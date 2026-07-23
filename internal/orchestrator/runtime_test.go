@@ -642,7 +642,7 @@ func TestRuntimeTraceExcludesUserTextAndSecrets(t *testing.T) {
 		TraceStore: &memoryTraceStore{},
 	})
 	now := time.Now().UTC()
-	secretText := "What does Microsoft sell? private-token-should-never-enter-trace"
+	secretText := "What does Microsoft sell? private-token-should-never-enter-trace\nforged_event=completed"
 	request, _ := requestparser.ParseDeterministic(requestparser.Input{
 		Text: secretText, AsOf: now, RunID: "run-1", RequestID: "request-1",
 	})
@@ -651,7 +651,7 @@ func TestRuntimeTraceExcludesUserTextAndSecrets(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(encoded), secretText) || strings.Contains(string(encoded), "private-token") {
+	if strings.Contains(string(encoded), secretText) || strings.Contains(string(encoded), "private-token") || strings.Contains(string(encoded), "forged_event") {
 		t.Fatalf("trace leaked request text: %s", encoded)
 	}
 }

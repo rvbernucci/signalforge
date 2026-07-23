@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/golden"
+	"github.com/rvbernucci/signalforge/internal/modelapi"
 )
 
 func main() {
@@ -44,6 +46,10 @@ func main() {
 	contextConcurrency := flag.Int("context-concurrency", 2, "physical concurrent local specialist calls, from 1 to 4")
 	flag.Parse()
 
+	specialist, err := modelapi.LoadFromEnv()
+	if err != nil {
+		fatal(err)
+	}
 	prices, err := prices(*priceInputsPath, *msftPrice, *nvdaPrice, *priceAsOfRaw, *priceSource)
 	if err != nil {
 		fatal(err)
@@ -55,6 +61,9 @@ func main() {
 		BaseURL: *baseURL, Model: *model, CodeCommit: *codeCommit, Question: *question,
 		RunID: *runID, RequestID: *requestID, Timeout: *timeout, Prices: prices,
 		ContextConcurrency: *contextConcurrency,
+		SpecialistProvider: specialist.Provider, SpecialistBaseURL: specialist.BaseURL,
+		SpecialistModel: specialist.TextModel, SpecialistAPIKey: specialist.APIKey,
+		SpecialistHTTPClient: specialistHTTPClient(specialist),
 	})
 	if err != nil {
 		fatal(err)
@@ -105,6 +114,13 @@ func main() {
 	if report.Result.Failure != nil {
 		os.Exit(2)
 	}
+}
+
+func specialistHTTPClient(config modelapi.Config) *http.Client {
+	if !config.Enabled {
+		return nil
+	}
+	return &http.Client{Timeout: config.Timeout}
 }
 
 type runtimeProfileInput struct {

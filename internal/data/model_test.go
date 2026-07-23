@@ -91,3 +91,75 @@ func TestNormalizedMetricRequiresReplayLineage(t *testing.T) {
 		t.Fatalf("lineage-complete metric should pass: %v", err)
 	}
 }
+
+func filingFixture(id, accession, form string, published time.Time) Filing {
+	return Filing{
+		FilingID: id, CompanyID: "sec-cik:0000789019", AccessionNumber: accession, FormType: form,
+		ReportPeriodEnd: time.Date(2026, 3, 31, 0, 0, 0, 0, time.UTC), FiledAt: published,
+		AcceptedAt: published, PublishedAt: published, SourceRecordID: "record-" + id,
+		SourceURI: "https://www.sec.gov/Archives/" + id, ContentSHA256: "sha-" + id,
+		RetrievedAt: published.Add(time.Hour), ExtractorVersion: "sec/v1",
+	}
+}
+
+func TestFilingSetPreservesAmendmentSupersessionAsOf(t *testing.T) {
+	baseTime := time.Date(2026, 4, 20, 12, 0, 0, 0, time.UTC)
+	base := filingFixture("filing-base", "0000789019-26-000001", "10-Q", baseTime)
+	amendment := filingFixture("filing-amended", "0000789019-26-000002", "10-Q/A", baseTime.Add(24*time.Hour))
+	amendment.AmendsFilingID = base.FilingID
+	filings := []Filing{base, amendment}
+	if err := ValidateFilingSet(filings); err != nil {
+		t.Fatal(err)
+	}
+	active, err := ActiveFilingsAsOf(filings, baseTime.Add(time.Hour))
+	if err != nil || len(active) != 1 || active[0].FilingID != base.FilingID {
+		t.Fatalf("historical as-of selected wrong filing: active=%+v err=%v", active, err)
+	}
+	active, err = ActiveFilingsAsOf(filings, amendment.PublishedAt)
+	if err != nil || len(active) != 1 || active[0].FilingID != amendment.FilingID {
+		t.Fatalf("amendment did not supersede base: active=%+v err=%v", active, err)
+	}
+}
+
+func TestFilingSetRejectsUnlinkedDuplicateAndCrossCompanyAmendment(t *testing.T) {
+	baseTime := time.Date(2026, 4, 20, 12, 0, 0, 0, time.UTC)
+	base := filingFixture("filing-base", "0000789019-26-000001", "10-Q", baseTime)
+	duplicate := filingFixture("filing-duplicate", "0000789019-26-000002", "10-Q", baseTime.Add(time.Hour))
+	if err := ValidateFilingSet([]Filing{base, duplicate}); err == nil {
+		t.Fatal("unlinked duplicate period/form was accepted")
+	}
+	amendment := duplicate
+	amendment.FormType = "10-Q/A"
+	amendment.AmendsFilingID = base.FilingID
+	amendment.CompanyID = "sec-cik:0001045810"
+	if err := ValidateFilingSet([]Filing{base, amendment}); err == nil {
+		t.Fatal("cross-company amendment was accepted")
+	}
+}
+
+func TestReportedFactSetRejectsDuplicateAndUnitConflictButPreservesSegments(t *testing.T) {
+	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 3, 31, 0, 0, 0, 0, time.UTC)
+	base := ReportedFact{
+		FactID: "fact-cloud", FilingID: "filing-1", CompanyID: "sec-cik:0000789019", Taxonomy: "us-gaap",
+		Concept: "Revenue", Value: "100", Unit: "USD", StartDate: &start, EndDate: &end, FormType: "10-Q",
+		Dimensions: map[string]string{"segment": "cloud"}, SourceContextID: "context-cloud", SourceLocator: "xbrl:cloud",
+		AvailableAt: end.Add(30 * 24 * time.Hour), RetrievedAt: end.Add(31 * 24 * time.Hour),
+	}
+	otherSegment := base
+	otherSegment.FactID, otherSegment.SourceContextID = "fact-devices", "context-devices"
+	otherSegment.Dimensions = map[string]string{"segment": "devices"}
+	if err := ValidateReportedFactSet([]ReportedFact{base, otherSegment}); err != nil {
+		t.Fatalf("distinct segment facts were rejected: %v", err)
+	}
+	duplicate := base
+	duplicate.FactID = "fact-duplicate"
+	if err := ValidateReportedFactSet([]ReportedFact{base, duplicate}); err == nil {
+		t.Fatal("duplicate fact identity was accepted")
+	}
+	conflict := base
+	conflict.FactID, conflict.Unit = "fact-conflict", "shares"
+	if err := ValidateReportedFactSet([]ReportedFact{base, conflict}); err == nil {
+		t.Fatal("same concept/period/dimension with conflicting unit was accepted")
+	}
+}

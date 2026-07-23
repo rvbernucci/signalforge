@@ -79,6 +79,7 @@ extracted/
 
 # Go build output
 bin/
+vendor/
 .tmp-bin/
 .tmp-sprint11/
 tmp/

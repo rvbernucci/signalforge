@@ -3,9 +3,12 @@ package market
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/cockroachdb/apd/v3"
 )
@@ -42,6 +45,25 @@ type Bar struct {
 
 type Provider interface {
 	Bars(context.Context, Query) ([]Bar, error)
+}
+
+type SeriesPolicy struct {
+	CanonicalSymbol  string
+	Aliases          map[string]string
+	Adjustment       string
+	TimeZone         string
+	AsOf             time.Time
+	MaxAge           time.Duration
+	ExpectedSessions []time.Time
+}
+
+type SeriesReceipt struct {
+	CanonicalSymbol  string   `json:"canonical_symbol"`
+	Adjustment       string   `json:"adjustment"`
+	TimeZone         string   `json:"time_zone"`
+	ObservedSessions []string `json:"observed_sessions"`
+	BarCount         int      `json:"bar_count"`
+	Passed           bool     `json:"passed"`
 }
 
 func ValidateQuery(query Query) error {
@@ -82,4 +104,61 @@ func ValidateBar(bar Bar) error {
 
 func AvailableAsOf(bar Bar, asOf time.Time) bool {
 	return !asOf.IsZero() && !bar.AvailableAt.IsZero() && !bar.AvailableAt.After(asOf)
+}
+
+func ValidateSeries(bars []Bar, policy SeriesPolicy) (SeriesReceipt, error) {
+	receipt := SeriesReceipt{CanonicalSymbol: policy.CanonicalSymbol, Adjustment: policy.Adjustment, TimeZone: policy.TimeZone, BarCount: len(bars)}
+	if !symbolPattern.MatchString(policy.CanonicalSymbol) || policy.Adjustment == "" || policy.TimeZone == "" || policy.AsOf.IsZero() {
+		return receipt, errors.New("canonical symbol, adjustment, time zone, and as_of are required")
+	}
+	location, err := time.LoadLocation(policy.TimeZone)
+	if err != nil {
+		return receipt, fmt.Errorf("invalid market time zone: %w", err)
+	}
+	seen := map[string]bool{}
+	sessions := map[string]bool{}
+	latest := time.Time{}
+	for index, bar := range bars {
+		if err := ValidateBar(bar); err != nil {
+			return receipt, fmt.Errorf("bars[%d]: %w", index, err)
+		}
+		canonical := bar.Symbol
+		if alias, exists := policy.Aliases[bar.Symbol]; exists {
+			canonical = alias
+		}
+		if canonical != policy.CanonicalSymbol {
+			return receipt, fmt.Errorf("bars[%d] has unauthorized symbol lineage %q", index, bar.Symbol)
+		}
+		if bar.Adjustment != policy.Adjustment {
+			return receipt, fmt.Errorf("bars[%d] mixes adjustment policy %q with %q", index, bar.Adjustment, policy.Adjustment)
+		}
+		if !AvailableAsOf(bar, policy.AsOf) {
+			return receipt, fmt.Errorf("bars[%d] was unavailable at as_of", index)
+		}
+		key := strings.Join([]string{bar.Provider, canonical, bar.Timestamp.Format(time.RFC3339Nano), bar.Adjustment}, "|")
+		if seen[key] {
+			return receipt, fmt.Errorf("bars[%d] duplicates a canonical market observation", index)
+		}
+		seen[key] = true
+		session := bar.Timestamp.In(location).Format("2006-01-02")
+		sessions[session] = true
+		if bar.AvailableAt.After(latest) {
+			latest = bar.AvailableAt
+		}
+	}
+	for _, expected := range policy.ExpectedSessions {
+		session := expected.In(location).Format("2006-01-02")
+		if !sessions[session] {
+			return receipt, fmt.Errorf("missing expected market session %s", session)
+		}
+	}
+	if policy.MaxAge > 0 && (latest.IsZero() || policy.AsOf.Sub(latest) > policy.MaxAge) {
+		return receipt, fmt.Errorf("latest market observation exceeds the %s freshness budget", policy.MaxAge)
+	}
+	for session := range sessions {
+		receipt.ObservedSessions = append(receipt.ObservedSessions, session)
+	}
+	sort.Strings(receipt.ObservedSessions)
+	receipt.Passed = true
+	return receipt, nil
 }

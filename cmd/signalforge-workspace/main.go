@@ -15,6 +15,7 @@ import (
 
 	"github.com/rvbernucci/signalforge/internal/casestore"
 	"github.com/rvbernucci/signalforge/internal/golden"
+	"github.com/rvbernucci/signalforge/internal/modelapi"
 	"github.com/rvbernucci/signalforge/internal/workspace"
 )
 
@@ -40,6 +41,10 @@ func main() {
 	if err := validateLoopbackListen(*listenAddress); err != nil {
 		fatal(err)
 	}
+	specialist, err := modelapi.LoadFromEnv()
+	if err != nil {
+		fatal(err)
+	}
 	prices, err := loadPrices(*priceInputsPath)
 	if err != nil {
 		fatal(err)
@@ -60,6 +65,9 @@ func main() {
 			TraceDir: *traceDir, BaseURL: *baseURL, Model: *model,
 			CodeCommit: *codeCommit, Timeout: *timeout, Prices: prices,
 			ContextConcurrency: *contextConcurrency,
+			SpecialistProvider: specialist.Provider, SpecialistBaseURL: specialist.BaseURL,
+			SpecialistModel: specialist.TextModel, SpecialistAPIKey: specialist.APIKey,
+			SpecialistHTTPClient: specialistHTTPClient(specialist),
 		},
 	})
 	if err != nil {
@@ -88,6 +96,13 @@ func main() {
 	if err := httpServer.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		fatal(err)
 	}
+}
+
+func specialistHTTPClient(config modelapi.Config) *http.Client {
+	if !config.Enabled {
+		return nil
+	}
+	return &http.Client{Timeout: config.Timeout}
 }
 
 func validateLoopbackListen(address string) error {

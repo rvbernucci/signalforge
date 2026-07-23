@@ -23,6 +23,33 @@ type PromptRegistry struct {
 	prompts map[string]Prompt
 }
 
+// WithSystemAddon returns an isolated registry for a controlled prompt experiment. The base
+// registry, response schema, token budget, temperature, and every other role remain unchanged.
+func (registry PromptRegistry) WithSystemAddon(roleID, baseVersion, addon string) (PromptRegistry, error) {
+	if baseVersion != PromptSetVersion {
+		return PromptRegistry{}, fmt.Errorf("prompt add-on base %q does not match %q", baseVersion, PromptSetVersion)
+	}
+	role, ok := roles.DefaultRegistry().Get(roleID)
+	if !ok || role.Class != roles.ClassContext {
+		return PromptRegistry{}, fmt.Errorf("prompt add-on role %q is not a context specialist", roleID)
+	}
+	addon = strings.TrimSpace(addon)
+	if addon == "" || len(addon) > 4096 || strings.ContainsRune(addon, '\x00') {
+		return PromptRegistry{}, fmt.Errorf("prompt add-on for %q is empty or exceeds its bounded contract", roleID)
+	}
+	prompt, ok := registry.Get(roleID)
+	if !ok || prompt.Version != baseVersion {
+		return PromptRegistry{}, fmt.Errorf("prompt add-on base prompt for %q is unavailable", roleID)
+	}
+	clone := PromptRegistry{prompts: make(map[string]Prompt, len(registry.prompts))}
+	for id, value := range registry.prompts {
+		clone.prompts[id] = value
+	}
+	prompt.System += "\n\nCandidate instruction add-on (same role authority and response schema):\n" + addon
+	clone.prompts[roleID] = prompt
+	return clone, nil
+}
+
 func DefaultPromptRegistry() PromptRegistry {
 	base := "You are one bounded component in SignalForge, a local investment-research system. " +
 		"Use only the supplied artifacts. Never invent evidence IDs, calculation receipts, company facts, or tool results. " +

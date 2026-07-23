@@ -40,6 +40,7 @@ type Expected struct {
 	RequireMissing        bool     `json:"require_missing,omitempty"`
 	RequireConflict       bool     `json:"require_conflict,omitempty"`
 	RequiredHandoff       string   `json:"required_handoff,omitempty"`
+	RequireAssumptionRef  bool     `json:"require_assumption_ref,omitempty"`
 	RequiredSections      []string `json:"required_sections,omitempty"`
 	MandatoryRoles        []string `json:"mandatory_roles,omitempty"`
 	MandatoryCapabilities []string `json:"mandatory_capabilities,omitempty"`
@@ -53,6 +54,7 @@ type Case struct {
 	Question     string            `json:"question"`
 	Evidence     []EvidenceSeed    `json:"evidence,omitempty"`
 	Calculations []CalculationSeed `json:"calculations,omitempty"`
+	Assumptions  []string          `json:"assumptions,omitempty"`
 	Expected     Expected          `json:"expected"`
 }
 

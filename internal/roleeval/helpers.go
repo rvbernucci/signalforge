@@ -183,6 +183,20 @@ func packetCalculationSupported(packet contracts.ContextPacket, seeds []Calculat
 	return false
 }
 
+func packetAssumptionsSupported(packet contracts.ContextPacket, expected []string) bool {
+	if len(expected) == 0 || !containsAll(packet.Assumptions, expected) {
+		return false
+	}
+	for _, finding := range append(append([]contracts.Finding(nil), packet.Findings...), packet.Counterevidence...) {
+		for _, assumption := range expected {
+			if slices.Contains(finding.AssumptionRefs, assumption) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func reviewDecisionSupported(report contracts.CritiqueReport, _ contracts.ContextPacket, scenario string) bool {
 	if scenario == "supported" {
 		return report.Decision == contracts.CritiqueApprove && len(report.ApprovedClaims) > 0

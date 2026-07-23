@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { caseExportURL, deleteCase, getCase, listCases } from "../api";
 import { displayCaseTitle } from "../format";
 import type { CaseSummary, Projection, RetentionView } from "../types";
@@ -38,11 +38,24 @@ function CaseLibrary({ open, onClose, onLoad }: Pick<Props, "open" | "onClose" |
   const [items, setItems] = useState<CaseSummary[]>([]);
   const [failure, setFailure] = useState("");
   const [pendingDelete, setPendingDelete] = useState("");
+  const closeButton = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const wasOpen = useRef(false);
 
   useEffect(() => {
     if (!open) return;
     setFailure("");
     void listCases().then(setItems).catch(() => setFailure("The local case index is temporarily unavailable."));
+  }, [open]);
+
+  useEffect(() => {
+    if (open && !wasOpen.current) {
+      returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      closeButton.current?.focus();
+    } else if (!open && wasOpen.current) {
+      returnFocus.current?.focus();
+    }
+    wasOpen.current = open;
   }, [open]);
 
   async function inspect(caseID: string) {
@@ -71,9 +84,9 @@ function CaseLibrary({ open, onClose, onLoad }: Pick<Props, "open" | "onClose" |
 
   return (
     <>
-      <button className={`library-scrim ${open ? "is-open" : ""}`} aria-label="Close case library" tabIndex={open ? 0 : -1} onClick={onClose} />
-      <aside className={`case-library ${open ? "is-open" : ""}`} aria-hidden={!open} inert={!open}>
-        <header><div><span className="eyebrow">Private local retention</span><h2>Research case library</h2></div><button className="icon-button" onClick={onClose} aria-label="Close case library">×</button></header>
+      <button className={`library-scrim ${open ? "is-open" : ""}`} aria-label="Dismiss case library overlay" tabIndex={open ? 0 : -1} onClick={onClose} />
+      <aside className={`case-library ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-labelledby="case-library-title" aria-hidden={!open} inert={!open}>
+        <header><div><span className="eyebrow">Private local retention</span><h2 id="case-library-title">Research case library</h2></div><button ref={closeButton} className="icon-button" onClick={onClose} aria-label="Close case library">×</button></header>
         <div className="library-principle"><ShieldIcon /><p><strong>Published snapshots, not model memory.</strong> Every case is hash-verified on read. Future calculations still resolve from canonical evidence and receipts.</p></div>
         {failure && <p className="library-failure" role="alert">{failure}</p>}
         <div className="library-list">

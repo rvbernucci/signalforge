@@ -26,27 +26,34 @@ const ReportSchemaV1 = "signalforge/golden-investor-report/v1"
 const DefaultQuestion = "Compare Microsoft and NVIDIA as long-term businesses under higher-for-longer interest rates and slower AI infrastructure spending. Include business quality, accounting comparability, financial quality, market behavior, DCF valuation ranges, multiples, explicit assumptions, counterevidence, and thesis invalidation conditions."
 
 type RunConfig struct {
-	SnapshotPath       string
-	RetrievalPath      string
-	TraceDir           string
-	BaseURL            string
-	Model              string
-	CodeCommit         string
-	Question           string
-	RunID              string
-	RequestID          string
-	Timeout            time.Duration
-	Prices             []PriceInput
-	HTTPClient         *http.Client
-	ContextConcurrency int
-	EventSink          orchestrator.EventSink
-	RequestOverride    *contracts.ResearchRequest
-	Assumptions        []string
-	UseAssumptions     bool
+	SnapshotPath         string
+	RetrievalPath        string
+	TraceDir             string
+	BaseURL              string
+	Model                string
+	SpecialistProvider   string
+	SpecialistBaseURL    string
+	SpecialistModel      string
+	SpecialistAPIKey     string
+	CodeCommit           string
+	Question             string
+	RunID                string
+	RequestID            string
+	Timeout              time.Duration
+	Prices               []PriceInput
+	HTTPClient           *http.Client
+	SpecialistHTTPClient *http.Client
+	ContextConcurrency   int
+	EventSink            orchestrator.EventSink
+	RequestOverride      *contracts.ResearchRequest
+	Assumptions          []string
+	UseAssumptions       bool
 }
 
 type CallMetric struct {
 	RoleID           string        `json:"role_id"`
+	ProviderID       string        `json:"provider_id"`
+	Model            string        `json:"model"`
 	StartedAt        time.Time     `json:"started_at"`
 	Duration         time.Duration `json:"duration_ns"`
 	TTFT             time.Duration `json:"ttft_ns"`
@@ -79,27 +86,32 @@ type Metrics struct {
 }
 
 type Acceptance struct {
-	CompleteLocalPath     bool `json:"complete_local_path"`
-	AllSixSpecialists     bool `json:"all_six_specialists"`
-	BothCriticsApproved   bool `json:"both_critics_approved"`
-	AllClaimsSupported    bool `json:"all_claims_supported"`
-	RequiredSectionsReady bool `json:"required_sections_ready"`
-	ScenarioReceiptsReady bool `json:"scenario_receipts_ready"`
-	MarketInputsExplicit  bool `json:"market_inputs_explicit"`
+	CompleteLocalPath       bool `json:"complete_local_path"`
+	CompleteHybridPath      bool `json:"complete_hybrid_path"`
+	ProvidedVLLMSpecialists bool `json:"provided_vllm_specialists"`
+	AllSixSpecialists       bool `json:"all_six_specialists"`
+	BothCriticsApproved     bool `json:"both_critics_approved"`
+	AllClaimsSupported      bool `json:"all_claims_supported"`
+	RequiredSectionsReady   bool `json:"required_sections_ready"`
+	ScenarioReceiptsReady   bool `json:"scenario_receipts_ready"`
+	MarketInputsExplicit    bool `json:"market_inputs_explicit"`
 }
 
 type Report struct {
-	SchemaVersion string                    `json:"schema_version"`
-	GeneratedAt   time.Time                 `json:"generated_at"`
-	Question      string                    `json:"question"`
-	AsOf          time.Time                 `json:"as_of"`
-	Model         string                    `json:"model"`
-	LocalBaseURL  string                    `json:"local_base_url"`
-	Request       contracts.ResearchRequest `json:"request"`
-	Result        orchestrator.Result       `json:"result"`
-	Calls         []CallMetric              `json:"model_calls"`
-	Metrics       Metrics                   `json:"metrics"`
-	Acceptance    Acceptance                `json:"acceptance"`
+	SchemaVersion      string                    `json:"schema_version"`
+	GeneratedAt        time.Time                 `json:"generated_at"`
+	Question           string                    `json:"question"`
+	AsOf               time.Time                 `json:"as_of"`
+	Model              string                    `json:"model"`
+	LocalBaseURL       string                    `json:"local_base_url"`
+	SpecialistProvider string                    `json:"specialist_provider,omitempty"`
+	SpecialistModel    string                    `json:"specialist_model,omitempty"`
+	SpecialistBaseURL  string                    `json:"specialist_base_url,omitempty"`
+	Request            contracts.ResearchRequest `json:"request"`
+	Result             orchestrator.Result       `json:"result"`
+	Calls              []CallMetric              `json:"model_calls"`
+	Metrics            Metrics                   `json:"metrics"`
+	Acceptance         Acceptance                `json:"acceptance"`
 }
 
 func Run(ctx context.Context, config RunConfig) (Report, error) {
@@ -119,13 +131,31 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 		return Report{}, fmt.Errorf("build golden material provider: %w", err)
 	}
 	client := benchmark.Client{BaseURL: strings.TrimRight(config.BaseURL, "/"), HTTPClient: config.HTTPClient}
-	recorder := newRecordingCompleter(client)
-	adapters, err := localagent.New(recorder, config.Model, provider)
+	localRecorder := newRecordingCompleterForProvider(client, "local-rocm")
+	localAdapters, err := localagent.New(localRecorder, config.Model, provider)
 	if err != nil {
 		return Report{}, err
 	}
+	specialistAdapters := localAdapters
+	recorders := []*recordingCompleter{localRecorder}
+	if config.SpecialistBaseURL != "" {
+		remoteClient := benchmark.Client{
+			BaseURL: strings.TrimRight(config.SpecialistBaseURL, "/"),
+			APIKey:  config.SpecialistAPIKey, ReuseConnections: true,
+			HTTPClient: config.SpecialistHTTPClient,
+		}
+		remoteRecorder := newRecordingCompleterForProvider(remoteClient, config.SpecialistProvider)
+		failover := failoverCompleter{
+			primary: remoteRecorder, fallback: localRecorder, fallbackModel: config.Model,
+		}
+		specialistAdapters, err = localagent.New(failover, config.SpecialistModel, provider)
+		if err != nil {
+			return Report{}, err
+		}
+		recorders = append(recorders, remoteRecorder)
+	}
 	runtime, err := orchestrator.New(orchestrator.Dependencies{
-		Specialist: adapters, Reviewer: adapters, Synthesizer: adapters,
+		Specialist: specialistAdapters, Reviewer: localAdapters, Synthesizer: localAdapters,
 		Sink: config.EventSink, TraceStore: orchestrator.FileTraceStore{Directory: config.TraceDir},
 	})
 	if err != nil {
@@ -153,7 +183,9 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 	report := Report{
 		SchemaVersion: ReportSchemaV1, GeneratedAt: time.Now().UTC(), Question: request.UserText,
 		AsOf: request.AsOf, Model: config.Model, LocalBaseURL: config.BaseURL,
-		Request: request, Result: result, Calls: recorder.Metrics(),
+		SpecialistProvider: config.SpecialistProvider, SpecialistModel: config.SpecialistModel,
+		SpecialistBaseURL: config.SpecialistBaseURL,
+		Request:           request, Result: result, Calls: mergeCallMetrics(recorders...),
 	}
 	report.Metrics = measureReport(report, time.Since(started))
 	report.Acceptance = acceptance(report)
@@ -222,15 +254,33 @@ func validateRunConfig(config RunConfig) error {
 	if config.ContextConcurrency < 1 || config.ContextConcurrency > 4 {
 		return errors.New("context concurrency must be between one and four")
 	}
+	specialistConfigured := config.SpecialistProvider != "" || config.SpecialistBaseURL != "" ||
+		config.SpecialistModel != "" || config.SpecialistAPIKey != ""
+	if specialistConfigured {
+		if config.SpecialistProvider != "radeon-vllm" || config.SpecialistBaseURL == "" ||
+			config.SpecialistModel == "" || config.SpecialistAPIKey == "" {
+			return errors.New("hybrid specialists require the radeon-vllm provider, base URL, model, and API key")
+		}
+		specialistURL, err := url.Parse(config.SpecialistBaseURL)
+		if err != nil || specialistURL.Hostname() == "" {
+			return errors.New("specialist base URL is invalid")
+		}
+		specialistHost := specialistURL.Hostname()
+		specialistLoopback := specialistHost == "127.0.0.1" || specialistHost == "localhost" || specialistHost == "::1"
+		if specialistURL.Scheme != "https" && !specialistLoopback {
+			return errors.New("external specialist base URL must use HTTPS")
+		}
+	}
 	return nil
 }
 
 type recordingCompleter struct {
-	client  benchmark.Client
-	roles   map[string]string
-	prompts []promptRole
-	mu      sync.Mutex
-	calls   []CallMetric
+	client     benchmark.Client
+	providerID string
+	roles      map[string]string
+	prompts    []promptRole
+	mu         sync.Mutex
+	calls      []CallMetric
 }
 
 type promptRole struct {
@@ -239,6 +289,10 @@ type promptRole struct {
 }
 
 func newRecordingCompleter(client benchmark.Client) *recordingCompleter {
+	return newRecordingCompleterForProvider(client, "local-rocm")
+}
+
+func newRecordingCompleterForProvider(client benchmark.Client, providerID string) *recordingCompleter {
 	registry := localagent.DefaultPromptRegistry()
 	roleByPrompt := map[string]string{}
 	prompts := make([]promptRole, 0)
@@ -247,7 +301,9 @@ func newRecordingCompleter(client benchmark.Client) *recordingCompleter {
 		prompts = append(prompts, promptRole{system: prompt.System, roleID: prompt.RoleID})
 	}
 	sort.Slice(prompts, func(i, j int) bool { return len(prompts[i].system) > len(prompts[j].system) })
-	return &recordingCompleter{client: client, roles: roleByPrompt, prompts: prompts}
+	return &recordingCompleter{
+		client: client, providerID: providerID, roles: roleByPrompt, prompts: prompts,
+	}
 }
 
 func (recorder *recordingCompleter) Complete(ctx context.Context, request benchmark.Request) (benchmark.Completion, error) {
@@ -257,7 +313,10 @@ func (recorder *recordingCompleter) Complete(ctx context.Context, request benchm
 	}
 	started := time.Now().UTC()
 	completion, err := recorder.client.Complete(ctx, request)
-	metric := CallMetric{RoleID: roleID, StartedAt: started, Failed: err != nil}
+	metric := CallMetric{
+		RoleID: roleID, ProviderID: recorder.providerID, Model: request.Model,
+		StartedAt: started, Failed: err != nil,
+	}
 	if err != nil {
 		metric.Duration = time.Since(started)
 		metric.Error = err.Error()
@@ -293,6 +352,30 @@ func (recorder *recordingCompleter) Metrics() []CallMetric {
 	recorder.mu.Lock()
 	defer recorder.mu.Unlock()
 	result := append([]CallMetric(nil), recorder.calls...)
+	sort.Slice(result, func(i, j int) bool { return result[i].StartedAt.Before(result[j].StartedAt) })
+	return result
+}
+
+type failoverCompleter struct {
+	primary       localagent.Completer
+	fallback      localagent.Completer
+	fallbackModel string
+}
+
+func (completer failoverCompleter) Complete(ctx context.Context, request benchmark.Request) (benchmark.Completion, error) {
+	completion, err := completer.primary.Complete(ctx, request)
+	if err == nil {
+		return completion, nil
+	}
+	request.Model = completer.fallbackModel
+	return completer.fallback.Complete(ctx, request)
+}
+
+func mergeCallMetrics(recorders ...*recordingCompleter) []CallMetric {
+	var result []CallMetric
+	for _, recorder := range recorders {
+		result = append(result, recorder.Metrics()...)
+	}
 	sort.Slice(result, func(i, j int) bool { return result[i].StartedAt.Before(result[j].StartedAt) })
 	return result
 }
@@ -361,15 +444,28 @@ func acceptance(report Report) Acceptance {
 	for _, roleID := range []string{roles.BusinessStrategy, roles.AccountingReporting, roles.FinancialQuality, roles.EconomicsTransmission, roles.Valuation, roles.MarketBehavior} {
 		allSix = allSix && contextRoles[roleID]
 	}
+	complete := report.Result.Answer != nil && report.Result.Failure == nil
+	hybrid := report.SpecialistProvider == "radeon-vllm"
 	return Acceptance{
-		CompleteLocalPath:     report.Result.Answer != nil && report.Result.Failure == nil,
-		AllSixSpecialists:     allSix,
-		BothCriticsApproved:   reviewers[roles.RiskContrarian] && reviewers[roles.EvidenceCritic],
-		AllClaimsSupported:    report.Metrics.Claims > 0 && report.Metrics.Claims == report.Metrics.SupportedClaims,
-		RequiredSectionsReady: report.Metrics.RequiredSections == report.Metrics.PresentRequiredSections,
-		ScenarioReceiptsReady: report.Metrics.DCFReceipts >= 2 && report.Metrics.SensitivityReceipts >= 2,
-		MarketInputsExplicit:  len(report.Request.Entities) == len(reportPriceTickers(report)),
+		CompleteLocalPath:       complete && !hybrid,
+		CompleteHybridPath:      complete && hybrid,
+		ProvidedVLLMSpecialists: hybrid && callsUseProvider(report.Calls, "radeon-vllm"),
+		AllSixSpecialists:       allSix,
+		BothCriticsApproved:     reviewers[roles.RiskContrarian] && reviewers[roles.EvidenceCritic],
+		AllClaimsSupported:      report.Metrics.Claims > 0 && report.Metrics.Claims == report.Metrics.SupportedClaims,
+		RequiredSectionsReady:   report.Metrics.RequiredSections == report.Metrics.PresentRequiredSections,
+		ScenarioReceiptsReady:   report.Metrics.DCFReceipts >= 2 && report.Metrics.SensitivityReceipts >= 2,
+		MarketInputsExplicit:    len(report.Request.Entities) == len(reportPriceTickers(report)),
 	}
+}
+
+func callsUseProvider(calls []CallMetric, providerID string) bool {
+	for _, call := range calls {
+		if call.ProviderID == providerID && !call.Failed {
+			return true
+		}
+	}
+	return false
 }
 
 func reportPriceTickers(report Report) map[string]bool {

@@ -149,5 +149,5 @@ function BootScreen() {
 }
 
 function BootFailure() {
-  return <div className="boot-screen failure"><ShieldIcon /><strong>The workspace stopped safely.</strong><small>Start the local SignalForge server, then reload this page.</small></div>;
+  return <div className="boot-screen failure" role="alert"><ShieldIcon /><strong>The workspace stopped safely.</strong><small>Start the local SignalForge server, then reload this page.</small></div>;
 }

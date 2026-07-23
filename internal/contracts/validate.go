@@ -3,8 +3,14 @@ package contracts
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
+	"time"
+
+	"github.com/cockroachdb/apd/v3"
 )
+
+var currencyPattern = regexp.MustCompile(`^[A-Z]{3}$`)
 
 func ValidateContextPacket(packet ContextPacket) error {
 	if err := validateEnvelope(packet.SchemaVersion, packet.PacketID, packet.RunID); err != nil {
@@ -19,6 +25,31 @@ func ValidateContextPacket(packet ContextPacket) error {
 	if packet.Scope.AsOf.IsZero() {
 		return errors.New("scope.as_of is required")
 	}
+	evidence := make(map[string]bool, len(packet.Evidence))
+	for i, item := range packet.Evidence {
+		if strings.TrimSpace(item.EvidenceID) == "" || strings.TrimSpace(item.SourceType) == "" ||
+			strings.TrimSpace(item.Locator) == "" || strings.TrimSpace(item.ContentSHA) == "" || item.AsOf.IsZero() {
+			return fmt.Errorf("evidence[%d] is incomplete", i)
+		}
+		if item.AsOf.After(packet.Scope.AsOf) {
+			return fmt.Errorf("evidence[%d] is later than scope.as_of", i)
+		}
+		if evidence[item.EvidenceID] {
+			return fmt.Errorf("evidence[%d] duplicates %q", i, item.EvidenceID)
+		}
+		evidence[item.EvidenceID] = true
+	}
+	assumptions := make(map[string]bool, len(packet.Assumptions))
+	for i, assumption := range packet.Assumptions {
+		assumption = strings.TrimSpace(assumption)
+		if assumption == "" {
+			return fmt.Errorf("assumptions[%d] is empty", i)
+		}
+		if assumptions[assumption] {
+			return fmt.Errorf("assumptions[%d] duplicates %q", i, assumption)
+		}
+		assumptions[assumption] = true
+	}
 	receipts := make(map[string]bool, len(packet.CalculationReceipts))
 	for i, receipt := range packet.CalculationReceipts {
 		if err := ValidateCalculationReceipt(receipt); err != nil {
@@ -26,6 +57,9 @@ func ValidateContextPacket(packet ContextPacket) error {
 		}
 		if receipts[receipt.ReceiptID] {
 			return fmt.Errorf("calculation_receipts[%d] duplicates %q", i, receipt.ReceiptID)
+		}
+		if receipt.SourceAsOf.After(packet.Scope.AsOf) {
+			return fmt.Errorf("calculation_receipts[%d] is later than scope.as_of", i)
 		}
 		receipts[receipt.ReceiptID] = true
 	}
@@ -58,6 +92,12 @@ func ValidateContextPacket(packet ContextPacket) error {
 		if err := validateFinding(finding); err != nil {
 			return fmt.Errorf("findings[%d]: %w", i, err)
 		}
+		if finding.ValidAsOf.After(packet.Scope.AsOf) {
+			return fmt.Errorf("findings[%d] is later than scope.as_of", i)
+		}
+		if err := validateFindingReferences(finding, evidence, assumptions); err != nil {
+			return fmt.Errorf("findings[%d]: %w", i, err)
+		}
 		for _, receiptID := range finding.CalculationRefs {
 			if !receipts[receiptID] {
 				return fmt.Errorf("findings[%d] references missing calculation receipt %q", i, receiptID)
@@ -71,6 +111,12 @@ func ValidateContextPacket(packet ContextPacket) error {
 	}
 	for i, finding := range packet.Counterevidence {
 		if err := validateFinding(finding); err != nil {
+			return fmt.Errorf("counterevidence[%d]: %w", i, err)
+		}
+		if finding.ValidAsOf.After(packet.Scope.AsOf) {
+			return fmt.Errorf("counterevidence[%d] is later than scope.as_of", i)
+		}
+		if err := validateFindingReferences(finding, evidence, assumptions); err != nil {
 			return fmt.Errorf("counterevidence[%d]: %w", i, err)
 		}
 		for _, receiptID := range finding.CalculationRefs {
@@ -130,6 +176,12 @@ func ValidateEngineRequest(request EngineRequest) error {
 		if len(input.EvidenceRefs) == 0 && input.Status != "assumed" {
 			return fmt.Errorf("inputs[%d] requires evidence or assumed status", i)
 		}
+		if err := validateQuantity(input.Quantity, request.Scope.AsOf); err != nil {
+			return fmt.Errorf("inputs[%d].quantity: %w", i, err)
+		}
+		if err := validateUniqueStrings(input.EvidenceRefs, "evidence_refs"); err != nil {
+			return fmt.Errorf("inputs[%d]: %w", i, err)
+		}
 	}
 	requestedOutputs := make(map[string]struct{}, len(request.RequestedOutputs))
 	for i, output := range request.RequestedOutputs {
@@ -157,6 +209,28 @@ func ValidateCalculationReceipt(receipt CalculationReceipt) error {
 	if receipt.CodeCommit == "" || receipt.InputSHA == "" || receipt.ReceiptSHA == "" {
 		return errors.New("reproducibility hashes and code_commit are required")
 	}
+	if receipt.GeneratedAt.Before(receipt.SourceAsOf) {
+		return errors.New("generated_at cannot precede source_as_of")
+	}
+	if !receipt.Scope.AsOf.IsZero() && receipt.SourceAsOf.After(receipt.Scope.AsOf) {
+		return errors.New("source_as_of cannot be later than scope.as_of")
+	}
+	if err := validateUniqueStrings(receipt.EvidenceRefs, "evidence_refs"); err != nil {
+		return err
+	}
+	outputIDs := map[string]bool{}
+	for i, output := range append(append([]ReceiptOutput(nil), receipt.IntermediateValues...), receipt.Outputs...) {
+		if strings.TrimSpace(output.OutputID) == "" || strings.TrimSpace(output.Status) == "" {
+			return fmt.Errorf("outputs[%d] is incomplete", i)
+		}
+		if outputIDs[output.OutputID] {
+			return fmt.Errorf("outputs[%d] duplicates output_id %q", i, output.OutputID)
+		}
+		outputIDs[output.OutputID] = true
+		if err := validateQuantity(output.Quantity, receipt.SourceAsOf); err != nil {
+			return fmt.Errorf("outputs[%d].quantity: %w", i, err)
+		}
+	}
 	if receipt.Status == ReceiptSuccess {
 		if len(receipt.Outputs) == 0 {
 			return errors.New("successful receipt requires outputs")
@@ -166,6 +240,65 @@ func ValidateCalculationReceipt(receipt CalculationReceipt) error {
 				return fmt.Errorf("successful receipt has failed invariant %q", invariant.InvariantID)
 			}
 		}
+	}
+	return nil
+}
+
+func validateFindingReferences(finding Finding, evidence, assumptions map[string]bool) error {
+	for _, refs := range []struct {
+		name   string
+		values []string
+	}{
+		{name: "evidence_refs", values: finding.EvidenceRefs},
+		{name: "calculation_refs", values: finding.CalculationRefs},
+		{name: "numerical_refs", values: finding.NumericalRefs},
+		{name: "assumption_refs", values: finding.AssumptionRefs},
+	} {
+		if err := validateUniqueStrings(refs.values, refs.name); err != nil {
+			return err
+		}
+	}
+	for _, reference := range finding.EvidenceRefs {
+		if !evidence[reference] {
+			return fmt.Errorf("references missing evidence %q", reference)
+		}
+	}
+	for _, reference := range finding.AssumptionRefs {
+		if !assumptions[reference] {
+			return fmt.Errorf("references missing assumption %q", reference)
+		}
+	}
+	return nil
+}
+
+func validateUniqueStrings(values []string, name string) error {
+	seen := make(map[string]bool, len(values))
+	for i, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			return fmt.Errorf("%s[%d] is empty", name, i)
+		}
+		if seen[value] {
+			return fmt.Errorf("%s[%d] duplicates %q", name, i, value)
+		}
+		seen[value] = true
+	}
+	return nil
+}
+
+func validateQuantity(quantity Quantity, scopeAsOf time.Time) error {
+	if strings.TrimSpace(quantity.Value) == "" || strings.TrimSpace(quantity.Unit) == "" {
+		return errors.New("value and unit are required")
+	}
+	decimal, _, err := apd.NewFromString(strings.TrimSpace(quantity.Value))
+	if err != nil || decimal.Form != apd.Finite {
+		return errors.New("value must be a finite decimal")
+	}
+	if quantity.Currency != "" && !currencyPattern.MatchString(quantity.Currency) {
+		return errors.New("currency must be an uppercase ISO-style code")
+	}
+	if quantity.AsOf != nil && !scopeAsOf.IsZero() && quantity.AsOf.After(scopeAsOf) {
+		return errors.New("as_of cannot be later than scope.as_of")
 	}
 	return nil
 }

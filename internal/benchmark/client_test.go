@@ -41,6 +41,33 @@ func TestCompleteMeasuresStreamAndUsage(t *testing.T) {
 	}
 }
 
+func TestCompleteAuthenticatesRemoteCompatibleEndpointWithoutClosingConnection(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if got := request.Header.Get("Authorization"); got != "Bearer test-secret" {
+			t.Fatalf("unexpected authorization header %q", got)
+		}
+		if request.Close {
+			t.Fatal("remote-compatible client should preserve HTTP connections")
+		}
+		response.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprintln(response, `data: {"choices":[{"delta":{"content":"{\"ok\":true}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":4,"completion_tokens":2,"total_tokens":6}}`)
+		fmt.Fprintln(response, "data: [DONE]")
+	}))
+	defer server.Close()
+
+	completion, err := (Client{
+		BaseURL: server.URL, APIKey: "test-secret", ReuseConnections: true,
+	}).Complete(context.Background(), Request{
+		Model: "test-model", Messages: []Message{{Role: "user", Content: "Test"}}, MaxTokens: 8,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completion.Answer != `{"ok":true}` || completion.Usage.TotalTokens != 6 {
+		t.Fatalf("unexpected completion: %+v", completion)
+	}
+}
+
 func TestCompleteRejectsEmptyStream(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		response.Header().Set("Content-Type", "text/event-stream")

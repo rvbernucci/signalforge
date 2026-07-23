@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -59,6 +60,12 @@ func ValidateFiling(filing Filing) error {
 	if filing.PublishedAt.Before(filing.AcceptedAt) {
 		return errors.New("published_at cannot precede accepted_at")
 	}
+	if filing.RetrievedAt.Before(filing.PublishedAt) {
+		return errors.New("retrieved_at cannot precede published_at")
+	}
+	if filing.AmendsFilingID != "" && filing.AmendsFilingID == filing.FilingID {
+		return errors.New("filing cannot amend itself")
+	}
 	return nil
 }
 
@@ -72,6 +79,9 @@ func ValidateReportedFact(fact ReportedFact) error {
 	if fact.AvailableAt.IsZero() || fact.RetrievedAt.IsZero() {
 		return errors.New("available_at and retrieved_at are required")
 	}
+	if fact.RetrievedAt.Before(fact.AvailableAt) {
+		return errors.New("retrieved_at cannot precede available_at")
+	}
 	duration := fact.StartDate != nil || fact.EndDate != nil
 	instant := fact.InstantDate != nil
 	if duration == instant {
@@ -84,6 +94,11 @@ func ValidateReportedFact(fact ReportedFact) error {
 		if fact.EndDate.Before(*fact.StartDate) {
 			return errors.New("end_date cannot precede start_date")
 		}
+		if fact.AvailableAt.Before(*fact.EndDate) {
+			return errors.New("duration fact cannot be available before period end")
+		}
+	} else if fact.AvailableAt.Before(*fact.InstantDate) {
+		return errors.New("instant fact cannot be available before its instant date")
 	}
 	return nil
 }
@@ -108,4 +123,139 @@ func ValidateNormalizedMetric(metric NormalizedMetric) error {
 		return fmt.Errorf("computed_at cannot precede source_available_at")
 	}
 	return nil
+}
+
+func ValidateFilingSet(filings []Filing) error {
+	byID := make(map[string]Filing, len(filings))
+	accessions := make(map[string]bool, len(filings))
+	periodForms := make(map[string]string, len(filings))
+	for index, filing := range filings {
+		if err := ValidateFiling(filing); err != nil {
+			return fmt.Errorf("filings[%d]: %w", index, err)
+		}
+		if _, duplicate := byID[filing.FilingID]; duplicate || accessions[filing.AccessionNumber] {
+			return fmt.Errorf("filings[%d] duplicates filing or accession identity", index)
+		}
+		key := strings.Join([]string{filing.CompanyID, filing.ReportPeriodEnd.Format("2006-01-02"), baseForm(filing.FormType)}, "|")
+		if prior, exists := periodForms[key]; exists && filing.AmendsFilingID == "" {
+			return fmt.Errorf("filings[%d] duplicates period/form without amendment lineage to %q", index, prior)
+		}
+		periodForms[key] = filing.FilingID
+		byID[filing.FilingID] = filing
+		accessions[filing.AccessionNumber] = true
+	}
+	for index, filing := range filings {
+		if filing.AmendsFilingID == "" {
+			continue
+		}
+		parent, exists := byID[filing.AmendsFilingID]
+		if !exists || parent.CompanyID != filing.CompanyID {
+			return fmt.Errorf("filings[%d] amendment target is missing or belongs to another company", index)
+		}
+		if !filing.PublishedAt.After(parent.PublishedAt) || baseForm(parent.FormType) != baseForm(filing.FormType) {
+			return fmt.Errorf("filings[%d] amendment order or form family is invalid", index)
+		}
+		seen := map[string]bool{filing.FilingID: true}
+		cursor := parent
+		for {
+			if seen[cursor.FilingID] {
+				return fmt.Errorf("filings[%d] amendment lineage contains a cycle", index)
+			}
+			seen[cursor.FilingID] = true
+			if cursor.AmendsFilingID == "" {
+				break
+			}
+			next, ok := byID[cursor.AmendsFilingID]
+			if !ok {
+				return fmt.Errorf("filings[%d] amendment chain has a missing ancestor", index)
+			}
+			cursor = next
+		}
+	}
+	return nil
+}
+
+func ActiveFilingsAsOf(filings []Filing, asOf time.Time) ([]Filing, error) {
+	if asOf.IsZero() {
+		return nil, errors.New("as_of is required")
+	}
+	if err := ValidateFilingSet(filings); err != nil {
+		return nil, err
+	}
+	available := make(map[string]Filing, len(filings))
+	superseded := map[string]bool{}
+	for _, filing := range filings {
+		if filing.PublishedAt.After(asOf) {
+			continue
+		}
+		available[filing.FilingID] = filing
+		if filing.AmendsFilingID != "" {
+			superseded[filing.AmendsFilingID] = true
+		}
+	}
+	result := make([]Filing, 0, len(available))
+	for id, filing := range available {
+		if !superseded[id] {
+			result = append(result, filing)
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		if result[i].PublishedAt.Equal(result[j].PublishedAt) {
+			return result[i].FilingID < result[j].FilingID
+		}
+		return result[i].PublishedAt.Before(result[j].PublishedAt)
+	})
+	return result, nil
+}
+
+func ValidateReportedFactSet(facts []ReportedFact) error {
+	byID := make(map[string]bool, len(facts))
+	identities := make(map[string]bool, len(facts))
+	conceptPeriods := make(map[string]string, len(facts))
+	for index, fact := range facts {
+		if err := ValidateReportedFact(fact); err != nil {
+			return fmt.Errorf("facts[%d]: %w", index, err)
+		}
+		if byID[fact.FactID] {
+			return fmt.Errorf("facts[%d] duplicates fact_id %q", index, fact.FactID)
+		}
+		byID[fact.FactID] = true
+		period := factPeriodKey(fact)
+		dimensions := dimensionKey(fact.Dimensions)
+		base := strings.Join([]string{fact.CompanyID, fact.FilingID, fact.Taxonomy, fact.Concept, period, dimensions}, "|")
+		identity := base + "|" + fact.Unit
+		if identities[identity] {
+			return fmt.Errorf("facts[%d] duplicates concept, period, dimensions, and unit", index)
+		}
+		identities[identity] = true
+		if priorUnit, exists := conceptPeriods[base]; exists && priorUnit != fact.Unit {
+			return fmt.Errorf("facts[%d] conflicts with unit %q for the same concept and period", index, priorUnit)
+		}
+		conceptPeriods[base] = fact.Unit
+	}
+	return nil
+}
+
+func baseForm(value string) string {
+	return strings.TrimSuffix(strings.ToUpper(strings.TrimSpace(value)), "/A")
+}
+
+func factPeriodKey(fact ReportedFact) string {
+	if fact.InstantDate != nil {
+		return "instant:" + fact.InstantDate.Format("2006-01-02")
+	}
+	return "duration:" + fact.StartDate.Format("2006-01-02") + ":" + fact.EndDate.Format("2006-01-02")
+}
+
+func dimensionKey(values map[string]string) string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		parts = append(parts, key+"="+values[key])
+	}
+	return strings.Join(parts, ";")
 }

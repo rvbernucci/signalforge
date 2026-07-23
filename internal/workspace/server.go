@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/rvbernucci/signalforge/internal/contracts"
 	"github.com/rvbernucci/signalforge/internal/golden"
@@ -651,7 +653,16 @@ func validCaseID(value string) (string, bool) {
 
 func (server *Server) decodeJSON(writer http.ResponseWriter, request *http.Request, target any) error {
 	request.Body = http.MaxBytesReader(writer, request.Body, server.config.MaxBodyBytes)
-	decoder := json.NewDecoder(request.Body)
+	payload, err := io.ReadAll(request.Body)
+	if err != nil {
+		writeProblem(writer, http.StatusBadRequest, "invalid_json")
+		return err
+	}
+	if !utf8.Valid(payload) {
+		writeProblem(writer, http.StatusBadRequest, "invalid_json")
+		return errors.New("request body must be valid UTF-8")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(payload))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(target); err != nil {
 		writeProblem(writer, http.StatusBadRequest, "invalid_json")

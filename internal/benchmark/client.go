@@ -14,8 +14,10 @@ import (
 )
 
 type Client struct {
-	BaseURL    string
-	HTTPClient *http.Client
+	BaseURL          string
+	APIKey           string
+	ReuseConnections bool
+	HTTPClient       *http.Client
 }
 
 type Request struct {
@@ -89,10 +91,13 @@ func (client Client) Complete(ctx context.Context, request Request) (Completion,
 		return Completion{}, fmt.Errorf("create completion request: %w", err)
 	}
 	httpRequest.Header.Set("Content-Type", "application/json")
+	if client.APIKey != "" {
+		httpRequest.Header.Set("Authorization", "Bearer "+client.APIKey)
+	}
 	// Local model servers may retire idle keep-alive sockets while a long prompt is
 	// running in another slot. A fresh loopback connection avoids replaying a POST
 	// after that race; the handshake cost is negligible compared with inference.
-	httpRequest.Close = true
+	httpRequest.Close = !client.ReuseConnections
 	httpClient := client.HTTPClient
 	if httpClient == nil {
 		httpClient = http.DefaultClient

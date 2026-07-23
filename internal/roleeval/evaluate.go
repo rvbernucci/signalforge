@@ -54,6 +54,10 @@ type Report struct {
 	SuiteSHA256           string        `json:"suite_sha256,omitempty"`
 	PromptSetVersion      string        `json:"prompt_set_version"`
 	ModelID               string        `json:"model_id"`
+	CandidateID           string        `json:"candidate_id,omitempty"`
+	CandidateRoleID       string        `json:"candidate_role_id,omitempty"`
+	CandidateManifestSHA  string        `json:"candidate_manifest_sha256,omitempty"`
+	CandidatePromptSHA    string        `json:"candidate_prompt_addon_sha256,omitempty"`
 	StartedAt             time.Time     `json:"started_at"`
 	CompletedAt           time.Time     `json:"completed_at"`
 	Cases                 int           `json:"cases"`
@@ -66,10 +70,12 @@ type Report struct {
 }
 
 type Evaluator struct {
-	Client  localagent.Completer
-	Model   string
-	Workers int
-	Now     func() time.Time
+	Client    localagent.Completer
+	Model     string
+	Workers   int
+	Now       func() time.Time
+	Prompts   *localagent.PromptRegistry
+	Candidate CandidateIdentity
 }
 
 func (evaluator Evaluator) Evaluate(ctx context.Context, suite Suite) (Report, error) {
@@ -89,6 +95,8 @@ func (evaluator Evaluator) Evaluate(ctx context.Context, suite Suite) (Report, e
 		SchemaVersion: "signalforge/role-evaluation-report/v1", SuiteID: suite.SuiteID,
 		PromptSetVersion: suite.PromptSetVersion, ModelID: evaluator.Model,
 		StartedAt: evaluator.Now(), Cases: len(suite.Cases), Observations: make([]Observation, len(suite.Cases)),
+		CandidateID: evaluator.Candidate.CandidateID, CandidateRoleID: evaluator.Candidate.RoleID,
+		CandidateManifestSHA: evaluator.Candidate.ManifestSHA, CandidatePromptSHA: evaluator.Candidate.PromptAddonSHA,
 	}
 	semaphore := make(chan struct{}, evaluator.Workers)
 	var wait sync.WaitGroup
@@ -124,7 +132,7 @@ func (evaluator Evaluator) runCase(ctx context.Context, item Case) Observation {
 	case "planner":
 		metrics, err = evaluatePlanner(item)
 	case "context":
-		metrics, err = evaluateContext(ctx, recorder, evaluator.Model, item)
+		metrics, err = evaluateContext(ctx, recorder, evaluator.Model, item, evaluator.promptRegistry())
 	case "review":
 		metrics, err = evaluateReview(ctx, recorder, evaluator.Model, item)
 	case "synthesis":
@@ -217,16 +225,16 @@ func evaluatePlanner(item Case) (Metrics, error) {
 	return metrics, nil
 }
 
-func evaluateContext(ctx context.Context, client localagent.Completer, model string, item Case) (Metrics, error) {
+func evaluateContext(ctx context.Context, client localagent.Completer, model string, item Case, prompts localagent.PromptRegistry) (Metrics, error) {
 	now := frozenTime()
 	request := contracts.ContextRequest{
 		SchemaVersion: contracts.SchemaVersionV1, ContextRequestID: "context-" + item.CaseID,
 		RunID: "eval-run", StepID: "step-" + item.CaseID, SpecialistRole: item.RoleID,
 		Objective: roleMission(item.RoleID), ResearchQuestion: item.Question,
-		Scope: contracts.Scope{AsOf: now}, TokenBudget: 5000,
+		Scope: contracts.Scope{AsOf: now}, Assumptions: append([]string(nil), item.Assumptions...), TokenBudget: 5000,
 	}
 	material := materialFor(item, now, request.StepID)
-	adapter, err := localagent.New(client, model, staticProvider{material: material})
+	adapter, err := localagent.NewWithPromptRegistry(client, model, staticProvider{material: material}, prompts)
 	if err != nil {
 		return Metrics{}, err
 	}
@@ -240,6 +248,7 @@ func evaluateContext(ctx context.Context, client localagent.Completer, model str
 	metrics.PacketComplete = boolMetric(len(packet.Findings) >= item.Expected.MinimumFindings &&
 		(!item.Expected.RequireMissing || len(packet.MissingEvidence)+len(packet.Uncertainties) > 0) &&
 		(!item.Expected.RequireConflict || len(packet.Conflicts) > 0) &&
+		(!item.Expected.RequireAssumptionRef || packetAssumptionsSupported(packet, item.Assumptions)) &&
 		(item.Expected.RequiredHandoff == "" || textContains(text, item.Expected.RequiredHandoff)))
 	metrics.CitationSupport = boolMetric(!item.Expected.RequireEvidence || packetCitationsSupported(packet))
 	metrics.NumericalConsistency = boolMetric(!item.Expected.RequireCalculationRef ||
@@ -248,6 +257,13 @@ func evaluateContext(ctx context.Context, client localagent.Completer, model str
 	metrics.BoundaryCompliance = boolMetric(containsTerms(text, item.Expected.RequiredTerms) &&
 		forbiddenTermsClear(text, item.Expected.ForbiddenTerms))
 	return metrics, nil
+}
+
+func (evaluator Evaluator) promptRegistry() localagent.PromptRegistry {
+	if evaluator.Prompts != nil {
+		return *evaluator.Prompts
+	}
+	return localagent.DefaultPromptRegistry()
 }
 
 func evaluateReview(ctx context.Context, client localagent.Completer, model string, item Case) (Metrics, error) {

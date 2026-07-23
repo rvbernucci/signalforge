@@ -17,6 +17,8 @@ import (
 	"github.com/rvbernucci/signalforge/internal/roles"
 )
 
+const maxModelResponseBytes = 1 << 20
+
 type Completer interface {
 	Complete(context.Context, benchmark.Request) (benchmark.Completion, error)
 }
@@ -106,10 +108,15 @@ type Adapters struct {
 }
 
 func New(client Completer, model string, materials MaterialProvider) (*Adapters, error) {
+	return NewWithPromptRegistry(client, model, materials, DefaultPromptRegistry())
+}
+
+// NewWithPromptRegistry is reserved for hash-pinned evaluation candidates. Production callers use
+// New, which always constructs the frozen default registry.
+func NewWithPromptRegistry(client Completer, model string, materials MaterialProvider, prompts PromptRegistry) (*Adapters, error) {
 	if client == nil || strings.TrimSpace(model) == "" || materials == nil {
 		return nil, errors.New("local model client, model ID, and material provider are required")
 	}
-	prompts := DefaultPromptRegistry()
 	if err := prompts.Validate(roles.DefaultRegistry()); err != nil {
 		return nil, err
 	}
@@ -221,6 +228,9 @@ func (adapters *Adapters) Run(ctx context.Context, request contracts.ContextRequ
 		return contracts.ContextPacket{}, err
 	}
 	if err := contracts.ValidateContextPacket(packet); err != nil {
+		return contracts.ContextPacket{}, err
+	}
+	if err := validateSpecialistSemantics(packet); err != nil {
 		return contracts.ContextPacket{}, err
 	}
 	return packet, nil
@@ -1009,6 +1019,9 @@ func contains(values []string, target string) bool {
 }
 
 func decodeJSONObject(payload string, destination any) error {
+	if len(payload) > maxModelResponseBytes {
+		return fmt.Errorf("model response exceeds %d-byte contract", maxModelResponseBytes)
+	}
 	trimmed := strings.TrimSpace(payload)
 	if strings.HasPrefix(trimmed, "```") {
 		firstNewline := strings.IndexByte(trimmed, '\n')

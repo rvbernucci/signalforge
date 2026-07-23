@@ -3,6 +3,7 @@ package localagent
 import (
 	"context"
 	"errors"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -43,6 +44,44 @@ func TestPromptRegistryCoversEveryFrozenRole(t *testing.T) {
 	}
 	if len(registry.List()) != 11 {
 		t.Fatalf("prompt count=%d, want 11", len(registry.List()))
+	}
+}
+
+func TestPromptRegistryAppliesOneIsolatedContextAddon(t *testing.T) {
+	base := DefaultPromptRegistry()
+	updated, err := base.WithSystemAddon(roles.AccountingReporting, PromptSetVersion, "Treat policy as policy.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseAccounting, _ := base.Get(roles.AccountingReporting)
+	updatedAccounting, _ := updated.Get(roles.AccountingReporting)
+	if strings.Contains(baseAccounting.System, "Treat policy as policy.") || !strings.Contains(updatedAccounting.System, "Treat policy as policy.") {
+		t.Fatal("candidate add-on mutated the base registry or was not applied")
+	}
+	baseEconomics, _ := base.Get(roles.EconomicsTransmission)
+	updatedEconomics, _ := updated.Get(roles.EconomicsTransmission)
+	if !reflect.DeepEqual(baseEconomics, updatedEconomics) {
+		t.Fatal("candidate add-on changed an unrelated role")
+	}
+	if baseAccounting.ResponseSchema["type"] != updatedAccounting.ResponseSchema["type"] ||
+		baseAccounting.MaxTokens != updatedAccounting.MaxTokens || baseAccounting.Temperature != updatedAccounting.Temperature {
+		t.Fatal("candidate add-on changed the response contract or inference controls")
+	}
+}
+
+func TestPromptRegistryRejectsInvalidAddonAuthority(t *testing.T) {
+	registry := DefaultPromptRegistry()
+	for _, test := range []struct {
+		role, version, addon string
+	}{
+		{roles.AccountingReporting, "wrong-version", "bounded"},
+		{roles.RequestInterpreter, PromptSetVersion, "bounded"},
+		{roles.AccountingReporting, PromptSetVersion, ""},
+		{roles.AccountingReporting, PromptSetVersion, strings.Repeat("x", 4097)},
+	} {
+		if _, err := registry.WithSystemAddon(test.role, test.version, test.addon); err == nil {
+			t.Fatalf("expected authority rejection for role=%q version=%q", test.role, test.version)
+		}
 	}
 }
 
@@ -1166,6 +1205,9 @@ func TestDecodeJSONObjectAcceptsFenceButRejectsTrailingValue(t *testing.T) {
 	}
 	if err := decodeJSONObject(`{"decision":"reject"} {"decision":"approve"}`, &body); err == nil {
 		t.Fatal("multiple JSON values must fail")
+	}
+	if err := decodeJSONObject(strings.Repeat("x", maxModelResponseBytes+1), &body); err == nil {
+		t.Fatal("oversized model response must fail before decoding")
 	}
 }
 

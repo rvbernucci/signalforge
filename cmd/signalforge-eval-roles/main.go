@@ -9,11 +9,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/benchmark"
+	"github.com/rvbernucci/signalforge/internal/localagent"
 	"github.com/rvbernucci/signalforge/internal/roleeval"
 )
+
+type repeatedStrings []string
+
+func (values *repeatedStrings) String() string { return strings.Join(*values, ",") }
+func (values *repeatedStrings) Set(value string) error {
+	*values = append(*values, value)
+	return nil
+}
 
 func main() {
 	baseURL := flag.String("base-url", "http://127.0.0.1:8000/v1", "OpenAI-compatible local endpoint")
@@ -23,7 +33,24 @@ func main() {
 	workers := flag.Int("workers", 1, "maximum concurrent role requests (1-8)")
 	requestTimeout := flag.Duration("request-timeout", 3*time.Minute, "timeout for each local completion")
 	overallTimeout := flag.Duration("overall-timeout", 45*time.Minute, "timeout for the complete suite")
+	var candidateManifests repeatedStrings
+	flag.Var(&candidateManifests, "candidate-manifest", "optional repeatable hash-pinned Sprint 16A candidate manifest")
+	sourceRoot := flag.String("source-root", ".", "repository root used to verify the base prompt source")
+	verifyCandidateOnly := flag.Bool("verify-candidate-only", false, "verify candidate identity and exit without inference")
 	flag.Parse()
+	if *verifyCandidateOnly {
+		if len(candidateManifests) == 0 {
+			fatal("--candidate-manifest is required with --verify-candidate-only")
+		}
+		_, identity, err := roleeval.LoadCandidatePromptBundle(candidateManifests, *sourceRoot)
+		if err != nil {
+			fatal(err.Error())
+		}
+		if err := json.NewEncoder(os.Stdout).Encode(identity); err != nil {
+			fatal(err.Error())
+		}
+		return
+	}
 
 	if *model == "" || *output == "" || *requestTimeout <= 0 || *overallTimeout <= 0 {
 		fatal("--model, --output, and positive timeout values are required")
@@ -43,8 +70,16 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), *overallTimeout)
 	defer cancel()
+	var prompts = localagent.DefaultPromptRegistry()
+	var candidate roleeval.CandidateIdentity
+	if len(candidateManifests) > 0 {
+		prompts, candidate, err = roleeval.LoadCandidatePromptBundle(candidateManifests, *sourceRoot)
+		if err != nil {
+			fatal(err.Error())
+		}
+	}
 	report, err := (roleeval.Evaluator{
-		Client: client, Model: *model, Workers: *workers,
+		Client: client, Model: *model, Workers: *workers, Prompts: &prompts, Candidate: candidate,
 	}).Evaluate(ctx, suite)
 	if err != nil {
 		fatal(err.Error())

@@ -195,6 +195,26 @@ func TestFixtureServerRejectsInvalidInputsAndExplainsFollowUpDegradation(t *test
 	}
 	invalidScenario.Body.Close()
 
+	oversized := postRaw(t, httpServer.URL+"/api/v1/runs", `{"question":"`+strings.Repeat("x", 17<<10)+`"}`)
+	if oversized.StatusCode != http.StatusBadRequest {
+		t.Fatalf("oversized body status = %d", oversized.StatusCode)
+	}
+	oversized.Body.Close()
+
+	invalidUnicodeRequest, err := http.NewRequest(http.MethodPost, httpServer.URL+"/api/v1/runs", bytes.NewReader([]byte{'{', '"', 'q', 'u', 'e', 's', 't', 'i', 'o', 'n', '"', ':', '"', 0xff, '"', '}'}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	invalidUnicodeRequest.Header.Set("Content-Type", "application/json")
+	invalidUnicode, err := http.DefaultClient.Do(invalidUnicodeRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if invalidUnicode.StatusCode != http.StatusBadRequest {
+		t.Fatalf("invalid UTF-8 status = %d", invalidUnicode.StatusCode)
+	}
+	invalidUnicode.Body.Close()
+
 	run := postRun(t, httpServer.URL, `{"question":"test","scenario":{}}`)
 	deadline := time.Now().Add(2 * time.Second)
 	for run.Status == "running" && time.Now().Before(deadline) {

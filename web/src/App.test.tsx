@@ -61,5 +61,30 @@ describe("SignalForge workspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open saved cases" }));
     expect(await screen.findByText("Research case library")).toBeInTheDocument();
     expect(await screen.findByText("No cases have been saved on this device.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Close case library" })).toHaveFocus();
+  });
+
+  it("moves focus into the proof dialog and returns it on Escape", async () => {
+    render(<App />);
+    const trigger = await screen.findByRole("button", { name: /Open proof layer/i });
+    trigger.focus();
+    fireEvent.click(trigger);
+    expect(screen.getByRole("button", { name: "Close proof drawer" })).toHaveFocus();
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it("shows an honest empty state when proof filtering has no matches", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: /Open proof layer/i }));
+    fireEvent.change(screen.getByPlaceholderText("Filter this proof set"), { target: { value: "not-a-real-proof-id" } });
+    expect(await screen.findByText("No proof items match this filter.")).toBeInTheDocument();
+  });
+
+  it("renders a plain-language fail-closed boot error", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("offline"); }));
+    render(<App />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("The workspace stopped safely.");
+    expect(screen.getByText("Start the local SignalForge server, then reload this page.")).toBeInTheDocument();
   });
 });

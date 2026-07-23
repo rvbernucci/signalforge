@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rvbernucci/signalforge/internal/benchmark"
 	"github.com/rvbernucci/signalforge/internal/capability"
 	"github.com/rvbernucci/signalforge/internal/contracts"
 	"github.com/rvbernucci/signalforge/internal/orchestrator"
@@ -99,6 +100,47 @@ func TestRunConfigRejectsRemoteCoreInference(t *testing.T) {
 	}
 }
 
+func TestRunConfigAcceptsRemoteSpecialistsWhileCoreInferenceRemainsLocal(t *testing.T) {
+	err := validateRunConfig(RunConfig{
+		SnapshotPath: "snapshot", RetrievalPath: "retrieval", TraceDir: "trace",
+		BaseURL: "http://127.0.0.1:8000/v1", Model: "local-model", CodeCommit: "tree",
+		SpecialistProvider: "radeon-vllm",
+		SpecialistBaseURL:  "https://radeon.example/api/v1",
+		SpecialistModel:    "DeepSeek-V4-Flash", SpecialistAPIKey: "secret",
+		Question: DefaultQuestion, RunID: "run", RequestID: "request", Timeout: time.Minute,
+		ContextConcurrency: 4,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFailoverCompleterRewritesRemoteModelForLocalFallback(t *testing.T) {
+	primary := &scriptedCompleter{err: context.DeadlineExceeded}
+	fallback := &scriptedCompleter{completion: benchmark.Completion{Answer: `{"ok":true}`}}
+	completer := failoverCompleter{
+		primary: primary, fallback: fallback, fallbackModel: "local-model",
+	}
+	completion, err := completer.Complete(context.Background(), benchmark.Request{Model: "remote-model"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completion.Answer != `{"ok":true}` || fallback.model != "local-model" {
+		t.Fatalf("fallback did not rewrite model: completion=%+v model=%q", completion, fallback.model)
+	}
+}
+
+type scriptedCompleter struct {
+	completion benchmark.Completion
+	err        error
+	model      string
+}
+
+func (completer *scriptedCompleter) Complete(_ context.Context, request benchmark.Request) (benchmark.Completion, error) {
+	completer.model = request.Model
+	return completer.completion, completer.err
+}
+
 func TestGoldenRequestRequiresTransmissionAndMarketSections(t *testing.T) {
 	snapshot, err := LoadSnapshot(filepath.Join("..", "..", "fixtures", "golden", "financial-snapshot.json"))
 	if err != nil {
@@ -131,7 +173,7 @@ func TestGoldenRequestUsesExplicitWorkspaceScenarioAssumptions(t *testing.T) {
 	}
 	request, err := goldenRequest(RunConfig{
 		Question: "Compare Microsoft and NVIDIA under easing rates and resilient AI spending.",
-		RunID: "run", RequestID: "request", UseAssumptions: true, Assumptions: want,
+		RunID:    "run", RequestID: "request", UseAssumptions: true, Assumptions: want,
 	}, now)
 	if err != nil {
 		t.Fatal(err)

@@ -53,3 +53,43 @@ func TestMarketBarRejectsStaleOrImpossibleAuthority(t *testing.T) {
 		t.Fatal("non-canonical market symbol must be rejected")
 	}
 }
+
+func seriesBar(symbol, adjustment string, timestamp time.Time) Bar {
+	return Bar{
+		Provider: "alpaca", Symbol: symbol, Timestamp: timestamp, Open: "420", High: "425", Low: "419", Close: "424", Volume: "1000",
+		Currency: "USD", Venue: "iex", Entitlement: "iex", Adjustment: adjustment,
+		AvailableAt: timestamp.Add(time.Minute), RetrievedAt: timestamp.Add(2 * time.Minute),
+		SourceURI: "fixture://alpaca/" + symbol, SourceSHA256: "sha-" + symbol,
+	}
+}
+
+func TestMarketSeriesPreservesSymbolLineageSessionsAndTimezone(t *testing.T) {
+	first := time.Date(2026, 1, 5, 21, 0, 0, 0, time.UTC)
+	second := time.Date(2026, 1, 7, 0, 30, 0, 0, time.UTC)
+	policy := SeriesPolicy{
+		CanonicalSymbol: "META", Aliases: map[string]string{"FB": "META"}, Adjustment: "all",
+		TimeZone: "America/New_York", AsOf: second.Add(time.Hour), MaxAge: 2 * time.Hour,
+		ExpectedSessions: []time.Time{first, second},
+	}
+	receipt, err := ValidateSeries([]Bar{seriesBar("FB", "all", first), seriesBar("META", "all", second)}, policy)
+	if err != nil || !receipt.Passed || len(receipt.ObservedSessions) != 2 || receipt.ObservedSessions[1] != "2026-01-06" {
+		t.Fatalf("series lineage failed: receipt=%+v err=%v", receipt, err)
+	}
+}
+
+func TestMarketSeriesRejectsMissingSessionMixedSplitAdjustmentAndStaleness(t *testing.T) {
+	first := time.Date(2026, 1, 5, 21, 0, 0, 0, time.UTC)
+	second := first.AddDate(0, 0, 1)
+	policy := SeriesPolicy{CanonicalSymbol: "MSFT", Adjustment: "all", TimeZone: "America/New_York", AsOf: second.Add(time.Hour), ExpectedSessions: []time.Time{first, second}}
+	if _, err := ValidateSeries([]Bar{seriesBar("MSFT", "all", first)}, policy); err == nil {
+		t.Fatal("missing expected session was accepted")
+	}
+	if _, err := ValidateSeries([]Bar{seriesBar("MSFT", "raw", first), seriesBar("MSFT", "all", second)}, policy); err == nil {
+		t.Fatal("mixed split-adjustment policy was accepted")
+	}
+	policy.ExpectedSessions = nil
+	policy.MaxAge = 30 * time.Minute
+	if _, err := ValidateSeries([]Bar{seriesBar("MSFT", "all", first)}, policy); err == nil {
+		t.Fatal("stale market series was accepted")
+	}
+}

@@ -65,6 +65,7 @@ func TestCompileRejectsMalformedFutureAndCrossRunPackets(t *testing.T) {
 func TestPrimaryFactRanksBeforeInference(t *testing.T) {
 	now := time.Date(2026, 7, 21, 0, 0, 0, 0, time.UTC)
 	item := packet(now, "packet-1", "Primary fact.", "sha-a")
+	item.Assumptions = []string{"assumption-1"}
 	item.Findings = append([]contracts.Finding{{
 		ClaimID: "inference-1", ClaimType: contracts.ClaimInference, Statement: "Inference.",
 		EvidenceRefs: []string{"evidence-1"}, AssumptionRefs: []string{"assumption-1"}, Confidence: 0.5, ValidAsOf: now,
