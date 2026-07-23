@@ -9,8 +9,10 @@ This directory contains reviewable sources for the SignalForge judge package.
 - `project-specification.md`: human-reviewable project specification source.
 - `demo-script.md`: verified 4 minute 12.9 second final cut sheet mapped to Track 2 evidence.
 - `demo-voiceover.txt`: narration source used by the final local video artifact.
-- `financial-intelligence.md`: private Sprint 16B architecture, numerical authority, verification,
-  and remaining promotion gates.
+- `financial-intelligence.md`: current financial-intelligence architecture, numerical authority,
+  CPU verification, and remaining Radeon evidence gates.
+- `hybrid-vllm-specialists.md`: optional organizer-provided vLLM specialist path, runtime
+  configuration, secret handling, fallback, and proof requirements.
 - `../output/pdf/SignalForge-Project-Specification.pdf`: final six-page project documentation.
 - `../output/presentation/SignalForge-Judge-Deck.pptx`: final six-slide supplemental deck.
 - `../output/video/SignalForge-Radeon-Demo.mp4`: final local H.264/AAC demo video.
@@ -28,7 +30,10 @@ python3 scripts/build_project_spec.py
 The production application does not import ReportLab. Documentation dependencies remain separate
 from the runtime and verification dependency path.
 
-The committed PDF was visually inspected after rendering all six pages with Poppler. It contains
+The committed PDF and deck document the immutable `v1.0.0` evidence baseline; current post-v1
+capabilities are documented in this directory and the repository README until a new judge package
+is deliberately cut. The committed PDF was visually inspected after rendering all six pages with
+Poppler. It contains
 no private prompts, credentials, raw model responses, source bodies, or chain-of-thought.
 
 The PowerPoint deck was rendered through the presentation QA toolchain, visually inspected slide

@@ -7,6 +7,11 @@ cd "$repo_root"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
+if ! python3 -c 'import jsonschema' >/dev/null 2>&1; then
+  echo "Missing verification dependency. Run: python3 -m pip install -r requirements-verify.txt" >&2
+  exit 1
+fi
+
 # Workspace tests exercise the production static bundle. Build it before Go tests so a clean clone
 # never inherits an untracked local web/dist directory as an accidental prerequisite.
 (cd web && npm ci --no-audit --no-fund && npm run test && npm run build)

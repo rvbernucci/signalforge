@@ -47,7 +47,7 @@
       "status": "verified",
       "evidence": [
         {"path":"internal/contextcompiler/compiler.go","sha256":"1703e78163e7f18ca5c2413ef149ec0c7f69db69610e00268b661e2578e77dea"},
-        {"path":"internal/contextcompiler/compiler_test.go","sha256":"d97bb6449e9e3fdf99331c2cd909ad43833441a84e2d60a81424fd26e25dc22b"}
+        {"path":"internal/contextcompiler/compiler_test.go","sha256":"900399f4f8b4d8f7e59418d6f24bb252391eaba56e5907a6b0dc977c311a6e6f"}
       ],
       "public_files": ["README.md"]
     },
@@ -138,8 +138,8 @@
       "evidence": [
         {"path":"evidence/workspace-evaluation.json","sha256":"5b53dfcf634d2988a785a53a3629b0bf66ed1bd921dfe78019ea0ce91d5aaf9a"},
         {"path":"fixtures/workspace/golden-case.json","sha256":"3f7bd7a15152492a2f1a56043fc3f966f40915ef46f8fd05f129b910c266ae6f"},
-        {"path":"internal/workspace/server.go","sha256":"76c338e3fa1d8ad204166c0aabde97ec8f78a0ac084695a4c000cc07fa5f54fc"},
-        {"path":"web/src/App.tsx","sha256":"fb5edb8cbdd96f87b2e0fdb6b385311082667452665213fedd0d669c7a795a75"}
+        {"path":"internal/workspace/server.go","sha256":"62c71bc0dea0ee654bc652f02d9d51ef5b3362df5b916fd3db15a72684d16626"},
+        {"path":"web/src/App.tsx","sha256":"0b579e28660809a96a603a3260815d2ed10fa50ee2c315d6519a75b963d137f2"}
       ],
       "public_files": ["README.md"]
     },
@@ -161,7 +161,7 @@
       "text": "The frozen Sprint 12 matrix executed 26 adversarial cases through 11 repository gates; all 22 critical and four high-severity cases passed their bounded controls with zero current release blockers and explicit residual risks.",
       "status": "measured",
       "evidence": [
-        {"path":"evidence/hardening-matrix.json","sha256":"034159d854e86e0923761e6ab38ffeaf9cc45e17379e808b53d098e0cac3099e"},
+        {"path":"evidence/hardening-matrix.json","sha256":"475bfa3b623856d2b6d79e0ec3163fb9fd0e6280738b546f68b2587d30f6c82c"},
         {"path":"configs/hardening/sprint12-matrix-v1.json","sha256":"798bcae6ad877e3db479073fd29f527a8cf510fa5f93d7ff2a35fbcb4e04d21a"},
         {"path":"internal/localagent/untrusted_content.go","sha256":"e1774ec6de440c5517e50669880d4e0c8e733ff319182dc4d192d5fba8e73ff1"},
         {"path":"internal/localagent/synthesis.go","sha256":"384f43d2d7ee7f4bb5487162149ee00f40aa05cac22826d52987b91bb4d47c89"},
@@ -194,8 +194,8 @@
         {"path":"internal/casestore/store_test.go","sha256":"571920e867a8d4d5db36afa63f334b577dca4cec4aba94e9f0fd33a91743c60f"},
         {"path":"internal/permissions/policy.go","sha256":"b6826aace77089b5c740d3a173d22986b04d0c0fbf585a4f26ce89c90d746d64"},
         {"path":"internal/resilience/breaker.go","sha256":"bbfaea25605a0391b59d878918be9319547c3ecdc2df3bc7b9801f08224fc8f3"},
-        {"path":"internal/workspace/server_test.go","sha256":"5d4dedc0af2ad25fad57a3872112eea3f4da1a5c64989c566a95599851748426"},
-        {"path":"web/src/components/CaseLibrary.tsx","sha256":"da5167a74c71a411fd5712eeaf86d28fd8d46756dc439032d6567960f405bd94"}
+        {"path":"internal/workspace/server_test.go","sha256":"86f1f7d2e664a75347c027ddcbe1fa28c8cc0babf3e3218fd303f29b409930d3"},
+        {"path":"web/src/components/CaseLibrary.tsx","sha256":"e74d8a326bb7fb71df1aaa487d0500f604df0cb177b1121ab831ee225e82f9c2"}
       ],
       "public_files": ["README.md"]
     }

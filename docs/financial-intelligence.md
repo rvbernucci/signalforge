@@ -1,7 +1,7 @@
-# Private Sprint 16B Financial Intelligence
+# Financial Intelligence Runtime
 
-Status: implemented and verified on CPU in the private Sprint 16B branch  
-Promotion: not authorized  
+Status: integrated on `main` and verified on CPU  
+Baseline: `v1.0.0` remains immutable  
 Radeon journey evidence: not yet collected
 
 ## Purpose
@@ -11,8 +11,9 @@ operations. The extension turns point-in-time reported facts into inspectable ca
 return, quality, capital-allocation, valuation, peer, and association evidence without delegating
 arithmetic or numerical authorship to a language model.
 
-The public `v1.0.0` release is unchanged. This document describes only
-`exp/sprint16b-financial-intelligence`.
+The `v1.0.0` tag is unchanged and remains the reproducible hackathon baseline. The current
+mainline integrates this extension without rewriting the historical Tier 0 identity or its
+evidence.
 
 ## Runtime Boundary
 
@@ -40,7 +41,7 @@ deterministic reference renderer
 ```
 
 `Tier0Registry()` remains the frozen 28-operation surface. `FinancialIntelligenceRegistry()` owns
-the 34 private additions. `RuntimeRegistry()` composes both without changing the historical Tier 0
+the 34 post-v1 additions. `RuntimeRegistry()` composes both without changing the historical Tier 0
 identity.
 
 ## Added Capability Groups
@@ -85,7 +86,7 @@ or introduce an authoritative number.
 
 ## Fail-Closed Behavior
 
-The private runtime rejects unsupported operations, roles, inputs, units, currencies, periods,
+The runtime rejects unsupported operations, roles, inputs, units, currencies, periods,
 future evidence, formula versions, invalid denominators, inapplicable company profiles, unresolved
 reconciliations, non-convergent reverse valuations, small peer samples, zero-variance regressions,
 and value-level mismatches.
@@ -95,15 +96,19 @@ structurally misleading. Sector-specific models require separate reviewed defini
 
 ## Verification
 
-The private audit is reproducible from the Sprint root:
+The financial-intelligence checks are reproducible from the repository root:
 
 ```bash
-python3 tools/audit_financial_intelligence.py
+go test ./internal/capability ./internal/engine ./internal/finance \
+  ./internal/financialintelligence ./internal/financialperiod ./internal/metricregistry
+python3 scripts/reference_finance.py
+go run ./cmd/signalforge-export-metric-registry >/tmp/signalforge-metric-registry.json
 ```
 
-It verifies the immutable public boundary, exports all 62 canonical definitions, confirms the 34
-operation extension, runs the focused Go suite, runs five CPU benchmarks, and checks 12 complex
-methods through an independent Python implementation.
+The complete `scripts/verify.sh` gate additionally validates the immutable evidence baseline,
+exports all 62 canonical definitions through tests, confirms the 34-operation extension, runs the
+full race-enabled Go suite, and checks complex methods through an independent Python
+implementation.
 
 Property and metamorphic tests cover beta leverage round trips, DCF monotonicity, capital-allocation
 conservation, invalid rates and denominators, TTM look-ahead, common-size period compatibility, and
@@ -114,7 +119,7 @@ immutable canonical registry reduced packet construction from approximately 582 
 allocations to 6.3 KB and 59 allocations on the development Mac. These are CPU development results,
 not Radeon claims.
 
-## Remaining Promotion Gates
+## Remaining Evidence Gates
 
 - Freeze and execute a separate financial-intelligence holdout without tuning against it.
 - Run complete Accounting, Financial Quality, Valuation, Economics, Market Behavior, critic, and
@@ -123,7 +128,7 @@ not Radeon claims.
   success separately.
 - Add product-facing comparison, valuation, capital-allocation, missing-data, and not-applicable
   golden journeys.
-- Record SG-08 before proposing a reviewed release newer than `v1.0.0`.
+- Record the Radeon evidence decision before cutting a reviewed release newer than `v1.0.0`.
 
-Until those gates pass, this work is a verified private CPU implementation, not a public product or
-Radeon performance claim.
+Until those gates pass, this work is a public, verified CPU implementation, not a Radeon
+performance or independent model-quality claim.

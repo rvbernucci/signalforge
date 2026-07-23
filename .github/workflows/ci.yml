@@ -31,5 +31,15 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-verify.txt
+
+      - name: Install verification dependencies
+        run: python3 -m pip install --requirement requirements-verify.txt
+
       - name: Verify repository and evidence
         run: scripts/verify.sh

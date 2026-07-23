@@ -1,6 +1,6 @@
 # Hybrid vLLM Specialist Runtime
 
-This private experimental path preserves SignalForge's local Radeon control plane while routing
+This optional runtime path preserves SignalForge's local Radeon control plane while routing
 the bounded context-specialist wave through the organizer-provided Radeon Cloud vLLM Model API.
 
 ## Runtime Split
@@ -83,4 +83,3 @@ Every model call records the provider ID, model ID, role ID, start time, latency
 finish reason, and failure state. The API key and raw private prompts or responses are excluded.
 The bonus is considered demonstrated only when at least one successful `radeon-vllm` specialist
 call participates in a complete accepted product journey.
-

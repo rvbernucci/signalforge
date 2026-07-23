@@ -38,7 +38,8 @@ go run ./cmd/signalforge-workspace --mode fixture --static-dir web/dist
 ```
 
 Open `http://127.0.0.1:8080`. Run `scripts/verify.sh` to execute the complete repository, evidence,
-frontend, and clean-output contract suite. Live Radeon inference is documented under
+frontend, and clean-output contract suite after installing its small Python dependency with
+`python3 -m pip install -r requirements-verify.txt`. Live Radeon inference is documented under
 [Reproduce The Selected Radeon Runtime](#reproduce-the-selected-radeon-runtime).
 
 ## Project Documentation
@@ -56,14 +57,11 @@ frontend, and clean-output contract suite. Live Radeon inference is documented u
 
 ## Status
 
-Foundation under active development. The repository currently includes:
-
-> Private branch note: `exp/sprint16b-financial-intelligence` adds a governed 34-operation
-> financial-intelligence registry, typed period/sign normalization, advanced cash-generation,
-> return, quality, capital-allocation, valuation, peer, and association engines, plus a
-> numerically silent `FinancialIntelligencePacket`. This extension is not part of public
-> `v1.0.0` and has no promotion approval. See
-> [Private Sprint 16B Financial Intelligence](docs/financial-intelligence.md).
+Foundation under active development. Tag `v1.0.0` remains the immutable, independently
+reproducible hackathon baseline. The current `main` line integrates the post-v1 financial
+intelligence, investor-relations evidence, validation, lineage, and optional hybrid specialist
+work in one reviewable history. New capabilities are not represented as Radeon performance or
+model-quality claims until their dedicated evidence gates pass.
 
 - versioned Go contracts for specialist context, deterministic engine requests and receipts, and evaluation evidence;
 - fail-closed validation for unsupported facts, unproven numerical inputs, and failed invariants;
@@ -75,6 +73,9 @@ Foundation under active development. The repository currently includes:
   JSONL derivation, and DuckDB/Parquet export;
 - a 28-operation Tier 0 capability registry with role-based, fail-closed permissions;
   <!-- evidence-claim:tier0-golden-coverage -->
+- a separate 34-operation financial-intelligence registry, composed with Tier 0 at runtime without
+  changing its frozen identity, plus 62 canonical metric definitions, typed period/sign
+  normalization, independent numerical references, and numerically silent model packets;
 - an immutable registry for 11 logical roles with artifact, tool, retry, timeout, and memory authority;
 - a versioned eight-intent taxonomy with 24 frozen routing cases;
 - typed research, planning, evidence, critique, final-answer, memory, and failure contracts;
@@ -99,6 +100,9 @@ Foundation under active development. The repository currently includes:
   <!-- evidence-claim:context-compiler -->
 - a bounded Microsoft/NVIDIA investor-relations source map with authority, temporal, rights, and
   supersession gates, plus a seven-document hash-addressed golden manifest;
+- a governed 20-company US technology investor-relations registry, official-source discovery and
+  collection tooling, immutable lineage, rights quarantine, narrative projection, chunking,
+  retrieval evaluation, and a citation-resolving Go query boundary;
 - a 17-question retrieval evaluation over 25 regulatory and investor-relations chunks; BM25 with
   financial-concept expansion returned the complete labeled evidence set for every frozen question;
   <!-- evidence-claim:retrieval-foundation -->
@@ -109,6 +113,12 @@ Foundation under active development. The repository currently includes:
 - one golden case for each of 28 Tier 0 operations and five independent Python reference checks;
 - a role-authorized executor for all 28 Tier 0 operations, immutable calculation receipts,
   replay verification, and append-only supersession records;
+- deterministic financial-intelligence engines for cash generation, returns, quality, capital
+  allocation, valuation, peer analysis, and non-causal association, with fail-closed domain,
+  period, denominator, and applicability controls;
+- an optional hybrid runtime that keeps planning, numerical authority, review, rendering, and
+  fallback under SignalForge control while sending only the bounded context-specialist wave to a
+  runtime-configured Radeon Cloud vLLM endpoint;
 - automated tests covering architecture, authority, evidence, and numerical validation.
 
 The production SEC path retrieves root and historical Submissions, bounded primary filing
@@ -325,7 +335,7 @@ ssh -L 8080:127.0.0.1:8080 user@radeon-host
 | --- | --- | --- |
 | Go control plane | Go 1.23 or newer | `go.mod` and `go.sum` |
 | Web workspace | Node.js 22 and npm | exact `web/package.json` versions plus `web/package-lock.json`; use `npm ci` |
-| Verification scripts | Python 3.10 or newer, Git, and `jq` | Python standard library unless an optional requirements file is named |
+| Verification scripts | Python 3.10 or newer, Git, and `jq` | `requirements-verify.txt` |
 | SEC analytical export | Python plus DuckDB | `requirements-analytics.txt` |
 | Retrieval experiments | Python, sentence-transformers, and Qdrant client | `requirements-retrieval.txt`; not required for fixture startup |
 | Judge-document rebuild | Python plus ReportLab | `requirements-docs.txt`; generated PDF is already included |
@@ -340,6 +350,13 @@ scripts/verify.sh
 go run ./cmd/signalforge-diag --output environment-report.json
 python3 scripts/audit_public_repo.py --output /tmp/signalforge-release-audit.json
 ```
+
+The optional hybrid specialist path is disabled by default. When enabled, its provider, endpoint,
+model IDs, timeout, and secret location are runtime inputs; no API credential is embedded in the
+repository or binary. See
+[`docs/hybrid-vllm-specialists.md`](docs/hybrid-vllm-specialists.md) for its trust boundary,
+OpenBao-compatible secret mount, local fallback, and evidence requirements. A successful complete
+journey through the organizer-provided endpoint is still required before claiming the vLLM bonus.
 
 The diagnostic records hardware and runtime capabilities when available. Missing optional ROCm
 commands are reported as unavailable rather than causing the diagnostic to fail. It never reads or
@@ -429,11 +446,17 @@ Model access remains subject to the upstream license and any Hugging Face access
 
 ## Deterministic Financial Engine
 
-The Go engine executes the complete 28-operation Tier 0 registry with decimal authority for
-financial arithmetic and declared `float64` policies for statistical methods. It refuses
+The Go engine preserves the complete 28-operation Tier 0 registry and composes it with a separate
+34-operation financial-intelligence registry. Decimal arithmetic remains authoritative for
+financial calculations, with declared `float64` policies limited to statistical methods. It refuses
 unauthorized roles, unregistered inputs, future evidence, incompatible units, currencies, or
 periods, failed invariants, and non-convergent solves. Receipts are canonical-hash verified;
 corrections create append-only supersession records instead of mutating prior calculations.
+
+The extended registry covers cash generation, returns, financial quality, capital allocation,
+valuation, peer comparison, and lagged association. Its architecture, numerical boundary, and
+remaining Radeon evidence gates are documented in
+[`docs/financial-intelligence.md`](docs/financial-intelligence.md).
 
 A dated `darwin/arm64` development-machine benchmark measured p95 latency of 42.71 microseconds
 for a five-year FCFF DCF, 1.45 milliseconds for reverse DCF, 87.21 microseconds for beta over

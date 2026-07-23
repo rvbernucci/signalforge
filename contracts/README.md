@@ -1,6 +1,6 @@
 # SignalForge Contracts
 
-Sprint 16B adds two private, versioned contracts:
+The current mainline adds two versioned financial-intelligence contracts:
 
 - `metric-registry.schema.json` governs canonical financial definitions, formula ownership,
   periods, applicability, authority, and failure dispositions.
@@ -20,6 +20,10 @@ allowlisted domains, document class, authority tier, timestamps, content identit
 and supersession before narrative material can enter retrieval. The bounded golden corpus is
 portable through `investor-relations-document-manifest.schema.json`; raw issuer files stay outside
 Git while their immutable identities remain testable.
+
+The 20-company pipeline uses the newer `ir-source-registry-v2.schema.json`,
+`ir-document-v2.schema.json`, and `ir-run-manifest-v2.schema.json` contracts for discovery,
+collection, transformation, lineage, rights quarantine, and reproducible run identity.
 
 SignalForge agents, engines, and evidence tooling communicate through versioned JSON contracts.
 The canonical Go types and fail-closed validation rules currently live in
