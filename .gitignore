@@ -71,6 +71,9 @@ evidence/runs/sprint13/*
 evidence/local/
 models/
 var/
+raw/
+vectors/
+extracted/
 *.duckdb
 *.parquet
 

@@ -78,3 +78,63 @@ func TestCitationOpenTargetIsAllowlistedAndPointInTime(t *testing.T) {
 		t.Fatal("untrusted citation host must fail closed")
 	}
 }
+
+func TestCitationHostsCanBeInjectedWithoutBroadeningTheDefault(t *testing.T) {
+	now := time.Now().UTC()
+	chunk := fixtureChunk("apple-ir", "sec-cik:0000320193", "Strategy", "Official investor evidence.", now)
+	chunk.EvidenceType = "investor_relations"
+	chunk.FilingID = ""
+	chunk.AccessionNumber = ""
+	chunk.FormType = ""
+	chunk.DocumentType = "official_strategy_or_risk_update"
+	chunk.AuthorityTier = "C"
+	chunk.Audited = false
+	chunk.FiledWithSEC = false
+	chunk.SourceURI = "https://investor.apple.com/investor-relations/default.aspx"
+	resolver, err := NewResolverWithAllowedHosts([]Chunk{chunk}, []string{"investor.apple.com"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := resolver.OpenTarget(chunk.ChunkID, now.Unix()); err != nil {
+		t.Fatalf("issuer-specific host should resolve: %v", err)
+	}
+	if _, err := NewResolverWithAllowedHosts([]Chunk{chunk}, []string{"apple.com.attacker.test/path"}); err == nil {
+		t.Fatal("host definitions with path syntax must fail closed")
+	}
+}
+
+func TestCitationSharedHostIsBoundToIssuerPrefix(t *testing.T) {
+	now := time.Now().UTC()
+	chunk := fixtureChunk("amd-deck", "sec-cik:0000002488", "Strategy", "Official investor evidence.", now)
+	chunk.EvidenceType = "investor_relations"
+	chunk.FilingID = ""
+	chunk.AccessionNumber = ""
+	chunk.FormType = ""
+	chunk.DocumentType = "investor_presentation"
+	chunk.AuthorityTier = "C"
+	chunk.SourceURI = "https://d1io3yog0oux5.cloudfront.net/_cece5bf914638d0ab16f558d26342d35/amd/deck.pdf"
+	resolver, err := NewResolverWithPolicy(
+		[]Chunk{chunk},
+		[]string{"d1io3yog0oux5.cloudfront.net"},
+		map[string][]string{"d1io3yog0oux5.cloudfront.net": {"https://d1io3yog0oux5.cloudfront.net/_cece5bf914638d0ab16f558d26342d35/amd/"}},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := resolver.OpenTarget(chunk.ChunkID, now.Unix()); err != nil {
+		t.Fatalf("issuer-owned path should resolve: %v", err)
+	}
+
+	chunk.SourceURI = "https://d1io3yog0oux5.cloudfront.net/_3db86d29d2361a15e461e3b4de61f31a/intel/deck.pdf"
+	otherIssuer, err := NewResolverWithPolicy(
+		[]Chunk{chunk},
+		[]string{"d1io3yog0oux5.cloudfront.net"},
+		map[string][]string{"d1io3yog0oux5.cloudfront.net": {"https://d1io3yog0oux5.cloudfront.net/_cece5bf914638d0ab16f558d26342d35/amd/"}},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := otherIssuer.OpenTarget(chunk.ChunkID, now.Unix()); err == nil {
+		t.Fatal("another issuer path on the shared host must fail closed")
+	}
+}

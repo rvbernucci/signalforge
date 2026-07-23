@@ -132,7 +132,7 @@ func cloneRole(role Role) Role {
 }
 
 func defaultRoles() []Role {
-	primary := []string{"sec_filing", "sec_xbrl", "official_macro", "licensed_market", "calculation_receipt"}
+	primary := []string{"sec_filing", "sec_xbrl", "official_investor_relations", "official_macro", "licensed_market", "calculation_receipt"}
 	context := func(id, mission string, triggers, anti, tools []string) Role {
 		return Role{
 			ID: id, Class: ClassContext, Mission: mission, Triggers: triggers, AntiTriggers: anti,
