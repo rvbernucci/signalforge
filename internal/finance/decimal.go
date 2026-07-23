@@ -103,3 +103,14 @@ func ratio(numerator, denominator numeric.Decimal) (numeric.Decimal, error) {
 	}
 	return divide(numerator, denominator)
 }
+
+// AbsoluteDecimal and DecimalLessThanOrEqual expose comparison primitives to
+// the deterministic dispatcher without leaking the underlying decimal type.
+func AbsoluteDecimal(value numeric.Decimal) (numeric.Decimal, error) {
+	return absolute(value)
+}
+
+func DecimalLessThanOrEqual(left, right numeric.Decimal) (bool, error) {
+	order, err := compare(left, right)
+	return order <= 0, err
+}

@@ -46,6 +46,65 @@ func tier0Operations() []Operation {
 	}
 }
 
+func FinancialIntelligenceRegistry() Registry {
+	registry, err := NewRegistry(financialIntelligenceOperations())
+	if err != nil {
+		panic(err)
+	}
+	return registry
+}
+
+func RuntimeRegistry() Registry {
+	operations := append(tier0Operations(), financialIntelligenceOperations()...)
+	registry, err := NewRegistry(operations)
+	if err != nil {
+		panic(err)
+	}
+	return registry
+}
+
+func financialIntelligenceOperations() []Operation {
+	financialRoles := []string{roles.AccountingReporting, roles.FinancialQuality, roles.Valuation, roles.EvidenceCritic}
+	valuationRoles := []string{roles.Valuation, roles.EvidenceCritic}
+	marketRoles := []string{roles.MarketBehavior, roles.EconomicsTransmission, roles.EvidenceCritic}
+	return []Operation{
+		op("financial.nopat", "financial", "Calculate after-tax operating profit from an explicit tax rate.", "money-decimal/v1", []string{"operating_income", "tax_rate"}, []string{"nopat"}, financialRoles, true),
+		op("financial.invested_capital", "financial", "Reconcile operating and financing definitions of invested capital.", "mixed-numeric/v1", []string{"operating_assets", "non_interest_bearing_operating_liabilities", "debt", "equity", "cash_and_equivalents", "non_operating_assets"}, []string{"operating_approach", "financing_approach", "difference"}, financialRoles, false),
+		op("financial.average_invested_capital", "financial", "Calculate average invested capital from beginning and ending balances.", "money-decimal/v1", []string{"invested_capital_beginning", "invested_capital_ending"}, []string{"average_invested_capital"}, financialRoles, false),
+		op("financial.operating_working_capital", "financial", "Calculate operating working capital from registered operating components.", "money-decimal/v1", []string{"accounts_receivable", "inventory", "other_operating_current_assets", "accounts_payable", "other_operating_current_liabilities"}, []string{"operating_working_capital"}, financialRoles, false),
+		op("financial.change_in_working_capital", "financial", "Calculate the period change in operating working capital.", "money-decimal/v1", []string{"operating_working_capital_ending", "operating_working_capital_beginning"}, []string{"change_in_working_capital"}, financialRoles, false),
+		op("financial.net_capex", "financial", "Calculate net capital expenditure after depreciation and amortization.", "money-decimal/v1", []string{"capital_expenditure", "depreciation_and_amortization"}, []string{"net_capex"}, financialRoles, false),
+		op("financial.reinvestment", "financial", "Calculate reinvestment from net capex, working-capital change, and acquisitions.", "money-decimal/v1", []string{"net_capex", "change_in_working_capital", "acquisitions"}, []string{"reinvestment"}, financialRoles, false),
+		op("financial.fcff_from_nopat", "financial", "Calculate free cash flow to the firm from NOPAT and reinvestment.", "money-decimal/v1", []string{"nopat", "reinvestment"}, []string{"fcff"}, financialRoles, false),
+		op("financial.fcfe", "financial", "Calculate free cash flow to equity from earnings, reinvestment, and borrowing.", "money-decimal/v1", []string{"net_income", "capital_expenditure", "depreciation_and_amortization", "change_in_working_capital", "net_borrowing"}, []string{"fcfe"}, financialRoles, false),
+		op("financial.roic", "financial", "Calculate governed return on invested capital.", "ratio-decimal/v1", []string{"nopat", "average_invested_capital"}, []string{"roic"}, financialRoles, false),
+		op("financial.incremental_roic", "financial", "Calculate incremental return on newly invested capital.", "ratio-decimal/v1", []string{"change_in_nopat", "change_in_invested_capital"}, []string{"incremental_roic"}, financialRoles, false),
+		op("financial.value_creation_spread", "financial", "Calculate ROIC less WACC under aligned definitions.", "ratio-decimal/v1", []string{"roic", "wacc"}, []string{"value_creation_spread"}, financialRoles, false),
+		op("financial.reinvestment_rate", "financial", "Calculate reinvestment relative to positive NOPAT.", "ratio-decimal/v1", []string{"reinvestment", "nopat"}, []string{"reinvestment_rate"}, financialRoles, false),
+		op("financial.fundamental_growth", "financial", "Calculate fundamental growth from return on capital and reinvestment rate.", "ratio-decimal/v1", []string{"return_on_capital", "reinvestment_rate"}, []string{"fundamental_growth"}, financialRoles, true),
+		op("financial.operating_margin", "financial", "Calculate typed operating margin.", "ratio-decimal/v1", []string{"operating_income", "revenue"}, []string{"operating_margin"}, financialRoles, false),
+		op("financial.incremental_margin", "financial", "Calculate incremental operating margin across aligned periods.", "ratio-decimal/v1", []string{"operating_income_current", "operating_income_prior", "revenue_current", "revenue_prior"}, []string{"incremental_margin"}, financialRoles, false),
+		op("financial.accrual_intensity", "financial", "Calculate accrual intensity relative to average assets.", "ratio-decimal/v1", []string{"net_income", "operating_cash_flow", "average_assets"}, []string{"accrual_intensity"}, financialRoles, false),
+		op("financial.cash_conversion_cycle", "financial", "Calculate the cash conversion cycle from DSO, DIO, and DPO.", "mixed-numeric/v1", []string{"days_sales_outstanding", "days_inventory_outstanding", "days_payables_outstanding"}, []string{"cash_conversion_cycle"}, financialRoles, false),
+		op("financial.quick_ratio", "financial", "Calculate liquid current assets relative to current liabilities.", "ratio-decimal/v1", []string{"cash_and_equivalents", "marketable_securities", "accounts_receivable", "current_liabilities"}, []string{"quick_ratio"}, financialRoles, false),
+		op("financial.interest_coverage", "financial", "Calculate EBIT coverage of positive interest expense.", "ratio-decimal/v1", []string{"ebit", "interest_expense"}, []string{"interest_coverage"}, financialRoles, false),
+		op("financial.net_debt_to_ebitda", "financial", "Calculate net debt relative to positive EBITDA.", "ratio-decimal/v1", []string{"net_debt", "ebitda"}, []string{"net_debt_to_ebitda"}, financialRoles, false),
+		op("financial.shareholder_yield", "financial", "Calculate dividends, net repurchases, and net debt reduction relative to market capitalization.", "ratio-decimal/v1", []string{"net_repurchases", "dividends_paid", "net_debt_reduction", "market_capitalization"}, []string{"shareholder_yield"}, financialRoles, false),
+		op("financial.capital_allocation_bridge", "financial", "Reconcile cash sources, capital uses, and the reported change in cash.", "mixed-numeric/v1", []string{"operating_cash_flow", "debt_issuance", "equity_issuance", "asset_sales", "capital_expenditure", "acquisitions", "debt_repayment", "dividends", "repurchases", "reported_change_in_cash", "tolerance"}, []string{"total_sources", "total_uses", "implied_change_in_cash", "reconciliation_gap", "within_tolerance"}, financialRoles, false),
+		op("valuation.capm", "valuation", "Calculate cost of equity from risk-free rate, beta, and equity risk premium.", "ratio-decimal/v1", []string{"risk_free_rate", "beta", "equity_risk_premium"}, []string{"cost_of_equity"}, valuationRoles, true),
+		op("valuation.unlever_beta", "valuation", "Remove the registered debt and tax effect from levered beta.", "ratio-decimal/v1", []string{"levered_beta", "debt", "equity", "tax_rate"}, []string{"unlevered_beta"}, valuationRoles, true),
+		op("valuation.relever_beta", "valuation", "Apply the registered debt and tax effect to unlevered beta.", "ratio-decimal/v1", []string{"unlevered_beta", "debt", "equity", "tax_rate"}, []string{"relevered_beta"}, valuationRoles, true),
+		op("valuation.multistage_dcf_perpetuity", "valuation", "Calculate multi-stage DCF using a perpetuity-growth terminal value.", "mixed-numeric/v1", []string{"fcff_forecast", "discount_rate", "terminal_growth", "mid_year"}, []string{"enterprise_value", "explicit_present_value", "terminal_value", "terminal_present_value", "terminal_value_share"}, valuationRoles, true),
+		op("valuation.multistage_dcf_exit", "valuation", "Calculate multi-stage DCF using an exit-multiple terminal value.", "mixed-numeric/v1", []string{"fcff_forecast", "discount_rate", "exit_metric", "exit_multiple", "mid_year"}, []string{"enterprise_value", "explicit_present_value", "terminal_value", "terminal_present_value", "terminal_value_share"}, valuationRoles, true),
+		op("valuation.reverse_revenue_growth", "valuation", "Solve the revenue growth implied by enterprise value under explicit operating assumptions.", "mixed-numeric/v1", []string{"enterprise_value", "base_revenue", "operating_margin", "tax_rate", "reinvestment_rate", "discount_rate", "terminal_growth", "years"}, []string{"implied_revenue_growth", "iterations"}, valuationRoles, true),
+		op("valuation.ev_to_ebitda", "valuation", "Calculate enterprise value to positive EBITDA.", "ratio-decimal/v1", []string{"enterprise_value", "ebitda"}, []string{"ev_to_ebitda"}, valuationRoles, false),
+		op("valuation.price_to_earnings", "valuation", "Calculate equity market value to positive net income.", "ratio-decimal/v1", []string{"equity_market_value", "net_income"}, []string{"price_to_earnings"}, valuationRoles, false),
+		op("comparison.dupont", "comparison", "Decompose return on equity into margin, turnover, and leverage.", "mixed-numeric/v1", []string{"net_income", "revenue", "average_assets", "average_equity"}, []string{"net_margin", "asset_turnover", "financial_leverage", "return_on_equity"}, financialRoles, false),
+		op("comparison.peer_statistics", "comparison", "Calculate robust peer context for a subject multiple.", "statistics-float64/v1", []string{"peer_values", "subject_value", "minimum_sample"}, []string{"median", "percentile", "median_absolute_deviation", "robust_z_score", "observations"}, valuationRoles, false),
+		op("economics.lagged_association", "economics", "Estimate a lagged linear association without causal attribution.", "statistics-float64/v1", []string{"driver_series", "outcome_series", "lag", "minimum_sample"}, []string{"slope", "intercept", "correlation", "r_squared", "observations", "lag"}, marketRoles, false),
+	}
+}
+
 func op(id, engine, description, policy string, inputs, outputs, roles []string, assumptions bool) Operation {
 	return Operation{
 		ID: id, Engine: engine, FormulaVersion: "1.0.0", Description: description,

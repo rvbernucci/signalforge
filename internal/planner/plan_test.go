@@ -125,6 +125,16 @@ func TestMaterialSecondaryIntentAddsIndependentContrarianReview(t *testing.T) {
 	if !reviewers[roles.EvidenceCritic] || !reviewers[roles.RiskContrarian] {
 		t.Fatalf("material secondary intent requires both independent reviewers: %+v", reviewers)
 	}
+	reviewOrder := []string{}
+	for _, step := range plan.Steps {
+		if step.Kind == "review" {
+			reviewOrder = append(reviewOrder, step.RoleID)
+		}
+	}
+	if len(reviewOrder) != 2 || reviewOrder[0] != roles.RiskContrarian ||
+		reviewOrder[1] != roles.EvidenceCritic {
+		t.Fatalf("risk must challenge before the evidence release gate: %+v", reviewOrder)
+	}
 }
 
 func TestGoldenComparisonUsesTwoBoundedContextWaves(t *testing.T) {

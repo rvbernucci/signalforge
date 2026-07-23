@@ -58,6 +58,13 @@ frontend, and clean-output contract suite. Live Radeon inference is documented u
 
 Foundation under active development. The repository currently includes:
 
+> Private branch note: `exp/sprint16b-financial-intelligence` adds a governed 34-operation
+> financial-intelligence registry, typed period/sign normalization, advanced cash-generation,
+> return, quality, capital-allocation, valuation, peer, and association engines, plus a
+> numerically silent `FinancialIntelligencePacket`. This extension is not part of public
+> `v1.0.0` and has no promotion approval. See
+> [Private Sprint 16B Financial Intelligence](docs/financial-intelligence.md).
+
 - versioned Go contracts for specialist context, deterministic engine requests and receipts, and evaluation evidence;
 - fail-closed validation for unsupported facts, unproven numerical inputs, and failed invariants;
 - a secret-safe environment diagnostic for reproducible Radeon/ROCm evidence;

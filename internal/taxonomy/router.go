@@ -11,6 +11,7 @@ type Route struct {
 	PrimaryIntent  Intent   `json:"primary_intent"`
 	ContextRoles   []string `json:"context_roles"`
 	ReviewRoles    []string `json:"review_roles"`
+	PolicyCodes    []string `json:"policy_codes"`
 	ClarifyFirst   bool     `json:"clarify_first"`
 	AdviceBoundary bool     `json:"advice_boundary"`
 }
@@ -44,29 +45,21 @@ func MinimalRoute(intent Intent, materialDecision bool) (Route, error) {
 	if err := ValidateIntent(intent); err != nil {
 		return Route{}, err
 	}
-	result := Route{PrimaryIntent: intent, ReviewRoles: []string{roles.EvidenceCritic}}
-	switch intent {
-	case CompanyUnderstanding:
-		result.ContextRoles = []string{roles.BusinessStrategy}
-	case FinancialQuality:
-		result.ContextRoles = []string{roles.FinancialQuality, roles.AccountingReporting}
-	case EconomicTransmission:
-		result.ContextRoles = []string{roles.EconomicsTransmission, roles.BusinessStrategy}
-	case Valuation:
-		result.ContextRoles = []string{roles.Valuation, roles.FinancialQuality}
-	case CompanyComparison:
-		result.ContextRoles = []string{roles.BusinessStrategy, roles.FinancialQuality}
-	case ConceptEducation:
-		result.ContextRoles = []string{roles.AccountingReporting}
-	case MarketBehavior:
-		result.ContextRoles = []string{roles.MarketBehavior}
-	case ThesisReview:
-		result.ContextRoles = []string{roles.BusinessStrategy}
-		result.ReviewRoles = appendUnique(result.ReviewRoles, roles.RiskContrarian)
+	policy, exists := PolicyFor(intent)
+	if !exists {
+		return Route{}, fmt.Errorf("no versioned route policy for %q", intent)
 	}
-	if materialDecision && intent != ThesisReview {
+	result := Route{
+		PrimaryIntent: intent, ContextRoles: policy.ContextRoles,
+		PolicyCodes: []string{policy.SelectionCode},
+	}
+	if materialDecision || intent == ThesisReview {
 		result.ReviewRoles = append(result.ReviewRoles, roles.RiskContrarian)
+		result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_RISK_REVIEW")
 	}
+	result.ReviewRoles = append(result.ReviewRoles, roles.EvidenceCritic)
+	result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_EVIDENCE_RELEASE_GATE")
+	result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_SINGLE_SYNTHESIS")
 	return result, nil
 }
 
@@ -85,21 +78,27 @@ func Plan(question string, intent Intent, materialDecision bool) (Route, error) 
 		"guarantee", "must buy", "tell me to sell", "invest all my savings")
 	if intent == CompanyComparison && containsAny(text, "balance sheet", "same fiscal periods", "same definitions") {
 		result.ContextRoles = appendUnique(result.ContextRoles, roles.AccountingReporting)
+		result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_ACCOUNTING_COMPARABILITY")
 	}
 	if intent == CompanyComparison && containsAny(text, "higher-for-longer", "interest rates", "economic") {
 		result.ContextRoles = appendUnique(result.ContextRoles, roles.EconomicsTransmission)
+		result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_MACRO_TRANSMISSION")
 	}
 	if intent == CompanyComparison && containsAny(text, "valuation", "market price", "market prices", "dcf", "multiples") {
 		result.ContextRoles = appendUnique(result.ContextRoles, roles.Valuation)
+		result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_VALUATION_RECEIPTS")
 	}
 	if intent == CompanyComparison && containsAny(text, "market behavior", "share price", "market price", "market prices") {
 		result.ContextRoles = appendUnique(result.ContextRoles, roles.MarketBehavior)
+		result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_MARKET_CONTEXT")
 	}
 	if intent == CompanyComparison && containsAny(text, "slower ai infrastructure", "accounting", "reported", "fiscal") {
 		result.ContextRoles = appendUnique(result.ContextRoles, roles.AccountingReporting)
+		result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_ACCOUNTING_COMPARABILITY")
 	}
 	if intent == ThesisReview && containsAny(text, "10-q", "10-k", "reported", "filing") {
 		result.ContextRoles = appendUnique(result.ContextRoles, roles.AccountingReporting)
+		result.PolicyCodes = appendUnique(result.PolicyCodes, "PLAN_ACCOUNTING_COMPARABILITY")
 	}
 	return result, nil
 }

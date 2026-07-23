@@ -153,11 +153,27 @@ func methodForOperation(operationID string) (contracts.NormalizationMethod, bool
 		return contracts.NormalizationCommonSize, true
 	case "financial.free_cash_flow", "financial.net_debt", "financial.earnings_per_share", "accounting.balance_sheet_identity":
 		return contracts.NormalizationAbsoluteDerived, true
+	case "financial.nopat", "financial.invested_capital", "financial.average_invested_capital",
+		"financial.operating_working_capital", "financial.change_in_working_capital",
+		"financial.net_capex", "financial.reinvestment", "financial.fcff_from_nopat",
+		"financial.fcfe", "financial.capital_allocation_bridge":
+		return contracts.NormalizationAbsoluteDerived, true
+	case "financial.roic", "financial.incremental_roic", "financial.value_creation_spread",
+		"financial.reinvestment_rate", "financial.fundamental_growth", "financial.operating_margin",
+		"financial.incremental_margin", "financial.accrual_intensity", "financial.cash_conversion_cycle",
+		"financial.quick_ratio", "financial.interest_coverage", "financial.net_debt_to_ebitda",
+		"financial.shareholder_yield", "comparison.dupont":
+		return contracts.NormalizationCommonSize, true
 	case "valuation.fcff_dcf", "valuation.reverse_dcf":
 		return contracts.NormalizationScenarioOutput, true
-	case "valuation.peer_multiple":
+	case "valuation.capm", "valuation.unlever_beta", "valuation.relever_beta",
+		"valuation.multistage_dcf_perpetuity", "valuation.multistage_dcf_exit",
+		"valuation.reverse_revenue_growth":
+		return contracts.NormalizationScenarioOutput, true
+	case "valuation.peer_multiple", "valuation.ev_to_ebitda", "valuation.price_to_earnings":
 		return contracts.NormalizationMultiple, true
-	case "market.total_return", "market.volatility", "market.maximum_drawdown", "market.beta", "market.correlation":
+	case "market.total_return", "market.volatility", "market.maximum_drawdown", "market.beta", "market.correlation",
+		"comparison.peer_statistics", "economics.lagged_association":
 		return contracts.NormalizationMarketStatistic, true
 	default:
 		return "", false
@@ -179,9 +195,25 @@ func eligibleOutput(operationID string, output contracts.ReceiptOutput) bool {
 		if output.OutputID != "implied_growth" {
 			return false
 		}
+	case "valuation.multistage_dcf_perpetuity", "valuation.multistage_dcf_exit":
+		if output.OutputID != "enterprise_value" && output.OutputID != "terminal_value_share" {
+			return false
+		}
+	case "valuation.reverse_revenue_growth":
+		if output.OutputID != "implied_revenue_growth" {
+			return false
+		}
+	case "financial.invested_capital":
+		if output.OutputID != "operating_approach" && output.OutputID != "difference" {
+			return false
+		}
+	case "financial.capital_allocation_bridge":
+		if output.OutputID != "total_sources" && output.OutputID != "total_uses" && output.OutputID != "implied_change_in_cash" && output.OutputID != "reconciliation_gap" {
+			return false
+		}
 	}
 	switch output.Quantity.Unit {
-	case "currency", "currency_per_share", "ratio", "percent", "shares", "index_point":
+	case "currency", "currency_per_share", "ratio", "percent", "shares", "index_point", "days":
 	default:
 		return false
 	}

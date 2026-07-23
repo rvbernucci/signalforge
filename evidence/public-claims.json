@@ -16,7 +16,7 @@
       "status": "verified",
       "evidence": [
         {"path":"fixtures/tier0-golden-cases.json","sha256":"905b7db44beeb4f6beef78823b6ef64f32f16a096926506a56da5b6e9e22252c"},
-        {"path":"internal/capability/tier0.go","sha256":"65c7f59ddd88e2058077dbcbd8d713a573dff181d4273fcc2b655ac51c11f9e1"}
+        {"path":"internal/capability/tier0.go","sha256":"1d4a09ef66581e255ceb6bc581e04bce6c3f0757a6a4922ae85d5eb9240b0661"}
       ],
       "public_files": ["README.md"]
     },
@@ -36,7 +36,7 @@
       "status": "measured",
       "evidence": [
         {"path":"evidence/engine-benchmark.json","sha256":"ee07959ea8aa7dff4976c0dd8823c7e8b42a812e42168dc843435a76dccc4562"},
-        {"path":"internal/engine/executor.go","sha256":"ad0cf7ef36d822dea87a2e8740dc2ca3488ef5ff9d53b69845fd2c8e5b9d0402"},
+        {"path":"internal/engine/executor.go","sha256":"efbbedc49802f59d7bbbf1a7b64059b792e4e8a32117681c846b99e08f585223"},
         {"path":"internal/engine/executor_test.go","sha256":"5a7ac0891155b92fe5a9725a0aa2fd80f24223e706a6b0380b2557672cf9afc1"}
       ],
       "public_files": ["README.md"]

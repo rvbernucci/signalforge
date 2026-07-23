@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/domaincontrols"
+	"github.com/rvbernucci/signalforge/internal/entityresolver"
 	"github.com/rvbernucci/signalforge/internal/runid"
 	"github.com/rvbernucci/signalforge/internal/taxonomy"
 )
@@ -69,7 +71,7 @@ func ParseDeterministic(input Input) (contracts.ResearchRequest, error) {
 		resolvedEntities = append([]contracts.EntityRef(nil), inheritedEntities...)
 	}
 	requestAsOf := input.AsOf.UTC()
-	requestPeriod := period(input.Text)
+	requestPeriod, periodDecision := domaincontrols.ResolvePeriod(input.Text, input.AsOf)
 	requestComparison := comparison(input.Text)
 	parentRequestID := input.ParentRequestID
 	lineageEvidence, lineageReceipts := []string(nil), []string(nil)
@@ -111,8 +113,11 @@ func ParseDeterministic(input Input) (contracts.ResearchRequest, error) {
 		RequestedOutputs:    contracts.RequiredFinalSections(string(intent)),
 		RiskFlags:           riskFlags(input.Text),
 	}
+	if !periodDecision.Allowed {
+		request.Ambiguities = append(request.Ambiguities, periodDecision.Codes...)
+	}
 	if len(request.Entities) == 0 && intent != taxonomy.ConceptEducation {
-		request.Ambiguities = []string{"company_or_prior_conversation_context_required"}
+		request.Ambiguities = append(request.Ambiguities, "company_or_prior_conversation_context_required")
 	}
 	if err := contracts.ValidateResearchRequest(request); err != nil {
 		return contracts.ResearchRequest{}, err
@@ -211,34 +216,18 @@ func NormalizeModelIntent(value string) (taxonomy.Intent, error) {
 }
 
 func entities(text string) []contracts.EntityRef {
-	lower := strings.ToLower(text)
-	definitions := []struct{ mention, id string }{
-		{"microsoft", "sec-cik:0000789019"},
-		{"nvidia", "sec-cik:0001045810"},
-	}
-	result := make([]contracts.EntityRef, 0, len(definitions))
-	for _, definition := range definitions {
-		if strings.Contains(lower, definition.mention) {
-			result = append(result, contracts.EntityRef{EntityType: "company", EntityID: definition.id, Mention: definition.mention, Resolved: true})
+	resolutions := entityresolver.DefaultRegistry().ResolveText(text)
+	result := make([]contracts.EntityRef, 0, len(resolutions))
+	seen := map[string]bool{}
+	for _, resolution := range resolutions {
+		if !resolution.Resolved || seen[resolution.CompanyID] {
+			continue
 		}
-	}
-	return result
-}
-
-func period(text string) contracts.PeriodScope {
-	lower := strings.ToLower(text)
-	result := contracts.PeriodScope{Kind: "latest_available"}
-	switch {
-	case strings.Contains(lower, "five years") || strings.Contains(lower, "five fiscal years"):
-		result.Kind = "trailing_fiscal_years"
-		result.LookbackYears = 5
-	case strings.Contains(lower, "three years") || strings.Contains(lower, "three fiscal years"):
-		result.Kind = "trailing_fiscal_years"
-		result.LookbackYears = 3
-	case strings.Contains(lower, "latest 10-q") || strings.Contains(lower, "latest quarter"):
-		result.Kind = "latest_fiscal_quarter"
-	case strings.Contains(lower, "current price") || strings.Contains(lower, "today"):
-		result.Kind = "current_and_latest_reported"
+		result = append(result, contracts.EntityRef{
+			EntityType: "company", EntityID: resolution.CompanyID,
+			Mention: resolution.Mention, Resolved: true,
+		})
+		seen[resolution.CompanyID] = true
 	}
 	return result
 }
@@ -246,7 +235,8 @@ func period(text string) contracts.PeriodScope {
 func hasExplicitPeriod(text string) bool {
 	lower := strings.ToLower(text)
 	return containsAny(lower, "five years", "five fiscal years", "three years", "three fiscal years",
-		"latest 10-q", "latest quarter", "current price", "today", "latest", "current")
+		"last fiscal year", "previous fiscal year", "fiscal year", "fy ", "latest 10-q",
+		"latest quarter", "current price", "today", "latest", "current", " from ")
 }
 
 func requestsFreshAsOf(text string) bool {
@@ -297,7 +287,15 @@ func riskFlags(text string) []string {
 			result = append(result, candidate.flag)
 		}
 	}
-	return result
+	language := domaincontrols.AssessLanguage(text)
+	if !language.Allowed {
+		result = append(result, language.Codes...)
+	}
+	scope := domaincontrols.AssessResponsibleScope(text)
+	if !scope.Allowed {
+		result = append(result, scope.Codes...)
+	}
+	return uniqueSorted(result)
 }
 
 func contains(values []string, target string) bool {

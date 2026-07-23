@@ -100,9 +100,13 @@ func (builder Builder) Build(request contracts.ResearchRequest) (contracts.Resea
 		}
 		stepID := fmt.Sprintf("review-%02d", index+1)
 		reviewIDs = append(reviewIDs, stepID)
+		dependencies := append([]string(nil), contextIDs...)
+		if len(reviewIDs) > 1 {
+			dependencies = append(dependencies, reviewIDs[len(reviewIDs)-2])
+		}
 		plan.Steps = append(plan.Steps, contracts.PlanStep{
 			StepID: stepID, Kind: "review", Objective: role.Mission, RoleID: roleID,
-			DependsOn: append([]string(nil), contextIDs...), Mandatory: true,
+			DependsOn: dependencies, Mandatory: true,
 			ContextBudget: role.ContextBudget, TimeoutMS: configuredTimeout(role.TimeoutMS, builder.ReviewTimeoutMS),
 		})
 	}

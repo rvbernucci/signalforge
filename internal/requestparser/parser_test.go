@@ -25,6 +25,24 @@ func TestDeterministicParserExtractsClosedRequest(t *testing.T) {
 	}
 }
 
+func TestDeterministicParserResolvesTechnologyTwentyEntities(t *testing.T) {
+	request, err := ParseDeterministic(Input{
+		Text:  "Compare Apple and AMD as long-term businesses.",
+		AsOf:  time.Date(2026, 7, 23, 12, 0, 0, 0, time.UTC),
+		RunID: "run-tech-20", RequestID: "request-tech-20",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(request.Entities) != 2 || request.Comparison.Mode != "peer" {
+		t.Fatalf("technology-20 entities were not resolved: %+v", request)
+	}
+	if request.Entities[0].EntityID != "sec-cik:0000002488" &&
+		request.Entities[1].EntityID != "sec-cik:0000002488" {
+		t.Fatalf("AMD CIK missing: %+v", request.Entities)
+	}
+}
+
 func TestModelIntentMappingFailsClosed(t *testing.T) {
 	if _, err := NormalizeModelIntent("company_understanding"); err != nil {
 		t.Fatal(err)
@@ -101,6 +119,45 @@ func TestThreeGovernedFollowUpsPreservePointInTimeScopeAndLineage(t *testing.T) 
 		}
 		parent = child
 		answer = governedAnswer(child, "evidence-child", "receipt-child")
+	}
+}
+
+func TestParserPreservesFiscalIdentityAndFutureBoundary(t *testing.T) {
+	asOf := time.Date(2026, 7, 23, 0, 0, 0, 0, time.UTC)
+	request, err := ParseDeterministic(Input{
+		Text: "Explain Microsoft free cash flow for FY 2025.", AsOf: asOf,
+		RunID: "run-period", RequestID: "request-period",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if request.Period.Kind != "fiscal_year" || len(request.Period.FiscalYears) != 1 ||
+		request.Period.FiscalYears[0] != 2025 || request.Period.Start != nil || request.Period.End != nil {
+		t.Fatalf("fiscal period was not preserved: %+v", request.Period)
+	}
+	request, err = ParseDeterministic(Input{
+		Text: "Explain Microsoft free cash flow from 2026-01-01 to 2027-01-01.", AsOf: asOf,
+		RunID: "run-future", RequestID: "request-future",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !contains(request.Ambiguities, "future_information_unavailable") {
+		t.Fatalf("future information boundary was not preserved: %+v", request.Ambiguities)
+	}
+}
+
+func TestParserFlagsUnsupportedLanguageWithoutGuessingTranslation(t *testing.T) {
+	request, err := ParseDeterministic(Input{
+		Text:  "Explique o free cash flow da Microsoft.",
+		AsOf:  time.Date(2026, 7, 23, 0, 0, 0, 0, time.UTC),
+		RunID: "run-language", RequestID: "request-language",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !contains(request.RiskFlags, "non_english_input") {
+		t.Fatalf("unsupported language was not flagged: %+v", request.RiskFlags)
 	}
 }
 

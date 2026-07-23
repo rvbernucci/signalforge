@@ -9,6 +9,8 @@ This directory contains reviewable sources for the SignalForge judge package.
 - `project-specification.md`: human-reviewable project specification source.
 - `demo-script.md`: verified 4 minute 12.9 second final cut sheet mapped to Track 2 evidence.
 - `demo-voiceover.txt`: narration source used by the final local video artifact.
+- `financial-intelligence.md`: private Sprint 16B architecture, numerical authority, verification,
+  and remaining promotion gates.
 - `../output/pdf/SignalForge-Project-Specification.pdf`: final six-page project documentation.
 - `../output/presentation/SignalForge-Judge-Deck.pptx`: final six-slide supplemental deck.
 - `../output/video/SignalForge-Radeon-Demo.mp4`: final local H.264/AAC demo video.

@@ -1,5 +1,12 @@
 # SignalForge Contracts
 
+Sprint 16B adds two private, versioned contracts:
+
+- `metric-registry.schema.json` governs canonical financial definitions, formula ownership,
+  periods, applicability, authority, and failure dispositions.
+- `financial-intelligence-packet.schema.json` separates the authoritative backend numerical
+  context from the value-free model view used under Numerical Silence.
+
 Retrieval boundaries are also versioned: `evidence-chunk.schema.json` preserves point-in-time
 regulatory and investor-relations lineage without pretending issuer material is an SEC filing.
 The original `filing-chunk.schema.json` remains as a legacy Sprint 05 artifact, while
