@@ -9,11 +9,14 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
 )
 
 type fakeCaseStore struct {
@@ -342,6 +345,101 @@ func TestStaticServerRejectsEscapingPaths(t *testing.T) {
 	server.Handler().ServeHTTP(response, request)
 	if response.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
+func TestSPAHandlerPreservesOperationalEndpoints(t *testing.T) {
+	staticDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(staticDir, "index.html"), []byte("<html>workspace</html>"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	api := http.NewServeMux()
+	api.HandleFunc("GET /health/ready", func(writer http.ResponseWriter, _ *http.Request) {
+		writeJSON(writer, http.StatusOK, map[string]string{"status": "ready"})
+	})
+	api.HandleFunc("GET /metrics", func(writer http.ResponseWriter, _ *http.Request) {
+		_, _ = writer.Write([]byte("signalforge_test_metric 1\n"))
+	})
+	handler := spaHandler(api, staticDir)
+
+	for path, expected := range map[string]string{
+		"/health/ready": `"status":"ready"`,
+		"/metrics":      "signalforge_test_metric 1",
+	} {
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, path, nil))
+		if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), expected) {
+			t.Fatalf("%s was intercepted by SPA fallback: status=%d body=%q", path, response.Code, response.Body.String())
+		}
+	}
+}
+
+func TestIntelligenceInspectorSeparatesMetadataAndProtectedBodies(t *testing.T) {
+	audit, err := intelligenceaudit.NewStore(intelligenceaudit.Config{
+		Directory: t.TempDir(), Enabled: true, Token: "operator-token", TTL: time.Hour,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := newFixtureTestServerWithConfig(t, ServerConfig{AuditStore: audit})
+	httpServer := httptest.NewServer(server.Handler())
+	t.Cleanup(httpServer.Close)
+	run := waitForRun(t, httpServer.URL, postRun(t, httpServer.URL, `{"question":"Compare Microsoft and NVIDIA.","scenario":{}}`))
+
+	metadata := getRaw(t, httpServer.URL+"/api/v1/runs/"+run.RunID+"/intelligence")
+	if metadata.StatusCode != http.StatusOK {
+		t.Fatalf("metadata status = %d, body = %s", metadata.StatusCode, readBody(t, metadata))
+	}
+	metadataBody := readBody(t, metadata)
+	if !strings.Contains(metadataBody, `"engine_calls"`) || !strings.Contains(metadataBody, `"retrievals"`) ||
+		strings.Contains(metadataBody, `"question"`) {
+		t.Fatalf("unexpected metadata body: %s", metadataBody)
+	}
+
+	denied := getRaw(t, httpServer.URL+"/api/v1/runs/"+run.RunID+"/intelligence/protected")
+	if denied.StatusCode != http.StatusForbidden {
+		t.Fatalf("protected status = %d", denied.StatusCode)
+	}
+	denied.Body.Close()
+
+	request, err := http.NewRequest(http.MethodGet, httpServer.URL+"/api/v1/runs/"+run.RunID+"/intelligence/protected", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("X-SignalForge-Audit-Token", "operator-token")
+	protected, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer protected.Body.Close()
+	if protected.StatusCode != http.StatusOK {
+		t.Fatalf("protected status = %d, body = %s", protected.StatusCode, readBody(t, protected))
+	}
+	if !strings.Contains(readBody(t, protected), `Compare Microsoft and NVIDIA.`) {
+		t.Fatal("protected fixture question was unavailable")
+	}
+}
+
+func TestGoldenFixtureHasImmediateIntelligenceLineage(t *testing.T) {
+	audit, err := intelligenceaudit.NewStore(intelligenceaudit.Config{Directory: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := newFixtureTestServerWithConfig(t, ServerConfig{AuditStore: audit})
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet,
+		"/api/v1/runs/"+server.fixture.RunID+"/intelligence", nil)
+	server.Handler().ServeHTTP(response, request)
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+	var record intelligenceaudit.Record
+	if err := json.Unmarshal(response.Body.Bytes(), &record); err != nil {
+		t.Fatal(err)
+	}
+	if record.Release == nil || len(record.Retrievals) != 1 ||
+		len(record.Engines) != len(server.fixture.Calculations) {
+		t.Fatalf("record = %+v", record)
 	}
 }
 

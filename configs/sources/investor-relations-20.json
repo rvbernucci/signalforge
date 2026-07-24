@@ -17,7 +17,9 @@
       "text/html",
       "text/plain",
       "application/pdf",
-      "application/json"
+      "application/json",
+      "application/xml",
+      "text/xml"
     ]
   },
   "material_classes": [

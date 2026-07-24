@@ -168,3 +168,52 @@ func RollingCorrelation(left, right []float64, window int) ([]float64, error) {
 	}
 	return result, nil
 }
+
+type RollingMarketWindow struct {
+	Start        int
+	End          int
+	Covariance   float64
+	Correlation  float64
+	Beta         float64
+	Slope        float64
+	Intercept    float64
+	RSquared     float64
+	Observations int
+}
+
+func RollingMarketStatistics(securityReturns, benchmarkReturns []float64, window int) ([]RollingMarketWindow, error) {
+	if len(securityReturns) != len(benchmarkReturns) {
+		return nil, errors.New("series lengths differ")
+	}
+	if window < 3 || window > len(securityReturns) {
+		return nil, errors.New("window must be between three and the series length")
+	}
+	result := make([]RollingMarketWindow, 0, len(securityReturns)-window+1)
+	for end := window; end <= len(securityReturns); end++ {
+		security := securityReturns[end-window : end]
+		benchmark := benchmarkReturns[end-window : end]
+		covariance, err := Covariance(security, benchmark, 1)
+		if err != nil {
+			return nil, err
+		}
+		correlation, err := Correlation(security, benchmark, 1)
+		if err != nil {
+			return nil, err
+		}
+		beta, observations, err := Beta(security, benchmark, 1)
+		if err != nil {
+			return nil, err
+		}
+		association, err := LinearAssociation(benchmark, security, 3)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, RollingMarketWindow{
+			Start: end - window, End: end - 1, Covariance: covariance,
+			Correlation: correlation, Beta: beta, Slope: association.Slope,
+			Intercept: association.Intercept, RSquared: association.RSquared,
+			Observations: observations,
+		})
+	}
+	return result, nil
+}

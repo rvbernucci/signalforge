@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
@@ -44,6 +45,36 @@ class IRTransformTests(unittest.TestCase):
             [("Strategy", "Management continues to invest in responsible AI systems.", "html:paragraph=1", 0)],
             blocks,
         )
+
+    def test_html_parser_preserves_table_cell_locators(self) -> None:
+        blocks = MODULE.extract_html(
+            b"<h2>Segments</h2><table><tr><th>Platform category and customer description</th>"
+            b"<td>Cloud services include infrastructure and database products.</td></tr></table>"
+        )
+        self.assertEqual("html:table_cell=1", blocks[0][2])
+        self.assertEqual("html:table_cell=2", blocks[1][2])
+
+    def test_plain_text_preserves_speaker_and_role_context(self) -> None:
+        blocks = MODULE.extract_text(
+            b"Jane Example -- Chief Executive Officer\n\n"
+            b"Management described stronger demand for the cloud platform and related services."
+        )
+        self.assertEqual("Speaker: Jane Example | Role: Chief Executive Officer", blocks[0][0])
+        self.assertEqual("text:paragraph=2", blocks[0][2])
+
+    def test_json_feed_preserves_stable_paths(self) -> None:
+        blocks = MODULE.extract_json(
+            b'{"items":[{"title":"Management described a durable cloud strategy for enterprise customers."}]}'
+        )
+        self.assertEqual("$.items[0].title", blocks[0][2].removeprefix("json:path="))
+
+    def test_malformed_json_fails_visibly(self) -> None:
+        with self.assertRaises(json.JSONDecodeError):
+            MODULE.extract_json(b'{"items": [}')
+
+    def test_malformed_pdf_fails_visibly(self) -> None:
+        with self.assertRaises(Exception):
+            MODULE.extract_pdf(b"not-a-pdf")
 
     def test_projection_replaces_financial_literals_but_preserves_year(self) -> None:
         projected, references = MODULE.silent_projection("In 2025 revenue was $12.4 billion and margin was 31%.")

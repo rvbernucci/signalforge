@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import email.utils
+import errno
 import hashlib
 from html.parser import HTMLParser
 import http.client
@@ -14,12 +15,14 @@ import os
 from pathlib import Path
 import re
 import socket
+import tempfile
 import time
 from typing import Any
 import urllib.error
 import urllib.parse
 import urllib.request
 import urllib.robotparser
+import xml.etree.ElementTree as ET
 
 try:
     import ir_discover
@@ -37,6 +40,7 @@ INDEX_PATTERN = re.compile(
     r"dividend|repurchase|buyback",
     re.IGNORECASE,
 )
+NAVIGATION_PATTERN = re.compile(r"archive|pagination|older|next", re.IGNORECASE)
 EXCLUDED_PATTERN = re.compile(
     r"privacy|cookie|career|jobs?|support|store|shop|diversity|notification|email.alert|"
     r"press.contact|sitemap|accessibility|terms|legal|sec.filing|annual.report|10[- ]?[kq]",
@@ -88,6 +92,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-documents", type=int, default=80)
     parser.add_argument("--max-depth", type=int, default=2)
     parser.add_argument("--timeout", type=float, default=45.0)
+    parser.add_argument("--max-wall-seconds", type=float, default=1800.0)
     parser.add_argument("--evaluation-only-pending-rights", action="store_true")
     parser.add_argument("--resume", action="store_true")
     return parser.parse_args()
@@ -151,6 +156,15 @@ def is_material_candidate(uri: str, label: str) -> bool:
     return bool(INDEX_PATTERN.search(haystack))
 
 
+def is_discovery_candidate(uri: str, label: str) -> bool:
+    parsed = urllib.parse.urlsplit(uri)
+    path = urllib.parse.unquote(parsed.path)
+    haystack = path + " " + label
+    if EXCLUDED_PATTERN.search(path):
+        return False
+    return is_material_candidate(uri, label) or bool(NAVIGATION_PATTERN.search(haystack))
+
+
 def normalize_links(base_uri: str, parser: LinkParser) -> list[dict[str, str]]:
     result: dict[str, dict[str, str]] = {}
     for href, label in parser.links:
@@ -160,6 +174,60 @@ def normalize_links(base_uri: str, parser: LinkParser) -> list[dict[str, str]]:
             continue
         result.setdefault(uri, {"uri": uri, "label": " ".join(label.split())})
     return sorted(result.values(), key=lambda item: item["uri"])
+
+
+def extract_json_links(base_uri: str, payload: bytes) -> list[dict[str, str]]:
+    value = json.loads(payload.decode("utf-8"))
+    result: dict[str, dict[str, str]] = {}
+    stack: list[tuple[str, Any]] = [("", value)]
+    visited = 0
+    while stack:
+        label, item = stack.pop()
+        visited += 1
+        if visited > 100_000:
+            raise RuntimeError("json_node_limit_exceeded")
+        if isinstance(item, dict):
+            for key in reversed(sorted(item)):
+                stack.append((key, item[key]))
+        elif isinstance(item, list):
+            for child in reversed(item):
+                stack.append((label, child))
+        elif isinstance(item, str):
+            candidate = item.strip()
+            if candidate.startswith(("https://", "/")):
+                uri = canonical_uri(urllib.parse.urljoin(base_uri, candidate))
+                if urllib.parse.urlsplit(uri).scheme == "https":
+                    result.setdefault(uri, {"uri": uri, "label": label.replace("_", " ")})
+    return sorted(result.values(), key=lambda item: item["uri"])
+
+
+def extract_sitemap_links(payload: bytes) -> list[dict[str, str]]:
+    root = ET.fromstring(payload)
+    result: dict[str, dict[str, str]] = {}
+    for element in root.iter():
+        if element.tag.rsplit("}", 1)[-1] != "loc" or not element.text:
+            continue
+        uri = canonical_uri(element.text.strip())
+        if urllib.parse.urlsplit(uri).scheme == "https":
+            result[uri] = {"uri": uri, "label": "sitemap entry"}
+    return sorted(result.values(), key=lambda item: item["uri"])
+
+
+def explicit_temporal_metadata(label: str, title: str, payload: bytes, media_type: str) -> dict[str, str]:
+    # Unstructured body text may contain many unrelated historical dates. Until a parser exposes
+    # a typed publication field, only link labels and titles are safe temporal metadata.
+    _ = payload, media_type
+    text = f"{label} {title}"
+    result: dict[str, str] = {}
+    date_match = re.search(r"\b(20[0-9]{2})[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12][0-9]|3[01])\b", text)
+    if date_match:
+        result["published_at"] = f"{date_match.group(1)}-{date_match.group(2)}-{date_match.group(3)}T00:00:00+00:00"
+    fiscal_match = re.search(r"\b(?:FY\s*)?(20[0-9]{2})\s*(?:Q([1-4]))?\b|\bQ([1-4])\s*(20[0-9]{2})\b", text, re.IGNORECASE)
+    if fiscal_match:
+        year = fiscal_match.group(1) or fiscal_match.group(4)
+        quarter = fiscal_match.group(2) or fiscal_match.group(3)
+        result["fiscal_period"] = f"FY{year}" + (f"-Q{quarter}" if quarter else "")
+    return result
 
 
 class HostBudget:
@@ -174,26 +242,65 @@ class HostBudget:
         self._last_request[host] = time.monotonic()
 
 
+class CollectionBudget:
+    """Global wall-time and concurrency contract for a bounded collection run."""
+
+    def __init__(self, max_wall_seconds: float, configured_max_concurrency: int) -> None:
+        if max_wall_seconds <= 0:
+            raise ValueError("max wall seconds must be positive")
+        if configured_max_concurrency < 1:
+            raise ValueError("configured max concurrency must be positive")
+        self.max_wall_seconds = max_wall_seconds
+        self.configured_max_concurrency = configured_max_concurrency
+        # The collector is intentionally sequential until a measured parallel design is approved.
+        self.effective_concurrency = 1
+        self.started_monotonic = time.monotonic()
+
+    def exhausted(self) -> bool:
+        return time.monotonic() - self.started_monotonic >= self.max_wall_seconds
+
+    def elapsed_seconds(self) -> float:
+        return max(0.0, time.monotonic() - self.started_monotonic)
+
+    def remaining_seconds(self) -> float:
+        return max(0.0, self.max_wall_seconds - self.elapsed_seconds())
+
+
 class RobotsGuard:
     def __init__(self, user_agent: str, timeout: float, budget: HostBudget) -> None:
         self.user_agent = user_agent
         self.timeout = timeout
         self.budget = budget
-        self.decisions: dict[tuple[str, str], tuple[bool, dict[str, Any]]] = {}
+        self.policies: dict[
+            tuple[str, str],
+            tuple[urllib.robotparser.RobotFileParser | None, bool],
+        ] = {}
 
-    def check(self, uri: str, company_id: str, allowed_hosts: list[str]) -> tuple[bool, dict[str, Any] | None]:
+    def check(
+        self,
+        uri: str,
+        company_id: str,
+        allowed_hosts: list[str],
+        remaining_seconds: float | None = None,
+    ) -> tuple[bool, dict[str, Any] | None]:
         host = urllib.parse.urlsplit(uri).hostname or ""
         cache_key = (company_id, host)
-        if cache_key in self.decisions:
-            return self.decisions[cache_key][0], None
+        if cache_key in self.policies:
+            parser, default_allowed = self.policies[cache_key]
+            return (parser.can_fetch(self.user_agent, uri) if parser is not None else default_allowed), None
         robots_uri = f"https://{host}/robots.txt"
         self.budget.wait(host)
-        fetched = ir_discover.fetch(robots_uri, self.user_agent, min(self.timeout, 20.0), 512 * 1024)
+        timeout = min(self.timeout, 20.0)
+        if remaining_seconds is not None:
+            timeout = min(timeout, max(0.001, remaining_seconds))
+        fetched = ir_discover.fetch(robots_uri, self.user_agent, timeout, 512 * 1024)
         observed_at = dt.datetime.now(dt.timezone.utc).isoformat()
         final_uri = fetched.get("final_uri", robots_uri)
         final_host = urllib.parse.urlsplit(final_uri).hostname or ""
         status = fetched.get("status_code")
         allowed = False
+        parser: urllib.robotparser.RobotFileParser | None = None
+        default_allowed = False
         reason = "robots_fetch_failed"
         if not ir_discover.host_allowed(final_host, allowed_hosts):
             reason = "robots_redirect_outside_allowlist"
@@ -205,6 +312,7 @@ class RobotsGuard:
             reason = "robots_allowed" if allowed else "robots_disallowed"
         elif status in {404, 410}:
             allowed = True
+            default_allowed = True
             reason = "robots_missing_standard_allow"
         observation = {
             "observation_id": "obs-" + hashlib.sha256((company_id + robots_uri + observed_at).encode()).hexdigest()[:24],
@@ -219,7 +327,7 @@ class RobotsGuard:
         for key in ("status_code", "final_uri", "media_type", "content_bytes", "content_sha256"):
             if fetched.get(key) is not None:
                 observation[key] = fetched[key]
-        self.decisions[cache_key] = (allowed, observation)
+        self.policies[cache_key] = (parser, default_allowed)
         return allowed, observation
 
 
@@ -246,17 +354,32 @@ def fetch(
     allowed_hosts: list[str],
     source: dict[str, Any],
     budget: HostBudget,
+    deadline_monotonic: float | None = None,
 ) -> tuple[dict[str, Any], bytes]:
     started = time.monotonic()
     host = urllib.parse.urlsplit(uri).hostname or ""
     for attempt in range(1, 4):
+        if deadline_monotonic is not None and time.monotonic() >= deadline_monotonic:
+            return {
+                "disposition": "timeout",
+                "failure_class": "global_wall_time_exhausted",
+                "attempt": attempt,
+                "elapsed_ms": round((time.monotonic() - started) * 1000),
+            }, b""
         budget.wait(host)
+        request_timeout = timeout
+        if deadline_monotonic is not None:
+            request_timeout = min(timeout, max(0.001, deadline_monotonic - time.monotonic()))
         request = urllib.request.Request(
             uri,
-            headers={"User-Agent": user_agent, "Accept-Encoding": "identity", "Accept": "text/html,application/pdf,text/plain;q=0.8,*/*;q=0.1"},
+            headers={
+                "User-Agent": user_agent,
+                "Accept-Encoding": "identity",
+                "Accept": "text/html,application/pdf,application/json,application/xml,text/xml,text/plain;q=0.8,*/*;q=0.1",
+            },
         )
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            with urllib.request.urlopen(request, timeout=request_timeout) as response:
                 final_uri = canonical_uri(response.geturl())
                 if not ir_discover.source_uri_allowed(final_uri, source):
                     return {"disposition": "rejected", "failure_class": "redirect_outside_allowlist", "final_uri": final_uri, "attempt": attempt}, b""
@@ -292,8 +415,12 @@ def fetch(
                 return result, payload
         except urllib.error.HTTPError as error:
             retry_after = error.headers.get("Retry-After") if error.headers else None
+            error.close()
             if error.code in {429, 500, 502, 503, 504} and attempt < 3:
-                time.sleep(retry_delay(retry_after, attempt))
+                delay = retry_delay(retry_after, attempt)
+                if deadline_monotonic is not None:
+                    delay = min(delay, max(0.0, deadline_monotonic - time.monotonic()))
+                time.sleep(delay)
                 continue
             result = {
                 "disposition": "blocked" if error.code in {401, 403} else "failed",
@@ -307,12 +434,18 @@ def fetch(
             return result, b""
         except (TimeoutError, socket.timeout):
             if attempt < 3:
-                time.sleep(retry_delay(None, attempt))
+                delay = retry_delay(None, attempt)
+                if deadline_monotonic is not None:
+                    delay = min(delay, max(0.0, deadline_monotonic - time.monotonic()))
+                time.sleep(delay)
                 continue
             return {"disposition": "timeout", "failure_class": "timeout", "attempt": attempt, "elapsed_ms": round((time.monotonic() - started) * 1000)}, b""
         except (urllib.error.URLError, ValueError, OSError, http.client.HTTPException) as error:
             if attempt < 3:
-                time.sleep(retry_delay(None, attempt))
+                delay = retry_delay(None, attempt)
+                if deadline_monotonic is not None:
+                    delay = min(delay, max(0.0, deadline_monotonic - time.monotonic()))
+                time.sleep(delay)
                 continue
             return {"disposition": "failed", "failure_class": type(error).__name__, "attempt": attempt, "elapsed_ms": round((time.monotonic() - started) * 1000)}, b""
     raise AssertionError("bounded retry loop exhausted without a result")
@@ -330,11 +463,41 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def store_payload(raw_store: Path, digest: str, payload: bytes) -> Path:
+    if hashlib.sha256(payload).hexdigest() != digest:
+        raise OSError(errno.EIO, "payload does not match the declared content hash")
     path = raw_store / "sha256" / digest[:2] / digest
     path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
-        path.write_bytes(payload)
+    if path.exists():
+        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise OSError(errno.EIO, "content-addressed object failed integrity verification")
+        return path
+    temporary_name = ""
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{digest}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary_name = handle.name
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_name, path)
+    finally:
+        if temporary_name:
+            Path(temporary_name).unlink(missing_ok=True)
     return path
+
+
+def try_store_payload(raw_store: Path, digest: str, payload: bytes) -> tuple[Path | None, str | None]:
+    try:
+        return store_payload(raw_store, digest, payload), None
+    except OSError as error:
+        if error.errno == errno.ENOSPC:
+            return None, "storage_full"
+        return None, "storage_write_error"
 
 
 def crawl_source(
@@ -343,6 +506,7 @@ def crawl_source(
     args: argparse.Namespace,
     budget: HostBudget,
     robots: RobotsGuard,
+    collection_budget: CollectionBudget,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     started_at = dt.datetime.now(dt.timezone.utc)
     start_year = json.loads(args.registry.read_text())["historical_policy"]["complete_window_start_year"]
@@ -353,7 +517,12 @@ def crawl_source(
     index_pages = 0
     accepted_hashes: set[str] = set()
     accepted_uris: dict[str, str] = {}
-    while queue and index_pages < args.max_index_pages and len(documents) < args.max_documents:
+    while (
+        queue
+        and index_pages < args.max_index_pages
+        and len(documents) < args.max_documents
+        and not collection_budget.exhausted()
+    ):
         requested_uri, label, depth = queue.pop(0)
         uri = canonical_uri(requested_uri)
         if uri in seen:
@@ -362,9 +531,16 @@ def crawl_source(
         host = urllib.parse.urlsplit(uri).hostname or ""
         if not ir_discover.source_uri_allowed(uri, source):
             continue
-        robots_allowed, robots_observation = robots.check(uri, source["company_id"], source["allowed_hosts"])
+        robots_allowed, robots_observation = robots.check(
+            uri,
+            source["company_id"],
+            source["allowed_hosts"],
+            collection_budget.remaining_seconds(),
+        )
         if robots_observation is not None:
             observations.append(robots_observation)
+        if collection_budget.exhausted():
+            break
         if not robots_allowed:
             observations.append(
                 {
@@ -388,6 +564,7 @@ def crawl_source(
             source["allowed_hosts"],
             source,
             budget,
+            collection_budget.started_monotonic + collection_budget.max_wall_seconds,
         )
         observed_at = dt.datetime.now(dt.timezone.utc).isoformat()
         observation = {
@@ -404,7 +581,12 @@ def crawl_source(
             continue
         media_type = result["media_type"]
         digest = result["content_sha256"]
-        raw_path = store_payload(args.raw_store, digest, payload)
+        raw_path, storage_failure = try_store_payload(args.raw_store, digest, payload)
+        if storage_failure:
+            observation["disposition"] = "failed"
+            observation["failure_class"] = storage_failure
+            continue
+        assert raw_path is not None
         observation["raw_store_key"] = str(raw_path.relative_to(args.raw_store))
         title = label or Path(urllib.parse.urlsplit(uri).path).name or source["issuer"]
         is_root = uri.rstrip("/") == canonical_uri(source["discovery_uri"]).rstrip("/")
@@ -419,15 +601,44 @@ def crawl_source(
                     child_host = urllib.parse.urlsplit(item["uri"]).hostname or ""
                     if (
                         ir_discover.source_uri_allowed(item["uri"], source)
-                        and is_material_candidate(item["uri"], item["label"])
+                        and is_discovery_candidate(item["uri"], item["label"])
                         and eligible_year(item["uri"], item["label"], start_year)
                     ):
                         queue.append((item["uri"], item["label"], depth + 1))
+        elif media_type == "application/json" and depth < args.max_depth:
+            try:
+                links = extract_json_links(result.get("final_uri", uri), payload)
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                observation["disposition"] = "quarantined"
+                observation["failure_class"] = "malformed_json_feed"
+                continue
+            for item in links:
+                if (
+                    ir_discover.source_uri_allowed(item["uri"], source)
+                    and is_discovery_candidate(item["uri"], item["label"])
+                    and eligible_year(item["uri"], item["label"], start_year)
+                ):
+                    queue.append((item["uri"], item["label"], depth + 1))
+        elif media_type in {"application/xml", "text/xml"} and depth < args.max_depth:
+            try:
+                links = extract_sitemap_links(payload)
+            except ET.ParseError:
+                observation["disposition"] = "quarantined"
+                observation["failure_class"] = "malformed_sitemap"
+                continue
+            for item in links:
+                if (
+                    ir_discover.source_uri_allowed(item["uri"], source)
+                    and is_discovery_candidate(item["uri"], item["label"])
+                    and eligible_year(item["uri"], item["label"], start_year)
+                ):
+                    queue.append((item["uri"], item["label"], depth + 1))
         canonical = result.get("final_uri", uri)
         is_material = is_material and is_material_candidate(canonical, title)
         if not (is_root or is_material):
             continue
         document_type, authority_tier, promotional = classify(uri, label, title)
+        temporal_metadata = explicit_temporal_metadata(label, title, payload, media_type)
         if canonical in accepted_uris:
             observation["duplicate_document_id"] = accepted_uris[canonical]
             continue
@@ -456,6 +667,7 @@ def crawl_source(
                 "discovery_uri": source["discovery_uri"],
                 "media_type": media_type,
                 "language": "en",
+                "published_at": temporal_metadata.get("published_at", observed_at),
                 "available_at": observed_at,
                 "retrieved_at": observed_at,
                 "audited": False,
@@ -468,6 +680,7 @@ def crawl_source(
                 "parser_version": "pending",
                 "classification_status": "quarantined" if source["rights_class"].endswith("pending_review") else "deterministic",
                 "classification_reasons": ["evaluation-only pending rights review"] if source["rights_class"].endswith("pending_review") else ["URL and title rule"],
+                **({"fiscal_period": temporal_metadata["fiscal_period"]} if temporal_metadata.get("fiscal_period") else {}),
             }
         )
     return observations, documents, {
@@ -478,6 +691,7 @@ def crawl_source(
         "index_page_count": index_pages,
         "document_count": len(documents),
         "queue_remaining": len(queue),
+        "wall_time_exhausted": collection_budget.exhausted(),
     }
 
 
@@ -506,6 +720,7 @@ def main() -> int:
         "max_index_pages": args.max_index_pages,
         "max_documents": args.max_documents,
         "max_depth": args.max_depth,
+        "max_wall_seconds": args.max_wall_seconds,
         "evaluation_only": args.evaluation_only_pending_rights,
     }
     checkpoint_dir = args.report_dir / "checkpoints"
@@ -517,6 +732,10 @@ def main() -> int:
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
         scope_path.write_text(json.dumps(scope, indent=2, sort_keys=True) + "\n")
     budget = HostBudget(registry["collection_policy"]["default_requests_per_second"])
+    collection_budget = CollectionBudget(
+        args.max_wall_seconds,
+        registry["collection_policy"]["max_concurrency"],
+    )
     robots = RobotsGuard(user_agent, args.timeout, budget)
     args.max_response_bytes = registry["collection_policy"]["max_response_bytes"]
     args.allowed_media_types = set(registry["collection_policy"]["allowed_media_types"])
@@ -524,6 +743,15 @@ def main() -> int:
     documents: list[dict[str, Any]] = []
     companies: list[dict[str, Any]] = []
     for source in sources:
+        if collection_budget.exhausted():
+            companies.append(
+                {
+                    "ticker": source["primary_ticker"],
+                    "collection_disposition": "paused",
+                    "reason": "global_wall_time_exhausted",
+                }
+            )
+            continue
         disposition = dispositions.get(source["primary_ticker"], "missing")
         if disposition not in {"root_verified", "head_verified_needs_body"}:
             companies.append({"ticker": source["primary_ticker"], "collection_disposition": "quarantined", "reason": disposition})
@@ -537,8 +765,19 @@ def main() -> int:
             documents.extend(read_jsonl(checkpoint_documents))
             companies.append(json.loads(checkpoint_summary.read_text()))
             continue
-        source_observations, source_documents, summary = crawl_source(source, user_agent, args, budget, robots)
-        completed_summary = {**summary, "collection_disposition": "completed"}
+        source_observations, source_documents, summary = crawl_source(
+            source,
+            user_agent,
+            args,
+            budget,
+            robots,
+            collection_budget,
+        )
+        completed_summary = {
+            **summary,
+            "collection_disposition": "paused" if summary["wall_time_exhausted"] else "completed",
+            "reason": "global_wall_time_exhausted" if summary["wall_time_exhausted"] else "bounded_collection_complete",
+        }
         write_jsonl(checkpoint_observations, source_observations)
         write_jsonl(checkpoint_documents, source_documents)
         checkpoint_summary.write_text(json.dumps(completed_summary, indent=2, sort_keys=True) + "\n")
@@ -557,6 +796,16 @@ def main() -> int:
         "source_count": len(sources),
         "observation_count": len(observations),
         "document_count": len(documents),
+        "budgets": {
+            "configured_max_concurrency": collection_budget.configured_max_concurrency,
+            "effective_concurrency": collection_budget.effective_concurrency,
+            "requests_per_second_per_host": registry["collection_policy"]["default_requests_per_second"],
+            "max_response_bytes": args.max_response_bytes,
+            "max_documents_per_company": args.max_documents,
+            "max_index_pages_per_company": args.max_index_pages,
+            "max_wall_seconds": args.max_wall_seconds,
+            "elapsed_seconds": round(collection_budget.elapsed_seconds(), 3),
+        },
         "companies": companies,
         "claim_boundary": "Pending-rights documents are quarantined evaluation artifacts and are not product-ready or redistributable.",
     }

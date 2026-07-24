@@ -392,15 +392,18 @@ func (inputs inputSet) validateMetadata(operationID string) error {
 		"accounting.balance_sheet_identity": true, "financial.margin": true,
 		"financial.free_cash_flow": true, "financial.cash_conversion": true,
 		"financial.capex_intensity": true, "financial.roic_proxy": true,
-		"financial.current_ratio": true, "financial.debt_to_equity": true,
+		"financial.net_debt": true, "financial.current_ratio": true, "financial.debt_to_equity": true,
 		"financial.earnings_per_share": true, "financial.quality_of_earnings": true,
 		"financial.invested_capital":          true,
 		"financial.operating_working_capital": true, "financial.net_capex": true,
 		"financial.reinvestment": true, "financial.fcff_from_nopat": true,
 		"financial.fcfe": true, "financial.operating_margin": true,
 		"financial.accrual_intensity": true, "financial.cash_conversion_cycle": true,
-		"financial.quick_ratio": true, "financial.interest_coverage": true,
-		"financial.capital_allocation_bridge": true,
+		"financial.quick_ratio": true, "financial.cash_ratio": true,
+		"financial.cash_conversion_ebitda": true, "financial.cash_conversion_operating_profit": true,
+		"financial.reinvestment_rate": true, "financial.interest_coverage": true,
+		"financial.capital_allocation_bridge":     true,
+		"valuation.enterprise_to_equity_detailed": true, "valuation.price_to_book": true,
 	}
 	if !periodAligned[operationID] {
 		return nil
@@ -419,9 +422,10 @@ func (inputs inputSet) validateMetadata(operationID string) error {
 	return nil
 }
 
-func (inputs inputSet) validateUnits(operationID string) error {
-	type rule map[string][]string
-	rules := map[string]rule{
+type unitRule map[string][]string
+
+func governedUnitRules() map[string]unitRule {
+	return map[string]unitRule{
 		"accounting.balance_sheet_identity":   {"assets": {"currency"}, "liabilities": {"currency"}, "equity": {"currency"}},
 		"financial.revenue_growth":            {"revenue_current": {"currency"}, "revenue_prior": {"currency"}},
 		"financial.cagr":                      {"value_start": {"currency", "count", "index_point"}, "value_end": {"currency", "count", "index_point"}, "years": {"years"}},
@@ -448,6 +452,7 @@ func (inputs inputSet) validateUnits(operationID string) error {
 		"market.drawdown":                     {"wealth_index": {"index_point"}},
 		"market.beta":                         {"security_returns": {"ratio"}, "benchmark_returns": {"ratio"}, "ddof": {"count"}},
 		"market.rolling_correlation":          {"series_x": {"ratio", "index_point"}, "series_y": {"ratio", "index_point"}, "window": {"count"}},
+		"comparison.period_aligned":           {"company_metrics": {"currency"}},
 		"scenario.sensitivity_matrix":         {"fcff_forecast": {"currency"}, "discount_rates": {"ratio"}, "terminal_growth_rates": {"ratio"}},
 		"financial.nopat":                     {"operating_income": {"currency"}, "tax_rate": {"ratio"}},
 		"financial.invested_capital":          {"operating_assets": {"currency"}, "non_interest_bearing_operating_liabilities": {"currency"}, "debt": {"currency"}, "equity": {"currency"}, "cash_and_equivalents": {"currency"}, "non_operating_assets": {"currency"}},
@@ -460,6 +465,7 @@ func (inputs inputSet) validateUnits(operationID string) error {
 		"financial.fcfe":                      {"net_income": {"currency"}, "capital_expenditure": {"currency"}, "depreciation_and_amortization": {"currency"}, "change_in_working_capital": {"currency"}, "net_borrowing": {"currency"}},
 		"financial.roic":                      {"nopat": {"currency"}, "average_invested_capital": {"currency"}},
 		"financial.incremental_roic":          {"change_in_nopat": {"currency"}, "change_in_invested_capital": {"currency"}},
+		"financial.roce":                      {"ebit": {"currency"}, "total_assets": {"currency"}, "current_liabilities": {"currency"}},
 		"financial.value_creation_spread":     {"roic": {"ratio"}, "wacc": {"ratio"}},
 		"financial.reinvestment_rate":         {"reinvestment": {"currency"}, "nopat": {"currency"}},
 		"financial.fundamental_growth":        {"return_on_capital": {"ratio"}, "reinvestment_rate": {"ratio"}},
@@ -468,8 +474,16 @@ func (inputs inputSet) validateUnits(operationID string) error {
 		"financial.accrual_intensity":         {"net_income": {"currency"}, "operating_cash_flow": {"currency"}, "average_assets": {"currency"}},
 		"financial.cash_conversion_cycle":     {"days_sales_outstanding": {"days"}, "days_inventory_outstanding": {"days"}, "days_payables_outstanding": {"days"}},
 		"financial.quick_ratio":               {"cash_and_equivalents": {"currency"}, "marketable_securities": {"currency"}, "accounts_receivable": {"currency"}, "current_liabilities": {"currency"}},
+		"financial.cash_ratio":                {"cash_and_equivalents": {"currency"}, "marketable_securities": {"currency"}, "current_liabilities": {"currency"}},
 		"financial.interest_coverage":         {"ebit": {"currency"}, "interest_expense": {"currency"}},
 		"financial.net_debt_to_ebitda":        {"net_debt": {"currency"}, "ebitda": {"currency"}},
+		"financial.cash_conversion_ebitda":    {"operating_cash_flow": {"currency"}, "ebitda": {"currency"}},
+		"financial.cash_conversion_operating_profit": {
+			"operating_cash_flow": {"currency"}, "operating_profit": {"currency"},
+		},
+		"financial.buyback_yield":             {"net_repurchases": {"currency"}, "market_capitalization": {"currency"}},
+		"financial.dividend_yield":            {"dividends_paid": {"currency"}, "market_capitalization": {"currency"}},
+		"financial.net_payout_yield":          {"net_repurchases": {"currency"}, "dividends_paid": {"currency"}, "market_capitalization": {"currency"}},
 		"financial.shareholder_yield":         {"net_repurchases": {"currency"}, "dividends_paid": {"currency"}, "net_debt_reduction": {"currency"}, "market_capitalization": {"currency"}},
 		"financial.capital_allocation_bridge": {"operating_cash_flow": {"currency"}, "debt_issuance": {"currency"}, "equity_issuance": {"currency"}, "asset_sales": {"currency"}, "capital_expenditure": {"currency"}, "acquisitions": {"currency"}, "debt_repayment": {"currency"}, "dividends": {"currency"}, "repurchases": {"currency"}, "reported_change_in_cash": {"currency"}, "tolerance": {"currency"}},
 		"valuation.capm":                      {"risk_free_rate": {"ratio"}, "beta": {"ratio"}, "equity_risk_premium": {"ratio"}},
@@ -477,14 +491,32 @@ func (inputs inputSet) validateUnits(operationID string) error {
 		"valuation.relever_beta":              {"unlevered_beta": {"ratio"}, "debt": {"currency"}, "equity": {"currency"}, "tax_rate": {"ratio"}},
 		"valuation.multistage_dcf_perpetuity": {"fcff_forecast": {"currency"}, "discount_rate": {"ratio"}, "terminal_growth": {"ratio"}, "mid_year": {"boolean"}},
 		"valuation.multistage_dcf_exit":       {"fcff_forecast": {"currency"}, "discount_rate": {"ratio"}, "exit_metric": {"currency"}, "exit_multiple": {"ratio"}, "mid_year": {"boolean"}},
+		"valuation.dividend_discount":         {"dividend_forecast": {"currency"}, "cost_of_equity": {"ratio"}, "terminal_growth": {"ratio"}, "mid_year": {"boolean"}},
 		"valuation.reverse_revenue_growth":    {"enterprise_value": {"currency"}, "base_revenue": {"currency"}, "operating_margin": {"ratio"}, "tax_rate": {"ratio"}, "reinvestment_rate": {"ratio"}, "discount_rate": {"ratio"}, "terminal_growth": {"ratio"}, "years": {"years"}},
-		"valuation.ev_to_ebitda":              {"enterprise_value": {"currency"}, "ebitda": {"currency"}},
-		"valuation.price_to_earnings":         {"equity_market_value": {"currency"}, "net_income": {"currency"}},
-		"comparison.dupont":                   {"net_income": {"currency"}, "revenue": {"currency"}, "average_assets": {"currency"}, "average_equity": {"currency"}},
-		"comparison.peer_statistics":          {"peer_values": {"ratio"}, "subject_value": {"ratio"}, "minimum_sample": {"count"}},
-		"economics.lagged_association":        {"driver_series": {"ratio", "index_point"}, "outcome_series": {"ratio", "index_point"}, "lag": {"count"}, "minimum_sample": {"count"}},
+		"valuation.reverse_operating_margin":  {"enterprise_value": {"currency"}, "base_revenue": {"currency"}, "revenue_growth": {"ratio"}, "tax_rate": {"ratio"}, "reinvestment_rate": {"ratio"}, "discount_rate": {"ratio"}, "terminal_growth": {"ratio"}, "years": {"years"}},
+		"valuation.reverse_reinvestment_rate": {"enterprise_value": {"currency"}, "base_revenue": {"currency"}, "revenue_growth": {"ratio"}, "operating_margin": {"ratio"}, "tax_rate": {"ratio"}, "discount_rate": {"ratio"}, "terminal_growth": {"ratio"}, "years": {"years"}},
+		"valuation.implied_roic":              {"growth_rate": {"ratio"}, "reinvestment_rate": {"ratio"}},
+		"valuation.enterprise_to_equity_detailed": {
+			"enterprise_value": {"currency"}, "debt": {"currency"}, "cash": {"currency"},
+			"investments": {"currency"}, "minority_interest": {"currency"}, "option_value": {"currency"},
+			"diluted_shares": {"shares"},
+		},
+		"valuation.ev_to_ebitda":       {"enterprise_value": {"currency"}, "ebitda": {"currency"}},
+		"valuation.ev_to_revenue":      {"enterprise_value": {"currency"}, "revenue": {"currency"}},
+		"valuation.ev_to_ebit":         {"enterprise_value": {"currency"}, "ebit": {"currency"}},
+		"valuation.price_to_earnings":  {"equity_market_value": {"currency"}, "net_income": {"currency"}},
+		"valuation.price_to_book":      {"equity_market_value": {"currency"}, "book_equity": {"currency"}},
+		"valuation.price_to_fcf":       {"equity_market_value": {"currency"}, "free_cash_flow_to_equity": {"currency"}},
+		"valuation.fcf_yield":          {"free_cash_flow_to_equity": {"currency"}, "equity_market_value": {"currency"}},
+		"valuation.earnings_yield":     {"net_income": {"currency"}, "equity_market_value": {"currency"}},
+		"comparison.dupont":            {"net_income": {"currency"}, "revenue": {"currency"}, "average_assets": {"currency"}, "average_equity": {"currency"}},
+		"comparison.peer_statistics":   {"peer_values": {"ratio"}, "subject_value": {"ratio"}, "minimum_sample": {"count"}},
+		"economics.lagged_association": {"driver_series": {"ratio", "index_point"}, "outcome_series": {"ratio", "index_point"}, "lag": {"count"}, "minimum_sample": {"count"}},
 	}
-	operationRules, ok := rules[operationID]
+}
+
+func (inputs inputSet) validateUnits(operationID string) error {
+	operationRules, ok := governedUnitRules()[operationID]
 	if !ok {
 		return nil
 	}

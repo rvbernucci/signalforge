@@ -12,11 +12,11 @@
     },
     {
       "claim_id": "tier0-golden-coverage",
-      "text": "The Tier 0 registry contains 28 operations and every operation has one frozen golden specification case.",
+      "text": "The frozen Tier 0 baseline contains 28 operations and every baseline operation has one frozen golden specification case; the active registry is a versioned superset.",
       "status": "verified",
       "evidence": [
         {"path":"fixtures/tier0-golden-cases.json","sha256":"905b7db44beeb4f6beef78823b6ef64f32f16a096926506a56da5b6e9e22252c"},
-        {"path":"internal/capability/tier0.go","sha256":"1d4a09ef66581e255ceb6bc581e04bce6c3f0757a6a4922ae85d5eb9240b0661"}
+        {"path":"internal/capability/tier0.go","sha256":"5b852fd91b6714fe72bceaaf2c9b29bd9073f2bc9c71c93f731cb02a3ff08297"}
       ],
       "public_files": ["README.md"]
     },
@@ -25,7 +25,7 @@
       "text": "Canonical decimal arithmetic uses cockroachdb/apd/v3 v3.2.3 with 34-digit round-half-even policy.",
       "status": "verified",
       "evidence": [
-        {"path":"go.mod","sha256":"e1ffdc4006dfd129d2689b77f509aeb573b7c48121a2343885abc66cebc78c7f"},
+        {"path":"go.mod","sha256":"e3f8f5781683c8932cf63db57cd33f402f5c6cae9a3fb07cf3aa2cf1fdd83615"},
         {"path":"internal/numeric/types.go","sha256":"5ebe39409afee7685045d66bdac1ec667f8410562dc6678220e3ef92a8c94049"}
       ],
       "public_files": ["README.md"]
@@ -36,7 +36,7 @@
       "status": "measured",
       "evidence": [
         {"path":"evidence/engine-benchmark.json","sha256":"ee07959ea8aa7dff4976c0dd8823c7e8b42a812e42168dc843435a76dccc4562"},
-        {"path":"internal/engine/executor.go","sha256":"efbbedc49802f59d7bbbf1a7b64059b792e4e8a32117681c846b99e08f585223"},
+        {"path":"internal/engine/executor.go","sha256":"4d381ef4a284f213ac1d151122d14537c411dc411ac885093e6914d2433aee86"},
         {"path":"internal/engine/executor_test.go","sha256":"5a7ac0891155b92fe5a9725a0aa2fd80f24223e706a6b0380b2557672cf9afc1"}
       ],
       "public_files": ["README.md"]
@@ -138,8 +138,8 @@
       "evidence": [
         {"path":"evidence/workspace-evaluation.json","sha256":"5b53dfcf634d2988a785a53a3629b0bf66ed1bd921dfe78019ea0ce91d5aaf9a"},
         {"path":"fixtures/workspace/golden-case.json","sha256":"3f7bd7a15152492a2f1a56043fc3f966f40915ef46f8fd05f129b910c266ae6f"},
-        {"path":"internal/workspace/server.go","sha256":"62c71bc0dea0ee654bc652f02d9d51ef5b3362df5b916fd3db15a72684d16626"},
-        {"path":"web/src/App.tsx","sha256":"0b579e28660809a96a603a3260815d2ed10fa50ee2c315d6519a75b963d137f2"}
+        {"path":"internal/workspace/server.go","sha256":"31a3ec77570c26b5b7f3247f881b1b85e00277e5c5e2833805abbbcb6176da75"},
+        {"path":"web/src/App.tsx","sha256":"2c2efba6da4b335911950100151c3f59defdc2c5993c9a3d81ebdf7526a2ad8f"}
       ],
       "public_files": ["README.md"]
     },
@@ -161,18 +161,18 @@
       "text": "The frozen Sprint 12 matrix executed 26 adversarial cases through 11 repository gates; all 22 critical and four high-severity cases passed their bounded controls with zero current release blockers and explicit residual risks.",
       "status": "measured",
       "evidence": [
-        {"path":"evidence/hardening-matrix.json","sha256":"475bfa3b623856d2b6d79e0ec3163fb9fd0e6280738b546f68b2587d30f6c82c"},
+        {"path":"evidence/hardening-matrix.json","sha256":"0e9bf12aec0dcbc9f04494f44a9faaa26d6da540279456efda9b124176a53113"},
         {"path":"configs/hardening/sprint12-matrix-v1.json","sha256":"798bcae6ad877e3db479073fd29f527a8cf510fa5f93d7ff2a35fbcb4e04d21a"},
         {"path":"internal/localagent/untrusted_content.go","sha256":"e1774ec6de440c5517e50669880d4e0c8e733ff319182dc4d192d5fba8e73ff1"},
-        {"path":"internal/localagent/synthesis.go","sha256":"384f43d2d7ee7f4bb5487162149ee00f40aa05cac22826d52987b91bb4d47c89"},
+        {"path":"internal/localagent/synthesis.go","sha256":"9a5fceb5c3a260e9b62888318f6fc6b3ba4d68831d66dd6c96b5acd1842a1c4d"},
         {"path":"scripts/verify_clean_startup.sh","sha256":"279d14ed922e66050128653ebc17066281733185d55d6a8e7f5578b0a5d046ff"},
-        {"path":"internal/workspace/load_test.go","sha256":"407390952e0cc9c09cce2c8471e11fc807173fb8a60549d12e98e455fc51e98d"}
+        {"path":"internal/workspace/load_test.go","sha256":"3c0acb05a59708961f12a1f5382dbf079c68babd8f464c52e2b29f7bba410600"}
       ],
       "public_files": ["README.md"]
     },
     {
       "claim_id": "judge-evidence-drafts",
-      "text": "The public judge package contains a visually reviewed six-page project specification, a six-slide deck that passes the canvas-overflow gate, a scalable architecture diagram, and a reviewed 252.9-second Radeon demo with a real local run, source proof, deterministic receipt, governed follow-up, and memory controls; public-link verification remains pending.",
+      "text": "The public judge package contains a visually reviewed six-page project specification, a six-slide deck that passes the canvas-overflow gate, a scalable architecture diagram, and a reviewed 252.9-second Radeon demo with a real local run, source proof, deterministic receipt, governed follow-up, and memory controls; the public release was verified without authentication and matched the local artifact hashes.",
       "status": "verified",
       "evidence": [
         {"path":"evidence/judge-package.json","sha256":"9b0c85c8d7e3be5031f5a256f3c510b95ecd953bb1f509e5fb558c90d74cf3f1"},
@@ -194,7 +194,7 @@
         {"path":"internal/casestore/store_test.go","sha256":"571920e867a8d4d5db36afa63f334b577dca4cec4aba94e9f0fd33a91743c60f"},
         {"path":"internal/permissions/policy.go","sha256":"b6826aace77089b5c740d3a173d22986b04d0c0fbf585a4f26ce89c90d746d64"},
         {"path":"internal/resilience/breaker.go","sha256":"bbfaea25605a0391b59d878918be9319547c3ecdc2df3bc7b9801f08224fc8f3"},
-        {"path":"internal/workspace/server_test.go","sha256":"86f1f7d2e664a75347c027ddcbe1fa28c8cc0babf3e3218fd303f29b409930d3"},
+        {"path":"internal/workspace/server_test.go","sha256":"8c47166230b7ff04319c6117a37de05220a1652221482d7310217562d6fbc70a"},
         {"path":"web/src/components/CaseLibrary.tsx","sha256":"e74d8a326bb7fb71df1aaa487d0500f604df0cb177b1121ab831ee225e82f9c2"}
       ],
       "public_files": ["README.md"]

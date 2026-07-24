@@ -8,17 +8,25 @@ func interpreterSchema() map[string]any {
 	}, "entity_type", "entity_id", "mention", "resolved")
 	period := strictObject(map[string]any{
 		"kind": stringSchema(), "lookback_years": integerSchema(0, 20),
-		"fiscal_years": arraySchema(integerSchema(1900, 2200)), "fiscal_periods": stringArraySchema(),
+		"fiscal_years":   boundedArraySchema(integerSchema(1900, 2200), 8),
+		"fiscal_periods": boundedArraySchema(stringSchema(), 8),
 	}, "kind", "lookback_years", "fiscal_years", "fiscal_periods")
 	comparison := strictObject(map[string]any{
 		"mode":       stringEnum("none", "peer", "benchmark"),
-		"entity_ids": stringArraySchema(), "metrics": stringArraySchema(),
+		"entity_ids": boundedArraySchema(stringSchema(), 4),
+		"metrics":    boundedArraySchema(stringSchema(), 8),
 	}, "mode", "entity_ids", "metrics")
 	return strictObject(map[string]any{
-		"primary_intent": stringEnum(intents...), "secondary_intents": arraySchema(stringEnum(intents...)),
-		"entities": arraySchema(entity), "period": period, "comparison": comparison,
-		"answer_depth": stringEnum("brief", "standard", "deep"), "requested_outputs": stringArraySchema(),
-		"assumptions": stringArraySchema(), "ambiguities": stringArraySchema(), "risk_flags": stringArraySchema(),
+		"primary_intent":    stringEnum(intents...),
+		"secondary_intents": boundedArraySchema(stringEnum(intents...), 4),
+		"entities":          boundedArraySchema(entity, 4),
+		"period":            period,
+		"comparison":        comparison,
+		"answer_depth":      stringEnum("brief", "standard", "deep"),
+		"requested_outputs": boundedArraySchema(stringSchema(), 8),
+		"assumptions":       boundedArraySchema(boundedStringSchema(240), 6),
+		"ambiguities":       boundedArraySchema(boundedStringSchema(240), 6),
+		"risk_flags":        boundedArraySchema(boundedStringSchema(240), 6),
 	}, "primary_intent", "secondary_intents", "entities", "period", "comparison", "answer_depth", "requested_outputs", "assumptions", "ambiguities", "risk_flags")
 }
 

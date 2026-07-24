@@ -23,6 +23,30 @@ func PriceToEarnings(equityMarketValue, netIncome numeric.Decimal) (numeric.Deci
 	return positiveDenominatorRatio(equityMarketValue, netIncome, "net income")
 }
 
+func EnterpriseValueToRevenue(enterpriseValue, revenue numeric.Decimal) (numeric.Decimal, error) {
+	return positiveDenominatorRatio(enterpriseValue, revenue, "revenue")
+}
+
+func EnterpriseValueToEBIT(enterpriseValue, ebit numeric.Decimal) (numeric.Decimal, error) {
+	return positiveDenominatorRatio(enterpriseValue, ebit, "EBIT")
+}
+
+func PriceToBook(equityMarketValue, bookEquity numeric.Decimal) (numeric.Decimal, error) {
+	return positiveDenominatorRatio(equityMarketValue, bookEquity, "book equity")
+}
+
+func PriceToFreeCashFlow(equityMarketValue, freeCashFlowToEquity numeric.Decimal) (numeric.Decimal, error) {
+	return positiveDenominatorRatio(equityMarketValue, freeCashFlowToEquity, "free cash flow to equity")
+}
+
+func FreeCashFlowYield(freeCashFlowToEquity, equityMarketValue numeric.Decimal) (numeric.Decimal, error) {
+	return positiveDenominatorRatio(freeCashFlowToEquity, equityMarketValue, "equity market value")
+}
+
+func EarningsYield(netIncome, equityMarketValue numeric.Decimal) (numeric.Decimal, error) {
+	return positiveDenominatorRatio(netIncome, equityMarketValue, "equity market value")
+}
+
 func UnleverBeta(leveredBeta, debt, equity, taxRate numeric.Decimal) (numeric.Decimal, error) {
 	if sign, _ := compare(equity, zero); sign <= 0 {
 		return numeric.Decimal{}, errors.New("equity must be positive")

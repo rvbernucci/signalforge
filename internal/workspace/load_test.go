@@ -23,7 +23,7 @@ func TestFixtureServerSustainsExpectedDemoReadLoad(t *testing.T) {
 	httpServer := httptest.NewServer(server.Handler())
 	defer httpServer.Close()
 
-	paths := []string{"/api/v1/health", "/api/v1/config", "/api/v1/cases/golden"}
+	paths := []string{"/health/live", "/health/ready", "/api/v1/health", "/api/v1/config", "/api/v1/cases/golden"}
 	const requests = 96
 	started := time.Now()
 	errors := make(chan error, requests)

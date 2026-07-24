@@ -104,6 +104,10 @@ web/*.tsbuildinfo
 web/vite.config.js
 web/vite.config.d.ts
 
+# Runtime-only container secrets and state
+.secrets/
+.signalforge/
+
 # Local presentation QA renders
 output/presentation/*.inspect.ndjson
 output/presentation/SignalForge-Judge-Deck/

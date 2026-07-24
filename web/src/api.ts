@@ -1,4 +1,13 @@
-import type { CaseSummary, Projection, RunView, ScenarioControl, StoredCase, WorkspaceConfig } from "./types";
+import type {
+  CaseSummary,
+  IntelligenceRecord,
+  Projection,
+  ProtectedIntelligenceRecord,
+  RunView,
+  ScenarioControl,
+  StoredCase,
+  WorkspaceConfig
+} from "./types";
 
 type Problem = { error?: { code?: string } };
 
@@ -60,4 +69,21 @@ export function subscribeToRun(runID: string, onEvent: (event: MessageEvent<stri
   source.addEventListener("progress", onEvent as EventListener);
   source.onerror = onError;
   return source;
+}
+
+export async function getIntelligence(runID: string): Promise<IntelligenceRecord> {
+  return readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}/intelligence`));
+}
+
+export async function getProtectedIntelligence(runID: string, token: string): Promise<ProtectedIntelligenceRecord> {
+  return readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}/intelligence/protected`, {
+    headers: { "X-SignalForge-Audit-Token": token }
+  }));
+}
+
+export async function purgeProtectedIntelligence(runID: string, token: string): Promise<void> {
+  await readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}/intelligence/protected`, {
+    method: "DELETE",
+    headers: { "X-SignalForge-Audit-Token": token }
+  }));
 }

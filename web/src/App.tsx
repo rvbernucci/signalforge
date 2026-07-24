@@ -3,6 +3,7 @@ import { getConfig, getGoldenCase } from "./api";
 import { CaseNotes, InsightPanel } from "./components/InsightPanel";
 import { MobileHeader, Navigation } from "./components/Navigation";
 import { ProofDrawer } from "./components/ProofDrawer";
+import { IntelligenceDrawer } from "./components/IntelligenceDrawer";
 import { RunProgress } from "./components/RunProgress";
 import { ScenarioBar } from "./components/ScenarioBar";
 import { ArrowIcon, ChipIcon, ShieldIcon, SparkIcon } from "./components/Icons";
@@ -27,6 +28,7 @@ export function App() {
   const [followUp, setFollowUp] = useState("");
   const [retain, setRetain] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const research = useResearchRun(fixture);
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function App() {
       setDrawerOpen(false);
       setNavOpen(false);
       setLibraryOpen(false);
+      setIntelligenceOpen(false);
     }
     window.addEventListener("keydown", closeOverlay);
     return () => window.removeEventListener("keydown", closeOverlay);
@@ -115,15 +118,22 @@ export function App() {
             <div><span className="eyebrow">Evidence coverage</span><strong>{Math.round(projection.metrics.evidence_coverage * 100)}%</strong></div>
             <div><span className="eyebrow">Supported claims</span><strong>{projection.metrics.supported_claims} / {projection.metrics.claims}</strong></div>
             <button onClick={() => openProof("evidence")}><span className="eyebrow">Audit trail</span><strong>Open proof layer <ArrowIcon /></strong></button>
+            <button onClick={() => setIntelligenceOpen(true)} disabled={!config.intelligence_audit}><span className="eyebrow">Intelligence path</span><strong>Inspect orchestration <ArrowIcon /></strong></button>
           </section>
 
           <InsightPanel projection={projection} activeSection={activeSection} onSection={setActiveSection} onProof={openProof} />
           <CaseNotes projection={projection} />
           <FollowUpPanel projection={projection} enabled={config.follow_ups_live} value={followUp} running={research.running} onValue={setFollowUp} onSubmit={submitFollowUp} />
         </div>
-        <footer className="site-footer"><span>SignalForge · Private investor intelligence</span><span><ShieldIcon /> No remote model calls · No model-authored financial values</span></footer>
+        <footer className="site-footer"><span>SignalForge · Private investor intelligence</span><span><ShieldIcon /> Local core inference · No model-authored financial values</span></footer>
       </main>
       <ProofDrawer projection={projection} open={drawerOpen} tab={drawerTab} refs={drawerRefs} onTab={setDrawerTab} onClose={() => setDrawerOpen(false)} />
+      <IntelligenceDrawer
+        runID={projection.run_id}
+        open={intelligenceOpen}
+        protectedCapture={config.protected_capture}
+        onClose={() => setIntelligenceOpen(false)}
+      />
     </div>
   );
 }

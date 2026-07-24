@@ -120,6 +120,8 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 	placeApprovedCounterevidenceClaims(body.Sections, material.Claims)
 	canonicalizeRequestedAssumptions(&body, material)
 	placeRequiredSemanticAuthority(body.Sections, material)
+	repairReceiptAvailabilityClaims(&body, material)
+	neutralizeInternalReferenceMentions(&body, material)
 	draftErr := validateNumericallySilentDraft(body)
 	if draftErr == nil {
 		draftErr = validateRequiredDecisionSections(body, input.Request.RequestedOutputs, material.Claims)
@@ -156,6 +158,8 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 		placeApprovedCounterevidenceClaims(body.Sections, material.Claims)
 		canonicalizeRequestedAssumptions(&body, material)
 		placeRequiredSemanticAuthority(body.Sections, material)
+		repairReceiptAvailabilityClaims(&body, material)
+		neutralizeInternalReferenceMentions(&body, material)
 		if err := validateNumericallySilentDraft(body); err != nil {
 			return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded numerical-silence retry: %w", err)
 		}
@@ -267,7 +271,13 @@ func placeRequiredSemanticAuthority(sections []answerSectionDraft, material synt
 			appendRef(section, first(roles.MarketBehavior))
 			section.Content = appendSentence(section.Content, "Market observations are measurements, not causal attributions.")
 		case "scenarios":
-			appendRef(section, first(roles.Valuation))
+			if material.Request.PrimaryIntent == "economic_transmission" {
+				appendRef(section, first(roles.EconomicsTransmission))
+				section.Content = appendSentence(section.Content, "Scenarios remain conditional on approved economic-transmission mechanisms.")
+			} else {
+				appendRef(section, first(roles.Valuation))
+				section.Content = appendSentence(section.Content, "Scenario ranges combine Go-validated valuation receipts with the explicit macro assumptions.")
+			}
 			appendRef(section, macroAuthority)
 			for _, assumption := range material.Request.Assumptions {
 				for _, claim := range byRole[roles.EconomicsTransmission] {
@@ -277,7 +287,6 @@ func placeRequiredSemanticAuthority(sections []answerSectionDraft, material synt
 					}
 				}
 			}
-			section.Content = appendSentence(section.Content, "Scenario ranges combine Go-validated valuation receipts with the explicit macro assumptions.")
 		}
 	}
 }
@@ -469,7 +478,10 @@ func validateDecisionSemanticAuthority(body finalBody, material synthesisPromptI
 		}
 	}
 	if section, required := sections["scenarios"]; required {
-		if !hasRole(section, roles.Valuation) {
+		if material.Request.PrimaryIntent == "economic_transmission" && !hasRole(section, roles.EconomicsTransmission) {
+			return errors.New("economic-transmission scenarios require approved economics-transmission authority")
+		}
+		if material.Request.PrimaryIntent != "economic_transmission" && !hasRole(section, roles.Valuation) {
 			return errors.New("scenarios requires approved valuation authority")
 		}
 		coveredAssumptions := map[string]bool{}
@@ -555,6 +567,7 @@ var modelOwnedDirectionPattern = regexp.MustCompile(`(?i)\b(?:higher|lower|great
 var numericalConceptPattern = regexp.MustCompile(`(?i)\b(?:dcf|discounted\s+cash\s+flow|enterprise\s+value|valuation|multiple|margin|growth|revenue|cash\s+flow|capex|return|volatility|beta|correlation|price|earnings|debt|equity)\b`)
 var unavailableAuthorityPattern = regexp.MustCompile(`(?i)\b(?:not\s+(?:available|provided|supplied|present)|unavailable|missing|absent|withheld|remain(?:s)?\s+open)\b`)
 var malformedMixedCasePattern = regexp.MustCompile(`[a-z][A-Z]{2,}\b`)
+var semanticSentenceFragmentPattern = regexp.MustCompile(`(?s)[^.!?\n]+(?:[.!?]+|$)`)
 
 // Models may explain why a deterministic relation matters, but they cannot author the relation's
 // company ordering. Go appends the validated direction after synthesis.
@@ -614,6 +627,72 @@ func validateReceiptAvailabilityClaims(body finalBody, material synthesisPromptI
 		}
 	}
 	return nil
+}
+
+// A successful calculation receipt is stronger authority than model-authored availability prose.
+// Go removes only the contradictory sentence and records a neutral, receipt-backed boundary; it
+// never invents a value or rewrites the model's qualitative interpretation.
+func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptInput) {
+	operations := map[string]bool{}
+	for _, operation := range material.ValidatedOperations {
+		operations[operation] = true
+	}
+	for _, receipt := range material.Receipts {
+		operations[receipt.OperationID] = true
+	}
+	terms := map[string][]string{
+		"valuation.fcff_dcf":          {"dcf", "discounted cash flow", "valuation range", "valuation ranges"},
+		"scenario.sensitivity_matrix": {"sensitivity", "sensitivity matrix"},
+		"valuation.peer_multiple":     {"multiple", "multiples"},
+	}
+	sanitize := func(value string) (string, []string) {
+		kept := make([]string, 0)
+		removed := make([]string, 0)
+		for _, sentence := range semanticSentenceFragmentPattern.FindAllString(value, -1) {
+			lower := strings.ToLower(sentence)
+			matched := false
+			if unavailableAuthorityPattern.MatchString(sentence) {
+				for operation, aliases := range terms {
+					if !operations[operation] {
+						continue
+					}
+					for _, alias := range aliases {
+						if strings.Contains(lower, alias) {
+							removed = appendUnique(removed, operation)
+							matched = true
+							break
+						}
+					}
+				}
+			}
+			if !matched && strings.TrimSpace(sentence) != "" {
+				kept = append(kept, strings.TrimSpace(sentence))
+			}
+		}
+		return strings.TrimSpace(strings.Join(kept, " ")), removed
+	}
+	for index := range body.Sections {
+		content, removed := sanitize(body.Sections[index].Content)
+		if len(removed) > 0 {
+			sort.Strings(removed)
+			content = strings.TrimSpace(content + " Deterministic outputs for " +
+				strings.Join(removed, ", ") +
+				" are available under validated calculation receipts; interpretation remains conditional on the supplied assumptions.")
+		}
+		body.Sections[index].Content = content
+	}
+	limitations := make([]string, 0, len(body.Limitations))
+	for _, limitation := range body.Limitations {
+		content, removed := sanitize(limitation)
+		if content != "" {
+			limitations = append(limitations, content)
+		}
+		if len(removed) > 0 && content == "" {
+			limitations = append(limitations,
+				"Deterministic outputs remain conditional on the supplied assumptions and source scope.")
+		}
+	}
+	body.Limitations = limitations
 }
 
 func validatePresentationQuality(body finalBody) error {

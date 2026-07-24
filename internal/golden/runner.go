@@ -13,6 +13,7 @@ import (
 
 	"github.com/rvbernucci/signalforge/internal/benchmark"
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
 	"github.com/rvbernucci/signalforge/internal/localagent"
 	"github.com/rvbernucci/signalforge/internal/orchestrator"
 	"github.com/rvbernucci/signalforge/internal/requestparser"
@@ -45,6 +46,7 @@ type RunConfig struct {
 	SpecialistHTTPClient *http.Client
 	ContextConcurrency   int
 	EventSink            orchestrator.EventSink
+	ModelObserver        intelligenceaudit.ModelObserver
 	RequestOverride      *contracts.ResearchRequest
 	Assumptions          []string
 	UseAssumptions       bool
@@ -131,7 +133,7 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 		return Report{}, fmt.Errorf("build golden material provider: %w", err)
 	}
 	client := benchmark.Client{BaseURL: strings.TrimRight(config.BaseURL, "/"), HTTPClient: config.HTTPClient}
-	localRecorder := newRecordingCompleterForProvider(client, "local-rocm")
+	localRecorder := newRecordingCompleterForProvider(client, "local-rocm", config.ModelObserver)
 	localAdapters, err := localagent.New(localRecorder, config.Model, provider)
 	if err != nil {
 		return Report{}, err
@@ -144,7 +146,7 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 			APIKey:  config.SpecialistAPIKey, ReuseConnections: true,
 			HTTPClient: config.SpecialistHTTPClient,
 		}
-		remoteRecorder := newRecordingCompleterForProvider(remoteClient, config.SpecialistProvider)
+		remoteRecorder := newRecordingCompleterForProvider(remoteClient, config.SpecialistProvider, config.ModelObserver)
 		failover := failoverCompleter{
 			primary: remoteRecorder, fallback: localRecorder, fallbackModel: config.Model,
 		}
@@ -279,6 +281,7 @@ type recordingCompleter struct {
 	providerID string
 	roles      map[string]string
 	prompts    []promptRole
+	observer   intelligenceaudit.ModelObserver
 	mu         sync.Mutex
 	calls      []CallMetric
 }
@@ -289,10 +292,10 @@ type promptRole struct {
 }
 
 func newRecordingCompleter(client benchmark.Client) *recordingCompleter {
-	return newRecordingCompleterForProvider(client, "local-rocm")
+	return newRecordingCompleterForProvider(client, "local-rocm", nil)
 }
 
-func newRecordingCompleterForProvider(client benchmark.Client, providerID string) *recordingCompleter {
+func newRecordingCompleterForProvider(client benchmark.Client, providerID string, observer intelligenceaudit.ModelObserver) *recordingCompleter {
 	registry := localagent.DefaultPromptRegistry()
 	roleByPrompt := map[string]string{}
 	prompts := make([]promptRole, 0)
@@ -303,6 +306,7 @@ func newRecordingCompleterForProvider(client benchmark.Client, providerID string
 	sort.Slice(prompts, func(i, j int) bool { return len(prompts[i].system) > len(prompts[j].system) })
 	return &recordingCompleter{
 		client: client, providerID: providerID, roles: roleByPrompt, prompts: prompts,
+		observer: observer,
 	}
 }
 
@@ -330,6 +334,9 @@ func (recorder *recordingCompleter) Complete(ctx context.Context, request benchm
 	recorder.mu.Lock()
 	recorder.calls = append(recorder.calls, metric)
 	recorder.mu.Unlock()
+	if recorder.observer != nil {
+		recorder.observer.ObserveModelCall(ctx, roleID, recorder.providerID, request, completion, err)
+	}
 	return completion, err
 }
 

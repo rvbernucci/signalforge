@@ -108,11 +108,11 @@
         },
         {
           "path": "internal/localagent/adapter_test.go",
-          "sha256": "8e2c9e3050d3b6a3d0d18fc577486d495125ff3f99c9e49adb7aaaf0aa024e0d"
+          "sha256": "69d985ad9356dbe987ea75fa178947d30bbd769aef293ce2f9c3a0243f10891e"
         },
         {
           "path": "internal/localagent/synthesis.go",
-          "sha256": "384f43d2d7ee7f4bb5487162149ee00f40aa05cac22826d52987b91bb4d47c89"
+          "sha256": "9a5fceb5c3a260e9b62888318f6fc6b3ba4d68831d66dd6c96b5acd1842a1c4d"
         }
       ],
       "status": "passed"
@@ -203,7 +203,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "86f1f7d2e664a75347c027ddcbe1fa28c8cc0babf3e3218fd303f29b409930d3"
+          "sha256": "8c47166230b7ff04319c6117a37de05220a1652221482d7310217562d6fbc70a"
         }
       ],
       "status": "passed"
@@ -220,7 +220,7 @@
         },
         {
           "path": "cmd/signalforge-workspace/main.go",
-          "sha256": "9ec2a12024d9b8f2f2417501eaab0c52116ecf3aa898e6c622cf567658d50224"
+          "sha256": "2ab022b1907d11926a71f62c186a819c9d5a32e39ea5bc1de84595121ed3c689"
         }
       ],
       "status": "passed"
@@ -238,7 +238,7 @@
       "source_hashes": [
         {
           "path": "internal/workspace/load_test.go",
-          "sha256": "407390952e0cc9c09cce2c8471e11fc807173fb8a60549d12e98e455fc51e98d"
+          "sha256": "3c0acb05a59708961f12a1f5382dbf079c68babd8f464c52e2b29f7bba410600"
         }
       ],
       "status": "passed"

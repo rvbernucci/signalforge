@@ -182,6 +182,10 @@ func (adapters *Adapters) Run(ctx context.Context, request contracts.ContextRequ
 			return contracts.ContextPacket{}, fmt.Errorf("decode context packet body after bounded truncation retry: %w", err)
 		}
 	}
+	return buildContextPacket(request, material, body)
+}
+
+func buildContextPacket(request contracts.ContextRequest, material Material, body packetBody) (contracts.ContextPacket, error) {
 	packet := contracts.ContextPacket{
 		SchemaVersion: contracts.SchemaVersionV1, PacketID: "packet-" + request.ContextRequestID,
 		RunID: request.RunID, StepID: request.StepID, SpecialistRole: request.SpecialistRole,
@@ -207,6 +211,7 @@ func (adapters *Adapters) Run(ctx context.Context, request contracts.ContextRequ
 	quarantineStructurallyInvalidClaims(&packet)
 	quarantineUnauthorizedClaims(&packet, material)
 	appendSourceBackedRiskCounterevidence(&packet, material)
+	appendSourceBackedBusinessFacts(&packet, material)
 	appendScopeBoundaryFindings(&packet, material)
 	appendMarketPriceFindings(&packet, material)
 	if request.SpecialistRole == roles.EconomicsTransmission {
@@ -223,6 +228,8 @@ func (adapters *Adapters) Run(ctx context.Context, request contracts.ContextRequ
 	for index := range packet.Counterevidence {
 		packet.Counterevidence[index].ValidAsOf = request.Scope.AsOf
 	}
+	quarantineModelSemanticViolations(&packet)
+	var err error
 	packet.Evidence, packet.CalculationReceipts, packet.NumericalContext, err = authorizePacketReferences(packet, material)
 	if err != nil {
 		return contracts.ContextPacket{}, err
@@ -245,7 +252,7 @@ func appendCanonicalTransmissionHypotheses(packet *contracts.ContextPacket, assu
 		if assumption == "" {
 			continue
 		}
-		statement := "Under the explicit request scenario, operating and valuation outcomes may differ; direction and magnitude require evidence."
+		statement := "Under the explicit request scenario, the stated variable could affect operating and valuation outcomes through financing, demand, or discount-rate channels; direction and magnitude require evidence."
 		lower := strings.ToLower(assumption)
 		switch {
 		case strings.Contains(lower, "interest rate") || strings.Contains(lower, "higher-for-longer"):
@@ -378,6 +385,44 @@ func appendSourceBackedRiskCounterevidence(packet *contracts.ContextPacket, mate
 func isSECItem1ARiskSection(section string) bool {
 	normalized := strings.ToLower(strings.Join(strings.Fields(section), " "))
 	return strings.HasPrefix(normalized, "item 1a") && strings.Contains(normalized, "risk")
+}
+
+// Item 1 business descriptions are issuer-authored facts. Carrying a bounded exact extraction for
+// each available issuer prevents a contrarian review from replacing business-model authority with
+// an unrelated risk disclosure merely because model-authored prose was narrowed.
+func appendSourceBackedBusinessFacts(packet *contracts.ContextPacket, material Material) {
+	if packet.SpecialistRole != roles.BusinessStrategy {
+		return
+	}
+	candidates := make([]contracts.EvidenceItem, 0)
+	for _, item := range material.Evidence.Items {
+		statement := strings.TrimSpace(item.Statement)
+		if evidenceIsQuarantined(item) || item.State != contracts.EvidenceAvailable ||
+			!isSECItem1BusinessSection(item.EvidenceRef.DocumentSection) ||
+			statement == "" || containsAuthoritativeNumericalLiteral(statement) {
+			continue
+		}
+		candidates = append(candidates, item)
+	}
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].EvidenceRef.EvidenceID < candidates[j].EvidenceRef.EvidenceID
+	})
+	for _, item := range candidates {
+		packet.Findings = append(packet.Findings, contracts.Finding{
+			ClaimType:    contracts.ClaimFact,
+			Origin:       contracts.FindingOriginSourceExtraction,
+			Statement:    strings.TrimSpace(item.Statement),
+			EvidenceRefs: []string{item.EvidenceRef.EvidenceID},
+			Confidence:   1,
+		})
+	}
+}
+
+func isSECItem1BusinessSection(section string) bool {
+	normalized := strings.ToLower(strings.Join(strings.Fields(section), " "))
+	return strings.HasPrefix(normalized, "item 1") &&
+		!strings.HasPrefix(normalized, "item 1a") &&
+		strings.Contains(normalized, "business")
 }
 
 func appendDeterministicNumericalRelationFindings(packet *contracts.ContextPacket, numerical *contracts.NumericalContext) {

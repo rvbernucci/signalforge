@@ -345,6 +345,21 @@ func dispatch(operationID string, inputs inputSet) ([]contracts.ReceiptOutput, [
 		}
 		value, calculationErr := finance.IncrementalROIC(nopat, capital)
 		return ratioOutput("incremental_roic", value, calculationErr)
+	case "financial.roce":
+		ebit, err := scalar("ebit")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		assets, err := scalar("total_assets")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		liabilities, err := scalar("current_liabilities")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		value, calculationErr := finance.ROCE(ebit, assets, liabilities)
+		return ratioOutput("roce", value, calculationErr)
 	case "financial.value_creation_spread":
 		roic, err := scalar("roic")
 		if err != nil {
@@ -447,6 +462,17 @@ func dispatch(operationID string, inputs inputSet) ([]contracts.ReceiptOutput, [
 		}
 		value, calculationErr := finance.QuickRatio(values[0], values[1], values[2], values[3])
 		return ratioOutput("quick_ratio", value, calculationErr)
+	case "financial.cash_ratio":
+		values := make([]numeric.Decimal, 3)
+		var err error
+		for index, name := range []string{"cash_and_equivalents", "marketable_securities", "current_liabilities"} {
+			values[index], err = scalar(name)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+		}
+		value, calculationErr := finance.CashRatio(values[0], values[1], values[2])
+		return ratioOutput("cash_ratio", value, calculationErr)
 	case "financial.interest_coverage":
 		ebit, err := scalar("ebit")
 		if err != nil {
@@ -469,6 +495,58 @@ func dispatch(operationID string, inputs inputSet) ([]contracts.ReceiptOutput, [
 		}
 		value, calculationErr := finance.NetDebtToEBITDA(netDebt, ebitda)
 		return ratioOutput("net_debt_to_ebitda", value, calculationErr)
+	case "financial.cash_conversion_ebitda", "financial.cash_conversion_operating_profit":
+		cashFlow, err := scalar("operating_cash_flow")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		denominatorName := "ebitda"
+		kind := finance.CashConversionEBITDA
+		outputID := "cash_conversion_ebitda"
+		if operationID == "financial.cash_conversion_operating_profit" {
+			denominatorName = "operating_profit"
+			kind = finance.CashConversionOperatingProfit
+			outputID = "cash_conversion_operating_profit"
+		}
+		denominator, err := scalar(denominatorName)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		result, calculationErr := finance.TypedCashConversion(kind, cashFlow, denominator)
+		return ratioOutput(outputID, result.Value, calculationErr)
+	case "financial.buyback_yield", "financial.dividend_yield":
+		marketCapitalization, err := scalar("market_capitalization")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		inputName, outputID := "net_repurchases", "buyback_yield"
+		if operationID == "financial.dividend_yield" {
+			inputName, outputID = "dividends_paid", "dividend_yield"
+		}
+		amount, err := scalar(inputName)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		value, calculationErr := finance.BuybackYield(amount, marketCapitalization)
+		if operationID == "financial.dividend_yield" {
+			value, calculationErr = finance.DividendYield(amount, marketCapitalization)
+		}
+		return ratioOutput(outputID, value, calculationErr)
+	case "financial.net_payout_yield":
+		repurchases, err := scalar("net_repurchases")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		dividends, err := scalar("dividends_paid")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		marketCapitalization, err := scalar("market_capitalization")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		value, calculationErr := finance.NetPayoutYield(repurchases, dividends, marketCapitalization)
+		return ratioOutput("net_payout_yield", value, calculationErr)
 	case "financial.shareholder_yield":
 		values := make([]numeric.Decimal, 4)
 		var err error
@@ -584,6 +662,34 @@ func dispatch(operationID string, inputs inputSet) ([]contracts.ReceiptOutput, [
 			decimalOutput("terminal_present_value", result.TerminalPresentValue, "currency", currency),
 			decimalOutput("terminal_value_share", result.TerminalValueShare, "ratio", ""),
 		}, nil, result.Warnings, nil
+	case "valuation.dividend_discount":
+		dividends, err := inputs.decimalSeries("dividend_forecast")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		costOfEquity, err := scalar("cost_of_equity")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		terminalGrowth, err := scalar("terminal_growth")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		midYearValue, err := inputs.integer("mid_year")
+		if err != nil || (midYearValue != 0 && midYearValue != 1) {
+			return nil, nil, nil, errors.New("mid_year must be encoded as zero or one")
+		}
+		result, err := finance.DividendDiscountModel(dividends, costOfEquity, terminalGrowth, midYearValue == 1)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		return []contracts.ReceiptOutput{
+			decimalOutput("equity_value", result.EnterpriseValue, "currency", currency),
+			decimalOutput("explicit_present_value", result.ExplicitPresentValue, "currency", currency),
+			decimalOutput("terminal_value", result.TerminalValue, "currency", currency),
+			decimalOutput("terminal_present_value", result.TerminalPresentValue, "currency", currency),
+			decimalOutput("terminal_value_share", result.TerminalValueShare, "ratio", ""),
+		}, nil, result.Warnings, nil
 	case "valuation.reverse_revenue_growth":
 		values := make([]numeric.Decimal, 7)
 		var err error
@@ -605,28 +711,137 @@ func dispatch(operationID string, inputs inputSet) ([]contracts.ReceiptOutput, [
 			return nil, nil, nil, errors.New("non_convergent: reverse revenue growth exhausted iteration budget")
 		}
 		return []contracts.ReceiptOutput{decimalOutput("implied_revenue_growth", result.ImpliedValue, "ratio", ""), intOutput("iterations", result.Iterations, "count")}, []contracts.InvariantResult{{InvariantID: "reverse_revenue_growth_converged", Passed: true}}, nil, nil
-	case "valuation.ev_to_ebitda":
+	case "valuation.reverse_operating_margin", "valuation.reverse_reinvestment_rate":
+		values := make(map[string]numeric.Decimal)
+		for _, name := range []string{"enterprise_value", "base_revenue", "revenue_growth", "tax_rate", "discount_rate", "terminal_growth"} {
+			value, err := scalar(name)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			values[name] = value
+		}
+		years, err := inputs.integer("years")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		outputID := "implied_operating_margin"
+		var result finance.ReverseExpectationsResult
+		if operationID == "valuation.reverse_operating_margin" {
+			reinvestmentRate, err := scalar("reinvestment_rate")
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			result, err = finance.ReverseOperatingMargin(
+				values["enterprise_value"], values["base_revenue"], values["revenue_growth"],
+				values["tax_rate"], reinvestmentRate, values["discount_rate"], values["terminal_growth"],
+				years, 256, numeric.MustDecimal("0.00000001"),
+			)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+		} else {
+			outputID = "implied_reinvestment_rate"
+			operatingMargin, err := scalar("operating_margin")
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			result, err = finance.ReverseReinvestmentRate(
+				values["enterprise_value"], values["base_revenue"], values["revenue_growth"],
+				operatingMargin, values["tax_rate"], values["discount_rate"], values["terminal_growth"],
+				years, 256, numeric.MustDecimal("0.00000001"),
+			)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+		}
+		if !result.Converged {
+			return nil, nil, nil, errors.New("non_convergent: reverse expectation exhausted iteration budget")
+		}
+		return []contracts.ReceiptOutput{decimalOutput(outputID, result.ImpliedValue, "ratio", ""), intOutput("iterations", result.Iterations, "count")}, []contracts.InvariantResult{{InvariantID: outputID + "_converged", Passed: true}}, nil, nil
+	case "valuation.implied_roic":
+		growth, err := scalar("growth_rate")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		reinvestment, err := scalar("reinvestment_rate")
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		value, calculationErr := finance.ImpliedReturnOnCapital(growth, reinvestment)
+		return ratioOutput("implied_roic", value, calculationErr)
+	case "valuation.enterprise_to_equity_detailed":
+		values := make([]numeric.Decimal, 7)
+		var err error
+		for index, name := range []string{"enterprise_value", "debt", "cash", "investments", "minority_interest", "option_value", "diluted_shares"} {
+			values[index], err = scalar(name)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+		}
+		result, err := finance.DetailedEnterpriseToEquity(values[0], values[1], values[2], values[3], values[4], values[5], values[6])
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		return []contracts.ReceiptOutput{
+			decimalOutput("equity_value", result.EquityValue, "currency", currency),
+			decimalOutput("value_per_diluted_share", result.ValuePerDilutedShare, "currency_per_share", currency),
+		}, nil, nil, nil
+	case "valuation.ev_to_ebitda", "valuation.ev_to_revenue", "valuation.ev_to_ebit":
 		enterprise, err := scalar("enterprise_value")
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		ebitda, err := scalar("ebitda")
+		denominatorName, outputID := "ebitda", "ev_to_ebitda"
+		if operationID == "valuation.ev_to_revenue" {
+			denominatorName, outputID = "revenue", "ev_to_revenue"
+		} else if operationID == "valuation.ev_to_ebit" {
+			denominatorName, outputID = "ebit", "ev_to_ebit"
+		}
+		denominator, err := scalar(denominatorName)
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		value, calculationErr := finance.EnterpriseValueToEBITDA(enterprise, ebitda)
-		return ratioOutput("ev_to_ebitda", value, calculationErr)
-	case "valuation.price_to_earnings":
+		value, calculationErr := finance.EnterpriseValueToEBITDA(enterprise, denominator)
+		if operationID == "valuation.ev_to_revenue" {
+			value, calculationErr = finance.EnterpriseValueToRevenue(enterprise, denominator)
+		} else if operationID == "valuation.ev_to_ebit" {
+			value, calculationErr = finance.EnterpriseValueToEBIT(enterprise, denominator)
+		}
+		return ratioOutput(outputID, value, calculationErr)
+	case "valuation.price_to_earnings", "valuation.price_to_book", "valuation.price_to_fcf", "valuation.fcf_yield", "valuation.earnings_yield":
 		marketValue, err := scalar("equity_market_value")
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		income, err := scalar("net_income")
+		inputName, outputID := "net_income", "price_to_earnings"
+		if operationID == "valuation.price_to_book" {
+			inputName, outputID = "book_equity", "price_to_book"
+		} else if operationID == "valuation.price_to_fcf" || operationID == "valuation.fcf_yield" {
+			inputName = "free_cash_flow_to_equity"
+			if operationID == "valuation.price_to_fcf" {
+				outputID = "price_to_fcf"
+			} else {
+				outputID = "fcf_yield"
+			}
+		} else if operationID == "valuation.earnings_yield" {
+			outputID = "earnings_yield"
+		}
+		denominator, err := scalar(inputName)
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		value, calculationErr := finance.PriceToEarnings(marketValue, income)
-		return ratioOutput("price_to_earnings", value, calculationErr)
+		value, calculationErr := finance.PriceToEarnings(marketValue, denominator)
+		switch operationID {
+		case "valuation.price_to_book":
+			value, calculationErr = finance.PriceToBook(marketValue, denominator)
+		case "valuation.price_to_fcf":
+			value, calculationErr = finance.PriceToFreeCashFlow(marketValue, denominator)
+		case "valuation.fcf_yield":
+			value, calculationErr = finance.FreeCashFlowYield(denominator, marketValue)
+		case "valuation.earnings_yield":
+			value, calculationErr = finance.EarningsYield(denominator, marketValue)
+		}
+		return ratioOutput(outputID, value, calculationErr)
 	case "comparison.dupont":
 		values := make([]float64, 4)
 		var err error

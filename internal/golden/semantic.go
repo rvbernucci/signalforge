@@ -270,8 +270,26 @@ func EvaluateSemantics(report Report, rubric SemanticRubric, rubricSHA string, e
 		}
 	}
 
-	approved := map[string]int{}
+	// The orchestration result preserves the complete review history, including intermediate
+	// repair requests. Final synthesis is authorized only by the approved reports referenced in
+	// the released answer, so semantic evaluation must use that same authority boundary.
+	critiquesByID := make(map[string]contracts.CritiqueReport, len(report.Result.Critiques))
 	for _, critique := range report.Result.Critiques {
+		critiquesByID[critique.ReportID] = critique
+	}
+	approved := map[string]int{}
+	authorityValid := len(answer.CritiqueRefs) > 0
+	authorityReports := map[string]bool{}
+	authorityReviewers := map[string]bool{}
+	for _, reportID := range answer.CritiqueRefs {
+		critique, exists := critiquesByID[reportID]
+		if !exists || authorityReports[reportID] || authorityReviewers[critique.ReviewerRole] ||
+			critique.Decision != contracts.CritiqueApprove {
+			authorityValid = false
+			continue
+		}
+		authorityReports[reportID] = true
+		authorityReviewers[critique.ReviewerRole] = true
 		for _, claimID := range critique.ApprovedClaims {
 			approved[claimID]++
 		}
@@ -282,15 +300,16 @@ func EvaluateSemantics(report Report, rubric SemanticRubric, rubricSHA string, e
 			released[claimID] = true
 		}
 	}
-	unanimous := true
+	unanimous := authorityValid && len(authorityReports) == len(answer.CritiqueRefs)
 	unknown := false
 	for claimID := range released {
-		unanimous = unanimous && approved[claimID] == len(report.Result.Critiques)
+		unanimous = unanimous && approved[claimID] == len(authorityReports)
 		_, exists := claims[claimID]
 		unknown = unknown || !exists
 	}
 	add("released_claim_authority", !unknown && unanimous && len(released) > 0,
-		fmt.Sprintf("released=%d unknown=%t unanimous=%t", len(released), unknown, unanimous))
+		fmt.Sprintf("released=%d review_refs=%d authority_valid=%t unknown=%t unanimous=%t",
+			len(released), len(authorityReports), authorityValid, unknown, unanimous))
 
 	evaluation.TotalChecks = len(evaluation.Checks)
 	evaluation.Passed = evaluation.TotalChecks > 0 && evaluation.PassedChecks == evaluation.TotalChecks

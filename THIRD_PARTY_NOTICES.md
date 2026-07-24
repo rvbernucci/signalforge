@@ -48,6 +48,10 @@ The production module identities are pinned by `go.mod` and `go.sum`.
 | Component | Version | License |
 | --- | --- | --- |
 | `github.com/cockroachdb/apd/v3` | `v3.2.3` | Apache License 2.0 |
+| `go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp` | `v0.68.0` | Apache License 2.0 |
+| `go.opentelemetry.io/otel` | `v1.43.0` | Apache License 2.0 |
+| `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | `v1.43.0` | Apache License 2.0 |
+| `go.opentelemetry.io/otel/sdk` | `v1.43.0` | Apache License 2.0 |
 | `modernc.org/sqlite` | `v1.38.2` | BSD 3-Clause License |
 
 Go resolves additional indirect modules recorded in `go.mod` and `go.sum`. No Go dependency source
@@ -89,6 +93,13 @@ committed.
 
 The IBM Plex Mono and Newsreader font files incorporated by a locally generated web bundle remain
 under the SIL Open Font License 1.1 distributed by their Fontsource packages.
+
+## Optional Observability Stack
+
+The development and demonstration Compose profiles reference pinned Grafana, Prometheus, Loki,
+Tempo, and Alloy container images. Those services are independent runtime components and are not
+incorporated into the SignalForge application image. Their upstream licenses, container notices,
+and trademarks remain authoritative.
 
 ## External Data And Services
 

@@ -1,6 +1,7 @@
 package localagent
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -87,4 +88,39 @@ func validateSpecialistSemantics(packet contracts.ContextPacket) error {
 		}
 	}
 	return nil
+}
+
+// quarantineModelSemanticViolations applies the fail-closed boundary at claim granularity.
+// Deterministic and source-extracted claims are never silently removed: a violation in either
+// still fails the complete packet and exposes an application or provenance defect.
+func quarantineModelSemanticViolations(packet *contracts.ContextPacket) {
+	filter := func(findings []contracts.Finding) []contracts.Finding {
+		kept := make([]contracts.Finding, 0, len(findings))
+		for _, finding := range findings {
+			if finding.Origin == contracts.FindingOriginDeterministic ||
+				finding.Origin == contracts.FindingOriginSourceExtraction {
+				kept = append(kept, finding)
+				continue
+			}
+			candidate := contracts.ContextPacket{
+				SpecialistRole: packet.SpecialistRole,
+				Assumptions:    packet.Assumptions,
+				Findings:       []contracts.Finding{finding},
+			}
+			if err := validateSpecialistSemantics(candidate); err != nil {
+				var violation semanticViolation
+				code := "semantic_boundary"
+				if errors.As(err, &violation) {
+					code = violation.Code
+				}
+				packet.Uncertainties = appendUnique(packet.Uncertainties,
+					fmt.Sprintf("Dropped model claim %s because semantic guard %s rejected it.", finding.ClaimID, code))
+				continue
+			}
+			kept = append(kept, finding)
+		}
+		return kept
+	}
+	packet.Findings = filter(packet.Findings)
+	packet.Counterevidence = filter(packet.Counterevidence)
 }

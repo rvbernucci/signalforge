@@ -42,6 +42,17 @@ frontend, and clean-output contract suite after installing its small Python depe
 `python3 -m pip install -r requirements-verify.txt`. Live Radeon inference is documented under
 [Reproduce The Selected Radeon Runtime](#reproduce-the-selected-radeon-runtime).
 
+For a clean container reproduction, including the optional Radeon Mission Control stack:
+
+```bash
+make fixture-up          # Workspace only
+make mission-control-up  # Workspace plus Grafana, Prometheus, Loki, Tempo, and Alloy
+```
+
+Both ports bind to loopback. Fixture inference requires no GPU, model, credential, or remote API.
+See [Radeon Mission Control](docs/radeon-mission-control.md) for the four dashboards, the protected
+Inference Inspector, privacy boundaries, and exact validation commands.
+
 ## Project Documentation
 
 - [Project specification PDF](output/pdf/SignalForge-Project-Specification.pdf)
@@ -50,6 +61,7 @@ frontend, and clean-output contract suite after installing its small Python depe
 - [4 minute 12.9 second Radeon demo](output/video/SignalForge-Radeon-Demo.mp4)
 - [Final demo cut sheet](docs/demo-script.md)
 - [Evidence and reproduction guide](evidence/README.md)
+- [Radeon Mission Control and container guide](docs/radeon-mission-control.md)
 - [Public Sprint 13 judge-artifact release](https://github.com/rvbernucci/signalforge/releases/tag/sprint13-demo-v1)
 <!-- evidence-claim:judge-evidence-drafts -->
 
@@ -71,10 +83,11 @@ model-quality claims until their dedicated evidence gates pass.
 - immutable, content-addressed raw storage with separate retrieval observations;
 - fail-closed SEC parsing, historical-submission joins, amendment-aware point-in-time normalization,
   JSONL derivation, and DuckDB/Parquet export;
-- a 28-operation Tier 0 capability registry with role-based, fail-closed permissions;
+- a frozen 28-operation Tier 0 baseline with role-based, fail-closed permissions and one
+  golden specification case per baseline operation;
   <!-- evidence-claim:tier0-golden-coverage -->
-- a separate 34-operation financial-intelligence registry, composed with Tier 0 at runtime without
-  changing its frozen identity, plus 62 canonical metric definitions, typed period/sign
+- a separate 52-operation financial-intelligence registry, composed with Tier 0 at runtime without
+  changing its frozen identity, plus 80 canonical metric definitions, typed period/sign
   normalization, independent numerical references, and numerically silent model packets;
 - an immutable registry for 11 logical roles with artifact, tool, retry, timeout, and memory authority;
 - a versioned eight-intent taxonomy with 24 frozen routing cases;
@@ -96,6 +109,13 @@ model-quality claims until their dedicated evidence gates pass.
 - a responsive React/TypeScript research workspace with safe SSE progress, scenario controls,
   case-aware follow-ups, distinct evidence and calculation surfaces, explicit degraded states,
   and a privacy-safe Go projection that excludes prompts, responses, and private reasoning;
+- a correlated Intelligence Inspector for model identity, prompt hashes, token use, RAG lineage,
+  deterministic engine receipts, review, and release, with a disabled-by-default, token-protected,
+  expiring local vault for sanitized model input/output;
+- privacy-safe OpenTelemetry, bounded Prometheus metrics, structured JSONL events, a resilient
+  `amd-smi`/`rocm-smi` exporter, and four provisioned Grafana Mission Control dashboards;
+- reproducible `linux/amd64` fixture, ROCm llama.cpp, local-only, championship, and observability
+  container surfaces with file-mounted secrets and no startup model download;
 - a deterministic Context Compiler that preserves conflicts and enforces an explicit token budget;
   <!-- evidence-claim:context-compiler -->
 - a bounded Microsoft/NVIDIA investor-relations source map with authority, temporal, rights, and
@@ -388,6 +408,14 @@ hf download google/gemma-4-26B-A4B-it-qat-q4_0-gguf \
 SIGNALFORGE_VERIFY_MODEL_HASH=1 scripts/serve_llama_rocm.sh
 ```
 
+The equivalent license-gated, hash-verifying staging command is:
+
+```bash
+SIGNALFORGE_ACCEPT_GEMMA_LICENSE=yes \
+HF_TOKEN="$HF_TOKEN" \
+scripts/stage_gemma_model.sh models/gemma4-26b-q4
+```
+
 The server binds to `127.0.0.1:8000` by default and exposes an OpenAI-compatible API. In another
 shell, reproduce the contract suite and summary:
 
@@ -446,11 +474,13 @@ Model access remains subject to the upstream license and any Hugging Face access
 
 ## Deterministic Financial Engine
 
-The Go engine preserves the complete 28-operation Tier 0 registry and composes it with a separate
-34-operation financial-intelligence registry. Decimal arithmetic remains authoritative for
-financial calculations, with declared `float64` policies limited to statistical methods. It refuses
-unauthorized roles, unregistered inputs, future evidence, incompatible units, currencies, or
-periods, failed invariants, and non-convergent solves. Receipts are canonical-hash verified;
+The Go engine preserves the frozen 28-operation Tier 0 baseline and composes it with a separate
+52-operation financial-intelligence registry, producing 80 active operations. Decimal arithmetic
+remains authoritative for financial calculations, with declared `float64` policies limited to
+statistical methods. It refuses unauthorized roles, unregistered inputs, future evidence,
+incompatible units, currencies, or periods, failed invariants, and non-convergent solves. Every
+registered operation has a complete required-input unit contract, enforced by a registry-wide
+regression test. Receipts are canonical-hash verified;
 corrections create append-only supersession records instead of mutating prior calculations.
 
 The extended registry covers cash generation, returns, financial quality, capital allocation,

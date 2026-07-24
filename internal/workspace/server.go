@@ -17,11 +17,14 @@ import (
 
 	"github.com/rvbernucci/signalforge/internal/contracts"
 	"github.com/rvbernucci/signalforge/internal/golden"
+	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
+	"github.com/rvbernucci/signalforge/internal/missioncontrol"
 	"github.com/rvbernucci/signalforge/internal/orchestrator"
 	"github.com/rvbernucci/signalforge/internal/permissions"
 	"github.com/rvbernucci/signalforge/internal/requestparser"
 	"github.com/rvbernucci/signalforge/internal/resilience"
 	"github.com/rvbernucci/signalforge/internal/runid"
+	"github.com/rvbernucci/signalforge/internal/telemetry"
 )
 
 const (
@@ -40,6 +43,8 @@ type ServerConfig struct {
 	MaxBodyBytes   int64
 	CaseStore      CaseStore
 	RuntimeBreaker *resilience.Breaker
+	AuditStore     *intelligenceaudit.Store
+	BuildVersion   string
 }
 
 type Server struct {
@@ -112,6 +117,8 @@ type ConfigView struct {
 	FollowUpsLive      bool            `json:"follow_ups_live"`
 	RetentionAvailable bool            `json:"retention_available"`
 	RetentionDefault   bool            `json:"retention_default"`
+	IntelligenceAudit  bool            `json:"intelligence_audit"`
+	ProtectedCapture   bool            `json:"protected_capture"`
 }
 
 func NewServer(config ServerConfig) (*Server, error) {
@@ -148,12 +155,23 @@ func NewServer(config ServerConfig) (*Server, error) {
 	if err := Validate(server.fixture); err != nil {
 		return nil, fmt.Errorf("validate workspace fixture: %w", err)
 	}
+	if config.AuditStore != nil {
+		recorder, auditErr := config.AuditStore.Begin(context.Background(), server.fixture.RunID,
+			server.fixture.RequestID, server.fixture.Question)
+		if auditErr == nil {
+			now := config.Now()
+			_ = recorder.Complete(auditFixtureProjection(now, now, server.fixture))
+		}
+	}
 	return server, nil
 }
 
 func (server *Server) Handler() http.Handler {
 	api := http.NewServeMux()
+	api.HandleFunc("GET /health/live", server.handleLiveness)
+	api.HandleFunc("GET /health/ready", server.handleReadiness)
 	api.HandleFunc("GET /api/v1/health", server.handleHealth)
+	api.Handle("GET /metrics", missioncontrol.MetricsHandler{Store: server.config.AuditStore, Version: server.config.BuildVersion})
 	api.HandleFunc("GET /api/v1/config", server.handleConfig)
 	api.HandleFunc("GET /api/v1/cases/golden", server.handleGoldenCase)
 	api.HandleFunc("GET /api/v1/cases", server.handleListCases)
@@ -163,6 +181,9 @@ func (server *Server) Handler() http.Handler {
 	api.HandleFunc("POST /api/v1/runs", server.handleCreateRun)
 	api.HandleFunc("GET /api/v1/runs/{runID}", server.handleGetRun)
 	api.HandleFunc("GET /api/v1/runs/{runID}/events", server.handleEvents)
+	api.HandleFunc("GET /api/v1/runs/{runID}/intelligence", server.handleIntelligence)
+	api.HandleFunc("GET /api/v1/runs/{runID}/intelligence/protected", server.handleProtectedIntelligence)
+	api.HandleFunc("DELETE /api/v1/runs/{runID}/intelligence/protected", server.handlePurgeProtectedIntelligence)
 	api.HandleFunc("POST /api/v1/runs/{runID}/follow-ups", server.handleFollowUp)
 	api.HandleFunc("DELETE /api/v1/runs/{runID}", server.handleCancelRun)
 
@@ -177,6 +198,26 @@ func (server *Server) handleHealth(writer http.ResponseWriter, _ *http.Request) 
 	writeJSON(writer, http.StatusOK, map[string]any{"status": "ok", "local_only": true, "mode": server.config.Mode})
 }
 
+func (server *Server) handleLiveness(writer http.ResponseWriter, _ *http.Request) {
+	writeJSON(writer, http.StatusOK, map[string]string{"status": "alive"})
+}
+
+func (server *Server) handleReadiness(writer http.ResponseWriter, _ *http.Request) {
+	modelDependency := "not_required"
+	if server.config.Mode == ModeLive {
+		modelDependency = "configured"
+	}
+	writeJSON(writer, http.StatusOK, map[string]any{
+		"status": "ready",
+		"mode":   server.config.Mode,
+		"dependencies": map[string]string{
+			"model_runtime":      modelDependency,
+			"case_retention":     availability(server.config.CaseStore != nil),
+			"intelligence_audit": availability(server.config.AuditStore != nil),
+		},
+	})
+}
+
 func (server *Server) handleConfig(writer http.ResponseWriter, _ *http.Request) {
 	model := server.config.Golden.Model
 	if model == "" {
@@ -188,6 +229,8 @@ func (server *Server) handleConfig(writer http.ResponseWriter, _ *http.Request) 
 		FollowUpsLive:      server.config.Mode == ModeLive,
 		RetentionAvailable: server.config.CaseStore != nil,
 		RetentionDefault:   false,
+		IntelligenceAudit:  server.config.AuditStore != nil,
+		ProtectedCapture:   server.config.AuditStore != nil && server.config.AuditStore.Enabled(),
 	})
 }
 
@@ -380,6 +423,52 @@ func (server *Server) handleGetRun(writer http.ResponseWriter, request *http.Req
 	writeJSON(writer, http.StatusOK, view)
 }
 
+func (server *Server) handleIntelligence(writer http.ResponseWriter, request *http.Request) {
+	runID := request.PathValue("runID")
+	if server.config.AuditStore == nil {
+		writeProblem(writer, http.StatusServiceUnavailable, "intelligence_audit_unavailable")
+		return
+	}
+	record, err := server.config.AuditStore.Public(runID)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			writeProblem(writer, http.StatusNotFound, "intelligence_audit_not_found")
+			return
+		}
+		writeProblem(writer, http.StatusServiceUnavailable, "intelligence_audit_read_failed")
+		return
+	}
+	writeJSON(writer, http.StatusOK, record)
+}
+
+func (server *Server) handleProtectedIntelligence(writer http.ResponseWriter, request *http.Request) {
+	runID := request.PathValue("runID")
+	if server.config.AuditStore == nil {
+		writeProblem(writer, http.StatusServiceUnavailable, "protected_audit_unavailable")
+		return
+	}
+	record, err := server.config.AuditStore.Protected(runID, request.Header.Get("X-SignalForge-Audit-Token"))
+	if err != nil {
+		writeProblem(writer, http.StatusForbidden, "protected_audit_denied")
+		return
+	}
+	writer.Header().Set("Cache-Control", "no-store")
+	writeJSON(writer, http.StatusOK, record)
+}
+
+func (server *Server) handlePurgeProtectedIntelligence(writer http.ResponseWriter, request *http.Request) {
+	runID := request.PathValue("runID")
+	if server.config.AuditStore == nil {
+		writeProblem(writer, http.StatusServiceUnavailable, "protected_audit_unavailable")
+		return
+	}
+	if err := server.config.AuditStore.Purge(runID, request.Header.Get("X-SignalForge-Audit-Token")); err != nil {
+		writeProblem(writer, http.StatusForbidden, "protected_audit_denied")
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]string{"status": "purged", "run_id": runID})
+}
+
 func (server *Server) handleCancelRun(writer http.ResponseWriter, request *http.Request) {
 	record, ok := server.record(request.PathValue("runID"))
 	if !ok {
@@ -470,6 +559,9 @@ func (server *Server) newRun(parentRunID string, retain bool) (*runRecord, error
 }
 
 func (server *Server) replayFixture(record *runRecord, question string, assumptions []string) {
+	journeyContext, journeySpan := telemetry.StartJourney(context.Background(), record.view.RunID,
+		"request-"+strings.TrimPrefix(record.view.RunID, "run-"), ModeFixture)
+	defer journeySpan.End()
 	projection := cloneProjection(server.fixture)
 	projection.RunID = record.view.RunID
 	projection.RequestID = "request-" + strings.TrimPrefix(record.view.RunID, "run-")
@@ -477,6 +569,7 @@ func (server *Server) replayFixture(record *runRecord, question string, assumpti
 	projection.Question = question
 	projection.Assumptions = append([]string(nil), assumptions...)
 	projection.Status = "completed"
+	audit := server.beginAudit(journeyContext, record.view.RunID, projection.RequestID, question)
 	for _, fixtureEvent := range projection.Events {
 		if server.config.EventDelay > 0 {
 			time.Sleep(server.config.EventDelay)
@@ -486,6 +579,9 @@ func (server *Server) replayFixture(record *runRecord, question string, assumpti
 			Label: eventLabel(fixtureEvent.Type, fixtureEvent.Status), At: server.config.Now(),
 		})
 	}
+	if audit != nil {
+		_ = audit.Complete(auditFixtureProjection(record.view.StartedAt, server.config.Now(), projection))
+	}
 	server.complete(record, projection, nil)
 }
 
@@ -494,7 +590,10 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 		server.fail(record, "local_runtime_temporarily_unavailable", true)
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), server.config.RunTimeout)
+	requestID := "request-" + strings.TrimPrefix(record.view.RunID, "run-")
+	journeyContext, journeySpan := telemetry.StartJourney(context.Background(), record.view.RunID, requestID, ModeLive)
+	defer journeySpan.End()
+	ctx, cancel := context.WithTimeout(journeyContext, server.config.RunTimeout)
 	server.mu.Lock()
 	record.cancel = cancel
 	server.mu.Unlock()
@@ -502,9 +601,11 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 	config := server.config.Golden
 	config.Question = question
 	config.RunID = record.view.RunID
-	config.RequestID = "request-" + strings.TrimPrefix(record.view.RunID, "run-")
+	config.RequestID = requestID
 	config.Timeout = server.config.RunTimeout
 	config.EventSink = runSink{server: server, record: record}
+	audit := server.beginAudit(ctx, record.view.RunID, config.RequestID, question)
+	config.ModelObserver = audit
 	config.RequestOverride = requestOverride
 	if requestOverride == nil {
 		config.UseAssumptions = true
@@ -512,6 +613,12 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 	}
 	report, err := golden.Run(ctx, config)
 	if err != nil {
+		if audit != nil {
+			_ = audit.Complete(intelligenceaudit.ProjectionInput{
+				RunID: record.view.RunID, RequestID: config.RequestID, Question: question,
+				StartedAt: record.view.StartedAt, CompletedAt: server.config.Now(), Status: "failed",
+			})
+		}
 		if errors.Is(err, context.Canceled) {
 			server.fail(record, "context_cancelled", false)
 			return
@@ -519,6 +626,9 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 		server.breaker.Failure(server.config.Now())
 		server.fail(record, "local_run_failed", errors.Is(err, context.DeadlineExceeded))
 		return
+	}
+	if audit != nil {
+		_ = audit.Complete(intelligenceaudit.FromResult(question, report.Request, report.Result))
 	}
 	server.breaker.Success()
 	if report.Result.Failure != nil {
@@ -534,6 +644,76 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 		return
 	}
 	server.complete(record, projection, &report)
+}
+
+func (server *Server) beginAudit(ctx context.Context, runID, requestID, question string) *intelligenceaudit.Recorder {
+	if server.config.AuditStore == nil {
+		return nil
+	}
+	recorder, err := server.config.AuditStore.Begin(ctx, runID, requestID, question)
+	if err != nil {
+		return nil
+	}
+	return recorder
+}
+
+func auditFixtureProjection(startedAt, completedAt time.Time, projection Projection) intelligenceaudit.ProjectionInput {
+	input := intelligenceaudit.ProjectionInput{
+		RunID: projection.RunID, RequestID: projection.RequestID, Question: projection.Question,
+		StartedAt: startedAt, CompletedAt: completedAt, Status: projection.Status,
+	}
+	retrieval := intelligenceaudit.RetrievalRecord{
+		RetrievalID: "retrieval-fixture-" + projection.RunID, StepID: "fixture-evidence",
+		RoleID: "fixture-replay", Method: "public_fixture", ContextPacketID: "fixture-" + projection.RunID,
+		Status: "selected", CompletedAt: completedAt,
+	}
+	for _, evidence := range projection.Evidence {
+		retrieval.EvidenceIDs = append(retrieval.EvidenceIDs, evidence.EvidenceID)
+		retrieval.EvidenceSources = append(retrieval.EvidenceSources, intelligenceaudit.EvidenceSourceRecord{
+			EvidenceID: evidence.EvidenceID, SourceType: evidence.SourceType,
+			Locator: evidence.Locator, DocumentSection: evidence.DocumentSection,
+			ContentSHA: evidence.ContentSHA, AsOf: evidence.AsOf,
+		})
+	}
+	if len(retrieval.EvidenceIDs) > 0 {
+		input.Retrievals = append(input.Retrievals, retrieval)
+	}
+	for _, receipt := range projection.Calculations {
+		engine := intelligenceaudit.EngineCall{
+			EngineCallID: "engine-fixture-" + receipt.ReceiptID,
+			StepID:       "fixture-calculation", RequestedBy: "fixture-replay",
+			EngineID: receipt.EngineID, EngineVersion: receipt.EngineVersion,
+			OperationID: receipt.OperationID, FormulaVersion: receipt.FormulaVersion,
+			ReceiptID: receipt.ReceiptID, ReceiptSHA: receipt.ReceiptSHA,
+			EvidenceRefs:    append([]string(nil), receipt.EvidenceRefs...),
+			InvariantsTotal: len(receipt.InvariantResults), Status: string(receipt.Status),
+			GeneratedAt: completedAt,
+		}
+		for _, output := range receipt.Outputs {
+			engine.OutputRefs = append(engine.OutputRefs, output.OutputID)
+		}
+		for _, invariant := range receipt.InvariantResults {
+			if invariant.Passed {
+				engine.InvariantsPass++
+			}
+		}
+		input.Engines = append(input.Engines, engine)
+		input.Receipts = append(input.Receipts, intelligenceaudit.ProtectedReceipt{
+			ReceiptID: receipt.ReceiptID, Payload: receipt,
+		})
+	}
+	release := &intelligenceaudit.ReleaseRecord{
+		AnswerID: "fixture-answer-" + projection.RunID, PrimaryIntent: projection.Intent,
+		Status: "released",
+	}
+	for _, section := range projection.Sections {
+		release.SectionTypes = append(release.SectionTypes, section.SectionType)
+		release.ClaimRefs = append(release.ClaimRefs, section.ClaimRefs...)
+		release.EvidenceRefs = append(release.EvidenceRefs, section.EvidenceRefs...)
+		release.ReceiptRefs = append(release.ReceiptRefs, section.ReceiptRefs...)
+	}
+	input.Release = release
+	return input
 }
 
 func (server *Server) complete(record *runRecord, projection Projection, report *golden.Report) {
@@ -804,6 +984,13 @@ func securityHeaders(next http.Handler) http.Handler {
 	})
 }
 
+func availability(available bool) string {
+	if available {
+		return "available"
+	}
+	return "disabled"
+}
+
 func spaHandler(api http.Handler, staticDir string) http.Handler {
 	root, err := filepath.Abs(staticDir)
 	if err != nil {
@@ -811,7 +998,9 @@ func spaHandler(api http.Handler, staticDir string) http.Handler {
 	}
 	files := http.FileServer(http.Dir(root))
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if strings.HasPrefix(request.URL.Path, "/api/") {
+		if strings.HasPrefix(request.URL.Path, "/api/") ||
+			strings.HasPrefix(request.URL.Path, "/health/") ||
+			request.URL.Path == "/metrics" {
 			api.ServeHTTP(writer, request)
 			return
 		}

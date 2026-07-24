@@ -8,8 +8,8 @@ import (
 
 func TestFinancialIntelligenceRegistryIsIsolatedAndComplete(t *testing.T) {
 	financial := FinancialIntelligenceRegistry().List()
-	if len(financial) != 34 {
-		t.Fatalf("expected 34 financial-intelligence operations, got %d", len(financial))
+	if len(financial) != 52 {
+		t.Fatalf("expected 52 financial-intelligence operations, got %d", len(financial))
 	}
 	if len(RuntimeRegistry().List()) != len(Tier0Registry().List())+len(financial) {
 		t.Fatal("runtime registry does not preserve both isolated catalogs")
@@ -17,7 +17,10 @@ func TestFinancialIntelligenceRegistryIsIsolatedAndComplete(t *testing.T) {
 	for _, id := range []string{
 		"financial.invested_capital",
 		"financial.capital_allocation_bridge",
+		"financial.roce",
 		"valuation.reverse_revenue_growth",
+		"valuation.reverse_operating_margin",
+		"valuation.enterprise_to_equity_detailed",
 		"comparison.peer_statistics",
 		"economics.lagged_association",
 	} {

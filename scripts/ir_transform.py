@@ -46,7 +46,7 @@ FINANCIAL_LITERAL = re.compile(
 class NarrativeHTMLParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.blocks: list[tuple[str, str]] = []
+        self.blocks: list[tuple[str, str, str]] = []
         self.section = "Document"
         self._capture = ""
         self._parts: list[str] = []
@@ -77,7 +77,8 @@ class NarrativeHTMLParser(HTMLParser):
             if lowered.startswith("h"):
                 self.section = text[:300]
             elif len(text) >= 30 and not EXCLUDED_SECTION_PATTERN.search(self.section):
-                self.blocks.append((self.section, text))
+                kind = "table_cell" if lowered in {"td", "th"} else "paragraph"
+                self.blocks.append((self.section, text, kind))
         self._capture = ""
         self._parts = []
 
@@ -106,7 +107,12 @@ def write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> None:
 def extract_html(payload: bytes) -> list[tuple[str, str, str, int]]:
     parser = NarrativeHTMLParser()
     parser.feed(payload.decode("utf-8", errors="replace"))
-    return [(section, text, f"html:paragraph={index}", 0) for index, (section, text) in enumerate(parser.blocks, 1)]
+    counters: dict[str, int] = {}
+    result: list[tuple[str, str, str, int]] = []
+    for section, text, kind in parser.blocks:
+        counters[kind] = counters.get(kind, 0) + 1
+        result.append((section, text, f"html:{kind}={counters[kind]}", 0))
+    return result
 
 
 def extract_pdf(payload: bytes) -> list[tuple[str, str, str, int]]:
@@ -121,6 +127,48 @@ def extract_pdf(payload: bytes) -> list[tuple[str, str, str, int]]:
         if text:
             blocks.append((f"Page {page_number}", text, f"pdf:page={page_number}", page_number))
     return blocks
+
+
+def extract_text(payload: bytes) -> list[tuple[str, str, str, int]]:
+    text = payload.decode("utf-8", errors="replace")
+    paragraphs = [SPACE.sub(" ", item).strip() for item in re.split(r"\n\s*\n+", text)]
+    result: list[tuple[str, str, str, int]] = []
+    section = "Document"
+    speaker = re.compile(r"^([A-Z][A-Za-z .'-]{2,80})\s+(?:--|—|-)\s+([A-Za-z][A-Za-z &/'-]{2,100})$")
+    for index, paragraph in enumerate(paragraphs, 1):
+        if not paragraph:
+            continue
+        match = speaker.match(paragraph)
+        if match:
+            section = f"Speaker: {match.group(1)} | Role: {match.group(2)}"
+            continue
+        if len(paragraph) >= 30:
+            result.append((section, paragraph, f"text:paragraph={index}", 0))
+    return result
+
+
+def extract_json(payload: bytes) -> list[tuple[str, str, str, int]]:
+    value = json.loads(payload.decode("utf-8"))
+    result: list[tuple[str, str, str, int]] = []
+    stack: list[tuple[str, Any]] = [("$", value)]
+    visited = 0
+    while stack:
+        path, item = stack.pop()
+        visited += 1
+        if visited > 100_000:
+            raise RuntimeError("json_node_limit_exceeded")
+        if isinstance(item, dict):
+            for key in reversed(sorted(item)):
+                stack.append((f"{path}.{key}", item[key]))
+        elif isinstance(item, list):
+            for index in range(len(item) - 1, -1, -1):
+                stack.append((f"{path}[{index}]", item[index]))
+        elif isinstance(item, str):
+            text = SPACE.sub(" ", item).strip()
+            if len(text) >= 30:
+                section = path.rsplit(".", 1)[-1].replace("_", " ").title()
+                result.append((section, text, f"json:path={path}", 0))
+    return result
 
 
 def chunk_blocks(
@@ -179,8 +227,9 @@ def transform_document(
     elif media_type == "application/pdf":
         blocks = extract_pdf(payload)
     elif media_type == "text/plain":
-        text = SPACE.sub(" ", payload.decode("utf-8", errors="replace")).strip()
-        blocks = [("Document", text, "text:document", 0)] if text else []
+        blocks = extract_text(payload)
+    elif media_type == "application/json":
+        blocks = extract_json(payload)
     else:
         raise RuntimeError("unsupported_media_type")
     chunks: list[dict[str, Any]] = []

@@ -6,7 +6,7 @@ Radeon journey evidence: not yet collected
 
 ## Purpose
 
-Sprint 16B extends the frozen 28-operation Tier 0 engine with 34 governed financial-intelligence
+Sprint 16B extends the frozen 28-operation Tier 0 engine with 52 governed financial-intelligence
 operations. The extension turns point-in-time reported facts into inspectable cash-generation,
 return, quality, capital-allocation, valuation, peer, and association evidence without delegating
 arithmetic or numerical authorship to a language model.
@@ -24,7 +24,7 @@ reported fact + filing availability
 typed period and sign normalization
         |
         v
-canonical metric registry (62 active definitions)
+canonical metric registry (80 active definitions)
         |
         v
 role-authorized deterministic Go executor
@@ -41,17 +41,23 @@ deterministic reference renderer
 ```
 
 `Tier0Registry()` remains the frozen 28-operation surface. `FinancialIntelligenceRegistry()` owns
-the 34 post-v1 additions. `RuntimeRegistry()` composes both without changing the historical Tier 0
+the 52 post-v1 additions. `RuntimeRegistry()` composes both without changing the historical Tier 0
 identity.
+
+All 80 registered operations have an explicit unit contract for every required input. The executor
+also enforces currency and governed period compatibility before dispatch. Auxiliary cohort,
+historical-band, debt-maturity, scenario, tornado, and diagnostic helpers are deterministic
+composition surfaces; they cannot independently publish an authoritative value outside an owning
+registered receipt and deterministic presentation path.
 
 ## Added Capability Groups
 
 | Group | Operations | Primary controls |
 |---|---:|---|
-| Cash generation and returns | 14 | explicit tax assumptions, two-way invested-capital reconciliation, positive denominator policies, aligned periods |
-| Financial quality and allocation | 9 | typed margins, accruals, liquidity, leverage, shareholder yield, sources-and-uses reconciliation |
-| Valuation | 8 | CAPM, beta leverage conventions, multi-stage DCF, terminal-method separation, reverse expectations, value-level-safe multiples |
-| Comparison and economics | 3 | DuPont, robust peer statistics, lagged association explicitly labeled non-causal |
+| Financial analysis | 30 | cash generation, returns, liquidity, debt maturity, typed cash conversion, payout, and sources-and-uses reconciliation |
+| Valuation | 19 | CAPM, beta conventions, multi-stage DCF, dividend discount, reverse expectations, detailed value bridge, scenarios, tornado inputs, and governed multiples |
+| Comparison | 2 | DuPont and robust peer statistics with governed cohorts and historical bands |
+| Economics | 1 | lagged association with train/test, missingness, stability, and confidence diagnostics, explicitly labeled non-causal |
 
 The generated canonical catalog is produced with:
 
@@ -84,6 +90,11 @@ The model view cannot contain a `value` property under the portable JSON Schema.
 release uses the existing deterministic presentation compiler. Models cannot alter receipt values
 or introduce an authoritative number.
 
+Role-scoped specialist packets preserve this boundary: they carry value-free receipt references
+with operation, formula, period, status, assumptions, evidence IDs, and hashes, but never normalized
+inputs, intermediate values, or numerical outputs. The Evidence Critic receives an independent
+superset of those references rather than copied specialist prose.
+
 ## Fail-Closed Behavior
 
 The runtime rejects unsupported operations, roles, inputs, units, currencies, periods,
@@ -106,7 +117,7 @@ go run ./cmd/signalforge-export-metric-registry >/tmp/signalforge-metric-registr
 ```
 
 The complete `scripts/verify.sh` gate additionally validates the immutable evidence baseline,
-exports all 62 canonical definitions through tests, confirms the 34-operation extension, runs the
+exports all 80 canonical definitions through tests, confirms the 52-operation extension, runs the
 full race-enabled Go suite, and checks complex methods through an independent Python
 implementation.
 
@@ -121,13 +132,14 @@ not Radeon claims.
 
 ## Remaining Evidence Gates
 
-- Freeze and execute a separate financial-intelligence holdout without tuning against it.
+- Use the committed 240-case development and restricted 80-case future holdout for subsequent
+  changes; it cannot retroactively prove changes made before its commitment.
 - Run complete Accounting, Financial Quality, Valuation, Economics, Market Behavior, critic, and
   final-analysis journeys on the selected local Radeon runtime.
 - Measure factual correctness, abstention, evidence coverage, latency, VRAM, and complete-task
   success separately.
-- Add product-facing comparison, valuation, capital-allocation, missing-data, and not-applicable
-  golden journeys.
+- Preserve the implemented product-facing comparison, valuation, capital-allocation, missing-data,
+  and not-applicable replay journeys when exercising the selected model runtime.
 - Record the Radeon evidence decision before cutting a reviewed release newer than `v1.0.0`.
 
 Until those gates pass, this work is a public, verified CPU implementation, not a Radeon
