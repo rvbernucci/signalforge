@@ -139,25 +139,27 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 		return Report{}, err
 	}
 	specialistAdapters := localAdapters
+	var specialist orchestrator.Specialist = localAdapters
 	recorders := []*recordingCompleter{localRecorder}
 	if config.SpecialistBaseURL != "" {
 		remoteClient := benchmark.Client{
 			BaseURL: strings.TrimRight(config.SpecialistBaseURL, "/"),
 			APIKey:  config.SpecialistAPIKey, ReuseConnections: true,
-			HTTPClient: config.SpecialistHTTPClient,
+			EmbedResponseFormatInPrompt: true,
+			HTTPClient:                  config.SpecialistHTTPClient,
 		}
 		remoteRecorder := newRecordingCompleterForProvider(remoteClient, config.SpecialistProvider, config.ModelObserver)
-		failover := failoverCompleter{
-			primary: remoteRecorder, fallback: localRecorder, fallbackModel: config.Model,
-		}
-		specialistAdapters, err = localagent.New(failover, config.SpecialistModel, provider)
+		specialistAdapters, err = localagent.New(remoteRecorder, config.SpecialistModel, provider)
 		if err != nil {
 			return Report{}, err
+		}
+		specialist = fallbackSpecialist{
+			primary: specialistAdapters, fallback: localAdapters, primaryTimeout: 55 * time.Second,
 		}
 		recorders = append(recorders, remoteRecorder)
 	}
 	runtime, err := orchestrator.New(orchestrator.Dependencies{
-		Specialist: specialistAdapters, Reviewer: localAdapters, Synthesizer: localAdapters,
+		Specialist: specialist, Reviewer: localAdapters, Synthesizer: localAdapters,
 		Sink: config.EventSink, TraceStore: orchestrator.FileTraceStore{Directory: config.TraceDir},
 	})
 	if err != nil {
@@ -166,6 +168,9 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 	runtime.ContextConcurrency = config.ContextConcurrency
 	runtime.Planner.DeadlineMS = int(config.Timeout.Milliseconds())
 	runtime.Planner.ContextTimeoutMS = 60000
+	if config.SpecialistBaseURL != "" {
+		runtime.Planner.ContextTimeoutMS = 180000
+	}
 	runtime.Planner.ReviewTimeoutMS = 60000
 	runtime.Planner.SynthesisTimeoutMS = 120000
 	var request contracts.ResearchRequest
@@ -363,19 +368,20 @@ func (recorder *recordingCompleter) Metrics() []CallMetric {
 	return result
 }
 
-type failoverCompleter struct {
-	primary       localagent.Completer
-	fallback      localagent.Completer
-	fallbackModel string
+type fallbackSpecialist struct {
+	primary        orchestrator.Specialist
+	fallback       orchestrator.Specialist
+	primaryTimeout time.Duration
 }
 
-func (completer failoverCompleter) Complete(ctx context.Context, request benchmark.Request) (benchmark.Completion, error) {
-	completion, err := completer.primary.Complete(ctx, request)
+func (specialist fallbackSpecialist) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
+	primaryContext, cancel := context.WithTimeout(ctx, specialist.primaryTimeout)
+	packet, err := specialist.primary.Run(primaryContext, request)
+	cancel()
 	if err == nil {
-		return completion, nil
+		return packet, nil
 	}
-	request.Model = completer.fallbackModel
-	return completer.fallback.Complete(ctx, request)
+	return specialist.fallback.Run(ctx, request)
 }
 
 func mergeCallMetrics(recorders ...*recordingCompleter) []CallMetric {

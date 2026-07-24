@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rvbernucci/signalforge/internal/benchmark"
 	"github.com/rvbernucci/signalforge/internal/capability"
 	"github.com/rvbernucci/signalforge/internal/contracts"
 	"github.com/rvbernucci/signalforge/internal/orchestrator"
@@ -115,30 +114,38 @@ func TestRunConfigAcceptsRemoteSpecialistsWhileCoreInferenceRemainsLocal(t *test
 	}
 }
 
-func TestFailoverCompleterRewritesRemoteModelForLocalFallback(t *testing.T) {
-	primary := &scriptedCompleter{err: context.DeadlineExceeded}
-	fallback := &scriptedCompleter{completion: benchmark.Completion{Answer: `{"ok":true}`}}
-	completer := failoverCompleter{
-		primary: primary, fallback: fallback, fallbackModel: "local-model",
+func TestFallbackSpecialistReplaysRejectedRemotePacketLocally(t *testing.T) {
+	request := contextRequest(roles.BusinessStrategy)
+	primary := &scriptedSpecialist{err: context.DeadlineExceeded}
+	expected := contracts.ContextPacket{
+		SchemaVersion:  contracts.SchemaVersionV1,
+		PacketID:       "packet-local-fallback",
+		RunID:          request.RunID,
+		StepID:         request.StepID,
+		SpecialistRole: request.SpecialistRole,
 	}
-	completion, err := completer.Complete(context.Background(), benchmark.Request{Model: "remote-model"})
+	fallback := &scriptedSpecialist{packet: expected}
+	specialist := fallbackSpecialist{
+		primary: primary, fallback: fallback, primaryTimeout: time.Second,
+	}
+	packet, err := specialist.Run(context.Background(), request)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if completion.Answer != `{"ok":true}` || fallback.model != "local-model" {
-		t.Fatalf("fallback did not rewrite model: completion=%+v model=%q", completion, fallback.model)
+	if packet.PacketID != expected.PacketID || primary.calls != 1 || fallback.calls != 1 {
+		t.Fatalf("fallback did not replay the rejected packet locally: packet=%+v primary=%d fallback=%d", packet, primary.calls, fallback.calls)
 	}
 }
 
-type scriptedCompleter struct {
-	completion benchmark.Completion
-	err        error
-	model      string
+type scriptedSpecialist struct {
+	packet contracts.ContextPacket
+	err    error
+	calls  int
 }
 
-func (completer *scriptedCompleter) Complete(_ context.Context, request benchmark.Request) (benchmark.Completion, error) {
-	completer.model = request.Model
-	return completer.completion, completer.err
+func (specialist *scriptedSpecialist) Run(_ context.Context, _ contracts.ContextRequest) (contracts.ContextPacket, error) {
+	specialist.calls++
+	return specialist.packet, specialist.err
 }
 
 func TestGoldenRequestRequiresTransmissionAndMarketSections(t *testing.T) {

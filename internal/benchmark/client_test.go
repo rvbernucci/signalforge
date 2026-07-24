@@ -2,9 +2,11 @@ package benchmark
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -49,6 +51,22 @@ func TestCompleteAuthenticatesRemoteCompatibleEndpointWithoutClosingConnection(t
 		if request.Close {
 			t.Fatal("remote-compatible client should preserve HTTP connections")
 		}
+		var payload map[string]any
+		if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
+			t.Fatal(err)
+		}
+		if _, present := payload["response_format"]; present {
+			t.Fatal("remote-compatible request must omit unsupported response_format")
+		}
+		messages, ok := payload["messages"].([]any)
+		if !ok || len(messages) == 0 {
+			t.Fatal("remote-compatible request is missing messages")
+		}
+		system, ok := messages[0].(map[string]any)
+		if !ok || system["role"] != "system" ||
+			!strings.Contains(system["content"].(string), `"status"`) {
+			t.Fatal("remote-compatible request must embed the response contract in the system prompt")
+		}
 		response.Header().Set("Content-Type", "text/event-stream")
 		fmt.Fprintln(response, `data: {"choices":[{"delta":{"content":"{\"ok\":true}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":4,"completion_tokens":2,"total_tokens":6}}`)
 		fmt.Fprintln(response, "data: [DONE]")
@@ -57,8 +75,24 @@ func TestCompleteAuthenticatesRemoteCompatibleEndpointWithoutClosingConnection(t
 
 	completion, err := (Client{
 		BaseURL: server.URL, APIKey: "test-secret", ReuseConnections: true,
+		EmbedResponseFormatInPrompt: true,
 	}).Complete(context.Background(), Request{
-		Model: "test-model", Messages: []Message{{Role: "user", Content: "Test"}}, MaxTokens: 8,
+		Model: "test-model", Messages: []Message{
+			{Role: "system", Content: "Return JSON."},
+			{Role: "user", Content: "Test"},
+		},
+		MaxTokens: 8,
+		ResponseFormat: map[string]any{
+			"type": "json_schema",
+			"json_schema": map[string]any{
+				"schema": map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"status": map[string]any{"type": "string"},
+					},
+				},
+			},
+		},
 	})
 	if err != nil {
 		t.Fatal(err)

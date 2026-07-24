@@ -56,6 +56,10 @@ For a judging harness that supports environment variables but not mounted secret
 - `DeepSeek-V4-Flash` is the initial text-specialist candidate.
 - `Qwen3.6-35B-A3B` is reserved for evidence that genuinely requires vision.
 - Model IDs remain runtime variables because the organizer may change the available set.
+- The public endpoints do not advertise JSON Schema response mode. SignalForge serializes the
+  exact response contract into the remote system message and omits only the unsupported
+  transport-level `response_format` parameter. Every returned packet still passes the same
+  deterministic decoder, schema, evidence, Numerical Silence, and review gates.
 - Fine-tuning and LoRA are deferred until a frozen holdout proves a systematic failure that
   prompting, GraphRAG, deterministic tools, and output contracts cannot repair.
 
@@ -72,10 +76,11 @@ All roles use one shared evidence fabric with role-scoped retrieval profiles.
 
 ## Failure Behavior
 
-The API client retries only through the orchestrator's existing bounded policy. If the provided
-endpoint fails, the specialist request is replayed once against the local model with the correct
-local model ID. Unsupported output is rejected by the existing packet, evidence, Numerical
-Silence, semantic, and review gates.
+The remote path receives a 55-second primary packet attempt inside a 180-second specialist budget.
+If transport, truncation, JSON decoding, schema, evidence, Numerical Silence, or semantic
+validation rejects that packet, the complete specialist role is replayed against the local model.
+The remote packet never participates partially. This preserves time for local recovery while the
+complete journey remains bounded by its independent deadline.
 
 ## Evidence
 

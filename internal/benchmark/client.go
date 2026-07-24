@@ -14,10 +14,11 @@ import (
 )
 
 type Client struct {
-	BaseURL          string
-	APIKey           string
-	ReuseConnections bool
-	HTTPClient       *http.Client
+	BaseURL                     string
+	APIKey                      string
+	ReuseConnections            bool
+	EmbedResponseFormatInPrompt bool
+	HTTPClient                  *http.Client
 }
 
 type Request struct {
@@ -77,6 +78,12 @@ type streamChunk struct {
 func (client Client) Complete(ctx context.Context, request Request) (Completion, error) {
 	if client.BaseURL == "" || request.Model == "" || len(request.Messages) == 0 {
 		return Completion{}, errors.New("completion request is incomplete")
+	}
+	if client.EmbedResponseFormatInPrompt && len(request.ResponseFormat) > 0 {
+		if err := embedResponseFormat(&request); err != nil {
+			return Completion{}, err
+		}
+		request.ResponseFormat = nil
 	}
 	request.Stream = true
 	request.StreamOptions = map[string]bool{"include_usage": true}
@@ -169,6 +176,23 @@ func (client Client) Complete(ctx context.Context, request Request) (Completion,
 		return Completion{}, errors.New("completion stream contained no answer or tool call")
 	}
 	return completion, nil
+}
+
+func embedResponseFormat(request *Request) error {
+	payload, err := json.Marshal(request.ResponseFormat)
+	if err != nil {
+		return fmt.Errorf("encode prompt-embedded response format: %w", err)
+	}
+	request.Messages = append([]Message(nil), request.Messages...)
+	instruction := "\n\nTransport compatibility contract: return only one JSON object matching this exact response format. Do not add prose or a wrapper key.\n" + string(payload)
+	for index := range request.Messages {
+		if request.Messages[index].Role == "system" {
+			request.Messages[index].Content += instruction
+			return nil
+		}
+	}
+	request.Messages = append([]Message{{Role: "system", Content: strings.TrimSpace(instruction)}}, request.Messages...)
+	return nil
 }
 
 func mergeUsage(current, update Usage) Usage {
