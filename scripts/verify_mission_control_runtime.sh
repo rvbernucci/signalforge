@@ -15,8 +15,10 @@ compose() {
 }
 
 capture_diagnostics() {
-  compose ps --all >"$output/compose-ps.txt" 2>&1 || true
-  compose logs --no-color --timestamps >"$output/compose.log" 2>&1 || true
+  compose --profile fixture --profile observability ps --all \
+    >"$output/compose-ps.txt" 2>&1 || true
+  compose --profile fixture --profile observability logs --no-color --timestamps \
+    >"$output/compose.log" 2>&1 || true
 }
 
 cleanup() {
