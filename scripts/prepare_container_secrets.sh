@@ -14,14 +14,18 @@ if [[ ! -s "$grafana_password" ]]; then
   else
     python3 -c 'import secrets; print(secrets.token_urlsafe(30), end="")' > "$grafana_password"
   fi
-  chmod 600 "$grafana_password"
+  # Compose implements local secrets as bind mounts. The parent directory remains
+  # private while the mounted file must be readable by Grafana's non-root user.
+  chmod 644 "$grafana_password"
   echo "Created local Grafana administrator secret."
 fi
+chmod 644 "$grafana_password"
 
 radeon_key="$secret_dir/radeon-model-api-key"
 if [[ ! -e "$radeon_key" ]]; then
   umask 077
   : > "$radeon_key"
-  chmod 600 "$radeon_key"
+  chmod 644 "$radeon_key"
   echo "Created an empty Radeon API key file. Populate it only before championship mode."
 fi
+chmod 644 "$radeon_key"

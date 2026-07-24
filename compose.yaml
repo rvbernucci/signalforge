@@ -34,6 +34,25 @@ x-app-common: &app-common
   networks: [signalforge]
 
 services:
+  observability-init:
+    profiles: [observability]
+    image: alpine:3.23@sha256:fd79142e9b9a24becd2b6fa7936b89b1daea1f80925c643943b69f08b323c6cc
+    user: "0:0"
+    command:
+      - /bin/sh
+      - -eu
+      - -c
+      - chown -R 10001:10001 /var/loki && chown -R 472:0 /var/lib/grafana
+    restart: "no"
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt: [no-new-privileges:true]
+    network_mode: none
+    volumes:
+      - loki-data:/var/loki
+      - grafana-data:/var/lib/grafana
+
   signalforge:
     <<: *app-common
     profiles: [fixture]
@@ -184,6 +203,9 @@ services:
     volumes:
       - ./deploy/observability/loki/loki.yml:/etc/loki/loki.yml:ro
       - loki-data:/var/loki
+    depends_on:
+      observability-init:
+        condition: service_completed_successfully
     networks: [signalforge]
 
   tempo:
@@ -215,7 +237,15 @@ services:
       - grafana-data:/var/lib/grafana
     ports:
       - "127.0.0.1:3000:3000"
-    depends_on: [prometheus, loki, tempo]
+    depends_on:
+      observability-init:
+        condition: service_completed_successfully
+      prometheus:
+        condition: service_started
+      loki:
+        condition: service_started
+      tempo:
+        condition: service_started
     networks: [signalforge]
 
 secrets:
