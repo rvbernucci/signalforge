@@ -25,7 +25,7 @@
       "text": "Canonical decimal arithmetic uses cockroachdb/apd/v3 v3.2.3 with 34-digit round-half-even policy.",
       "status": "verified",
       "evidence": [
-        {"path":"go.mod","sha256":"e3f8f5781683c8932cf63db57cd33f402f5c6cae9a3fb07cf3aa2cf1fdd83615"},
+        {"path":"go.mod","sha256":"53ac7c1449bbd4c42baa64d16ce355c86d2cc4340927ac3d48dd9723cf010885"},
         {"path":"internal/numeric/types.go","sha256":"5ebe39409afee7685045d66bdac1ec667f8410562dc6678220e3ef92a8c94049"}
       ],
       "public_files": ["README.md"]

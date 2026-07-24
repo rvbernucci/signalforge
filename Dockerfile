@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
       -trimpath -ldflags="-s -w -X main.buildCommit=${SOURCE_COMMIT}" \
       -o /out/signalforge-workspace ./cmd/signalforge-workspace
 
-FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
+FROM alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
 ARG SOURCE_COMMIT=unknown
 ARG BUILD_VERSION=development
 ARG BUILD_DATE=unknown
