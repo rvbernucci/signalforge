@@ -2,7 +2,7 @@ name: signalforge-observability
 
 services:
   observability-init:
-    image: alpine:3.23@sha256:fd79142e9b9a24becd2b6fa7936b89b1daea1f80925c643943b69f08b323c6cc
+    image: alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
     user: "0:0"
     command:
       - /bin/sh
