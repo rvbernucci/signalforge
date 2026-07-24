@@ -14,9 +14,17 @@ compose() {
   COMPOSE_PROJECT_NAME="$project" SIGNALFORGE_IMAGE="$image" docker compose "$@"
 }
 
+capture_diagnostics() {
+  compose ps --all >"$output/compose-ps.txt" 2>&1 || true
+  compose logs --no-color --timestamps >"$output/compose.log" 2>&1 || true
+}
+
 cleanup() {
+  local exit_code=$?
+  capture_diagnostics
   compose --profile fixture --profile observability down --volumes --remove-orphans \
     >/dev/null 2>&1 || true
+  return "$exit_code"
 }
 trap cleanup EXIT
 cleanup
