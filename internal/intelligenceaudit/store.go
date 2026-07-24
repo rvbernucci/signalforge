@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/benchmark"
+	"github.com/rvbernucci/signalforge/internal/telemetry"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -84,7 +85,12 @@ func (store *Store) Begin(ctx context.Context, runID, requestID, question string
 		return nil, errors.New("safe run_id and request_id are required")
 	}
 	now := store.config.Now()
-	traceID := digestString("trace:" + runID)[:32]
+	traceID := telemetry.TraceIDForRun(runID)
+	if ctx != nil {
+		if spanContext := trace.SpanContextFromContext(ctx); spanContext.IsValid() {
+			traceID = spanContext.TraceID().String()
+		}
+	}
 	capture := CaptureState{
 		Enabled: store.config.Enabled, Available: store.config.Enabled,
 		Status: "disabled", MaximumBytes: store.config.MaxBytes,

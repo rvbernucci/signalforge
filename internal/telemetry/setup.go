@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net"
@@ -78,7 +79,7 @@ func Setup(ctx context.Context, config Config) (*Runtime, error) {
 	if !config.Enabled {
 		return &Runtime{}, nil
 	}
-	options := []otlptracehttp.Option{otlptracehttp.WithEndpointURL(config.Endpoint)}
+	options := []otlptracehttp.Option{otlptracehttp.WithEndpointURL(traceEndpointURL(config.Endpoint))}
 	if config.Insecure {
 		options = append(options, otlptracehttp.WithInsecure())
 	}
@@ -128,6 +129,20 @@ func (runtime *Runtime) WrapHTTP(handler http.Handler) http.Handler {
 }
 
 func StartJourney(parent context.Context, runID, requestID, mode string) (context.Context, trace.Span) {
+	if parent == nil {
+		parent = context.Background()
+	}
+	if !trace.SpanContextFromContext(parent).IsValid() {
+		traceID, err := trace.TraceIDFromHex(TraceIDForRun(runID))
+		if err == nil {
+			parent = trace.ContextWithRemoteSpanContext(parent, trace.NewSpanContext(trace.SpanContextConfig{
+				TraceID:    traceID,
+				SpanID:     deterministicParentSpanID(runID),
+				TraceFlags: trace.FlagsSampled,
+				Remote:     true,
+			}))
+		}
+	}
 	return otel.Tracer("signalforge/journey").Start(parent, "signalforge.journey",
 		trace.WithAttributes(
 			attribute.String("signalforge.run_id", runID),
@@ -146,6 +161,30 @@ func parseBool(name, value string) (bool, error) {
 		return false, fmt.Errorf("%s must be true or false", name)
 	}
 	return parsed, nil
+}
+
+// TraceIDForRun is the canonical public-to-W3C trace identity mapping.
+func TraceIDForRun(runID string) string {
+	sum := sha256.Sum256([]byte("trace:" + runID))
+	return fmt.Sprintf("%x", sum[:16])
+}
+
+func deterministicParentSpanID(runID string) trace.SpanID {
+	sum := sha256.Sum256([]byte("parent-span:" + runID))
+	var spanID trace.SpanID
+	copy(spanID[:], sum[:8])
+	return spanID
+}
+
+func traceEndpointURL(endpoint string) string {
+	parsed, err := url.Parse(endpoint)
+	if err != nil {
+		return endpoint
+	}
+	if parsed.Path == "" || parsed.Path == "/" {
+		parsed.Path = "/v1/traces"
+	}
+	return parsed.String()
 }
 
 func loopback(host string) bool {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"testing"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestLoadFromEnvIsOptInAndRejectsUnsafeEndpoint(t *testing.T) {
@@ -49,5 +51,26 @@ func TestDisabledRuntimeIsNoop(t *testing.T) {
 	}
 	if err := runtime.Shutdown(context.Background()); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestTraceEndpointURLAddsOnlyTheStandardMissingPath(t *testing.T) {
+	if got := traceEndpointURL("http://alloy:4318"); got != "http://alloy:4318/v1/traces" {
+		t.Fatalf("default trace endpoint = %q", got)
+	}
+	if got := traceEndpointURL("https://collector.example/custom"); got != "https://collector.example/custom" {
+		t.Fatalf("custom trace endpoint = %q", got)
+	}
+}
+
+func TestStartJourneyUsesTheCanonicalRunTraceIdentity(t *testing.T) {
+	ctx, span := StartJourney(context.Background(), "run-example", "request-example", "fixture")
+	defer span.End()
+	spanContext := trace.SpanContextFromContext(ctx)
+	if !spanContext.IsValid() {
+		t.Fatal("journey span context is invalid")
+	}
+	if got, want := spanContext.TraceID().String(), TraceIDForRun("run-example"); got != want {
+		t.Fatalf("trace ID = %q, want %q", got, want)
 	}
 }
