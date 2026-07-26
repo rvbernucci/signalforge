@@ -583,6 +583,7 @@ func validateResponsibleUse(body finalBody) error {
 const (
 	transmissionBoundaryDisclosure = "These mechanisms are scenario-conditioned pathways, not estimates of observed causality."
 	marketBoundaryDisclosure       = "Price co-movement, correlation, and event-window timing do not by themselves establish causality."
+	noAuthorizedAssumptions        = "No explicit assumptions were supplied or authorized; any assumption-dependent conclusion remains unavailable."
 )
 
 func appendEpistemicBoundaryDisclosures(sections []contracts.AnswerSection) {
@@ -604,11 +605,12 @@ func synchronizeSemanticSections(sections []contracts.AnswerSection, assumptions
 	for index := range sections {
 		switch sections[index].SectionType {
 		case "assumptions":
-			if len(assumptions) == 0 {
-				return errors.New("final assumptions section requires at least one explicit assumption")
-			}
 			sections[index].Title = "Assumptions"
-			sections[index].Content = strings.Join(assumptions, " ")
+			if len(assumptions) == 0 {
+				sections[index].Content = noAuthorizedAssumptions
+			} else {
+				sections[index].Content = strings.Join(assumptions, " ")
+			}
 			clearSynchronizedSectionReferences(&sections[index])
 		case "limitations":
 			if len(limitations) == 0 {

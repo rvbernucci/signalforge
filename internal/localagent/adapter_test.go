@@ -1445,6 +1445,22 @@ func TestSynchronizeSemanticSectionsUsesSingleLimitationsAuthority(t *testing.T)
 	}
 }
 
+func TestSynchronizeSemanticSectionsDisclosesMissingAuthorizedAssumptions(t *testing.T) {
+	sections := []contracts.AnswerSection{{
+		SectionType: "assumptions", Title: "Model title", Content: "Model-authored assumption.",
+		ClaimRefs: []string{"model-claim"}, EvidenceRefs: []string{"model-evidence"},
+	}}
+	if err := synchronizeSemanticSections(sections, nil, []string{"Valuation remains unavailable."}); err != nil {
+		t.Fatal(err)
+	}
+	if sections[0].Title != "Assumptions" || sections[0].Content != noAuthorizedAssumptions {
+		t.Fatalf("missing assumption authority was not disclosed canonically: %+v", sections[0])
+	}
+	if len(sections[0].ClaimRefs)+len(sections[0].EvidenceRefs) != 0 {
+		t.Fatalf("canonical assumption disclosure retained model references: %+v", sections[0])
+	}
+}
+
 func TestReviewerRejectsInventedClaim(t *testing.T) {
 	now := time.Now().UTC()
 	client := &fakeCompleter{answers: []string{`{"decision":"approve","approved_claims":["invented"],"rejected_claims":[],"issues":[]}`}}
