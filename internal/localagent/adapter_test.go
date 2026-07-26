@@ -1414,6 +1414,37 @@ func TestNormalizeApplicationOwnedEvidenceUsesSupportedFallback(t *testing.T) {
 	}
 }
 
+func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing(t *testing.T) {
+	body := finalBody{
+		Sections: []answerSectionDraft{{
+			SectionType: "valuation_range",
+			Content:     "financial.free_cash_flow is available. valuation.fcff_dcf remains unavailable.",
+		}},
+		Limitations: []string{"valuation.peer_multiple remains unavailable."},
+	}
+	repairReceiptAvailabilityClaims(&body, synthesisPromptInput{
+		ValidatedOperations: []string{"financial.free_cash_flow"},
+	})
+	combined := body.Sections[0].Content + " " + strings.Join(body.Limitations, " ")
+	for _, internal := range []string{
+		"financial.free_cash_flow",
+		"valuation.fcff_dcf",
+		"valuation.peer_multiple",
+		"financial. free_cash_flow",
+		"valuation. fcff_dcf",
+		"valuation. peer_multiple",
+	} {
+		if strings.Contains(strings.ToLower(combined), internal) {
+			t.Fatalf("internal operation identifier reached user-facing prose: %q", combined)
+		}
+	}
+	if !strings.Contains(combined, "free cash flow is available") ||
+		!strings.Contains(combined, "FCFF DCF remains unavailable") ||
+		!strings.Contains(combined, "peer multiple remains unavailable") {
+		t.Fatalf("operation labels were not rendered safely: %q", combined)
+	}
+}
+
 func TestDirectionalComparisonValidatorRejectsObjectiveContradiction(t *testing.T) {
 	answer := contracts.FinalAnswer{Sections: []contracts.AnswerSection{{
 		SectionType: "comparison",

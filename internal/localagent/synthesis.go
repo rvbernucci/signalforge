@@ -722,7 +722,22 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 		"scenario.sensitivity_matrix": {"sensitivity", "sensitivity matrix"},
 		"valuation.peer_multiple":     {"multiple", "multiples"},
 	}
+	displayNames := make(map[string]string, len(terms)+len(operations))
+	for operation := range terms {
+		displayNames[operation] = operationDisplayName(operation)
+	}
+	for operation := range operations {
+		displayNames[operation] = operationDisplayName(operation)
+	}
+	renderOperationIDs := func(value string) string {
+		for operation, label := range displayNames {
+			pattern := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(operation) + `\b`)
+			value = pattern.ReplaceAllString(value, label)
+		}
+		return value
+	}
 	sanitize := func(value string) (string, []string) {
+		value = renderOperationIDs(value)
 		kept := make([]string, 0)
 		removed := make([]string, 0)
 		for _, sentence := range semanticSentenceFragmentPattern.FindAllString(value, -1) {
@@ -770,6 +785,18 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 		}
 	}
 	body.Limitations = limitations
+}
+
+func operationDisplayName(operation string) string {
+	name := operation
+	if index := strings.LastIndex(name, "."); index >= 0 {
+		name = name[index+1:]
+	}
+	name = strings.ReplaceAll(name, "_", " ")
+	if strings.EqualFold(name, "fcff dcf") {
+		return "FCFF DCF"
+	}
+	return name
 }
 
 func validatePresentationQuality(body finalBody) error {
