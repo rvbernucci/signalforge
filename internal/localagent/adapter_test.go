@@ -1362,13 +1362,20 @@ func TestSemanticDraftRejectsMalformedMixedCaseToken(t *testing.T) {
 }
 
 func TestSynchronizeSemanticSectionsUsesSingleLimitationsAuthority(t *testing.T) {
-	sections := []contracts.AnswerSection{{SectionType: "limitations", Title: "Wrong", Content: "No limitations."}}
+	sections := []contracts.AnswerSection{{
+		SectionType: "limitations", Title: "Wrong", Content: "No limitations.",
+		ClaimRefs: []string{"model-claim"}, EvidenceRefs: []string{"model-evidence"},
+		ReceiptRefs: []string{"model-receipt"}, NumericalRefs: []string{"model-variable"},
+	}}
 	limitations := []string{"Illustrative assumptions only.", "One reporting period."}
 	if err := synchronizeSemanticSections(sections, nil, limitations); err != nil {
 		t.Fatal(err)
 	}
 	if sections[0].Title != "Limitations" || sections[0].Content != "Illustrative assumptions only. One reporting period." {
 		t.Fatalf("limitations section was not synchronized: %+v", sections[0])
+	}
+	if len(sections[0].ClaimRefs)+len(sections[0].EvidenceRefs)+len(sections[0].ReceiptRefs)+len(sections[0].NumericalRefs) != 0 {
+		t.Fatalf("canonical limitations retained references from discarded model content: %+v", sections[0])
 	}
 	if err := synchronizeSemanticSections(sections, nil, nil); err == nil {
 		t.Fatal("empty limitations authority must fail closed")

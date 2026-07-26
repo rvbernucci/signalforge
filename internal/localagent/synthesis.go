@@ -592,15 +592,26 @@ func synchronizeSemanticSections(sections []contracts.AnswerSection, assumptions
 			}
 			sections[index].Title = "Assumptions"
 			sections[index].Content = strings.Join(assumptions, " ")
+			clearSynchronizedSectionReferences(&sections[index])
 		case "limitations":
 			if len(limitations) == 0 {
 				return errors.New("final limitations section requires at least one explicit limitation")
 			}
 			sections[index].Title = "Limitations"
 			sections[index].Content = strings.Join(limitations, " ")
+			clearSynchronizedSectionReferences(&sections[index])
 		}
 	}
 	return nil
+}
+
+// Assumptions and limitations are replaced with application-authorized text above. References
+// selected for the discarded model draft cannot remain attached to that canonical content.
+func clearSynchronizedSectionReferences(section *contracts.AnswerSection) {
+	section.ClaimRefs = nil
+	section.EvidenceRefs = nil
+	section.ReceiptRefs = nil
+	section.NumericalRefs = nil
 }
 
 var modelOwnedDirectionPattern = regexp.MustCompile(`(?i)\b(?:higher|lower|greater|less|more|smaller|larger)\s+than\b|\b(?:above|below|exceeds?|outpaces?|underperforms?|overperforms?)\b`)

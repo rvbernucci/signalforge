@@ -240,6 +240,42 @@ func TestGoldenComparisonUsesTwoBoundedContextWaves(t *testing.T) {
 	}
 }
 
+func TestRequestedOutputsCannotOmitRequiredSemanticAuthority(t *testing.T) {
+	request, err := requestparser.ParseDeterministic(requestparser.Input{
+		Text: "Compare Microsoft and NVIDIA on cash generation and valuation using compatible periods.",
+		AsOf: time.Now().UTC(), RunID: "run-output-authority", RequestID: "request-output-authority",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.RequestedOutputs = []string{
+		"comparison", "transmission_mechanisms", "market_measurement", "scenarios",
+		"evidence", "limitations",
+	}
+	request.Assumptions = []string{"Higher-for-longer rates remain a scenario boundary."}
+	plan, err := Default().Build(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wanted := map[string]bool{
+		roles.BusinessStrategy: false, roles.AccountingReporting: false,
+		roles.FinancialQuality: false, roles.EconomicsTransmission: false,
+		roles.Valuation: false, roles.MarketBehavior: false,
+	}
+	for _, step := range plan.Steps {
+		if step.Kind == "context" {
+			if _, exists := wanted[step.RoleID]; exists {
+				wanted[step.RoleID] = true
+			}
+		}
+	}
+	for roleID, found := range wanted {
+		if !found {
+			t.Fatalf("requested outputs omitted required authority %s: %+v", roleID, plan)
+		}
+	}
+}
+
 func TestTechnology20QuestionsAuthorizeExactDeterministicOperations(t *testing.T) {
 	request, err := requestparser.ParseDeterministic(requestparser.Input{
 		Text: "Check Microsoft's balance-sheet identity and assess its quality of earnings.",

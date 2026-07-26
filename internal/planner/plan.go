@@ -68,6 +68,9 @@ func (builder Builder) Build(request contracts.ResearchRequest) (contracts.Resea
 		contextRoles = appendUnique(contextRoles, roles.AccountingReporting)
 		contextRoles = appendUnique(contextRoles, roles.FinancialQuality)
 	}
+	// Requested output contracts are stronger than lexical routing hints. If a section is
+	// mandatory, its semantic authority must exist in the plan before any model is called.
+	contextRoles = ensureOutputAuthority(contextRoles, request)
 	if len(contextRoles) > 8 {
 		return contracts.ResearchPlan{}, errors.New("route exceeds bounded context specialist capacity")
 	}
@@ -136,6 +139,36 @@ func (builder Builder) Build(request contracts.ResearchRequest) (contracts.Resea
 		return contracts.ResearchPlan{}, err
 	}
 	return plan, nil
+}
+
+func ensureOutputAuthority(contextRoles []string, request contracts.ResearchRequest) []string {
+	for _, output := range request.RequestedOutputs {
+		switch output {
+		case "business_overview":
+			contextRoles = appendUnique(contextRoles, roles.BusinessStrategy)
+		case "financial_quality":
+			contextRoles = appendUnique(contextRoles, roles.FinancialQuality)
+			contextRoles = appendUnique(contextRoles, roles.AccountingReporting)
+		case "transmission_mechanisms":
+			contextRoles = appendUnique(contextRoles, roles.EconomicsTransmission)
+		case "market_measurement":
+			contextRoles = appendUnique(contextRoles, roles.MarketBehavior)
+		case "valuation_range", "sensitivity":
+			contextRoles = appendUnique(contextRoles, roles.Valuation)
+		case "comparison":
+			contextRoles = appendUnique(contextRoles, roles.BusinessStrategy)
+			contextRoles = appendUnique(contextRoles, roles.AccountingReporting)
+			contextRoles = appendUnique(contextRoles, roles.FinancialQuality)
+		case "concept", "company_example":
+			contextRoles = appendUnique(contextRoles, roles.AccountingReporting)
+		case "scenarios":
+			contextRoles = appendUnique(contextRoles, roles.Valuation)
+			if len(request.Assumptions) > 0 {
+				contextRoles = appendUnique(contextRoles, roles.EconomicsTransmission)
+			}
+		}
+	}
+	return contextRoles
 }
 
 func containsIntent(values []string, target taxonomy.Intent) bool {
