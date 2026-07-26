@@ -108,11 +108,11 @@
         },
         {
           "path": "internal/localagent/adapter_test.go",
-          "sha256": "a41349126798429912b564661c6d0ad3843f013d2c0e6e3a3a9d69e6a5b670ca"
+          "sha256": "0eddb2adb0c9be09a6bf90082a4a73e9a5d312e824f891b4159427f0476a595f"
         },
         {
           "path": "internal/localagent/synthesis.go",
-          "sha256": "387ba5419245ad57ed4f3ea0f072005869d3662e8270ff38b66a6f9eb717c5ff"
+          "sha256": "a067db1639f2a3f1517e7b2a3710a132566139c3764236d663c1f762e3c506d6"
         }
       ],
       "status": "passed"

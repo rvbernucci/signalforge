@@ -777,6 +777,7 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 		return strings.TrimSpace(strings.Join(kept, " ")), removed
 	}
 	for index := range body.Sections {
+		body.Sections[index].Title = renderOperationIDs(body.Sections[index].Title)
 		content, removed := sanitize(body.Sections[index].Content)
 		if len(removed) > 0 {
 			sort.Strings(removed)
@@ -785,6 +786,9 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 				" are available under validated calculation receipts; interpretation remains conditional on the supplied assumptions.")
 		}
 		body.Sections[index].Content = content
+	}
+	for index := range body.Assumptions {
+		body.Assumptions[index] = renderOperationIDs(body.Assumptions[index])
 	}
 	limitations := make([]string, 0, len(body.Limitations))
 	for _, limitation := range body.Limitations {
@@ -798,6 +802,9 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 		}
 	}
 	body.Limitations = limitations
+	for index := range body.NextActions {
+		body.NextActions[index] = renderOperationIDs(body.NextActions[index])
+	}
 }
 
 func operationDisplayName(operation string) string {
@@ -813,10 +820,11 @@ func operationDisplayName(operation string) string {
 }
 
 func validatePresentationQuality(body finalBody) error {
-	texts := make([]string, 0, len(body.Sections)+len(body.Limitations)+len(body.NextActions))
+	texts := make([]string, 0, len(body.Sections)+len(body.Assumptions)+len(body.Limitations)+len(body.NextActions))
 	for _, section := range body.Sections {
 		texts = append(texts, section.Title, section.Content)
 	}
+	texts = append(texts, body.Assumptions...)
 	texts = append(texts, body.Limitations...)
 	texts = append(texts, body.NextActions...)
 	for _, text := range texts {

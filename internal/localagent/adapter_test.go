@@ -1418,16 +1418,23 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 	body := finalBody{
 		Sections: []answerSectionDraft{{
 			SectionType: "valuation_range",
+			Title:       "valuation. peer_multiple readiness",
 			Content: "financial. free_cash_flow. free_cash_flow is available. " +
 				"valuation. fcff_dcf remains unavailable. financial. net_debt and " +
 				"financial. quality_of_earnings remain unavailable.",
 		}},
+		Assumptions: []string{"accounting.balance_sheet_identity remains required."},
 		Limitations: []string{"valuation.peer_multiple remains unavailable."},
+		NextActions: []string{"Review scenario.sensitivity_matrix inputs."},
 	}
 	repairReceiptAvailabilityClaims(&body, synthesisPromptInput{
 		ValidatedOperations: []string{"financial.free_cash_flow"},
 	})
-	combined := body.Sections[0].Content + " " + strings.Join(body.Limitations, " ")
+	combined := body.Sections[0].Title + " " +
+		body.Sections[0].Content + " " +
+		strings.Join(body.Assumptions, " ") + " " +
+		strings.Join(body.Limitations, " ") + " " +
+		strings.Join(body.NextActions, " ")
 	for _, internal := range []string{
 		"financial.free_cash_flow",
 		"valuation.fcff_dcf",
@@ -1437,6 +1444,8 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 		"valuation. peer_multiple",
 		"financial. net_debt",
 		"financial. quality_of_earnings",
+		"accounting.balance_sheet_identity",
+		"scenario.sensitivity_matrix",
 	} {
 		if strings.Contains(strings.ToLower(combined), internal) {
 			t.Fatalf("internal operation identifier reached user-facing prose: %q", combined)
@@ -1445,19 +1454,27 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 	if !strings.Contains(combined, "free cash flow is available") ||
 		!strings.Contains(combined, "FCFF DCF remains unavailable") ||
 		!strings.Contains(combined, "peer multiple remains unavailable") ||
-		!strings.Contains(combined, "net debt and quality of earnings remain unavailable") {
+		!strings.Contains(combined, "net debt and quality of earnings remain unavailable") ||
+		!strings.Contains(combined, "balance sheet identity remains required") ||
+		!strings.Contains(combined, "Review sensitivity matrix inputs") {
 		t.Fatalf("operation labels were not rendered safely: %q", combined)
 	}
 }
 
 func TestValidatePresentationQualityRejectsInternalOperationIdentifier(t *testing.T) {
-	body := finalBody{Sections: []answerSectionDraft{{
-		SectionType: "financial_quality",
-		Content:     "The unavailable operation is financial. net_debt.",
-	}}}
-	if err := validatePresentationQuality(body); err == nil ||
-		!strings.Contains(err.Error(), "internal operation identifier") {
-		t.Fatalf("internal operation identifier was not rejected: %v", err)
+	cases := []finalBody{
+		{Sections: []answerSectionDraft{{
+			SectionType: "financial_quality",
+			Content:     "The unavailable operation is financial. net_debt.",
+		}}},
+		{Assumptions: []string{"accounting.balance_sheet_identity is assumed."}},
+		{NextActions: []string{"Review scenario.sensitivity_matrix."}},
+	}
+	for _, body := range cases {
+		if err := validatePresentationQuality(body); err == nil ||
+			!strings.Contains(err.Error(), "internal operation identifier") {
+			t.Fatalf("internal operation identifier was not rejected: %v", err)
+		}
 	}
 }
 
