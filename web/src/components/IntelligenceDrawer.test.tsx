@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { IntelligenceRecord } from "../types";
 import { IntelligenceDrawer } from "./IntelligenceDrawer";
@@ -63,5 +63,40 @@ describe("IntelligenceDrawer identity boundary", () => {
     );
     expect(await screen.findByText("Lineage unavailable")).toBeInTheDocument();
     expect(screen.queryByText("ffffffffffff")).not.toBeInTheDocument();
+  });
+
+  it("treats nullable historical audit collections as empty instead of crashing", async () => {
+    const nullableRecord: IntelligenceRecord = {
+      ...record,
+      retrievals: [{
+        retrieval_id: "retrieval-empty",
+        step_id: "context-financial-quality",
+        role_id: "financial-quality/v1",
+        method: "authorized_context_packet",
+        context_packet_id: "packet-empty",
+        evidence_ids: null as unknown as string[],
+        estimated_tokens: 0,
+        status: "selected",
+        completed_at: "2026-07-25T00:00:01Z"
+      }]
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => nullableRecord
+    } as Response)));
+    render(
+      <IntelligenceDrawer
+        runID={nullableRecord.run_id}
+        traceID={nullableRecord.trace_id}
+        open
+        protectedCapture={false}
+        onClose={vi.fn()}
+      />
+    );
+    expect(await screen.findByText("run-accepted")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "evidence" }));
+    expect(await screen.findByText("Financial Quality V1")).toBeInTheDocument();
+    expect(screen.queryByText("Lineage unavailable")).not.toBeInTheDocument();
   });
 });

@@ -155,24 +155,27 @@ function RunHeader({ record }: { record: IntelligenceRecord }) {
 }
 
 function Pipeline({ record }: { record: IntelligenceRecord }) {
-  if (record.model_calls.length === 0 && record.retrievals.length === 0 && record.engine_calls.length === 0) {
+  const modelCalls = record.model_calls ?? [];
+  const retrievals = record.retrievals ?? [];
+  const engineCalls = record.engine_calls ?? [];
+  if (modelCalls.length === 0 && retrievals.length === 0 && engineCalls.length === 0) {
     return <InspectorState title="No model calls in this replay" detail="Fixture mode still exposes deterministic retrieval, engine, and release lineage when present." />;
   }
-  const modelTokens = record.model_calls.reduce((sum, call) => sum + call.input_tokens + call.output_tokens, 0);
+  const modelTokens = modelCalls.reduce((sum, call) => sum + call.input_tokens + call.output_tokens, 0);
   return (
     <>
       <section className="lineage-stats">
-        <Stat value={record.model_calls.length} label="Model calls" />
-        <Stat value={record.retrievals.length} label="Context packets" />
-        <Stat value={record.engine_calls.length} label="Engine receipts" />
+        <Stat value={modelCalls.length} label="Model calls" />
+        <Stat value={retrievals.length} label="Context packets" />
+        <Stat value={engineCalls.length} label="Engine receipts" />
         <Stat value={modelTokens} label="Observed tokens" />
       </section>
       <div className="pipeline-list">
-        {record.model_calls.map((call, index) => <ModelCall key={call.model_call_id} call={call} index={index} />)}
+        {modelCalls.map((call, index) => <ModelCall key={call.model_call_id} call={call} index={index} />)}
         {record.release && (
           <article className="pipeline-card release">
             <div className="pipeline-index"><CheckIcon /></div>
-            <div className="pipeline-main"><span className="eyebrow">Release authority</span><strong>{humanize(record.release.status)}</strong><small>{record.release.evidence_refs.length} evidence · {record.release.receipt_refs.length} receipts · {record.release.claim_refs.length} claims</small></div>
+            <div className="pipeline-main"><span className="eyebrow">Release authority</span><strong>{humanize(record.release.status)}</strong><small>{record.release.evidence_refs?.length ?? 0} evidence · {record.release.receipt_refs?.length ?? 0} receipts · {record.release.claim_refs?.length ?? 0} claims</small></div>
           </article>
         )}
       </div>
@@ -200,9 +203,10 @@ function ModelCall({ call, index }: { call: ModelCallAudit; index: number }) {
   );
 }
 
-function Retrievals({ items }: { items: RetrievalAudit[] }) {
-  if (items.length === 0) return <InspectorState title="No retrieval records" detail="This run did not compile a governed context packet." />;
-  return <div className="audit-grid">{items.map((item) => (
+function Retrievals({ items }: { items: RetrievalAudit[] | null | undefined }) {
+  const safeItems = items ?? [];
+  if (safeItems.length === 0) return <InspectorState title="No retrieval records" detail="This run did not compile a governed context packet." />;
+  return <div className="audit-grid">{safeItems.map((item) => (
     <article className="audit-card" key={item.retrieval_id}>
       <span className="audit-status">{humanize(item.status)}</span>
       <h3>{humanize(item.role_id)}</h3>
@@ -229,9 +233,10 @@ function Retrievals({ items }: { items: RetrievalAudit[] }) {
   ))}</div>;
 }
 
-function Engines({ items }: { items: EngineCallAudit[] }) {
-  if (items.length === 0) return <InspectorState title="No deterministic receipts" detail="No financial engine was required for this journey." />;
-  return <div className="audit-grid">{items.map((item) => (
+function Engines({ items }: { items: EngineCallAudit[] | null | undefined }) {
+  const safeItems = items ?? [];
+  if (safeItems.length === 0) return <InspectorState title="No deterministic receipts" detail="No financial engine was required for this journey." />;
+  return <div className="audit-grid">{safeItems.map((item) => (
     <article className="audit-card engine-audit-card" key={item.engine_call_id}>
       <span className="audit-status"><CheckIcon /> {item.invariants_passed}/{item.invariants_total} invariants</span>
       <h3>{humanize(item.operation_id)}</h3>
@@ -281,14 +286,14 @@ function ProtectedPanel({ record, protectedRecord, protectedCapture, operatorTok
     <section className="protected-record">
       <header><div><span className="eyebrow">Authorized diagnostic view</span><h3>Sanitized inputs and outputs</h3></div><button onClick={onPurge}>Purge now</button></header>
       <div className="protected-question"><span>Interpreted request</span><pre>{protectedRecord.question}</pre></div>
-      {protectedRecord.model_calls.map((call) => (
+      {(protectedRecord.model_calls ?? []).map((call) => (
         <details className="protected-call" key={call.model_call_id}>
           <summary>{call.parameters.model}<span>{call.parameters.max_tokens} token budget</span></summary>
           {call.messages.map((message, index) => <div key={`${message.role}-${index}`}><span>{message.role}</span><pre>{message.content}</pre></div>)}
           {call.raw_output && <div><span>Structured model output</span><pre>{call.raw_output}</pre></div>}
         </details>
       ))}
-      {protectedRecord.model_calls.length === 0 && <InspectorState title="No model bodies in this run" detail="The protected request remains available, but fixture replay made no model call." />}
+      {(protectedRecord.model_calls?.length ?? 0) === 0 && <InspectorState title="No model bodies in this run" detail="The protected request remains available, but fixture replay made no model call." />}
       <small>Automatic expiry: {formatDateTime(protectedRecord.expires_at)}</small>
     </section>
   );
@@ -306,13 +311,14 @@ function AuditPair({ label, value }: { label: string; value: string }) {
   return <div className="audit-pair"><span>{label}</span><code>{value}</code></div>;
 }
 
-function AuditList({ label, items }: { label: string; items: string[] }) {
-  if (items.length === 0) return null;
-  return <div className="audit-list"><span>{label}</span><div>{items.map((item) => <code key={item}>{shortID(item)}</code>)}</div></div>;
+function AuditList({ label, items }: { label: string; items: string[] | null | undefined }) {
+  const safeItems = items ?? [];
+  if (safeItems.length === 0) return null;
+  return <div className="audit-list"><span>{label}</span><div>{safeItems.map((item) => <code key={item}>{shortID(item)}</code>)}</div></div>;
 }
 
 function routeSummary(record: IntelligenceRecord) {
-  const routes = new Set(record.model_calls.map((call) => call.route));
+  const routes = new Set((record.model_calls ?? []).map((call) => call.route));
   if (routes.size === 0) return "deterministic / fixture";
   return Array.from(routes).map(humanize).join(" + ");
 }

@@ -3,6 +3,7 @@ package intelligenceaudit
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -139,5 +140,64 @@ func TestDisabledCaptureStillRecordsMetadata(t *testing.T) {
 	if public.Capture.Status != "disabled" || len(public.ModelCalls) != 1 ||
 		public.ModelCalls[0].FailureCode != "model_call_failed" {
 		t.Fatalf("public record = %+v", public)
+	}
+}
+
+func TestCompleteSerializesRequiredCollectionsAsArrays(t *testing.T) {
+	store, err := NewStore(Config{Directory: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recorder, err := store.Begin(context.Background(), "run-arrays", "request-arrays", "question")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := recorder.Complete(ProjectionInput{
+		RunID: "run-arrays", RequestID: "request-arrays", Status: "completed",
+		Retrievals: []RetrievalRecord{{
+			RetrievalID: "retrieval-empty", StepID: "context-empty",
+			RoleID: "financial-quality/v1", Method: "authorized_context_packet",
+			ContextPacketID: "packet-empty", Status: "selected",
+		}},
+		Engines: []EngineCall{{
+			EngineCallID: "engine-empty", StepID: "tool-empty",
+			EngineID: "financial", EngineVersion: "1.0.0",
+			OperationID: "financial.empty", FormulaVersion: "1.0.0",
+			ReceiptID: "receipt-empty", ReceiptSHA: strings.Repeat("a", 64),
+			Status: "success",
+		}},
+		Release: &ReleaseRecord{AnswerID: "answer-empty", Status: "released"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	payload, err := os.ReadFile(filepath.Join(store.config.Directory, "run-arrays.metadata.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var raw map[string]any
+	if err := json.Unmarshal(payload, &raw); err != nil {
+		t.Fatal(err)
+	}
+	assertJSONArray(t, raw, "model_calls")
+	assertJSONArray(t, raw, "retrievals")
+	assertJSONArray(t, raw, "engine_calls")
+	assertJSONArray(t, raw, "reviews")
+	retrieval := raw["retrievals"].([]any)[0].(map[string]any)
+	assertJSONArray(t, retrieval, "evidence_ids")
+	engine := raw["engine_calls"].([]any)[0].(map[string]any)
+	assertJSONArray(t, engine, "input_refs")
+	assertJSONArray(t, engine, "output_refs")
+	release := raw["release"].(map[string]any)
+	assertJSONArray(t, release, "section_types")
+	assertJSONArray(t, release, "claim_refs")
+	assertJSONArray(t, release, "evidence_refs")
+	assertJSONArray(t, release, "receipt_refs")
+}
+
+func assertJSONArray(t *testing.T, value map[string]any, key string) {
+	t.Helper()
+	if _, ok := value[key].([]any); !ok {
+		t.Fatalf("%s = %#v, want JSON array", key, value[key])
 	}
 }

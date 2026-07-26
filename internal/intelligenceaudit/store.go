@@ -98,6 +98,7 @@ func (store *Store) Begin(ctx context.Context, runID, requestID, question string
 	protected := ProtectedRecord{
 		SchemaVersion: ProtectedSchemaVersionV1, RunID: runID, RequestID: requestID,
 		CreatedAt: now, ExpiresAt: now.Add(store.config.TTL),
+		ModelCalls: []ProtectedModelCall{}, Receipts: []ProtectedReceipt{},
 	}
 	if store.config.Enabled {
 		capture.Status = "active"
@@ -259,10 +260,20 @@ func (recorder *Recorder) Complete(input ProjectionInput) error {
 	if record.public.Status == "" {
 		record.public.Status = "completed"
 	}
-	record.public.Retrievals = append([]RetrievalRecord(nil), input.Retrievals...)
-	record.public.Engines = append([]EngineCall(nil), input.Engines...)
-	record.public.Reviews = append([]ReviewRecord(nil), input.Reviews...)
-	record.public.Release = input.Release
+	record.public.Retrievals = append([]RetrievalRecord{}, input.Retrievals...)
+	for index := range record.public.Retrievals {
+		record.public.Retrievals[index].EvidenceIDs =
+			append([]string{}, record.public.Retrievals[index].EvidenceIDs...)
+	}
+	record.public.Engines = append([]EngineCall{}, input.Engines...)
+	for index := range record.public.Engines {
+		record.public.Engines[index].InputRefs =
+			append([]string{}, record.public.Engines[index].InputRefs...)
+		record.public.Engines[index].OutputRefs =
+			append([]string{}, record.public.Engines[index].OutputRefs...)
+	}
+	record.public.Reviews = append([]ReviewRecord{}, input.Reviews...)
+	record.public.Release = cloneRelease(input.Release)
 	if recorder.store.config.Enabled && record.public.Capture.Status == "active" {
 		record.protected.Receipts = append([]ProtectedReceipt(nil), input.Receipts...)
 		encoded, _ := json.Marshal(record.protected)
@@ -463,6 +474,18 @@ func cloneProtected(record ProtectedRecord) ProtectedRecord {
 	var result ProtectedRecord
 	_ = json.Unmarshal(payload, &result)
 	return result
+}
+
+func cloneRelease(record *ReleaseRecord) *ReleaseRecord {
+	if record == nil {
+		return nil
+	}
+	result := *record
+	result.SectionTypes = append([]string{}, record.SectionTypes...)
+	result.ClaimRefs = append([]string{}, record.ClaimRefs...)
+	result.EvidenceRefs = append([]string{}, record.EvidenceRefs...)
+	result.ReceiptRefs = append([]string{}, record.ReceiptRefs...)
+	return &result
 }
 
 func cloneMap(value map[string]any) map[string]any {

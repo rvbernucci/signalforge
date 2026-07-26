@@ -28,7 +28,7 @@ func FromResult(question string, request contracts.ResearchRequest, result orche
 			RetrievalID: "retrieval-" + digestString(packet.PacketID)[:20],
 			StepID:      packet.StepID, RoleID: packet.SpecialistRole,
 			Method: "authorized_context_packet", ContextPacketID: packet.PacketID,
-			Status: "selected", CompletedAt: completedAt,
+			EvidenceIDs: []string{}, Status: "selected", CompletedAt: completedAt,
 		}
 		for _, evidence := range packet.Evidence {
 			retrieval.EvidenceIDs = appendUnique(retrieval.EvidenceIDs, evidence.EvidenceID)
@@ -90,7 +90,8 @@ func FromResult(question string, request contracts.ResearchRequest, result orche
 	if result.Answer != nil {
 		release := &ReleaseRecord{
 			AnswerID: result.Answer.AnswerID, PrimaryIntent: result.Answer.PrimaryIntent,
-			Status: "released",
+			SectionTypes: []string{}, ClaimRefs: []string{}, EvidenceRefs: []string{},
+			ReceiptRefs: []string{}, Status: "released",
 		}
 		for _, section := range result.Answer.Sections {
 			release.SectionTypes = append(release.SectionTypes, section.SectionType)
