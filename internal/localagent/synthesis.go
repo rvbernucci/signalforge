@@ -125,6 +125,7 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 	repairReceiptAvailabilityClaims(&body, material)
 	neutralizeInternalReferenceMentions(&body, material)
 	ensureVisibleComparisonBoundary(&body, material)
+	neutralizeUnsupportedCausalAttribution(&body)
 	draftErr := validateRequestedSectionSet(body.Sections, input.Request.RequestedOutputs)
 	if draftErr == nil {
 		draftErr = validateNumericallySilentDraft(body)
@@ -177,6 +178,7 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 		repairReceiptAvailabilityClaims(&body, material)
 		neutralizeInternalReferenceMentions(&body, material)
 		ensureVisibleComparisonBoundary(&body, material)
+		neutralizeUnsupportedCausalAttribution(&body)
 		if err := validateRequestedSectionSet(body.Sections, input.Request.RequestedOutputs); err != nil {
 			if repairErr := repairApplicationOwnedSectionSet(&body, input.Request.RequestedOutputs, material.Claims); repairErr != nil {
 				return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded section-set retry: %w", err)
@@ -493,6 +495,37 @@ func validateRequiredDecisionSections(body finalBody, requested []string, claims
 var unsupportedCausalAssertionPattern = regexp.MustCompile(`(?i)\b(?:caused|causes|resulted\s+(?:from|in)|because\s+of|due\s+to)\b`)
 var directInvestmentInstructionPattern = regexp.MustCompile(`(?i)\b(?:(?:you|investors?|users?)\s+should\s+|(?:i|we)\s+recommend\s+)?(?:strong\s+)?(?:buy(?:ing)?|sell(?:ing)?|hold(?:ing)?)\s+(?:the\s+|this\s+|these\s+)?(?:stock|shares?|security|securities)\b`)
 var guaranteedOutcomePattern = regexp.MustCompile(`(?i)\b(?:guaranteed|certain|risk[- ]free|cannot\s+lose|sure\s+to)\b.{0,36}\b(?:return|profit|upside|gain|outperform|increase|rise)\b`)
+
+func neutralizeUnsupportedCausalAttribution(body *finalBody) {
+	for index := range body.Sections {
+		section := &body.Sections[index]
+		var boundary string
+		switch section.SectionType {
+		case "transmission_mechanisms":
+			boundary = "Available evidence supports a conditional transmission mechanism, not observed causality."
+		case "market_measurement":
+			boundary = "Available evidence does not establish a causal attribution for the observed market relationship."
+		default:
+			continue
+		}
+		kept := make([]string, 0)
+		removed := false
+		for _, sentence := range semanticSentenceFragmentPattern.FindAllString(section.Content, -1) {
+			sentence = strings.TrimSpace(sentence)
+			if sentence == "" {
+				continue
+			}
+			if unsupportedCausalAssertionPattern.MatchString(sentence) {
+				removed = true
+				continue
+			}
+			kept = append(kept, sentence)
+		}
+		if removed {
+			section.Content = appendSentence(strings.Join(kept, " "), boundary)
+		}
+	}
+}
 
 func canonicalizeRequestedAssumptions(body *finalBody, material synthesisPromptInput) {
 	// Request assumptions are user- or application-authorized scenario boundaries. Model-authored

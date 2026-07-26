@@ -1478,6 +1478,35 @@ func TestValidatePresentationQualityRejectsInternalOperationIdentifier(t *testin
 	}
 }
 
+func TestNeutralizeUnsupportedCausalAttributionPreservesSafeContext(t *testing.T) {
+	body := finalBody{Sections: []answerSectionDraft{
+		{
+			SectionType: "transmission_mechanisms",
+			Content: "Higher rates caused financing costs to rise. " +
+				"Transmission remains conditional on the stated scenario.",
+		},
+		{
+			SectionType: "market_measurement",
+			Content: "The price move resulted from the announcement. " +
+				"Event-window timing is observable.",
+		},
+	}}
+	neutralizeUnsupportedCausalAttribution(&body)
+	for _, section := range body.Sections {
+		if unsupportedCausalAssertionPattern.MatchString(section.Content) {
+			t.Fatalf("unsupported causal attribution survived: %+v", section)
+		}
+	}
+	if !strings.Contains(body.Sections[0].Content, "Transmission remains conditional") ||
+		!strings.Contains(body.Sections[0].Content, "not observed causality") {
+		t.Fatalf("transmission context was not repaired safely: %q", body.Sections[0].Content)
+	}
+	if !strings.Contains(body.Sections[1].Content, "Event-window timing is observable") ||
+		!strings.Contains(body.Sections[1].Content, "does not establish a causal attribution") {
+		t.Fatalf("market context was not repaired safely: %q", body.Sections[1].Content)
+	}
+}
+
 func TestModelFacingMetricLabelNeverExposesInternalIdentifiers(t *testing.T) {
 	cases := map[string]string{
 		"financial.free_cash_flow.free_cash_flow": "free cash flow",
