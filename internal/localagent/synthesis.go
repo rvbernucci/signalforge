@@ -303,6 +303,9 @@ func placeRequiredSemanticAuthority(sections []answerSectionDraft, material synt
 		case "market_measurement":
 			appendRef(section, first(roles.MarketBehavior))
 			section.Content = appendSentence(section.Content, "Market observations are measurements, not causal attributions.")
+		case "valuation_range", "sensitivity":
+			appendRef(section, firstSupported(roles.Valuation))
+			section.Content = appendSentence(section.Content, "Valuation outputs remain bounded by available source authority and Go-validated calculation receipts.")
 		case "scenarios":
 			if material.Request.PrimaryIntent == "economic_transmission" {
 				appendRef(section, first(roles.EconomicsTransmission))

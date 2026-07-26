@@ -2403,6 +2403,37 @@ func TestEconomicTransmissionSectionsReceiveEvidenceBackedBoundaryAuthority(t *t
 	}
 }
 
+func TestValuationSectionsReceiveEvidenceBackedBoundaryWithoutReceipts(t *testing.T) {
+	unsupported := contracts.Finding{
+		ClaimID: "valuation-model-conclusion", ClaimType: contracts.ClaimHypothesis,
+		Statement: "A valuation range cannot be produced.",
+	}
+	boundary := contracts.Finding{
+		ClaimID: "valuation-boundary", ClaimType: contracts.ClaimFact,
+		Origin:       contracts.FindingOriginSourceExtraction,
+		Statement:    "Valuation authority is unavailable and the product must abstain.",
+		EvidenceRefs: []string{"product-scope:valuation/v1"},
+	}
+	material := synthesisPromptInput{
+		Request: synthesisRequestView{PrimaryIntent: "valuation"},
+		Claims: []synthesisClaimView{
+			{SpecialistRole: roles.Valuation, Finding: unsupported},
+			{SpecialistRole: roles.Valuation, Finding: boundary},
+		},
+	}
+	drafts := []answerSectionDraft{
+		{SectionType: "valuation_range", ClaimRefs: []string{unsupported.ClaimID}},
+		{SectionType: "sensitivity", ClaimRefs: []string{unsupported.ClaimID}},
+	}
+	placeRequiredSemanticAuthority(drafts, material)
+	for _, section := range drafts {
+		if !slices.Contains(section.ClaimRefs, boundary.ClaimID) ||
+			!strings.Contains(section.Content, "Go-validated calculation receipts") {
+			t.Fatalf("%s lacks the evidence-backed valuation boundary: %+v", section.SectionType, section)
+		}
+	}
+}
+
 func TestSynthesisCarriesSpecialistBoundariesAndGoAppendsEpistemicDisclosures(t *testing.T) {
 	input := orchestrator.SynthesisInput{Packets: []contracts.ContextPacket{{
 		SpecialistRole:  roles.MarketBehavior,
