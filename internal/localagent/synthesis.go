@@ -861,6 +861,9 @@ func validatePresentationQuality(body finalBody) error {
 	texts = append(texts, body.Limitations...)
 	texts = append(texts, body.NextActions...)
 	for _, text := range texts {
+		if token := rawInternalReferenceTokenPattern.FindString(text); token != "" {
+			return fmt.Errorf("semantic draft contains internal authority identifier %q", token)
+		}
 		if token := internalOperationTokenPattern.FindString(text); token != "" {
 			return fmt.Errorf("semantic draft contains internal operation identifier %q", token)
 		}

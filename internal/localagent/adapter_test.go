@@ -1478,6 +1478,17 @@ func TestValidatePresentationQualityRejectsInternalOperationIdentifier(t *testin
 	}
 }
 
+func TestValidatePresentationQualityRejectsRawAuthorityIdentifier(t *testing.T) {
+	body := finalBody{Sections: []answerSectionDraft{{
+		SectionType: "evidence",
+		Content:     "See claim-placeholder.",
+	}}}
+	if err := validatePresentationQuality(body); err == nil ||
+		!strings.Contains(err.Error(), "internal authority identifier") {
+		t.Fatalf("internal authority identifier was not rejected: %v", err)
+	}
+}
+
 func TestNeutralizeUnsupportedCausalAttributionPreservesSafeContext(t *testing.T) {
 	body := finalBody{Sections: []answerSectionDraft{
 		{
@@ -1504,6 +1515,30 @@ func TestNeutralizeUnsupportedCausalAttributionPreservesSafeContext(t *testing.T
 	if !strings.Contains(body.Sections[1].Content, "Event-window timing is observable") ||
 		!strings.Contains(body.Sections[1].Content, "does not establish a causal attribution") {
 		t.Fatalf("market context was not repaired safely: %q", body.Sections[1].Content)
+	}
+}
+
+func TestNeutralizeUnknownInternalReferencePlaceholders(t *testing.T) {
+	body := finalBody{
+		Sections: []answerSectionDraft{{
+			SectionType: "financial_quality",
+			Title:       "Financial Quality",
+			Content: "A deterministic result is available (claim-id. " +
+				"Revenue authority remains bounded (claim-placeholder, evidence-source).",
+		}},
+		NextActions: []string{"Review receipt-placeholder and numvar-placeholder."},
+	}
+	neutralizeInternalReferenceMentions(&body, synthesisPromptInput{})
+	visible := body.Sections[0].Content + " " + strings.Join(body.NextActions, " ")
+	if token := rawInternalReferenceTokenPattern.FindString(visible); token != "" {
+		t.Fatalf("unknown internal reference placeholder survived: %q in %q", token, visible)
+	}
+	if strings.Contains(visible, "(the approved claim") ||
+		strings.Contains(visible, "the approved claim, the approved evidence") {
+		t.Fatalf("authority-only parenthetical survived: %q", visible)
+	}
+	if err := validatePresentationQuality(body); err != nil {
+		t.Fatalf("sanitized placeholder should satisfy presentation quality: %v", err)
 	}
 }
 

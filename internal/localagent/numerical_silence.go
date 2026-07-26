@@ -13,6 +13,12 @@ import (
 var numericalLiteralPattern = regexp.MustCompile(`[0-9]+(?:[.,][0-9]+)*%?`)
 var numericalWordPattern = regexp.MustCompile(`(?i)\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|single|double|triple|half|quarter)\b`)
 var singleEvidenceArtifactPattern = regexp.MustCompile(`(?i)\b(?:single|one)\s+(?:provided\s+)?(?:(?:held[- ]out|retrieved)\s+)?(?:evidence(?:\s+source)?|source|fixture|document)\b`)
+var rawInternalReferenceTokenPattern = regexp.MustCompile(`(?i)\b(?:claim|evidence|receipt|numvar)[-_][a-z0-9][a-z0-9_.:-]*\b`)
+var authorityOnlyParentheticalPattern = regexp.MustCompile(
+	`(?i)\s*\(\s*(?:(?:the approved claim|the approved evidence|the validated calculation receipt|` +
+		`the validated numerical reference)\s*(?:,\s*)?)+\)?`,
+)
+var repeatedHorizontalWhitespacePattern = regexp.MustCompile(`[ \t]{2,}`)
 var internalRoleDisplayLabels = map[string]string{
 	roles.RequestInterpreter:    "request interpretation",
 	roles.ResearchOrchestrator:  "research orchestration",
@@ -210,6 +216,20 @@ func neutralizeInternalReferenceMentions(body *finalBody, material synthesisProm
 			pattern := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(identifier) + `\b`)
 			value = pattern.ReplaceAllString(value, replacements[identifier])
 		}
+		value = rawInternalReferenceTokenPattern.ReplaceAllStringFunc(value, func(identifier string) string {
+			switch {
+			case strings.HasPrefix(strings.ToLower(identifier), "claim"):
+				return "the approved claim"
+			case strings.HasPrefix(strings.ToLower(identifier), "evidence"):
+				return "the approved evidence"
+			case strings.HasPrefix(strings.ToLower(identifier), "receipt"):
+				return "the validated calculation receipt"
+			default:
+				return "the validated numerical reference"
+			}
+		})
+		value = authorityOnlyParentheticalPattern.ReplaceAllString(value, "")
+		value = repeatedHorizontalWhitespacePattern.ReplaceAllString(value, " ")
 		if len(material.Evidence) == 1 {
 			value = singleEvidenceArtifactPattern.ReplaceAllString(value, "provided evidence set")
 		}
