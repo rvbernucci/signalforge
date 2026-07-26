@@ -1,9 +1,6 @@
 package productscope
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
@@ -29,12 +26,14 @@ func loadCompanyFinancialReports(t *testing.T, catalog PublicCatalog) map[string
 	t.Helper()
 	result := map[string]CompanyFinancialActivation{}
 	for _, company := range catalog.Companies {
-		payload, err := os.ReadFile(filepath.Join("..", "..", "..", "experiments", "sprint32", "financial-activation", company.PrimaryTicker+".json"))
+		report, err := BuildCompanyFinancialActivation(
+			company.CompanyID,
+			nil,
+			nil,
+			catalog.AsOf,
+			"clean-clone-test",
+		)
 		if err != nil {
-			t.Fatal(err)
-		}
-		var report CompanyFinancialActivation
-		if err := json.Unmarshal(payload, &report); err != nil {
 			t.Fatal(err)
 		}
 		result[company.CompanyID] = report
