@@ -142,7 +142,7 @@ export function App() {
           <section className="case-overview" aria-label="Case overview">
             <div><span className="eyebrow">Companies</span><strong>{projection.companies.map((company) => displayCompany(company.label)).join(" × ")}</strong></div>
             <div><span className="eyebrow">Evidence coverage</span><strong>{Math.round(projection.metrics.evidence_coverage * 100)}%</strong></div>
-            <div><span className="eyebrow">Supported claims</span><strong>{projection.metrics.supported_claims} / {projection.metrics.claims}</strong></div>
+            <div><span className="eyebrow">Supported context claims</span><strong>{projection.metrics.supported_claims} / {projection.metrics.claims}</strong></div>
             <button onClick={() => openProof("evidence")}><span className="eyebrow">Audit trail</span><strong>Open proof layer <ArrowIcon /></strong></button>
             <button onClick={() => setIntelligenceOpen(true)} disabled={!config.intelligence_audit}><span className="eyebrow">Intelligence path</span><strong>Inspect orchestration <ArrowIcon /></strong></button>
           </section>

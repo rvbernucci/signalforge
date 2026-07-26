@@ -19,9 +19,28 @@ const record: IntelligenceRecord = {
   started_at: "2026-07-25T00:00:00Z",
   completed_at: "2026-07-25T00:00:01Z",
   model_calls: [],
-  retrievals: [],
+  retrievals: [{
+    retrieval_id: "retrieval-accepted",
+    step_id: "context-accepted",
+    role_id: "financial-quality/v1",
+    method: "authorized_context_packet",
+    context_packet_id: "packet-accepted",
+    evidence_ids: [],
+    estimated_tokens: 0,
+    status: "selected",
+    completed_at: "2026-07-25T00:00:01Z"
+  }],
   engine_calls: [],
-  reviews: []
+  reviews: [],
+  release: {
+    answer_id: "answer-accepted",
+    primary_intent: "company_comparison",
+    section_types: ["comparison"],
+    claim_refs: ["claim-answer-used"],
+    evidence_refs: ["evidence-answer-used"],
+    receipt_refs: ["receipt-answer-used"],
+    status: "released"
+  }
 };
 
 describe("IntelligenceDrawer identity boundary", () => {
@@ -44,6 +63,7 @@ describe("IntelligenceDrawer identity boundary", () => {
     );
     expect(await screen.findByText(/80c42f9bdbda/)).toBeInTheDocument();
     expect(screen.getByText("run-accepted")).toBeInTheDocument();
+    expect(screen.getByText(/1 answer-used claims/i)).toBeInTheDocument();
   });
 
   it("fails closed when Mission Control returns a different trace", async () => {

@@ -204,8 +204,10 @@ describe("SignalForge workspace", () => {
 
   it("opens the privacy-safe intelligence lineage without exposing model bodies", async () => {
     render(<App />);
+    expect(await screen.findByText("Supported context claims")).toBeInTheDocument();
     fireEvent.click(await screen.findByRole("button", { name: /Inspect orchestration/i }));
     expect(await screen.findByText("Intelligence lineage.")).toBeInTheDocument();
+    expect(screen.getByText(/0 answer-used claims/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "evidence" }));
     expect(await screen.findByText("Accounting Context V1")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "engines" }));

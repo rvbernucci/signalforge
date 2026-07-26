@@ -175,7 +175,7 @@ function Pipeline({ record }: { record: IntelligenceRecord }) {
         {record.release && (
           <article className="pipeline-card release">
             <div className="pipeline-index"><CheckIcon /></div>
-            <div className="pipeline-main"><span className="eyebrow">Release authority</span><strong>{humanize(record.release.status)}</strong><small>{record.release.evidence_refs?.length ?? 0} evidence · {record.release.receipt_refs?.length ?? 0} receipts · {record.release.claim_refs?.length ?? 0} claims</small></div>
+            <div className="pipeline-main"><span className="eyebrow">Release authority</span><strong>{humanize(record.release.status)}</strong><small>{record.release.evidence_refs?.length ?? 0} evidence · {record.release.receipt_refs?.length ?? 0} receipts · {record.release.claim_refs?.length ?? 0} answer-used claims</small></div>
           </article>
         )}
       </div>
