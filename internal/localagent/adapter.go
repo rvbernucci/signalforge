@@ -566,7 +566,7 @@ func appendDeterministicNumericalVariableFindings(packet *contracts.ContextPacke
 			ClaimType: contracts.ClaimCalculation, Origin: contracts.FindingOriginDeterministic,
 			Statement: fmt.Sprintf(
 				"A deterministic %s result for %s is available for presentation by the trusted numerical renderer.",
-				variable.MetricID, label,
+				modelFacingMetricLabel(variable.MetricID), label,
 			),
 			CalculationRefs: append([]string(nil), variable.ReceiptRefs...),
 			NumericalRefs:   []string{variable.VariableID},
@@ -596,7 +596,7 @@ func appendDeterministicNumericalRelationFindings(packet *contracts.ContextPacke
 			ClaimType: contracts.ClaimCalculation, Origin: contracts.FindingOriginDeterministic,
 			Statement: fmt.Sprintf(
 				"A deterministic %s relation is available for presentation by the trusted numerical renderer.",
-				relation.MetricID,
+				modelFacingMetricLabel(relation.MetricID),
 			),
 			CalculationRefs: append([]string(nil), relation.ReceiptRefs...),
 			NumericalRefs:   []string{relation.RelationID},
@@ -714,7 +714,7 @@ func appendMissingValuationReceiptFindings(packet *contracts.ContextPacket, rece
 				ClaimType: contracts.ClaimCalculation, Origin: contracts.FindingOriginDeterministic,
 				Statement: fmt.Sprintf(
 					"A deterministic %s comparison is available for presentation by the trusted numerical renderer.",
-					relation.MetricID,
+					modelFacingMetricLabel(relation.MetricID),
 				),
 				CalculationRefs: relationReceipts,
 				NumericalRefs:   []string{relation.RelationID},
@@ -740,10 +740,19 @@ func appendMissingValuationReceiptFindings(packet *contracts.ContextPacket, rece
 		packet.Findings = append(packet.Findings, contracts.Finding{
 			ClaimType:       contracts.ClaimCalculation,
 			Origin:          contracts.FindingOriginDeterministic,
-			Statement:       fmt.Sprintf("A deterministic %s result is available for presentation by the trusted numerical renderer.", receipt.OperationID),
+			Statement:       fmt.Sprintf("A deterministic %s result is available for presentation by the trusted numerical renderer.", modelFacingMetricLabel(receipt.OperationID)),
 			CalculationRefs: []string{receipt.ReceiptID}, NumericalRefs: numericalRefs, Confidence: 1,
 		})
 	}
+}
+
+func modelFacingMetricLabel(metricID string) string {
+	parts := strings.Split(strings.TrimSpace(metricID), ".")
+	label := strings.ReplaceAll(parts[len(parts)-1], "_", " ")
+	if strings.EqualFold(label, "fcff dcf") {
+		return "FCFF DCF"
+	}
+	return label
 }
 
 func isRequiredValuationReceipt(operationID string) bool {

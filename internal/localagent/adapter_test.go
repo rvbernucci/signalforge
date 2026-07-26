@@ -1445,6 +1445,20 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 	}
 }
 
+func TestModelFacingMetricLabelNeverExposesInternalIdentifiers(t *testing.T) {
+	cases := map[string]string{
+		"financial.free_cash_flow.free_cash_flow": "free cash flow",
+		"valuation.fcff_dcf":                      "FCFF DCF",
+		"scenario.sensitivity_matrix":             "sensitivity matrix",
+		"valuation.fcff_dcf.enterprise_value":     "enterprise value",
+	}
+	for input, expected := range cases {
+		if actual := modelFacingMetricLabel(input); actual != expected {
+			t.Fatalf("modelFacingMetricLabel(%q) = %q, want %q", input, actual, expected)
+		}
+	}
+}
+
 func TestDirectionalComparisonValidatorRejectsObjectiveContradiction(t *testing.T) {
 	answer := contracts.FinalAnswer{Sections: []contracts.AnswerSection{{
 		SectionType: "comparison",
