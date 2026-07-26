@@ -184,7 +184,7 @@
         },
         {
           "path": "internal/orchestrator/runtime.go",
-          "sha256": "601446379a414eb18dc94de30ebcbe5a6040e2890141462c6eb1b4f3c9ead346"
+          "sha256": "63b07ad356e9528a8e5d70b03d9ffad4a191aea540a281bd37c4926838b7646d"
         },
         {
           "path": "contracts/orchestration-trace.schema.json",
@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "evidence/hardening-matrix.json",
-          "sha256": "a9bd21ed68592c2d8005e48e586bdd0e937075bc22e0d1a043681c33f8c7b1c5"
+          "sha256": "7ba95e22b791b5ac604b5d35e023c10f929ab80b3bc00f7ada5ef42d94eb2d91"
         },
         {
           "path": "configs/hardening/sprint12-matrix-v1.json",

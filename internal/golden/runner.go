@@ -389,13 +389,24 @@ type fallbackSpecialist struct {
 }
 
 func (specialist fallbackSpecialist) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
+	return specialist.RunAttempt(ctx, request, 0)
+}
+
+func (specialist fallbackSpecialist) RunAttempt(ctx context.Context, request contracts.ContextRequest, attempt int) (contracts.ContextPacket, error) {
 	primaryContext, cancel := context.WithTimeout(ctx, specialist.primaryTimeout)
-	packet, err := specialist.primary.Run(primaryContext, request)
+	packet, err := runSpecialistAttempt(primaryContext, specialist.primary, request, attempt)
 	cancel()
 	if err == nil {
 		return packet, nil
 	}
-	return specialist.fallback.Run(ctx, request)
+	return runSpecialistAttempt(ctx, specialist.fallback, request, attempt)
+}
+
+func runSpecialistAttempt(ctx context.Context, specialist orchestrator.Specialist, request contracts.ContextRequest, attempt int) (contracts.ContextPacket, error) {
+	if aware, ok := specialist.(orchestrator.AttemptAwareSpecialist); ok {
+		return aware.RunAttempt(ctx, request, attempt)
+	}
+	return specialist.Run(ctx, request)
 }
 
 func mergeCallMetrics(recorders ...*recordingCompleter) []CallMetric {

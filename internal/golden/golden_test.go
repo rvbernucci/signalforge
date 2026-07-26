@@ -3,6 +3,7 @@ package golden
 import (
 	"context"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"testing"
 	"time"
@@ -137,6 +138,28 @@ func TestFallbackSpecialistReplaysRejectedRemotePacketLocally(t *testing.T) {
 	}
 }
 
+func TestFallbackSpecialistPreservesAttemptIndex(t *testing.T) {
+	request := contextRequest(roles.FinancialQuality)
+	expected := contracts.ContextPacket{
+		SchemaVersion: contracts.SchemaVersionV1, PacketID: "packet-local-retry",
+		RunID: request.RunID, StepID: request.StepID, SpecialistRole: request.SpecialistRole,
+	}
+	primary := &attemptScriptedSpecialist{err: context.DeadlineExceeded}
+	fallback := &attemptScriptedSpecialist{packet: expected}
+	specialist := fallbackSpecialist{
+		primary: primary, fallback: fallback, primaryTimeout: time.Second,
+	}
+	packet, err := specialist.RunAttempt(context.Background(), request, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if packet.PacketID != expected.PacketID ||
+		!reflect.DeepEqual(primary.attempts, []int{1}) ||
+		!reflect.DeepEqual(fallback.attempts, []int{1}) {
+		t.Fatalf("fallback lost retry state: packet=%+v primary=%v fallback=%v", packet, primary.attempts, fallback.attempts)
+	}
+}
+
 type scriptedSpecialist struct {
 	packet contracts.ContextPacket
 	err    error
@@ -145,6 +168,21 @@ type scriptedSpecialist struct {
 
 func (specialist *scriptedSpecialist) Run(_ context.Context, _ contracts.ContextRequest) (contracts.ContextPacket, error) {
 	specialist.calls++
+	return specialist.packet, specialist.err
+}
+
+type attemptScriptedSpecialist struct {
+	packet   contracts.ContextPacket
+	err      error
+	attempts []int
+}
+
+func (specialist *attemptScriptedSpecialist) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
+	return specialist.RunAttempt(ctx, request, 0)
+}
+
+func (specialist *attemptScriptedSpecialist) RunAttempt(_ context.Context, _ contracts.ContextRequest, attempt int) (contracts.ContextPacket, error) {
+	specialist.attempts = append(specialist.attempts, attempt)
 	return specialist.packet, specialist.err
 }
 

@@ -108,7 +108,7 @@
         },
         {
           "path": "internal/localagent/adapter_test.go",
-          "sha256": "e074f927ee113c32b08e9f3370e5ed1a1bc0e611b8d56151ba37988f781cdd6e"
+          "sha256": "b1d8e63eaf6550c8cd4729f950e6b38a07dc58a12fdd1d5ac37da1e2e557d5b1"
         },
         {
           "path": "internal/localagent/synthesis.go",
@@ -149,7 +149,7 @@
       "source_hashes": [
         {
           "path": "internal/orchestrator/runtime_test.go",
-          "sha256": "effea5ab0cd95389ab66436021186675625248218a6aa2b00c5a634b707f41e8"
+          "sha256": "55d87f282681fc5050908a97c4feb4d76b24e5c5176eb1fea78eb1659456ce08"
         },
         {
           "path": "internal/resilience/breaker_test.go",
@@ -195,7 +195,7 @@
       "source_hashes": [
         {
           "path": "internal/orchestrator/runtime_test.go",
-          "sha256": "effea5ab0cd95389ab66436021186675625248218a6aa2b00c5a634b707f41e8"
+          "sha256": "55d87f282681fc5050908a97c4feb4d76b24e5c5176eb1fea78eb1659456ce08"
         },
         {
           "path": "internal/workspace/projection_test.go",

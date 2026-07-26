@@ -143,20 +143,37 @@ type packetBody struct {
 }
 
 func (adapters *Adapters) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
-	return adapters.run(ctx, request, nil)
+	return adapters.run(ctx, request, nil, 0)
+}
+
+func (adapters *Adapters) RunAttempt(ctx context.Context, request contracts.ContextRequest, attempt int) (contracts.ContextPacket, error) {
+	return adapters.run(ctx, request, nil, attempt)
 }
 
 func (adapters *Adapters) RunObserved(ctx context.Context, request contracts.ContextRequest, observer orchestrator.SpecialistLifecycleObserver) (contracts.ContextPacket, error) {
-	return adapters.run(ctx, request, observer)
+	return adapters.run(ctx, request, observer, 0)
 }
 
-func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequest, observer orchestrator.SpecialistLifecycleObserver) (contracts.ContextPacket, error) {
+func (adapters *Adapters) RunObservedAttempt(ctx context.Context, request contracts.ContextRequest, observer orchestrator.SpecialistLifecycleObserver, attempt int) (contracts.ContextPacket, error) {
+	return adapters.run(ctx, request, observer, attempt)
+}
+
+func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequest, observer orchestrator.SpecialistLifecycleObserver, attempt int) (contracts.ContextPacket, error) {
+	if attempt < 0 || attempt > 1 {
+		return contracts.ContextPacket{}, fmt.Errorf("specialist attempt %d is outside the bounded retry contract", attempt)
+	}
 	if err := contracts.ValidateContextRequest(request); err != nil {
 		return contracts.ContextPacket{}, err
 	}
 	prompt, ok := adapters.Prompts.Get(request.SpecialistRole)
 	if !ok {
 		return contracts.ContextPacket{}, fmt.Errorf("no prompt for role %q", request.SpecialistRole)
+	}
+	if attempt == 1 {
+		prompt.MaxTokens *= 2
+		if prompt.MaxTokens > 3200 {
+			prompt.MaxTokens = 3200
+		}
 	}
 	role, ok := roles.DefaultRegistry().Get(request.SpecialistRole)
 	if !ok || role.Class != roles.ClassContext {

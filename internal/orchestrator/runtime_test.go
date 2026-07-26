@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -243,6 +244,26 @@ type temporaryError struct{ message string }
 
 func (err temporaryError) Error() string   { return err.message }
 func (err temporaryError) Temporary() bool { return true }
+
+type attemptAwareTemporarySpecialist struct {
+	delegate *fakeSpecialist
+	attempts map[string][]int
+}
+
+func (specialist *attemptAwareTemporarySpecialist) Run(context.Context, contracts.ContextRequest) (contracts.ContextPacket, error) {
+	return contracts.ContextPacket{}, errors.New("legacy specialist entrypoint must not run")
+}
+
+func (specialist *attemptAwareTemporarySpecialist) RunAttempt(ctx context.Context, request contracts.ContextRequest, attempt int) (contracts.ContextPacket, error) {
+	if specialist.attempts == nil {
+		specialist.attempts = map[string][]int{}
+	}
+	specialist.attempts[request.StepID] = append(specialist.attempts[request.StepID], attempt)
+	if attempt == 0 {
+		return contracts.ContextPacket{}, temporaryError{message: "truncated specialist attempt"}
+	}
+	return specialist.delegate.Run(ctx, request)
+}
 
 type retryingReviewer struct {
 	mu       sync.Mutex
@@ -1445,6 +1466,32 @@ func TestTemporarySpecialistFailureRetriesAtMostOnce(t *testing.T) {
 	result := runtime.Run(context.Background(), request)
 	if result.Failure != nil || specialist.attempts["context-01"] != 2 {
 		t.Fatalf("temporary failure should retry once: result=%+v attempts=%+v", result, specialist.attempts)
+	}
+}
+
+func TestTemporarySpecialistRetryReceivesBoundedAttemptIndex(t *testing.T) {
+	specialist := &attemptAwareTemporarySpecialist{delegate: &fakeSpecialist{}}
+	runtime, err := New(Dependencies{
+		Specialist: specialist, Reviewer: fakeReviewer{}, Synthesizer: &fakeSynthesizer{},
+		TraceStore: &memoryTraceStore{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().UTC()
+	request, err := requestparser.ParseDeterministic(requestparser.Input{
+		Text: "What does Microsoft sell?", AsOf: now, RunID: "run-attempt-aware",
+		RequestID: "request-attempt-aware",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := runtime.Run(context.Background(), request)
+	if result.Failure != nil || result.Answer == nil {
+		t.Fatalf("attempt-aware retry did not recover: %+v", result)
+	}
+	if attempts := specialist.attempts["context-01"]; !slices.Equal(attempts, []int{0, 1}) {
+		t.Fatalf("specialist attempt sequence=%v, want [0 1]", attempts)
 	}
 }
 

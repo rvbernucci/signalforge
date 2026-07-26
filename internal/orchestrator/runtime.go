@@ -60,6 +60,12 @@ type Specialist interface {
 	Run(context.Context, contracts.ContextRequest) (contracts.ContextPacket, error)
 }
 
+// AttemptAwareSpecialist is optional. It lets an adapter preserve bounded generation state across
+// the orchestrator's one permitted retry without changing legacy specialist implementations.
+type AttemptAwareSpecialist interface {
+	RunAttempt(context.Context, contracts.ContextRequest, int) (contracts.ContextPacket, error)
+}
+
 type RetrievalLifecycle struct {
 	RetrievalID            string
 	BundleID               string
@@ -107,6 +113,11 @@ type SpecialistLifecycleObserver interface {
 // ObservedSpecialist is optional so existing specialist implementations remain compatible.
 type ObservedSpecialist interface {
 	RunObserved(context.Context, contracts.ContextRequest, SpecialistLifecycleObserver) (contracts.ContextPacket, error)
+}
+
+// AttemptAwareObservedSpecialist combines bounded retry state with lifecycle observation.
+type AttemptAwareObservedSpecialist interface {
+	RunObservedAttempt(context.Context, contracts.ContextRequest, SpecialistLifecycleObserver, int) (contracts.ContextPacket, error)
 }
 
 type Reviewer interface {
@@ -315,7 +326,9 @@ func (runtime *Runtime) runContextWave(ctx context.Context, request contracts.Re
 				emitter.emit(step.StepID, "context", "started", routeAttributes(step))
 				contextRequest := contextRequest(request, step)
 				lifecycle := specialistLifecycleEventAdapter{emitter: emitter, stepID: step.StepID}
-				_, observed := runtime.Deps.Specialist.(ObservedSpecialist)
+				_, observedLegacy := runtime.Deps.Specialist.(ObservedSpecialist)
+				_, observedAttempt := runtime.Deps.Specialist.(AttemptAwareObservedSpecialist)
+				observed := observedLegacy || observedAttempt
 				packet, err := runtime.callSpecialist(ctx, contextRequest, step, lifecycle)
 				if err != nil {
 					outcomes <- outcome{index: index, failure: failure(contextRequest.RunID, step.StepID, classify(err), err, retryable(err), runtime.Now())}
@@ -561,8 +574,12 @@ func (runtime *Runtime) callSpecialist(parent context.Context, request contracts
 		ctx, cancel := context.WithTimeout(parent, time.Duration(step.TimeoutMS)*time.Millisecond)
 		var packet contracts.ContextPacket
 		var err error
-		if observed, ok := runtime.Deps.Specialist.(ObservedSpecialist); ok {
+		if observed, ok := runtime.Deps.Specialist.(AttemptAwareObservedSpecialist); ok {
+			packet, err = observed.RunObservedAttempt(ctx, request, lifecycle, attempt)
+		} else if observed, ok := runtime.Deps.Specialist.(ObservedSpecialist); ok {
 			packet, err = observed.RunObserved(ctx, request, lifecycle)
+		} else if aware, ok := runtime.Deps.Specialist.(AttemptAwareSpecialist); ok {
+			packet, err = aware.RunAttempt(ctx, request, attempt)
 		} else {
 			packet, err = runtime.Deps.Specialist.Run(ctx, request)
 		}

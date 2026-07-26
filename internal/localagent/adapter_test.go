@@ -593,6 +593,54 @@ func TestSpecialistRetriesOnlyIncompleteJSONWithBoundedBudget(t *testing.T) {
 	}
 }
 
+func TestSpecialistOrchestratorRetryStartsWithExpandedBudget(t *testing.T) {
+	now := time.Now().UTC()
+	for _, test := range []struct {
+		name string
+		role string
+		want int
+	}{
+		{name: "financial-quality", role: roles.FinancialQuality, want: 2800},
+		{name: "accounting-reporting", role: roles.AccountingReporting, want: 3200},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			client := &fakeCompleter{answers: []string{`{
+			  "findings":[{"claim_id":"claim-1","claim_type":"fact","statement":"Supported finding.","evidence_refs":["evidence-1"],"calculation_refs":[],"numerical_refs":[],"assumption_refs":[],"confidence":0.9}],
+			  "counterevidence":[],"assumptions":[],"missing_evidence":[],"conflicts":[],"uncertainties":[],"handoff_notes":[]
+			}`}}
+			adapter, err := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			request := validContextRequest(now)
+			request.SpecialistRole = test.role
+			if _, err := adapter.RunAttempt(context.Background(), request, 1); err != nil {
+				t.Fatal(err)
+			}
+			if len(client.requests) != 1 || client.requests[0].MaxTokens != test.want {
+				t.Fatalf("retry request=%+v, want one request with max_tokens=%d", client.requests, test.want)
+			}
+		})
+	}
+}
+
+func TestSpecialistRejectsAttemptOutsideBoundedContract(t *testing.T) {
+	now := time.Now().UTC()
+	client := &fakeCompleter{}
+	adapter, err := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, attempt := range []int{-1, 2} {
+		if _, err := adapter.RunAttempt(context.Background(), validContextRequest(now), attempt); err == nil {
+			t.Fatalf("attempt %d must fail closed", attempt)
+		}
+	}
+	if len(client.requests) != 0 {
+		t.Fatalf("invalid attempt reached the model: %+v", client.requests)
+	}
+}
+
 func TestSpecialistNumericalSilenceHidesValuesAndPreservesAuthorizedReference(t *testing.T) {
 	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
 	material := numericalMaterial(now)
