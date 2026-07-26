@@ -1418,7 +1418,9 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 	body := finalBody{
 		Sections: []answerSectionDraft{{
 			SectionType: "valuation_range",
-			Content:     "financial. free_cash_flow. free_cash_flow is available. valuation. fcff_dcf remains unavailable.",
+			Content: "financial. free_cash_flow. free_cash_flow is available. " +
+				"valuation. fcff_dcf remains unavailable. financial. net_debt and " +
+				"financial. quality_of_earnings remain unavailable.",
 		}},
 		Limitations: []string{"valuation.peer_multiple remains unavailable."},
 	}
@@ -1433,6 +1435,8 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 		"financial. free_cash_flow",
 		"valuation. fcff_dcf",
 		"valuation. peer_multiple",
+		"financial. net_debt",
+		"financial. quality_of_earnings",
 	} {
 		if strings.Contains(strings.ToLower(combined), internal) {
 			t.Fatalf("internal operation identifier reached user-facing prose: %q", combined)
@@ -1440,8 +1444,20 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 	}
 	if !strings.Contains(combined, "free cash flow is available") ||
 		!strings.Contains(combined, "FCFF DCF remains unavailable") ||
-		!strings.Contains(combined, "peer multiple remains unavailable") {
+		!strings.Contains(combined, "peer multiple remains unavailable") ||
+		!strings.Contains(combined, "net debt and quality of earnings remain unavailable") {
 		t.Fatalf("operation labels were not rendered safely: %q", combined)
+	}
+}
+
+func TestValidatePresentationQualityRejectsInternalOperationIdentifier(t *testing.T) {
+	body := finalBody{Sections: []answerSectionDraft{{
+		SectionType: "financial_quality",
+		Content:     "The unavailable operation is financial. net_debt.",
+	}}}
+	if err := validatePresentationQuality(body); err == nil ||
+		!strings.Contains(err.Error(), "internal operation identifier") {
+		t.Fatalf("internal operation identifier was not rejected: %v", err)
 	}
 }
 

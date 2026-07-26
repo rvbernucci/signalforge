@@ -645,6 +645,10 @@ var numericalConceptPattern = regexp.MustCompile(`(?i)\b(?:dcf|discounted\s+cash
 var unavailableAuthorityPattern = regexp.MustCompile(`(?i)\b(?:not\s+(?:available|provided|supplied|present)|unavailable|missing|absent|withheld|remain(?:s)?\s+open)\b`)
 var malformedMixedCasePattern = regexp.MustCompile(`[a-z][A-Z]{2,}\b`)
 var semanticSentenceFragmentPattern = regexp.MustCompile(`(?s)[^.!?\n]+(?:[.!?]+|$)`)
+var internalOperationTokenPattern = regexp.MustCompile(
+	`(?i)\b(?:financial|valuation|scenario|accounting)\s*\.\s*` +
+		`[a-z][a-z0-9]*_[a-z0-9_]+(?:\s*\.\s*[a-z][a-z0-9]*_[a-z0-9_]+)?\b`,
+)
 
 // Models may explain why a deterministic relation matters, but they cannot author the relation's
 // company ordering. Go appends the validated direction after synthesis.
@@ -741,7 +745,9 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 				`(?:\.\s*` + leaf + `)?\b`)
 			value = pattern.ReplaceAllString(value, label)
 		}
-		return value
+		return internalOperationTokenPattern.ReplaceAllStringFunc(value, func(identifier string) string {
+			return operationDisplayName(strings.Join(strings.Fields(identifier), ""))
+		})
 	}
 	sanitize := func(value string) (string, []string) {
 		value = renderOperationIDs(value)
@@ -814,6 +820,9 @@ func validatePresentationQuality(body finalBody) error {
 	texts = append(texts, body.Limitations...)
 	texts = append(texts, body.NextActions...)
 	for _, text := range texts {
+		if token := internalOperationTokenPattern.FindString(text); token != "" {
+			return fmt.Errorf("semantic draft contains internal operation identifier %q", token)
+		}
 		if token := malformedMixedCasePattern.FindString(text); token != "" {
 			return fmt.Errorf("semantic draft contains malformed mixed-case token %q", token)
 		}
