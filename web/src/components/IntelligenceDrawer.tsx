@@ -13,12 +13,13 @@ type InspectorTab = "pipeline" | "evidence" | "engines" | "prompts";
 
 type Props = {
   runID: string;
+  traceID?: string;
   open: boolean;
   protectedCapture: boolean;
   onClose: () => void;
 };
 
-export function IntelligenceDrawer({ runID, open, protectedCapture, onClose }: Props) {
+export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onClose }: Props) {
   const [record, setRecord] = useState<IntelligenceRecord | null>(null);
   const [protectedRecord, setProtectedRecord] = useState<ProtectedIntelligenceRecord | null>(null);
   const [tab, setTab] = useState<InspectorTab>("pipeline");
@@ -46,17 +47,22 @@ export function IntelligenceDrawer({ runID, open, protectedCapture, onClose }: P
     }
     let active = true;
     setStatus("loading");
+    setRecord(null);
     setProtectedRecord(null);
     setToken("");
     getIntelligence(runID).then((next) => {
       if (!active) return;
+      if (!sameIdentity(next, runID, traceID)) {
+        setStatus("error");
+        return;
+      }
       setRecord(next);
       setStatus("ready");
     }).catch(() => {
       if (active) setStatus("error");
     });
     return () => { active = false; };
-  }, [open, runID]);
+  }, [open, runID, traceID]);
 
   async function unlock() {
     if (!token.trim()) return;
@@ -75,7 +81,9 @@ export function IntelligenceDrawer({ runID, open, protectedCapture, onClose }: P
       await purgeProtectedIntelligence(runID, token);
       setProtectedRecord(null);
       setToken("");
-      setRecord(await getIntelligence(runID));
+      const next = await getIntelligence(runID);
+      if (!sameIdentity(next, runID, traceID)) throw new Error("lineage identity mismatch");
+      setRecord(next);
       setStatus("purged");
     } catch {
       setStatus("denied");
@@ -129,6 +137,10 @@ export function IntelligenceDrawer({ runID, open, protectedCapture, onClose }: P
       </aside>
     </>
   );
+}
+
+function sameIdentity(record: IntelligenceRecord, runID: string, traceID?: string): boolean {
+  return record.run_id === runID && (!traceID || record.trace_id === traceID);
 }
 
 function RunHeader({ record }: { record: IntelligenceRecord }) {

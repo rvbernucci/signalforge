@@ -9,10 +9,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/executionplan"
 	"github.com/rvbernucci/signalforge/internal/golden"
 	"github.com/rvbernucci/signalforge/internal/modelapi"
+	"github.com/rvbernucci/signalforge/internal/orchestrator"
 )
 
 func main() {
@@ -33,6 +37,10 @@ func main() {
 	format := flag.String("format", "json", "output format: json or markdown")
 	outputPath := flag.String("output", "", "optional output file; stdout when empty")
 	safeReplayPath := flag.String("safe-replay-output", "", "optional privacy-safe decision replay JSON output")
+	executionPlanPath := flag.String(
+		"execution-plan-output", "",
+		"optional privacy-safe execution-plan JSON output; enables the observational dashboard projection",
+	)
 	runtimeProfileID := flag.String("runtime-profile-id", "", "attested local runtime profile identifier")
 	gpuArchitecture := flag.String("gpu-architecture", "", "attested GPU architecture, for example gfx1100")
 	rocmVersion := flag.String("rocm-version", "", "attested ROCm version")
@@ -56,6 +64,10 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
+	var executionSink *executionPlanSink
+	if strings.TrimSpace(*executionPlanPath) != "" {
+		executionSink = &executionPlanSink{}
+	}
 	report, err := golden.Run(ctx, golden.RunConfig{
 		SnapshotPath: *snapshotPath, RetrievalPath: *retrievalPath, TraceDir: *traceDir,
 		BaseURL: *baseURL, Model: *model, CodeCommit: *codeCommit, Question: *question,
@@ -64,9 +76,23 @@ func main() {
 		SpecialistProvider: specialist.Provider, SpecialistBaseURL: specialist.BaseURL,
 		SpecialistModel: specialist.TextModel, SpecialistAPIKey: specialist.APIKey,
 		SpecialistHTTPClient: specialistHTTPClient(specialist),
+		EventSink:            executionSink,
 	})
 	if err != nil {
 		fatal(err)
+	}
+	if executionSink != nil {
+		projection, projectionErr := executionSink.complete(time.Now().UTC())
+		if projectionErr != nil {
+			fatal(projectionErr)
+		}
+		projectionPayload, projectionErr := json.MarshalIndent(projection, "", "  ")
+		if projectionErr != nil {
+			fatal(projectionErr)
+		}
+		if projectionErr := writeFile(*executionPlanPath, append(projectionPayload, '\n')); projectionErr != nil {
+			fatal(projectionErr)
+		}
 	}
 	if *safeReplayPath != "" {
 		profile, profileErr := runtimeProfile(runtimeProfileInput{
@@ -114,6 +140,68 @@ func main() {
 	if report.Result.Failure != nil {
 		os.Exit(2)
 	}
+}
+
+type executionPlanSink struct {
+	mu         sync.Mutex
+	projection *executionplan.Projection
+	err        error
+}
+
+func (sink *executionPlanSink) AcceptPlan(plan contracts.ResearchPlan, at time.Time) {
+	sink.mu.Lock()
+	defer sink.mu.Unlock()
+	if sink.err != nil {
+		return
+	}
+	projection, err := executionplan.FromPlan(plan, at)
+	if err != nil {
+		sink.err = err
+		return
+	}
+	sink.projection = &projection
+}
+
+func (sink *executionPlanSink) Emit(event orchestrator.Event) {
+	sink.mu.Lock()
+	defer sink.mu.Unlock()
+	if sink.err != nil {
+		return
+	}
+	if sink.projection == nil {
+		sink.err = fmt.Errorf("execution event arrived before the accepted plan")
+		return
+	}
+	sink.err = executionplan.Apply(sink.projection, executionplan.Event{
+		Sequence: event.Sequence, StepID: event.StepID, Type: event.Type,
+		Status: event.Status, At: event.At, Attributes: event.Attributes,
+	})
+}
+
+func (sink *executionPlanSink) complete(at time.Time) (executionplan.Projection, error) {
+	sink.mu.Lock()
+	defer sink.mu.Unlock()
+	if sink.err != nil {
+		return executionplan.Projection{}, sink.err
+	}
+	if sink.projection == nil {
+		return executionplan.Projection{}, fmt.Errorf("execution projection was not created")
+	}
+	if err := executionplan.Apply(sink.projection, executionplan.Event{
+		Sequence: sink.projection.LastSequence + 1,
+		Type:     "workspace", Status: "completed", At: at,
+	}); err != nil {
+		return executionplan.Projection{}, err
+	}
+	payload, err := json.Marshal(sink.projection)
+	if err != nil {
+		return executionplan.Projection{}, err
+	}
+	var projection executionplan.Projection
+	if err := json.Unmarshal(payload, &projection); err != nil {
+		return executionplan.Projection{}, err
+	}
+	return projection, executionplan.Validate(projection)
 }
 
 func specialistHTTPClient(config modelapi.Config) *http.Client {

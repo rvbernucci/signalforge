@@ -97,6 +97,29 @@ func TestFinancialQueryExpansionUsesConceptsRatherThanFixtureIDs(t *testing.T) {
 	}
 }
 
+func TestLexicalSearchStatsCountOnlyMatchedEligibleCandidates(t *testing.T) {
+	asOf := time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC)
+	index, err := NewLexicalIndex([]Chunk{
+		fixtureChunk("selected", "cik:msft", "Business", "Cloud infrastructure demand.", asOf.Add(-time.Hour)),
+		fixtureChunk("rejected", "cik:msft", "Risk", "Infrastructure demand concentration.", asOf.Add(-time.Hour)),
+		fixtureChunk("unmatched", "cik:msft", "Governance", "Board committee independence.", asOf.Add(-time.Hour)),
+		fixtureChunk("future", "cik:msft", "Business", "Cloud infrastructure demand.", asOf.Add(time.Hour)),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hits, stats, err := index.SearchWithStats(Query{
+		Text: "infrastructure demand", AsOf: asOf, CompanyIDs: []string{"cik:msft"}, TopK: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(hits) != 1 || stats.EligibleCandidates != 3 || stats.MatchedCandidates != 2 ||
+		stats.SelectedCandidates != 1 || stats.RejectedCandidates != 1 {
+		t.Fatalf("unexpected bounded search stats: hits=%+v stats=%+v", hits, stats)
+	}
+}
+
 func FuzzChunkContentHash(f *testing.F) {
 	f.Add("evidence")
 	f.Fuzz(func(t *testing.T, text string) {

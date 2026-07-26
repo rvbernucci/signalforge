@@ -10,6 +10,7 @@ func TestEvaluateFixtureWorkspace(t *testing.T) {
 	root := filepath.Join("..", "..")
 	result, err := evaluate(
 		filepath.Join(root, "fixtures", "workspace", "golden-case.json"),
+		filepath.Join(root, "fixtures", "productscope", "technology20-catalog.json"),
 		filepath.Join(root, "web", "dist"), time.Millisecond,
 	)
 	if err != nil {

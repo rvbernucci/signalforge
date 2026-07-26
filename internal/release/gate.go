@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -41,6 +42,40 @@ type ReleaseChecklist struct {
 	Items         []ChecklistItem `json:"items"`
 }
 
+func RefreshClaimEvidence(root string, registry ClaimRegistry) (ClaimRegistry, error) {
+	for claimIndex := range registry.Claims {
+		for evidenceIndex := range registry.Claims[claimIndex].Evidence {
+			evidence := &registry.Claims[claimIndex].Evidence[evidenceIndex]
+			if strings.TrimSpace(evidence.Path) == "" {
+				return registry, fmt.Errorf(
+					"claim %q contains an empty evidence path",
+					registry.Claims[claimIndex].ClaimID,
+				)
+			}
+			evidencePath, err := resolveEvidencePath(root, evidence.Path)
+			if err != nil {
+				return registry, fmt.Errorf(
+					"claim %q evidence %q: %w",
+					registry.Claims[claimIndex].ClaimID,
+					evidence.Path,
+					err,
+				)
+			}
+			actual, err := hashFile(evidencePath)
+			if err != nil {
+				return registry, fmt.Errorf(
+					"claim %q evidence %q: %w",
+					registry.Claims[claimIndex].ClaimID,
+					evidence.Path,
+					err,
+				)
+			}
+			evidence.SHA256 = actual
+		}
+	}
+	return registry, nil
+}
+
 func CheckClaims(root string, registry ClaimRegistry) []error {
 	var problems []error
 	if registry.SchemaVersion != "signalforge/public-claims/v1" {
@@ -67,7 +102,12 @@ func CheckClaims(root string, registry ClaimRegistry) []error {
 			problems = append(problems, fmt.Errorf("claim %q has invalid status %q", claim.ClaimID, claim.Status))
 		}
 		for _, evidence := range claim.Evidence {
-			actual, err := hashFile(filepath.Join(root, filepath.FromSlash(evidence.Path)))
+			evidencePath, err := resolveEvidencePath(root, evidence.Path)
+			if err != nil {
+				problems = append(problems, fmt.Errorf("claim %q evidence %q: %w", claim.ClaimID, evidence.Path, err))
+				continue
+			}
+			actual, err := hashFile(evidencePath)
 			if err != nil {
 				problems = append(problems, fmt.Errorf("claim %q evidence %q: %w", claim.ClaimID, evidence.Path, err))
 				continue
@@ -89,6 +129,38 @@ func CheckClaims(root string, registry ClaimRegistry) []error {
 		}
 	}
 	return problems
+}
+
+func resolveEvidencePath(root, relative string) (string, error) {
+	if strings.TrimSpace(relative) == "" || filepath.IsAbs(filepath.FromSlash(relative)) {
+		return "", errors.New("evidence path must be repository-relative")
+	}
+	rootPath, err := filepath.Abs(root)
+	if err != nil {
+		return "", err
+	}
+	rootPath, err = filepath.EvalSymlinks(rootPath)
+	if err != nil {
+		return "", err
+	}
+	candidate, err := filepath.Abs(filepath.Join(rootPath, filepath.FromSlash(relative)))
+	if err != nil {
+		return "", err
+	}
+	withinRoot, err := filepath.Rel(rootPath, candidate)
+	if err != nil || withinRoot == ".." || strings.HasPrefix(withinRoot, ".."+string(filepath.Separator)) {
+		return "", errors.New("evidence path escapes repository root")
+	}
+	resolved, err := filepath.EvalSymlinks(candidate)
+	if err != nil {
+		return "", err
+	}
+	resolvedWithinRoot, err := filepath.Rel(rootPath, resolved)
+	if err != nil || resolvedWithinRoot == ".." ||
+		strings.HasPrefix(resolvedWithinRoot, ".."+string(filepath.Separator)) {
+		return "", errors.New("evidence symlink escapes repository root")
+	}
+	return resolved, nil
 }
 
 func CheckRelease(checklist ReleaseChecklist) []error {

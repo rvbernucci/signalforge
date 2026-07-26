@@ -113,5 +113,7 @@ function retentionLabel(available: boolean, retention?: RetentionView): string {
   if (!retention || retention.status === "not_requested") return "Ephemeral session · nothing retained";
   if (retention.status === "pending") return "Local save pending";
   if (retention.status === "saved") return "Audit snapshot saved locally";
+  if (retention.status === "deleted") return "Saved snapshot deleted at your request";
+  if (retention.status === "unavailable") return "Local save unavailable in this runtime";
   return "Analysis completed · local save did not succeed";
 }

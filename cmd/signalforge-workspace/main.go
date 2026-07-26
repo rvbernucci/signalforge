@@ -30,6 +30,7 @@ func main() {
 	allowContainerListen := flag.Bool("allow-container-listen", false, "allow a non-loopback listener for an explicitly host-bound container")
 	mode := flag.String("mode", workspace.ModeFixture, "workspace mode: fixture or live")
 	fixturePath := flag.String("fixture", "fixtures/workspace/golden-case.json", "safe public workspace fixture")
+	catalogPath := flag.String("catalog", "fixtures/productscope/technology20-catalog.json", "public-safe Technology 20 catalog")
 	staticDir := flag.String("static-dir", "", "optional built frontend directory")
 	eventDelay := flag.Duration("event-delay", 100*time.Millisecond, "fixture progress-event replay delay")
 	snapshotPath := flag.String("snapshot", "fixtures/golden/financial-snapshot.json", "frozen point-in-time financial snapshot")
@@ -100,7 +101,7 @@ func main() {
 		defer store.Close()
 	}
 	workspaceServer, err := workspace.NewServer(workspace.ServerConfig{
-		Mode: *mode, FixturePath: *fixturePath, StaticDir: *staticDir,
+		Mode: *mode, FixturePath: *fixturePath, CatalogPath: *catalogPath, StaticDir: *staticDir,
 		EventDelay: *eventDelay, RunTimeout: *timeout, CaseStore: store,
 		AuditStore: auditStore, BuildVersion: *codeCommit,
 		Golden: golden.RunConfig{

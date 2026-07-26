@@ -28,7 +28,12 @@
           "sequence": { "type": "integer", "minimum": 1 },
           "run_id": { "type": "string", "minLength": 1, "maxLength": 128 },
           "step_id": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "type": { "enum": ["plan", "context", "review", "synthesis", "run"] },
+          "type": {
+            "enum": [
+              "interpretation", "planning", "plan", "context", "model", "retrieval",
+              "tool", "review", "synthesis", "run", "retention", "workspace"
+            ]
+          },
           "status": { "type": "string", "minLength": 1, "maxLength": 64 },
           "at": { "type": "string", "format": "date-time" },
           "attributes": {

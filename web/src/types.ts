@@ -16,9 +16,106 @@ export type WorkspaceConfig = {
   protected_capture: boolean;
 };
 
+export type ProductCompany = {
+  company_id: string;
+  display_name: string;
+  primary_ticker: string;
+  tickers: string[];
+  research_cluster: string;
+  peer_group: string;
+  research_role: string;
+  activation_state: string;
+  research_enabled: boolean;
+  reason_codes: string[];
+  metric_state_count: Record<string, number>;
+  profile_sha256: string;
+};
+
+export type ProductPeerLane = {
+  lane_id: string;
+  company_ids: string[];
+  comparison_type: string;
+  decision_question: string;
+  allowed_question_ids: string[];
+  allowed_metric_ids: string[];
+  enabled: boolean;
+  reason_codes: string[];
+  lane_sha256: string;
+};
+
+export type ProductCatalog = {
+  schema_version: "signalforge/technology20-public-catalog/v1";
+  universe_id: string;
+  as_of: string;
+  company_policy_version: string;
+  activation_policy_version: string;
+  peer_lane_policy_version: string;
+  source_registry_sha256: string;
+  companies: ProductCompany[];
+  peer_lanes: ProductPeerLane[];
+  claim_boundary: string;
+};
+
+export type FinancialResult = {
+  operation_id: string;
+  formula_version: string;
+  periods: string[];
+  source_as_of: string;
+  outputs: Array<{
+    output_id: string;
+    quantity: { value: string; unit: string; currency?: string; scale?: number };
+    status: string;
+  }>;
+  evidence_refs: string[];
+  receipt_sha256: string;
+};
+
+export type FinancialCompany = {
+  company_id: string;
+  primary_ticker: string;
+  display_name: string;
+  report_sha256: string;
+  results: FinancialResult[];
+  abstentions: Array<{ operation_id: string; code: string; message: string }>;
+};
+
+export type FinancialSummary = {
+  schema_version: "signalforge/technology20-public-financial-summary/v1";
+  universe_id: string;
+  as_of: string;
+  companies: FinancialCompany[];
+  claim_boundary: string;
+};
+
+export type PeerEvaluation = {
+  lane_id: string;
+  company_ids: string[];
+  receipts: Array<{
+    disposition: "comparable" | "comparable_with_caveat" | "not_comparable";
+    operands: Array<{ canonical_metric_id: string }>;
+    required_caveat_ids?: string[];
+    reason_codes?: string[];
+    receipt_sha256: string;
+  }>;
+  abstentions: Array<{ metric_ids: string[]; code: string; message: string }>;
+  releasable_metric_ids: string[];
+  withheld_metric_ids: string[];
+  promoted: boolean;
+  reason_codes: string[];
+};
+
+export type PeerEvaluationSuite = {
+  schema_version: "signalforge/technology20-peer-evaluation/v1";
+  universe_id: string;
+  as_of: string;
+  policy_version: string;
+  lanes: PeerEvaluation[];
+  claim_boundary: string;
+};
+
 export type RetentionView = {
   requested: boolean;
-  status: "not_requested" | "pending" | "saved" | "failed" | "unavailable";
+  status: "not_requested" | "pending" | "saved" | "failed" | "unavailable" | "deleted";
   case_id?: string;
   error_code?: string;
 };
@@ -93,6 +190,92 @@ export type SafeEvent = {
   attributes?: Record<string, string>;
 };
 
+export type ExecutionStatus =
+  | "pending"
+  | "ready"
+  | "running"
+  | "passed"
+  | "failed"
+  | "degraded"
+  | "repairing"
+  | "skipped"
+  | "cancelled"
+  | "withheld"
+  | "unavailable";
+
+export type ExecutionChecklistItem = {
+  check_id: string;
+  label: string;
+  status: ExecutionStatus;
+  authority: string;
+  required: boolean;
+  reference_ids?: string[];
+  completed_at?: string;
+  safe_detail?: string;
+};
+
+export type ExecutionPhase = {
+  phase_id: string;
+  order: number;
+  safe_label: string;
+  safe_objective: string;
+  mandatory: boolean;
+  status: ExecutionStatus;
+  step_ids: string[];
+  safe_summary: string;
+};
+
+export type ExecutionStep = {
+  step_id: string;
+  parent_step_id?: string;
+  parent_phase_id: string;
+  phase: string;
+  kind: string;
+  safe_label: string;
+  safe_objective: string;
+  role_id?: string;
+  wave?: number;
+  depends_on?: string[];
+  mandatory: boolean;
+  status: ExecutionStatus;
+  route?: string;
+  route_reason_code?: string;
+  authorized_capability_ids?: string[];
+  evidence_requirement_classes?: string[];
+  checklist: ExecutionChecklistItem[];
+  started_at?: string;
+  completed_at?: string;
+  duration_ms?: number;
+  attempt: number;
+  max_attempts: number;
+  reference_ids?: string[];
+  failure_code?: string;
+  degradation_code?: string;
+  safe_summary: string;
+};
+
+export type ExecutionPlan = {
+  schema_version: "signalforge/execution-plan/v1";
+  run_id: string;
+  request_id: string;
+  plan_id?: string;
+  status: ExecutionStatus;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  total_steps: number;
+  terminal_steps: number;
+  progress_ratio: number;
+  max_parallel_specialists: number;
+  current_wave?: number;
+  route_summary?: string[];
+  phases: ExecutionPhase[];
+  steps: ExecutionStep[];
+  degradation_summary?: string[];
+  last_sequence: number;
+  projection_sha256: string;
+};
+
 export type Projection = {
   schema_version: string;
   case_id: string;
@@ -112,6 +295,7 @@ export type Projection = {
   next_actions?: string[];
   warnings?: Array<{ kind: string; role_id?: string; text: string }>;
   events: SafeEvent[];
+  execution_plan?: ExecutionPlan;
   execution: {
     local_only: boolean;
     endpoint_scope: string;
@@ -135,11 +319,13 @@ export type Projection = {
 
 export type RunView = {
   run_id: string;
+  trace_id: string;
   parent_run_id?: string;
   status: "running" | "completed" | "failed" | "cancelled";
   started_at: string;
   completed_at?: string;
   result?: Projection;
+  execution_plan?: ExecutionPlan;
   failure?: { code: string; retryable: boolean };
   retention: RetentionView;
 };

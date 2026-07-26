@@ -21,8 +21,32 @@ go vet ./...
 go test ./internal/casestore ./internal/permissions ./internal/resilience ./internal/workspace -count=1
 python3 scripts/reference_finance.py
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
-python3 -m py_compile scripts/build_project_spec.py scripts/run_hardening_matrix.py
+python3 -m py_compile \
+  scripts/build_project_spec.py \
+  scripts/run_hardening_matrix.py \
+  scripts/run_dashboard_cpu_ablation.py \
+  scripts/run_dashboard_workload_cpu.py \
+  scripts/build_dashboard_cpu_evidence.py \
+  scripts/capture_dashboard_radeon_journey.py \
+  scripts/build_dashboard_radeon_evidence.py \
+  scripts/verify_dashboard_cpu_ablation.py
 python3 scripts/run_hardening_matrix.py --check
+python3 scripts/build_dashboard_cpu_evidence.py \
+  --benchmark evidence/dashboard-cpu-benchmark-radeon.txt \
+  --workload evidence/dashboard-workload-cpu-radeon.json \
+  --output evidence/dashboard-cpu-evidence.json \
+  --check
+python3 scripts/build_dashboard_radeon_evidence.py \
+  --local evidence/dashboard-radeon-local-journey.json \
+  --hybrid evidence/dashboard-radeon-hybrid-journey.json \
+  --local-plan docs/assets/live-execution-plan-radeon-local-viewport.jpg \
+  --local-mission docs/assets/mission-control-radeon-local-viewport.jpg \
+  --hybrid-plan docs/assets/live-execution-plan-radeon-hybrid-viewport.jpg \
+  --hybrid-mission docs/assets/mission-control-radeon-hybrid-viewport.jpg \
+  --binary-sha256 c0f741b2ffdf2daac8fb8d0fa0f79acc1f88fb1b6dff43113934122c3c1d7992 \
+  --frontend-sha256 c7cfaaf9802c25154dac2719d94a1059afad888392da6dbde4bd4f3078d7bfa7 \
+  --output evidence/dashboard-radeon-synchronized-captures.json \
+  --check
 jq -e '
   .schema_version == "signalforge/hardening-report/v1" and
   .matrix_id == "sprint12-adversarial-v1" and

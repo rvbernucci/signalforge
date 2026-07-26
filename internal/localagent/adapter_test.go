@@ -37,6 +37,85 @@ func (provider staticMaterials) Load(_ context.Context, _ contracts.ContextReque
 	return provider.material, nil
 }
 
+type observedMaterials struct {
+	material Material
+	err      error
+	tool     bool
+}
+
+func (provider observedMaterials) Load(ctx context.Context, request contracts.ContextRequest) (Material, error) {
+	if provider.err != nil {
+		return Material{}, provider.err
+	}
+	if provider.tool {
+		engineRequest := contracts.EngineRequest{
+			SchemaVersion:    contracts.SchemaVersionV1,
+			RequestID:        "calc-observed-1",
+			RunID:            request.RunID,
+			StepID:           request.StepID,
+			RequestedBy:      request.SpecialistRole,
+			EngineID:         "test-engine",
+			OperationID:      "financial.margin",
+			FormulaVersion:   "ratio/v1",
+			Inputs:           []contracts.EngineInput{{InputID: "revenue"}},
+			RequestedOutputs: []string{"margin"},
+		}
+		ObserveToolStarted(ctx, engineRequest)
+		receipt := numericalMaterial(request.Scope.AsOf).CalculationReceipts[0]
+		receipt.RequestID = engineRequest.RequestID
+		receipt.EngineID = engineRequest.EngineID
+		receipt.OperationID = engineRequest.OperationID
+		receipt.FormulaVersion = engineRequest.FormulaVersion
+		ObserveToolPassed(ctx, receipt)
+	}
+	return provider.material, nil
+}
+
+type lifecycleRecorder struct {
+	retrievalStatuses []string
+	retrievals        []orchestrator.RetrievalLifecycle
+	toolStatuses      []string
+	tools             []orchestrator.ToolLifecycle
+}
+
+func (recorder *lifecycleRecorder) recordRetrieval(status string, lifecycle orchestrator.RetrievalLifecycle) {
+	recorder.retrievalStatuses = append(recorder.retrievalStatuses, status)
+	recorder.retrievals = append(recorder.retrievals, lifecycle)
+}
+
+func (recorder *lifecycleRecorder) RetrievalStarted(lifecycle orchestrator.RetrievalLifecycle) {
+	recorder.recordRetrieval("started", lifecycle)
+}
+
+func (recorder *lifecycleRecorder) RetrievalPassed(lifecycle orchestrator.RetrievalLifecycle) {
+	recorder.recordRetrieval("passed", lifecycle)
+}
+
+func (recorder *lifecycleRecorder) RetrievalDegraded(lifecycle orchestrator.RetrievalLifecycle) {
+	recorder.recordRetrieval("degraded", lifecycle)
+}
+
+func (recorder *lifecycleRecorder) RetrievalFailed(lifecycle orchestrator.RetrievalLifecycle) {
+	recorder.recordRetrieval("failed", lifecycle)
+}
+
+func (recorder *lifecycleRecorder) recordTool(status string, lifecycle orchestrator.ToolLifecycle) {
+	recorder.toolStatuses = append(recorder.toolStatuses, status)
+	recorder.tools = append(recorder.tools, lifecycle)
+}
+
+func (recorder *lifecycleRecorder) ToolStarted(lifecycle orchestrator.ToolLifecycle) {
+	recorder.recordTool("started", lifecycle)
+}
+
+func (recorder *lifecycleRecorder) ToolPassed(lifecycle orchestrator.ToolLifecycle) {
+	recorder.recordTool("passed", lifecycle)
+}
+
+func (recorder *lifecycleRecorder) ToolFailed(lifecycle orchestrator.ToolLifecycle) {
+	recorder.recordTool("failed", lifecycle)
+}
+
 func TestPromptRegistryCoversEveryFrozenRole(t *testing.T) {
 	registry := DefaultPromptRegistry()
 	if err := registry.Validate(roles.DefaultRegistry()); err != nil {
@@ -82,6 +161,23 @@ func TestPromptRegistryRejectsInvalidAddonAuthority(t *testing.T) {
 		if _, err := registry.WithSystemAddon(test.role, test.version, test.addon); err == nil {
 			t.Fatalf("expected authority rejection for role=%q version=%q", test.role, test.version)
 		}
+	}
+}
+
+func TestModelGenerationControlsMatchModelFamily(t *testing.T) {
+	chatTemplateKwargs, thinking := modelGenerationControls("DeepSeek-V4-Flash")
+	if chatTemplateKwargs != nil || thinking["type"] != "disabled" {
+		t.Fatalf("unexpected DeepSeek controls: chat=%v thinking=%v", chatTemplateKwargs, thinking)
+	}
+
+	chatTemplateKwargs, thinking = modelGenerationControls("Qwen3.6-35B-A3B")
+	if thinking != nil || chatTemplateKwargs["enable_thinking"] != false {
+		t.Fatalf("unexpected Qwen controls: chat=%v thinking=%v", chatTemplateKwargs, thinking)
+	}
+
+	chatTemplateKwargs, thinking = modelGenerationControls("signalforge-gemma4-26b-q4")
+	if thinking != nil || chatTemplateKwargs["enable_thinking"] != false {
+		t.Fatalf("unexpected Gemma controls: chat=%v thinking=%v", chatTemplateKwargs, thinking)
 	}
 }
 
@@ -177,6 +273,83 @@ func TestSpecialistAdapterBuildsEnvelopeAndAuthorizesEvidence(t *testing.T) {
 	}
 	if len(client.requests) != 1 || client.requests[0].ResponseFormat["type"] != "json_schema" {
 		t.Fatalf("structured local request was not used: %+v", client.requests)
+	}
+}
+
+func TestObservedSpecialistReportsRealRetrievalAndToolLifecycle(t *testing.T) {
+	now := time.Date(2026, 7, 25, 18, 0, 0, 0, time.UTC)
+	material := validMaterial(now)
+	material.Retrieval = RetrievalTrace{
+		Method: "bm25/v1", CandidateCount: 7, SelectedCandidateCount: 1,
+		RejectedCandidateCount: 6, CandidateCountsKnown: true,
+	}
+	client := &fakeCompleter{answers: []string{`{
+      "findings":[{"claim_type":"fact","statement":"Revenue grew.","evidence_refs":["evidence-1"],"confidence":0.9}],
+      "counterevidence":[],"assumptions":[],"missing_evidence":[],"conflicts":[],"uncertainties":[],"handoff_notes":[]
+    }`}}
+	adapter, err := New(client, "local-model", observedMaterials{material: material, tool: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recorder := &lifecycleRecorder{}
+	if _, err := adapter.RunObserved(context.Background(), validContextRequest(now), recorder); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(recorder.retrievalStatuses, []string{"started", "passed"}) {
+		t.Fatalf("retrieval lifecycle=%v", recorder.retrievalStatuses)
+	}
+	retrieval := recorder.retrievals[1]
+	if retrieval.RetrievalID != "retrieval-context-request-1" || retrieval.BundleID != "bundle-1" ||
+		retrieval.Method != "bm25/v1" || retrieval.EvidenceCount != 1 ||
+		retrieval.CandidateCount != 7 || retrieval.SelectedCandidateCount != 1 ||
+		retrieval.RejectedCandidateCount != 6 || !retrieval.CandidateCountsKnown ||
+		!slices.Equal(retrieval.SourceClasses, []string{"sec_filing"}) {
+		t.Fatalf("unsafe or incomplete retrieval metadata: %+v", retrieval)
+	}
+	if !slices.Equal(recorder.toolStatuses, []string{"started", "passed"}) {
+		t.Fatalf("tool lifecycle=%v", recorder.toolStatuses)
+	}
+	if tool := recorder.tools[1]; tool.ToolExecutionID != "calc-observed-1" ||
+		tool.OperationID != "financial.margin" || tool.InputCount != 1 ||
+		tool.OutputCount != 1 || tool.ReceiptID == "" || !tool.InvariantsPassed {
+		t.Fatalf("unsafe or incomplete tool metadata: %+v", tool)
+	}
+}
+
+func TestObservedSpecialistReportsRetrievalFailureAndDegradation(t *testing.T) {
+	now := time.Date(2026, 7, 25, 18, 0, 0, 0, time.UTC)
+	request := validContextRequest(now)
+	adapter, err := New(&fakeCompleter{}, "local-model", observedMaterials{err: errors.New("provider unavailable")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	failed := &lifecycleRecorder{}
+	if _, err := adapter.RunObserved(context.Background(), request, failed); err == nil {
+		t.Fatal("expected material load failure")
+	}
+	if !slices.Equal(failed.retrievalStatuses, []string{"started", "failed"}) ||
+		failed.retrievals[1].FailureCode != "material_load_failed" {
+		t.Fatalf("retrieval failure lifecycle=%+v statuses=%v", failed.retrievals, failed.retrievalStatuses)
+	}
+
+	material := validMaterial(now)
+	material.Evidence.Missing = []string{"Current guidance was unavailable."}
+	material.Retrieval = RetrievalTrace{Method: "bm25/v1", CandidateCountsKnown: true}
+	client := &fakeCompleter{answers: []string{`{
+      "findings":[{"claim_type":"fact","statement":"Revenue grew.","evidence_refs":["evidence-1"],"confidence":0.9}],
+      "counterevidence":[],"assumptions":[],"missing_evidence":[],"conflicts":[],"uncertainties":[],"handoff_notes":[]
+    }`}}
+	adapter, err = New(client, "local-model", observedMaterials{material: material})
+	if err != nil {
+		t.Fatal(err)
+	}
+	degraded := &lifecycleRecorder{}
+	if _, err := adapter.RunObserved(context.Background(), request, degraded); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(degraded.retrievalStatuses, []string{"started", "degraded"}) ||
+		degraded.retrievals[1].MissingEvidenceCount != 1 {
+		t.Fatalf("retrieval degradation lifecycle=%+v statuses=%v", degraded.retrievals, degraded.retrievalStatuses)
 	}
 }
 
@@ -439,7 +612,10 @@ func TestSpecialistNumericalSilenceHidesValuesAndPreservesAuthorizedReference(t 
 	if !strings.Contains(payload, "variable-1") || !strings.Contains(payload, "greater_than") && strings.Contains(payload, "relation-1") {
 		t.Fatalf("qualitative numerical authority was omitted: %s", payload)
 	}
-	if len(packet.Findings) != 1 || packet.NumericalContext == nil || len(packet.NumericalContext.Variables) != 1 || len(packet.CalculationReceipts) != 1 {
+	if len(packet.Findings) != 2 ||
+		packet.Findings[1].Origin != contracts.FindingOriginDeterministic ||
+		packet.NumericalContext == nil || len(packet.NumericalContext.Variables) != 1 ||
+		len(packet.CalculationReceipts) != 1 {
 		t.Fatalf("authorized numerical lineage was not preserved: %+v", packet)
 	}
 }
@@ -455,7 +631,12 @@ func TestSpecialistQuarantinesInventedNumericalReference(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(packet.Findings) != 0 || packet.NumericalContext != nil || len(packet.Uncertainties) != 1 || !strings.Contains(packet.Uncertainties[0], "unauthorized numerical reference") {
+	if len(packet.Findings) != 1 ||
+		packet.Findings[0].Origin != contracts.FindingOriginDeterministic ||
+		!slices.Equal(packet.Findings[0].NumericalRefs, []string{"variable-1"}) ||
+		packet.NumericalContext == nil ||
+		len(packet.Uncertainties) != 1 ||
+		!strings.Contains(packet.Uncertainties[0], "unauthorized numerical reference") {
 		t.Fatalf("invented numerical reference was not quarantined: %+v", packet)
 	}
 }
@@ -771,18 +952,13 @@ func TestSynthesizerRetriesIncompleteJSONOnce(t *testing.T) {
 	}
 }
 
-func TestSynthesizerRetriesNumericalSilenceViolationOnce(t *testing.T) {
+func TestSynthesizerRepairsAuthorizedNumericalSilenceViolationWithoutRetry(t *testing.T) {
 	now := time.Now().UTC()
 	client := &fakeCompleter{answers: []string{
 		`{"sections":[
 		  {"section_type":"business_overview","title":"Business overview","content":"Revenue grew by 12%.","claim_refs":["claim-1"]},
 		  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":[]},
 		  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
-		],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`,
-		`{"sections":[
-		  {"section_type":"business_overview","title":"Business overview","content":"Revenue grew materially.","claim_refs":["claim-1"]},
-		  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":[]},
-		  {"section_type":"limitations","title":"Limitations","content":"Available period coverage limits the inference.","claim_refs":[]}
 		],"assumptions":[],"limitations":["Available period coverage limits the inference."],"next_actions":[]}`,
 	}}
 	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
@@ -791,7 +967,43 @@ func TestSynthesizerRetriesNumericalSilenceViolationOnce(t *testing.T) {
 		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueApprove,
 		ApprovedClaims: []string{"claim-1"}, CreatedAt: now,
 	}
-	_, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
+	answer, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
+		Request: validResearchRequest(now), Packets: []contracts.ContextPacket{validPacket(now)},
+		Critiques: []contracts.CritiqueReport{critique},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(client.requests) != 1 {
+		t.Fatalf("authorized numerical prose should be narrowed without another inference: %+v", client.requests)
+	}
+	for _, section := range answer.Sections {
+		if containsAuthoritativeNumericalLiteral(section.Content) {
+			t.Fatalf("deterministic narrowing retained model-authored numerical prose: %+v", section)
+		}
+	}
+}
+
+func TestSynthesizerRetriesWhenDeterministicNumericalRepairIsUnauthorized(t *testing.T) {
+	now := time.Now().UTC()
+	unauthorized := `{"sections":[
+	  {"section_type":"business_overview","title":"Business overview","content":"Revenue grew by 12%.","claim_refs":[]},
+	  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":[]},
+	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
+	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
+	safe := `{"sections":[
+	  {"section_type":"business_overview","title":"Business overview","content":"Revenue grew materially.","claim_refs":["claim-1"]},
+	  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":[]},
+	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
+	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
+	client := &fakeCompleter{answers: []string{unauthorized, safe}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+	critique := contracts.CritiqueReport{
+		SchemaVersion: contracts.SchemaVersionV1, ReportID: "critique-1", RunID: "run-1",
+		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueApprove,
+		ApprovedClaims: []string{"claim-1"}, CreatedAt: now,
+	}
+	answer, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
 		Request: validResearchRequest(now), Packets: []contracts.ContextPacket{validPacket(now)},
 		Critiques: []contracts.CritiqueReport{critique},
 	})
@@ -799,36 +1011,146 @@ func TestSynthesizerRetriesNumericalSilenceViolationOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(client.requests) != 2 {
-		t.Fatalf("numerical-silence repair must be attempted exactly once: %+v", client.requests)
+		t.Fatalf("unauthorized numerical prose must use the bounded model retry: %+v", client.requests)
 	}
-	if !strings.Contains(client.requests[1].Messages[0].Content, "single bounded repair") {
-		t.Fatalf("repair prompt omitted the numerical-silence correction: %+v", client.requests[1].Messages)
+	for _, section := range answer.Sections {
+		if containsAuthoritativeNumericalLiteral(section.Content) {
+			t.Fatalf("deterministic narrowing retained model-authored numerical prose: %+v", section)
+		}
 	}
 }
 
-func TestSynthesizerFailsClosedAfterSecondNumericalSilenceViolation(t *testing.T) {
-	now := time.Now().UTC()
-	unsafe := `{"sections":[
-	  {"section_type":"business_overview","title":"Business overview","content":"Revenue grew by 12%.","claim_refs":["claim-1"]},
-	  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":[]},
-	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
-	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
-	client := &fakeCompleter{answers: []string{unsafe, unsafe}}
-	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
-	critique := contracts.CritiqueReport{
-		SchemaVersion: contracts.SchemaVersionV1, ReportID: "critique-1", RunID: "run-1",
-		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueApprove,
-		ApprovedClaims: []string{"claim-1"}, CreatedAt: now,
+func TestDeterministicRepairRemovesOnlyNumericalProseWithApprovedAuthority(t *testing.T) {
+	body := finalBody{Sections: []answerSectionDraft{{
+		SectionType: "financial_quality", Title: "Financial quality",
+		Content:   "Cash conversion was 81.4%. The evidence indicates resilient conversion quality.",
+		ClaimRefs: []string{"claim-financial"},
+	}}}
+	material := synthesisPromptInput{Claims: []synthesisClaimView{{
+		Finding: contracts.Finding{
+			ClaimID: "claim-financial", CalculationRefs: []string{"receipt-1"},
+			NumericalRefs: []string{"variable-1"},
+		},
+	}}}
+	if err := repairAuthorizedNumericalDraft(&body, material); err != nil {
+		t.Fatal(err)
 	}
-	_, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
-		Request: validResearchRequest(now), Packets: []contracts.ContextPacket{validPacket(now)},
-		Critiques: []contracts.CritiqueReport{critique},
-	})
-	if err == nil || !strings.Contains(err.Error(), "after bounded numerical-silence retry") {
-		t.Fatalf("repeated numerical leakage must fail closed, got %v", err)
+	if containsAuthoritativeNumericalLiteral(body.Sections[0].Content) ||
+		!strings.Contains(body.Sections[0].Content, "resilient conversion quality") {
+		t.Fatalf("deterministic repair removed safe prose or retained a number: %+v", body.Sections[0])
 	}
-	if len(client.requests) != 2 {
-		t.Fatalf("numerical-silence retries must remain bounded: %+v", client.requests)
+}
+
+func TestDeterministicRepairNarrowsNumericalProseBoundToApprovedClaim(t *testing.T) {
+	body := finalBody{Sections: []answerSectionDraft{{
+		SectionType: "business_overview", Title: "Business overview",
+		Content: "Revenue grew by 12%.", ClaimRefs: []string{"claim-business"},
+	}}}
+	material := synthesisPromptInput{Claims: []synthesisClaimView{{
+		Finding: contracts.Finding{ClaimID: "claim-business"},
+	}}}
+	if err := repairAuthorizedNumericalDraft(&body, material); err != nil {
+		t.Fatal(err)
+	}
+	if containsAuthoritativeNumericalLiteral(body.Sections[0].Content) {
+		t.Fatalf("approved section retained model-authored numerical prose: %+v", body.Sections[0])
+	}
+}
+
+func TestDeterministicRepairNarrowsNumericalEvidenceProseWithApprovedClaim(t *testing.T) {
+	body := finalBody{Sections: []answerSectionDraft{{
+		SectionType: "evidence", Title: "Evidence",
+		Content:   "Three normalized inputs support the identity. The filing lineage is approved.",
+		ClaimRefs: []string{"claim-evidence"},
+	}}}
+	material := synthesisPromptInput{Claims: []synthesisClaimView{{
+		Finding: contracts.Finding{
+			ClaimID:      "claim-evidence",
+			EvidenceRefs: []string{"evidence-1"},
+		},
+	}}}
+	if err := repairAuthorizedNumericalDraft(&body, material); err != nil {
+		t.Fatal(err)
+	}
+	if containsAuthoritativeNumericalLiteral(body.Sections[0].Content) ||
+		!strings.Contains(body.Sections[0].Content, "filing lineage is approved") {
+		t.Fatalf("evidence repair did not preserve safe prose: %+v", body.Sections[0])
+	}
+}
+
+func TestDeterministicRepairNarrowsEveryApprovedSection(t *testing.T) {
+	for _, sectionType := range []string{
+		"business_overview", "financial_quality", "comparison", "valuation_range",
+		"thesis", "limitations", "counterevidence", "invalidation_conditions",
+	} {
+		t.Run(sectionType, func(t *testing.T) {
+			body := finalBody{Sections: []answerSectionDraft{{
+				SectionType: sectionType,
+				Title:       titleFromSectionType(sectionType),
+				Content:     "Two observations constrain the thesis. The approved evidence remains decision-useful.",
+				ClaimRefs:   []string{"claim-qualitative"},
+			}}}
+			material := synthesisPromptInput{Claims: []synthesisClaimView{{
+				Finding: contracts.Finding{
+					ClaimID:      "claim-qualitative",
+					EvidenceRefs: []string{"evidence-1"},
+				},
+			}}}
+			if err := repairAuthorizedNumericalDraft(&body, material); err != nil {
+				t.Fatal(err)
+			}
+			if containsAuthoritativeNumericalLiteral(body.Sections[0].Content) ||
+				!strings.Contains(body.Sections[0].Content, "approved evidence remains decision-useful") {
+				t.Fatalf("qualitative repair did not narrow safely: %+v", body.Sections[0])
+			}
+		})
+	}
+}
+
+func TestDeterministicRepairRejectsNumericalProseWithoutApprovedClaim(t *testing.T) {
+	body := finalBody{Sections: []answerSectionDraft{{
+		SectionType: "business_overview",
+		Title:       "Business overview",
+		Content:     "The unsupported value was 12%.",
+		ClaimRefs:   []string{"invented-claim"},
+	}}}
+	material := synthesisPromptInput{Claims: []synthesisClaimView{{
+		Finding: contracts.Finding{
+			ClaimID:      "approved-claim",
+			EvidenceRefs: []string{"evidence-1"},
+		},
+	}}}
+	if err := repairAuthorizedNumericalDraft(&body, material); err == nil {
+		t.Fatal("numerical prose without an approved claim must fail closed")
+	}
+}
+
+func TestDeterministicRepairDropsNumericalMetadataWithoutInventingReplacementValues(t *testing.T) {
+	body := finalBody{
+		Sections: []answerSectionDraft{{
+			SectionType: "financial_quality",
+			Content:     "The approved calculation supports the analysis.",
+			ClaimRefs:   []string{"claim-financial"},
+		}},
+		Limitations: []string{"The analysis covers one reporting period."},
+		NextActions: []string{"Review the next 10-Q.", "Review the next filing."},
+	}
+	material := synthesisPromptInput{Claims: []synthesisClaimView{{
+		Finding: contracts.Finding{
+			ClaimID:         "claim-financial",
+			CalculationRefs: []string{"receipt-1"},
+			NumericalRefs:   []string{"variable-1"},
+		},
+	}}}
+	if err := repairAuthorizedNumericalDraft(&body, material); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Limitations) != 1 ||
+		containsAuthoritativeNumericalLiteral(body.Limitations[0]) {
+		t.Fatalf("limitations retained or invented a numerical value: %+v", body.Limitations)
+	}
+	if len(body.NextActions) != 1 || body.NextActions[0] != "Review the next filing." {
+		t.Fatalf("next actions were not safely narrowed: %+v", body.NextActions)
 	}
 }
 
@@ -1262,6 +1584,40 @@ func TestReviewerFailsClosedWhenNonApprovalHasNoAuthorizedClaimReference(t *test
 	}
 }
 
+func TestReviewerRejectsPersistentlyOmittedClaimsAfterBoundedRetry(t *testing.T) {
+	now := time.Now().UTC()
+	packet := validPacket(now)
+	packet.Findings = append(packet.Findings, contracts.Finding{
+		ClaimID: "claim-2", ClaimType: contracts.ClaimFact, Statement: "A second supported claim.",
+		EvidenceRefs: []string{"evidence-1"}, Confidence: 0.9, ValidAsOf: now,
+	})
+	client := &fakeCompleter{answers: []string{
+		`{"decision":"approve","approved_claims":["claim-1"],"rejected_claims":[],"issues":[{"issue_id":"ungrounded","severity":"high","claim_refs":["claim-1"],"description":"Invalid issue on an approved claim."}]}`,
+		`{"decision":"approve","approved_claims":["claim-1"],"rejected_claims":[],"issues":[{"issue_id":"ungrounded","severity":"high","claim_refs":["claim-1"],"description":"Invalid issue on an approved claim."}]}`,
+	}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+	report, err := adapter.Review(context.Background(), orchestrator.ReviewInput{
+		Request: validResearchRequest(now),
+		Step:    contracts.PlanStep{StepID: "review-1", RoleID: roles.EvidenceCritic},
+		Packets: []contracts.ContextPacket{packet},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(client.requests) != 2 {
+		t.Fatalf("review completeness retry must remain bounded: calls=%d", len(client.requests))
+	}
+	if report.Decision != contracts.CritiqueNarrow ||
+		!slices.Equal(report.ApprovedClaims, []string{"claim-1"}) ||
+		!slices.Equal(report.RejectedClaims, []string{"claim-2"}) {
+		t.Fatalf("persistently omitted claim did not close fail-safe: %+v", report)
+	}
+	if len(report.Issues) != 1 || report.Issues[0].IssueID != "review-output-omission" ||
+		!slices.Equal(report.Issues[0].ClaimRefs, []string{"claim-2"}) {
+		t.Fatalf("omission closure was not auditable: %+v", report.Issues)
+	}
+}
+
 func TestReviewerRejectsContradictoryApproveDecision(t *testing.T) {
 	now := time.Now().UTC()
 	client := &fakeCompleter{answers: []string{`{"decision":"approve","approved_claims":["claim-1"],"rejected_claims":["claim-1"],"issues":[]}`}}
@@ -1301,6 +1657,38 @@ func TestDecodeJSONObjectAcceptsFenceButRejectsTrailingValue(t *testing.T) {
 	}
 	if err := decodeJSONObject(strings.Repeat("x", maxModelResponseBytes+1), &body); err == nil {
 		t.Fatal("oversized model response must fail before decoding")
+	}
+}
+
+func TestEnsureVisibleComparisonBoundary(t *testing.T) {
+	comparative := finalBody{Limitations: []string{"Source coverage is bounded."}}
+	ensureVisibleComparisonBoundary(&comparative, synthesisPromptInput{
+		Request: synthesisRequestView{
+			Question: "Challenge a relative-quality thesis for Cisco and Arista.",
+		},
+	})
+	if !slices.Contains(comparative.Limitations, comparisonBoundaryDisclosure) {
+		t.Fatalf("comparative answer omitted the deterministic boundary: %+v", comparative.Limitations)
+	}
+	ensureVisibleComparisonBoundary(&comparative, synthesisPromptInput{
+		Request: synthesisRequestView{Question: "Compare Cisco and Arista."},
+	})
+	count := 0
+	for _, limitation := range comparative.Limitations {
+		if limitation == comparisonBoundaryDisclosure {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Fatalf("comparison boundary was duplicated %d times: %+v", count, comparative.Limitations)
+	}
+
+	standalone := finalBody{Limitations: []string{"Source coverage is bounded."}}
+	ensureVisibleComparisonBoundary(&standalone, synthesisPromptInput{
+		Request: synthesisRequestView{Question: "Explain Cisco's cash generation."},
+	})
+	if slices.Contains(standalone.Limitations, comparisonBoundaryDisclosure) {
+		t.Fatalf("standalone answer received an irrelevant comparison boundary: %+v", standalone.Limitations)
 	}
 }
 
@@ -1378,6 +1766,44 @@ func TestNeutralizeInternalReferenceMentionsPreservesNumericalSilenceBoundary(t 
 	}
 }
 
+func TestNeutralizeInternalRoleVersionBeforeNumericalSilence(t *testing.T) {
+	body := finalBody{
+		Sections: []answerSectionDraft{{
+			SectionType: "limitations",
+			Title:       "Limitations",
+			Content:     "The required source authority for business-strategy/v1 is not activated.",
+		}},
+		Limitations: []string{
+			"Escalation to financial-quality/v1 remains unavailable.",
+		},
+	}
+
+	neutralizeInternalReferenceMentions(&body, synthesisPromptInput{})
+
+	if strings.Contains(body.Sections[0].Content, "business-strategy/v1") ||
+		!strings.Contains(body.Sections[0].Content, "business strategy") {
+		t.Fatalf("internal business role was not translated: %q", body.Sections[0].Content)
+	}
+	if strings.Contains(body.Limitations[0], "financial-quality/v1") ||
+		!strings.Contains(body.Limitations[0], "financial quality") {
+		t.Fatalf("internal financial role was not translated: %q", body.Limitations[0])
+	}
+	if err := validateNumericallySilentDraft(body); err != nil {
+		t.Fatalf("translated role labels must satisfy numerical silence: %v", err)
+	}
+}
+
+func TestRedactFinancialNumericsTranslatesRoleVersionBeforeRedaction(t *testing.T) {
+	got := redactFinancialNumerics(
+		"The required source authority for business-strategy/v1 analysis is unavailable.",
+	)
+	if strings.Contains(got, "[value withheld]") ||
+		strings.Contains(got, "business-strategy/v1") ||
+		!strings.Contains(got, "business strategy analysis") {
+		t.Fatalf("role version crossed the numerical redaction boundary: %q", got)
+	}
+}
+
 func TestFinalSectionGetsGoRenderedNumericalDisclosure(t *testing.T) {
 	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
 	material := numericalMaterial(now)
@@ -1444,6 +1870,136 @@ func TestGoPublishesIncomparableRelationWithoutDirection(t *testing.T) {
 		!slices.Equal(packet.Findings[0].NumericalRefs, []string{"relation-1"}) ||
 		directionalSemanticPattern.MatchString(packet.Findings[0].Statement) {
 		t.Fatalf("Go did not preserve a neutral incomparable disclosure: %+v", packet.Findings)
+	}
+}
+
+func TestGoPublishesAccountingAuthorityBoundaryFromTypedPolicyEvidence(t *testing.T) {
+	packet := contracts.ContextPacket{SpecialistRole: roles.AccountingReporting}
+	material := Material{Evidence: contracts.EvidenceBundle{Items: []contracts.EvidenceItem{{
+		EvidenceRef: contracts.EvidenceRef{
+			EvidenceID: "accounting-authority:company-a",
+			SourceType: "accounting_authority_policy",
+			ContentSHA: strings.Repeat("a", 64),
+		},
+		State:     contracts.EvidenceAvailable,
+		Statement: "Accounting authority is limited to consolidated periodic facts and receipt-gated comparisons.",
+	}}}}
+	appendAccountingAuthorityFindings(&packet, material)
+	if len(packet.Findings) != 1 ||
+		packet.Findings[0].Origin != contracts.FindingOriginSourceExtraction ||
+		!slices.Equal(packet.Findings[0].EvidenceRefs, []string{"accounting-authority:company-a"}) {
+		t.Fatalf("accounting boundary was not published with deterministic authority: %+v", packet.Findings)
+	}
+}
+
+func TestGoPublishesGovernedAbstentionWithoutInventingCompanyEvidence(t *testing.T) {
+	packet := contracts.ContextPacket{}
+	material := Material{Evidence: contracts.EvidenceBundle{Items: []contracts.EvidenceItem{{
+		EvidenceRef: contracts.EvidenceRef{
+			EvidenceID: "product-scope:business-strategy/v1",
+			SourceType: "product_scope_policy",
+		},
+		State:     contracts.EvidenceAvailable,
+		Statement: "The governed product scope does not activate the required source authority; related company claims must abstain.",
+		Warnings:  []string{"scope_boundary_only", "not_company_evidence"},
+	}}}}
+	appendGovernedAbstentionFindings(&packet, material, contracts.ContextRequest{})
+	if len(packet.Findings) != 1 ||
+		packet.Findings[0].Origin != contracts.FindingOriginSourceExtraction ||
+		!slices.Equal(packet.Findings[0].EvidenceRefs, []string{"product-scope:business-strategy/v1"}) {
+		t.Fatalf("governed abstention was not published with scope authority: %+v", packet.Findings)
+	}
+}
+
+func TestGoRoutesGovernedAbstentionToRequestedCounterevidenceChannel(t *testing.T) {
+	material := Material{Evidence: contracts.EvidenceBundle{Items: []contracts.EvidenceItem{{
+		EvidenceRef: contracts.EvidenceRef{
+			EvidenceID: "product-scope:business-strategy/v1",
+			SourceType: "product_scope_policy",
+		},
+		State:     contracts.EvidenceAvailable,
+		Statement: "SignalForge has no authorized qualitative source for a company-specific counterevidence claim.",
+		Warnings:  []string{"scope_boundary_only", "not_company_evidence"},
+	}}}}
+	for _, question := range []string{
+		"What counterevidence weakens the thesis?",
+		"Challenge a relative-quality thesis without ranking incomparable measures.",
+	} {
+		packet := contracts.ContextPacket{}
+		appendGovernedAbstentionFindings(&packet, material, contracts.ContextRequest{
+			ResearchQuestion: question,
+		})
+		if len(packet.Findings) != 0 || len(packet.Counterevidence) != 1 {
+			t.Fatalf("governed counterevidence abstention used the wrong semantic channel for %q: %+v", question, packet)
+		}
+		finding := packet.Counterevidence[0]
+		if finding.Origin != contracts.FindingOriginSourceExtraction ||
+			finding.ClaimType != contracts.ClaimFact ||
+			!slices.Equal(finding.EvidenceRefs, []string{"product-scope:business-strategy/v1"}) {
+			t.Fatalf("counterevidence abstention lost scope authority for %q: %+v", question, finding)
+		}
+	}
+}
+
+func TestGoPublishesStandaloneDeterministicVariableWithoutModelAuthoredNumber(t *testing.T) {
+	packet := contracts.ContextPacket{}
+	numerical := &contracts.NumericalContext{Variables: []contracts.NumericalVariable{{
+		VariableID: "variable-1", EntityID: "sec-cik:0000789019", EntityLabel: "MSFT",
+		MetricID:    "financial.cash_conversion.cash_conversion",
+		ReceiptRefs: []string{"receipt-1"},
+	}}}
+	appendDeterministicNumericalVariableFindings(&packet, numerical)
+	if len(packet.Findings) != 1 {
+		t.Fatalf("findings = %+v", packet.Findings)
+	}
+	finding := packet.Findings[0]
+	if finding.Origin != contracts.FindingOriginDeterministic ||
+		!slices.Equal(finding.CalculationRefs, []string{"receipt-1"}) ||
+		!slices.Equal(finding.NumericalRefs, []string{"variable-1"}) ||
+		strings.Contains(finding.Statement, "1.337") {
+		t.Fatalf("standalone deterministic finding lost authority or leaked a value: %+v", finding)
+	}
+}
+
+func TestGoPreservesDeterministicVariableWhenModelInterpretationUsesSameReference(t *testing.T) {
+	packet := contracts.ContextPacket{Findings: []contracts.Finding{{
+		ClaimID: "model-claim", ClaimType: contracts.ClaimInference,
+		Statement:       "The validated result is decision-relevant.",
+		CalculationRefs: []string{"receipt-1"}, NumericalRefs: []string{"variable-1"},
+	}}}
+	numerical := &contracts.NumericalContext{Variables: []contracts.NumericalVariable{{
+		VariableID: "variable-1", EntityID: "sec-cik:0000789019", EntityLabel: "MSFT",
+		MetricID:    "financial.quality_of_earnings.cash_conversion",
+		ReceiptRefs: []string{"receipt-1"},
+	}}}
+
+	appendDeterministicNumericalVariableFindings(&packet, numerical)
+
+	if len(packet.Findings) != 2 {
+		t.Fatalf("deterministic authority must survive an independently reviewable interpretation: %+v", packet.Findings)
+	}
+	finding := packet.Findings[1]
+	if finding.Origin != contracts.FindingOriginDeterministic ||
+		!slices.Equal(finding.CalculationRefs, []string{"receipt-1"}) ||
+		!slices.Equal(finding.NumericalRefs, []string{"variable-1"}) {
+		t.Fatalf("deterministic fallback lost receipt authority: %+v", finding)
+	}
+}
+
+func TestGoDoesNotDuplicateVariablesRepresentedByRelation(t *testing.T) {
+	packet := contracts.ContextPacket{}
+	numerical := &contracts.NumericalContext{
+		Variables: []contracts.NumericalVariable{
+			{VariableID: "left", ReceiptRefs: []string{"receipt-left"}},
+			{VariableID: "right", ReceiptRefs: []string{"receipt-right"}},
+		},
+		Relations: []contracts.NumericalRelation{{
+			RelationID: "relation", LeftVariableID: "left", RightVariableID: "right",
+		}},
+	}
+	appendDeterministicNumericalVariableFindings(&packet, numerical)
+	if len(packet.Findings) != 0 {
+		t.Fatalf("relation operands were duplicated as scalar claims: %+v", packet.Findings)
 	}
 }
 

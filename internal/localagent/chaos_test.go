@@ -238,7 +238,7 @@ func TestUnifiedFakeProviderChaosSuite(t *testing.T) {
 		runtime.Deps.Specialist = chaosPartialSpecialist{failRole: failRole}
 		runtime.Now = func() time.Time { return now }
 		result := runtime.Run(context.Background(), request)
-		if result.Failure != nil || result.Answer == nil || len(result.ContextFailures) != 1 || len(result.Packets) != 1 {
+		if result.Failure != nil || result.Answer == nil || len(result.ContextFailures) != 1 || len(result.Packets) != 2 {
 			t.Fatalf("partial failure did not degrade safely: %+v", result)
 		}
 		if len(result.Trace.Failures) != 1 || len(store.traces) != 1 {

@@ -29,6 +29,21 @@ Validate registered public claims:
 `go run ./cmd/signalforge-release-check --root . \
   --claims evidence/public-claims.json`
 
+After a human has confirmed that an existing claim remains semantically supported by its declared
+evidence, refresh only those already-declared evidence hashes and immediately re-run the gate:
+
+```bash
+go run ./cmd/signalforge-release-check --root . \
+  --claims evidence/public-claims.json --refresh-evidence
+go run ./cmd/signalforge-release-check --root . \
+  --claims evidence/public-claims.json
+```
+
+Refresh never adds evidence paths or changes claim text, status, or public scope. Both refresh and
+validation reject absolute paths, repository traversal, missing files, and symlinks that resolve
+outside the repository. A passing hash gate proves byte identity, not that changed evidence still
+supports the claim; semantic review remains mandatory before refresh.
+
 Validate the public, privacy-safe replay of the current Radeon golden run:
 
 `go run ./cmd/signalforge-validate-replay \
@@ -193,6 +208,65 @@ Regenerate a fresh threshold-checked observation after building the frontend:
 npm --prefix web ci
 npm --prefix web run build
 go run ./cmd/signalforge-eval-workspace --output /tmp/workspace-evaluation.json
+```
+
+## Live Execution Plan CPU Overhead
+
+`dashboard-cpu-evidence.json` closes the observational dashboard's accepted-workload CPU gate
+without attributing local-model generation variance to the UI projection. Five deterministic
+`linux/amd64` benchmark repetitions measure the same accepted plan and lifecycle workload with the
+projection disabled and enabled. Their medians are 10.663 ms and 41.421 ms per operation, leaving
+30.758 ms of incremental projection work.
+
+`dashboard-workload-cpu-radeon.json` independently records one accepted local Gemma journey on the
+Radeon host. It completed on the first attempt, used ten model calls, and consumed 270.013214
+seconds of orchestrator-plus-model CPU. Neither artifact retains prompt, response, source, or
+private reasoning bodies. The resulting conservative upper bound is **0.011391362%**, below the
+strict one-percent gate.
+
+The raw AB/BA model experiment is not decision evidence: model repair count and generated-token
+volume varied between conditions. The accepted method keeps model variance out of the incremental
+numerator and binds the benchmark, capture runners, workload binary, and source artifacts by
+SHA-256.
+
+```bash
+python3 scripts/build_dashboard_cpu_evidence.py \
+  --benchmark evidence/dashboard-cpu-benchmark-radeon.txt \
+  --workload evidence/dashboard-workload-cpu-radeon.json \
+  --output evidence/dashboard-cpu-evidence.json \
+  --check
+```
+
+## Synchronized Radeon Dashboard Evidence
+
+`dashboard-radeon-local-journey.json` and `dashboard-radeon-hybrid-journey.json` are sanitized
+aggregates from accepted working-tree journeys on the Radeon host. The local journey records 12
+local ROCm calls. The hybrid journey records 18 calls across `radeon-vllm` and `local-rocm`,
+including the bounded fallback path. Both plans reached 12 of 12 terminal steps across the eight
+governed phases and released an accepted result.
+
+`dashboard-radeon-synchronized-captures.json` binds those manifests to four 1280×720 Workspace and
+Mission Control captures, the tested workspace binary, and the frontend bundle. Its verifier
+rejects incomplete plans, missing phase coverage, mismatched image formats, captures below
+1280×720, a local run using a remote provider, a hybrid run without both Radeon API and local ROCm,
+or any declared retention of prompts, responses, source bodies, or credentials.
+
+This evidence closes the synchronized working-tree Radeon gate only. The manifest deliberately
+sets `exact_release_artifact` and `release_claim_permitted` to `false`; exact source/image binding
+remains a separate release decision.
+
+```bash
+python3 scripts/build_dashboard_radeon_evidence.py \
+  --local evidence/dashboard-radeon-local-journey.json \
+  --hybrid evidence/dashboard-radeon-hybrid-journey.json \
+  --local-plan docs/assets/live-execution-plan-radeon-local-viewport.jpg \
+  --local-mission docs/assets/mission-control-radeon-local-viewport.jpg \
+  --hybrid-plan docs/assets/live-execution-plan-radeon-hybrid-viewport.jpg \
+  --hybrid-mission docs/assets/mission-control-radeon-hybrid-viewport.jpg \
+  --binary-sha256 c0f741b2ffdf2daac8fb8d0fa0f79acc1f88fb1b6dff43113934122c3c1d7992 \
+  --frontend-sha256 c7cfaaf9802c25154dac2719d94a1059afad888392da6dbde4bd4f3078d7bfa7 \
+  --output evidence/dashboard-radeon-synchronized-captures.json \
+  --check
 ```
 
 ## Local Memory And Privacy Controls

@@ -26,8 +26,10 @@ func ValidateResearchRequest(request ResearchRequest) error {
 		return errors.New("lineage references require parent_request_id")
 	}
 	for label, values := range map[string][]string{
-		"lineage_evidence_refs": request.LineageEvidenceRefs,
-		"lineage_receipt_refs":  request.LineageReceiptRefs,
+		"lineage_evidence_refs":  request.LineageEvidenceRefs,
+		"lineage_receipt_refs":   request.LineageReceiptRefs,
+		"authority_refs":         request.AuthorityRefs,
+		"authority_reason_codes": request.AuthorityReasonCodes,
 	} {
 		seen := map[string]bool{}
 		for index, value := range values {
@@ -67,6 +69,9 @@ func ValidateResearchRequest(request ResearchRequest) error {
 	}
 	if len(request.RequestedOutputs) == 0 {
 		return errors.New("requested_outputs cannot be empty")
+	}
+	if err := validateAuthority(request.AuthorityState, request.AuthorityRefs, request.AuthorityReasonCodes); err != nil {
+		return err
 	}
 	return nil
 }
@@ -174,6 +179,36 @@ func ValidateContextRequest(request ContextRequest) error {
 			return fmt.Errorf("assumptions[%d] is empty or duplicated", index)
 		}
 		assumptions[assumption] = true
+	}
+	if err := validateAuthority(request.AuthorityState, request.AuthorityRefs, request.AuthorityReasonCodes); err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateAuthority(state string, refs, reasons []string) error {
+	if state == "" {
+		if len(refs) > 0 || len(reasons) > 0 {
+			return errors.New("authority references and reasons require authority_state")
+		}
+		return nil
+	}
+	switch state {
+	case "data_ready", "research_ready", "comparison_ready", "limited", "quarantined":
+	default:
+		return fmt.Errorf("unsupported authority_state %q", state)
+	}
+	if len(refs) == 0 {
+		return errors.New("authority_state requires at least one immutable authority reference")
+	}
+	for label, values := range map[string][]string{"authority_refs": refs, "authority_reason_codes": reasons} {
+		seen := map[string]bool{}
+		for index, value := range values {
+			if strings.TrimSpace(value) == "" || seen[value] {
+				return fmt.Errorf("%s[%d] is empty or duplicated", label, index)
+			}
+			seen[value] = true
+		}
 	}
 	return nil
 }

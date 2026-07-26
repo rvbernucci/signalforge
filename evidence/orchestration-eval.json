@@ -8,7 +8,7 @@
   "advice_boundary_recall": 1,
   "valid_plan_rate": 1,
   "unauthorized_capabilities": 0,
-  "max_context_fan_out": 3,
+  "max_context_fan_out": 4,
   "multiple_synthesis_plans": 0,
   "recursive_plans": 0,
   "runtime_cases": 20,

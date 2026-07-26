@@ -3,14 +3,17 @@ package orchestrator
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/executionplan"
 	"github.com/rvbernucci/signalforge/internal/requestparser"
 	"github.com/rvbernucci/signalforge/internal/roles"
 )
@@ -24,6 +27,82 @@ type fakeSpecialist struct {
 	temporary bool
 	block     bool
 	conflicts []string
+}
+
+type receiptSpecialist struct{ delegate *fakeSpecialist }
+
+func (specialist receiptSpecialist) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
+	packet, err := specialist.delegate.Run(ctx, request)
+	if err != nil {
+		return contracts.ContextPacket{}, err
+	}
+	receipt := validRuntimeTestReceipt("receipt-"+request.StepID, request.Scope.AsOf)
+	receipt.RequestID = request.ContextRequestID
+	receipt.OperationID = "financial.free_cash_flow"
+	packet.CalculationReceipts = []contracts.CalculationReceipt{receipt}
+	return packet, nil
+}
+
+type observedRuntimeSpecialist struct{ delegate *fakeSpecialist }
+
+func (specialist observedRuntimeSpecialist) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
+	return specialist.delegate.Run(ctx, request)
+}
+
+type failingObservedSpecialist struct{ stage string }
+
+func (specialist failingObservedSpecialist) Run(context.Context, contracts.ContextRequest) (contracts.ContextPacket, error) {
+	return contracts.ContextPacket{}, errors.New("observed specialist failure")
+}
+
+func (specialist failingObservedSpecialist) RunObserved(_ context.Context, request contracts.ContextRequest, observer SpecialistLifecycleObserver) (contracts.ContextPacket, error) {
+	retrieval := RetrievalLifecycle{
+		RetrievalID: "retrieval-" + request.ContextRequestID,
+		Method:      "bm25/v1",
+		AsOf:        request.Scope.AsOf,
+	}
+	observer.RetrievalStarted(retrieval)
+	if specialist.stage == "retrieval" {
+		retrieval.FailureCode = "material_load_failed"
+		observer.RetrievalFailed(retrieval)
+		return contracts.ContextPacket{}, errors.New("retrieval failed")
+	}
+	retrieval.BundleID = "bundle-" + request.ContextRequestID
+	retrieval.EvidenceCount = 1
+	retrieval.SourceClasses = []string{"sec_filing"}
+	observer.RetrievalPassed(retrieval)
+	tool := ToolLifecycle{
+		ToolExecutionID: "calc-" + request.StepID,
+		EngineID:        "test-engine", OperationID: "financial.margin", FormulaVersion: "ratio/v1",
+	}
+	observer.ToolStarted(tool)
+	tool.FailureCode = "engine_execution_failed"
+	observer.ToolFailed(tool)
+	return contracts.ContextPacket{}, errors.New("tool failed")
+}
+
+func (specialist observedRuntimeSpecialist) RunObserved(ctx context.Context, request contracts.ContextRequest, observer SpecialistLifecycleObserver) (contracts.ContextPacket, error) {
+	retrieval := RetrievalLifecycle{
+		RetrievalID: "retrieval-" + request.ContextRequestID,
+		BundleID:    "bundle-" + request.ContextRequestID,
+		Method:      "bm25/v1", EvidenceCount: 1, SourceClasses: []string{"sec_filing"},
+		AsOf: request.Scope.AsOf, CandidateCount: 3, SelectedCandidateCount: 1,
+		RejectedCandidateCount: 2, CandidateCountsKnown: true,
+	}
+	observer.RetrievalStarted(retrieval)
+	observer.RetrievalPassed(retrieval)
+	tool := ToolLifecycle{
+		ToolExecutionID: "calc-" + request.StepID,
+		ReceiptID:       "receipt-" + request.StepID,
+		ReceiptSHA:      strings.Repeat("a", 64),
+		EngineID:        "test-engine", OperationID: "financial.margin",
+		FormulaVersion: "ratio/v1", InputRefIDs: []string{"revenue"},
+		OutputRefIDs: []string{"margin"}, InputCount: 1, OutputCount: 1,
+		InvariantCount: 1, InvariantsPassed: true,
+	}
+	observer.ToolStarted(tool)
+	observer.ToolPassed(tool)
+	return specialist.delegate.Run(ctx, request)
 }
 
 type memoryTraceStore struct {
@@ -117,6 +196,18 @@ func (fakeReviewer) Review(_ context.Context, input ReviewInput) (contracts.Crit
 		RunID: input.Request.RunID, ReviewerRole: input.Step.RoleID, Decision: contracts.CritiqueApprove,
 		ApprovedClaims: claims, RepairPass: input.RepairPass, CreatedAt: input.Request.AsOf,
 	}, nil
+}
+
+type countingReviewer struct {
+	mu    sync.Mutex
+	calls int
+}
+
+func (reviewer *countingReviewer) Review(ctx context.Context, input ReviewInput) (contracts.CritiqueReport, error) {
+	reviewer.mu.Lock()
+	reviewer.calls++
+	reviewer.mu.Unlock()
+	return (fakeReviewer{}).Review(ctx, input)
 }
 
 type fakeSynthesizer struct {
@@ -228,6 +319,160 @@ type conflictObserver struct {
 	synthesisConflicts []string
 }
 
+type dashboardProjectionSink struct {
+	mu         sync.Mutex
+	projection *executionplan.Projection
+	err        error
+}
+
+type adapterTranscriptEntry struct {
+	Boundary string          `json:"boundary"`
+	Key      string          `json:"key"`
+	Request  json.RawMessage `json:"request"`
+	Response json.RawMessage `json:"response"`
+}
+
+type adapterTranscript struct {
+	mu      sync.Mutex
+	entries []adapterTranscriptEntry
+}
+
+func (transcript *adapterTranscript) record(boundary, key string, request, response any) error {
+	requestPayload, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+	responsePayload, err := json.Marshal(response)
+	if err != nil {
+		return err
+	}
+	transcript.mu.Lock()
+	defer transcript.mu.Unlock()
+	transcript.entries = append(transcript.entries, adapterTranscriptEntry{
+		Boundary: boundary, Key: key, Request: requestPayload, Response: responsePayload,
+	})
+	return nil
+}
+
+func (transcript *adapterTranscript) canonical() ([]byte, error) {
+	transcript.mu.Lock()
+	entries := append([]adapterTranscriptEntry(nil), transcript.entries...)
+	transcript.mu.Unlock()
+	sort.Slice(entries, func(left, right int) bool {
+		if entries[left].Boundary != entries[right].Boundary {
+			return entries[left].Boundary < entries[right].Boundary
+		}
+		return entries[left].Key < entries[right].Key
+	})
+	return json.Marshal(entries)
+}
+
+type transcriptSpecialist struct {
+	delegate   Specialist
+	transcript *adapterTranscript
+}
+
+func (specialist transcriptSpecialist) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
+	packet, err := specialist.delegate.Run(ctx, request)
+	if err != nil {
+		return contracts.ContextPacket{}, err
+	}
+	if recordErr := specialist.transcript.record("specialist", request.StepID, request, packet); recordErr != nil {
+		return contracts.ContextPacket{}, recordErr
+	}
+	return packet, nil
+}
+
+type transcriptReviewer struct {
+	delegate   Reviewer
+	transcript *adapterTranscript
+}
+
+func (reviewer transcriptReviewer) Review(ctx context.Context, input ReviewInput) (contracts.CritiqueReport, error) {
+	report, err := reviewer.delegate.Review(ctx, input)
+	if err != nil {
+		return contracts.CritiqueReport{}, err
+	}
+	key := input.Step.StepID + ":" + report.ReportID
+	if recordErr := reviewer.transcript.record("reviewer", key, input, report); recordErr != nil {
+		return contracts.CritiqueReport{}, recordErr
+	}
+	return report, nil
+}
+
+type transcriptSynthesizer struct {
+	delegate   Synthesizer
+	transcript *adapterTranscript
+}
+
+func (synthesizer transcriptSynthesizer) Synthesize(ctx context.Context, input SynthesisInput) (contracts.FinalAnswer, error) {
+	answer, err := synthesizer.delegate.Synthesize(ctx, input)
+	if err != nil {
+		return contracts.FinalAnswer{}, err
+	}
+	if recordErr := synthesizer.transcript.record("synthesizer", input.Request.RunID, input, answer); recordErr != nil {
+		return contracts.FinalAnswer{}, recordErr
+	}
+	return answer, nil
+}
+
+type panickingObservabilitySink struct{}
+
+func (panickingObservabilitySink) AcceptPlan(contracts.ResearchPlan, time.Time) {
+	panic("observability plan sink unavailable")
+}
+
+func (panickingObservabilitySink) Emit(Event) {
+	panic("observability event sink unavailable")
+}
+
+func (sink *dashboardProjectionSink) AcceptPlan(plan contracts.ResearchPlan, at time.Time) {
+	sink.mu.Lock()
+	defer sink.mu.Unlock()
+	if sink.err != nil {
+		return
+	}
+	projection, err := executionplan.FromPlan(plan, at)
+	if err != nil {
+		sink.err = err
+		return
+	}
+	sink.projection = &projection
+}
+
+func (sink *dashboardProjectionSink) Emit(event Event) {
+	sink.mu.Lock()
+	defer sink.mu.Unlock()
+	if sink.err != nil {
+		return
+	}
+	if sink.projection == nil {
+		sink.err = errors.New("dashboard received an event before the accepted plan")
+		return
+	}
+	sink.err = executionplan.Apply(sink.projection, executionplan.Event{
+		Sequence: event.Sequence, StepID: event.StepID, Type: event.Type,
+		Status: event.Status, At: event.At, Attributes: event.Attributes,
+	})
+}
+
+func (sink *dashboardProjectionSink) snapshot() (executionplan.Projection, error) {
+	sink.mu.Lock()
+	defer sink.mu.Unlock()
+	if sink.projection == nil {
+		return executionplan.Projection{}, errors.New("dashboard projection was not created")
+	}
+	payload, err := json.Marshal(sink.projection)
+	if err != nil {
+		return executionplan.Projection{}, err
+	}
+	var projection executionplan.Projection
+	if err := json.Unmarshal(payload, &projection); err != nil {
+		return executionplan.Projection{}, err
+	}
+	return projection, sink.err
+}
+
 func (observer *conflictObserver) Review(ctx context.Context, input ReviewInput) (contracts.CritiqueReport, error) {
 	observer.mu.Lock()
 	for _, packet := range input.Packets {
@@ -244,6 +489,185 @@ func (observer *conflictObserver) Synthesize(ctx context.Context, input Synthesi
 	}
 	observer.mu.Unlock()
 	return (&fakeSynthesizer{}).Synthesize(ctx, input)
+}
+
+func TestObservabilityFailureCannotBlockResearch(t *testing.T) {
+	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+	specialist := &fakeSpecialist{}
+	synthesizer := &fakeSynthesizer{}
+	runtime, err := New(Dependencies{
+		Specialist: specialist, Reviewer: fakeReviewer{}, Synthesizer: synthesizer,
+		Sink: panickingObservabilitySink{}, TraceStore: &memoryTraceStore{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtime.Now = func() time.Time { return now }
+	request, err := requestparser.ParseDeterministic(requestparser.Input{
+		Text: "Compare Microsoft and NVIDIA on cash conversion.", AsOf: now,
+		RunID: "run-observability-failure", RequestID: "request-observability-failure",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := runtime.Run(context.Background(), request)
+	if result.Failure != nil || result.Answer == nil || result.Answer.AnswerID != "answer-1" {
+		t.Fatalf("observability failure affected governed research: %+v", result)
+	}
+	if synthesizer.calls != 1 || len(result.Trace.Events) == 0 {
+		t.Fatalf("research did not preserve its authoritative execution: calls=%d trace=%+v", synthesizer.calls, result.Trace)
+	}
+}
+
+func TestExecutionDashboardIsObservationallyEquivalent(t *testing.T) {
+	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+	journeys := []struct {
+		name string
+		text string
+	}{
+		{name: "cash-conversion", text: "Compare Microsoft and NVIDIA on cash conversion."},
+		{
+			name: "full-research",
+			text: "Compare Microsoft and NVIDIA as long-term businesses under higher-for-longer interest rates and slower AI infrastructure spending. Include accounting, market behavior, DCF valuation, and assumptions implied by market prices.",
+		},
+		{name: "market-behavior", text: "How sensitive have Microsoft and NVIDIA been to the Nasdaq?"},
+	}
+	for _, journey := range journeys {
+		t.Run(journey.name, func(t *testing.T) {
+			request, err := requestparser.ParseDeterministic(requestparser.Input{
+				Text: journey.text, AsOf: now,
+				RunID: "run-dashboard-" + journey.name, RequestID: "request-dashboard-" + journey.name,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			run := func(sink EventSink) ([]byte, int, []byte, Trace) {
+				t.Helper()
+				specialist := &fakeSpecialist{}
+				reviewer := &countingReviewer{}
+				synthesizer := &fakeSynthesizer{}
+				transcript := &adapterTranscript{}
+				runtime, newErr := New(Dependencies{
+					Specialist: transcriptSpecialist{
+						delegate: receiptSpecialist{delegate: specialist}, transcript: transcript,
+					},
+					Reviewer: transcriptReviewer{delegate: reviewer, transcript: transcript},
+					Synthesizer: transcriptSynthesizer{
+						delegate: synthesizer, transcript: transcript,
+					},
+					Sink: sink, TraceStore: &memoryTraceStore{},
+				})
+				if newErr != nil {
+					t.Fatal(newErr)
+				}
+				runtime.Now = func() time.Time { return now }
+				result := runtime.Run(context.Background(), request)
+				if result.Failure != nil || result.Answer == nil {
+					t.Fatalf("unexpected ablation result: %+v", result)
+				}
+				answer, marshalErr := json.Marshal(result.Answer)
+				if marshalErr != nil {
+					t.Fatal(marshalErr)
+				}
+				specialist.mu.Lock()
+				specialistCalls := 0
+				for _, attempts := range specialist.attempts {
+					specialistCalls += attempts
+				}
+				specialist.mu.Unlock()
+				reviewer.mu.Lock()
+				reviewerCalls := reviewer.calls
+				reviewer.mu.Unlock()
+				synthesizer.mu.Lock()
+				synthesisCalls := synthesizer.calls
+				synthesizer.mu.Unlock()
+				canonicalTranscript, transcriptErr := transcript.canonical()
+				if transcriptErr != nil {
+					t.Fatal(transcriptErr)
+				}
+				return answer, specialistCalls + reviewerCalls + synthesisCalls, canonicalTranscript, result.Trace
+			}
+
+			baselineAnswer, baselineCalls, baselineTranscript, baselineTrace := run(nil)
+			dashboard := &dashboardProjectionSink{}
+			dashboardAnswer, dashboardCalls, dashboardTranscript, dashboardTrace := run(dashboard)
+			if string(dashboardAnswer) != string(baselineAnswer) {
+				t.Fatalf("dashboard changed final answer bytes:\nbaseline=%s\ndashboard=%s", baselineAnswer, dashboardAnswer)
+			}
+			if dashboardCalls != baselineCalls {
+				t.Fatalf("dashboard changed governed adapter calls: baseline=%d dashboard=%d", baselineCalls, dashboardCalls)
+			}
+			if string(dashboardTranscript) != string(baselineTranscript) {
+				t.Fatalf(
+					"dashboard changed canonical model-boundary requests or responses:\nbaseline=%s\ndashboard=%s",
+					baselineTranscript, dashboardTranscript,
+				)
+			}
+			if len(dashboardTrace.Events) != len(baselineTrace.Events) {
+				t.Fatalf("dashboard changed runtime event count: baseline=%d dashboard=%d", len(baselineTrace.Events), len(dashboardTrace.Events))
+			}
+			projection, err := dashboard.snapshot()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if projection.Status != executionplan.StatusRunning ||
+				projection.LastSequence != len(dashboardTrace.Events) ||
+				projection.ProgressRatio != 1 {
+				t.Fatalf("dashboard did not reconcile the complete orchestrator runtime: %+v", projection)
+			}
+			dashboard.Emit(Event{
+				Sequence: len(dashboardTrace.Events) + 1, RunID: request.RunID,
+				Type: "workspace", Status: "completed", At: now,
+			})
+			projection, err = dashboard.snapshot()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if projection.Status != executionplan.StatusPassed ||
+				projection.LastSequence != len(dashboardTrace.Events)+1 ||
+				projection.ProgressRatio != 1 {
+				t.Fatalf("dashboard did not reconcile the host completion boundary: %+v", projection)
+			}
+		})
+	}
+}
+
+func BenchmarkExecutionDashboardCPUOverhead(b *testing.B) {
+	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+	request, err := requestparser.ParseDeterministic(requestparser.Input{
+		Text: "Compare Microsoft and NVIDIA as long-term businesses under higher-for-longer interest rates and slower AI infrastructure spending. Include accounting, market behavior, DCF valuation, and assumptions implied by market prices.",
+		AsOf: now, RunID: "run-dashboard-cpu", RequestID: "request-dashboard-cpu",
+	})
+	if err != nil {
+		b.Fatal(err)
+	}
+	run := func(b *testing.B, dashboard bool) {
+		b.Helper()
+		b.ReportAllocs()
+		for iteration := 0; iteration < b.N; iteration++ {
+			var sink EventSink
+			if dashboard {
+				sink = &dashboardProjectionSink{}
+			}
+			runtime, newErr := New(Dependencies{
+				Specialist:  receiptSpecialist{delegate: &fakeSpecialist{}},
+				Reviewer:    &countingReviewer{},
+				Synthesizer: &fakeSynthesizer{},
+				Sink:        sink,
+				TraceStore:  &memoryTraceStore{},
+			})
+			if newErr != nil {
+				b.Fatal(newErr)
+			}
+			runtime.Now = func() time.Time { return now }
+			result := runtime.Run(context.Background(), request)
+			if result.Failure != nil || result.Answer == nil {
+				b.Fatalf("unexpected benchmark result: %+v", result)
+			}
+		}
+	}
+	b.Run("baseline", func(b *testing.B) { run(b, false) })
+	b.Run("dashboard", func(b *testing.B) { run(b, true) })
 }
 
 func TestRuntimeExecutesBoundedInspectableWorkflow(t *testing.T) {
@@ -266,13 +690,18 @@ func TestRuntimeExecutesBoundedInspectableWorkflow(t *testing.T) {
 	if result.Failure != nil || result.Answer == nil {
 		t.Fatalf("unexpected result %+v", result)
 	}
-	if result.Trace.MaxConcurrentContext != 2 || specialist.maximum != 2 || synthesizer.calls != 1 {
+	if result.Trace.MaxConcurrentContext != 3 || specialist.maximum != 3 || synthesizer.calls != 1 {
 		t.Fatalf("workflow was not bounded or singly synthesized: trace=%+v max=%d calls=%d", result.Trace, specialist.maximum, synthesizer.calls)
 	}
-	if len(result.Trace.PacketIDs) != 2 || len(result.Trace.CritiqueIDs) < 1 || len(result.Trace.Events) == 0 {
+	if len(result.Trace.PacketIDs) != 3 || len(result.Trace.CritiqueIDs) < 1 || len(result.Trace.Events) == 0 {
 		t.Fatalf("trace is incomplete %+v", result.Trace)
 	}
 	routeStarts := 0
+	retrievals := 0
+	interpretations := 0
+	plannings := 0
+	reviews := 0
+	releases := 0
 	for _, event := range result.Trace.Events {
 		if event.At.After(result.Trace.CompletedAt) {
 			t.Fatalf("trace completed before event %d: %+v", event.Sequence, result.Trace)
@@ -283,12 +712,260 @@ func TestRuntimeExecutesBoundedInspectableWorkflow(t *testing.T) {
 				t.Fatalf("route event omitted safe decision attributes: %+v", event)
 			}
 		}
+		if event.Type == "retrieval" && event.Status == "completed" {
+			retrievals++
+			if event.Attributes["packet_id"] == "" || event.Attributes["evidence_count"] != "1" ||
+				event.Attributes["source_classes"] != "sec_filing" || event.Attributes["as_of"] != "2026-07-21" ||
+				event.Attributes["finding_count"] != "1" || event.Attributes["evidence_coverage"] != "1_of_1" {
+				t.Fatalf("retrieval event omitted its safe packet metadata: %+v", event)
+			}
+		}
+		if event.Type == "interpretation" && event.Status == "completed" {
+			interpretations++
+			if event.Attributes["primary_intent"] == "" || event.Attributes["entity_count"] != "2" ||
+				event.Attributes["as_of"] != "2026-07-21" {
+				t.Fatalf("interpretation event omitted its safe boundary: %+v", event)
+			}
+		}
+		if event.Type == "planning" && event.Status == "completed" {
+			plannings++
+			if event.Attributes["role_count"] == "" || event.Attributes["max_parallel_specialists"] != "4" ||
+				event.Attributes["deadline_ms"] == "" ||
+				event.Attributes["completion_condition_count"] == "" ||
+				event.Attributes["completion_conditions"] == "" ||
+				event.Attributes["abstention_conditions"] == "" {
+				t.Fatalf("planning event omitted its safe boundary: %+v", event)
+			}
+		}
+		if event.Type == "review" && event.Status == "approve" {
+			reviews++
+			if event.Attributes["report_id"] == "" || event.Attributes["approved_claim_count"] == "" ||
+				event.Attributes["rejected_claim_count"] == "" || event.Attributes["issue_count"] == "" {
+				t.Fatalf("review event omitted its safe governance counts: %+v", event)
+			}
+		}
+		if (event.Type == "synthesis" && event.Status == "passed") ||
+			(event.Type == "run" && event.Status == "completed") {
+			releases++
+			if event.Attributes["answer_id"] == "" || event.Attributes["mandatory_review_count"] == "" ||
+				event.Attributes["claim_count"] == "" || event.Attributes["supported_claim_coverage"] == "" ||
+				event.Attributes["evidence_ref_count"] == "" || event.Attributes["receipt_ref_count"] == "" ||
+				event.Attributes["limitation_count"] == "" || event.Attributes["section_count"] == "" {
+				t.Fatalf("release event omitted its safe governance metadata: %+v", event)
+			}
+		}
 	}
 	if routeStarts < 4 {
 		t.Fatalf("expected context, review, and synthesis route starts, got %d", routeStarts)
 	}
+	if retrievals != 3 {
+		t.Fatalf("expected one validated retrieval event per packet, got %d", retrievals)
+	}
+	if interpretations != 1 || plannings != 1 {
+		t.Fatalf("expected one safe interpretation and planning event, got %d and %d", interpretations, plannings)
+	}
+	if reviews != 2 || releases != 2 {
+		t.Fatalf("expected two review approvals and two release events, got %d and %d", reviews, releases)
+	}
 	if len(store.traces) != 1 || store.traces[0].AnswerID != "answer-1" {
 		t.Fatalf("completed trace was not persisted: %+v", store.traces)
+	}
+}
+
+func TestRuntimeEmitsClarificationBoundaryBeforePlanning(t *testing.T) {
+	runtime, err := New(Dependencies{
+		Specialist: &fakeSpecialist{}, Reviewer: fakeReviewer{},
+		Synthesizer: &fakeSynthesizer{}, TraceStore: &memoryTraceStore{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 7, 25, 12, 0, 0, 0, time.UTC)
+	runtime.Now = func() time.Time { return now }
+	request, err := requestparser.ParseDeterministic(requestparser.Input{
+		Text: "How sensitive has this stock been to the Nasdaq?", AsOf: now,
+		RunID: "run-clarify", RequestID: "request-clarify",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := runtime.Run(context.Background(), request)
+	if result.Failure == nil || result.Failure.FailureCode != "clarification_required" ||
+		result.Answer != nil {
+		t.Fatalf("ambiguous request did not fail closed: %+v", result)
+	}
+	clarifications := 0
+	for _, event := range result.Trace.Events {
+		if event.Type == "interpretation" && event.Status == "clarification_required" {
+			clarifications++
+			if event.Attributes["ambiguity_count"] != "1" ||
+				event.Attributes["primary_intent"] == "" {
+				t.Fatalf("clarification event omitted its safe boundary: %+v", event)
+			}
+		}
+		if event.Type == "planning" || event.Type == "plan" {
+			t.Fatalf("ambiguous request must not pretend planning began: %+v", event)
+		}
+	}
+	if clarifications != 1 {
+		t.Fatalf("expected one clarification event, got %d", clarifications)
+	}
+}
+
+func TestRuntimeEmitsDeterministicReceiptEvents(t *testing.T) {
+	specialist := receiptSpecialist{delegate: &fakeSpecialist{}}
+	runtime, err := New(Dependencies{
+		Specialist: specialist, Reviewer: fakeReviewer{},
+		Synthesizer: &fakeSynthesizer{}, TraceStore: &memoryTraceStore{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+	runtime.Now = func() time.Time { return now }
+	request, err := requestparser.ParseDeterministic(requestparser.Input{
+		Text: "Compare Microsoft and NVIDIA on cash conversion.", AsOf: now,
+		RunID: "run-1", RequestID: "request-1",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := runtime.Run(context.Background(), request)
+	if result.Failure != nil {
+		t.Fatalf("unexpected runtime failure: %+v", result.Failure)
+	}
+	tools := 0
+	for _, event := range result.Trace.Events {
+		if event.Type != "tool" || event.Status != "completed" {
+			continue
+		}
+		tools++
+		if event.Attributes["receipt_id"] == "" ||
+			event.Attributes["operation_id"] != "financial.free_cash_flow" ||
+			event.Attributes["engine_id"] != "test-engine" ||
+			event.Attributes["input_ref_ids"] != "input-1" ||
+			event.Attributes["output_count"] != "1" ||
+			event.Attributes["output_ref_ids"] != "output-1" ||
+			event.Attributes["warning_count"] != "0" {
+			t.Fatalf("tool event omitted safe deterministic receipt metadata: %+v", event)
+		}
+	}
+	if tools != 3 {
+		t.Fatalf("expected one deterministic receipt event per specialist packet, got %d", tools)
+	}
+}
+
+func TestRuntimeProjectsObservedSpecialistLifecycleWithoutLegacyDuplicates(t *testing.T) {
+	runtime, err := New(Dependencies{
+		Specialist: observedRuntimeSpecialist{delegate: &fakeSpecialist{}},
+		Reviewer:   fakeReviewer{}, Synthesizer: &fakeSynthesizer{},
+		TraceStore: &memoryTraceStore{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+	runtime.Now = func() time.Time { return now }
+	request, err := requestparser.ParseDeterministic(requestparser.Input{
+		Text: "Compare Microsoft and NVIDIA on cash conversion.", AsOf: now,
+		RunID: "run-1", RequestID: "request-1",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := runtime.Run(context.Background(), request)
+	if result.Failure != nil {
+		t.Fatalf("unexpected runtime failure: %+v", result.Failure)
+	}
+	retrievalStarted, retrievalPassed, toolsStarted, toolsPassed := 0, 0, 0, 0
+	for _, event := range result.Trace.Events {
+		switch {
+		case event.Type == "retrieval" && event.Status == "started":
+			retrievalStarted++
+		case event.Type == "retrieval" && event.Status == "passed":
+			retrievalPassed++
+			if event.Attributes["retrieval_method"] != "bm25/v1" ||
+				event.Attributes["candidate_count"] != "3" ||
+				event.Attributes["rejected_candidate_count"] != "2" {
+				t.Fatalf("retrieval event omitted bounded lifecycle metadata: %+v", event)
+			}
+		case event.Type == "retrieval" && event.Status == "completed":
+			t.Fatalf("observed specialist received a duplicate legacy retrieval event: %+v", event)
+		case event.Type == "tool" && event.Status == "started":
+			toolsStarted++
+		case event.Type == "tool" && event.Status == "passed":
+			toolsPassed++
+			if event.Attributes["tool_execution_id"] == "" ||
+				event.Attributes["receipt_id"] == "" ||
+				event.Attributes["operation_id"] != "financial.margin" {
+				t.Fatalf("tool event omitted bounded lifecycle metadata: %+v", event)
+			}
+		case event.Type == "tool" && event.Status == "completed":
+			t.Fatalf("observed specialist received a duplicate legacy tool event: %+v", event)
+		}
+	}
+	want := len(result.Packets)
+	if retrievalStarted != want || retrievalPassed != want || toolsStarted != want || toolsPassed != want {
+		t.Fatalf("lifecycle counts retrieval=%d/%d tools=%d/%d packets=%d",
+			retrievalStarted, retrievalPassed, toolsStarted, toolsPassed, want)
+	}
+}
+
+func TestRuntimeFailureMatrixProjectsRetrievalAndToolFailures(t *testing.T) {
+	for _, stage := range []string{"retrieval", "tool"} {
+		t.Run(stage, func(t *testing.T) {
+			sink := &dashboardProjectionSink{}
+			runtime, err := New(Dependencies{
+				Specialist: failingObservedSpecialist{stage: stage},
+				Reviewer:   fakeReviewer{}, Synthesizer: &fakeSynthesizer{},
+				Sink: sink, TraceStore: &memoryTraceStore{},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+			runtime.Now = func() time.Time { return now }
+			request, err := requestparser.ParseDeterministic(requestparser.Input{
+				Text: "Compare Microsoft and NVIDIA on cash conversion.", AsOf: now,
+				RunID: "run-" + stage, RequestID: "request-" + stage,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			result := runtime.Run(context.Background(), request)
+			expectedType := stage
+			expectedAuthority := stage
+			expectedCode := "material_load_failed"
+			if stage == "tool" {
+				expectedAuthority = "engine"
+				expectedCode = "engine_execution_failed"
+			}
+			foundFailure := false
+			for _, event := range result.Trace.Events {
+				if event.Type == expectedType && event.Status == "failed" &&
+					event.Attributes["code"] == expectedCode {
+					foundFailure = true
+				}
+			}
+			if !foundFailure {
+				t.Fatalf("%s failure was absent from trace: %+v", stage, result.Trace.Events)
+			}
+			projection, err := sink.snapshot()
+			if err != nil {
+				t.Fatal(err)
+			}
+			foundChecklistFailure := false
+			for _, step := range projection.Steps {
+				for _, check := range step.Checklist {
+					if check.Authority == expectedAuthority && check.Status == executionplan.StatusFailed {
+						foundChecklistFailure = true
+					}
+				}
+			}
+			if !foundChecklistFailure {
+				t.Fatalf("%s failure was absent from dashboard projection: %+v", stage, projection)
+			}
+		})
 	}
 }
 
@@ -530,6 +1207,196 @@ func TestNarrowContextPacketsRemovesCriticizedClaimsAndUnusedAuthority(t *testin
 	}
 	if len(packets[0].Findings) != 2 || len(packets[0].Evidence) != 2 {
 		t.Fatal("narrowing mutated the original packets")
+	}
+}
+
+func TestNarrowContextPacketsClosesNumericalAuthorityWithRetainedClaims(t *testing.T) {
+	now := time.Now().UTC()
+	actual := contracts.NumericalVariable{
+		VariableID: "actual-keep", EntityID: "adbe", MetricID: "free_cash_flow", Period: "FY2025",
+		PeriodBasis: contracts.PeriodBasisNominalLabel, ComparisonKey: "adbe:free_cash_flow:FY2025",
+		ValueKind: contracts.NumericalActual, Value: contracts.Quantity{Value: "10", Unit: "USD", Currency: "USD"},
+		Method: contracts.NormalizationNone, EvidenceRefs: []string{"evidence-keep"}, AsOf: now,
+	}
+	derived := contracts.NumericalVariable{
+		VariableID: "derived-remove", EntityID: "adbe", MetricID: "cash_conversion", Period: "FY2025",
+		PeriodBasis: contracts.PeriodBasisNominalLabel, ComparisonKey: "adbe:cash_conversion:FY2025",
+		ValueKind: contracts.NumericalDerivedView, Value: contracts.Quantity{Value: "0.9", Unit: "ratio"},
+		Method: contracts.NormalizationAbsoluteDerived, FormulaVersion: "quality/v1",
+		ReceiptRefs: []string{"receipt-remove"}, AsOf: now,
+	}
+	packets := []contracts.ContextPacket{{
+		SchemaVersion: contracts.SchemaVersionV1, PacketID: "packet-1", RunID: "run-1",
+		StepID: "context-1", SpecialistRole: roles.FinancialQuality, Objective: "Assess quality.",
+		Scope: contracts.Scope{AsOf: now},
+		Findings: []contracts.Finding{
+			{ClaimID: "keep", ClaimType: contracts.ClaimFact, Statement: "Keep.", EvidenceRefs: []string{"evidence-keep"}, NumericalRefs: []string{"actual-keep"}, Confidence: 1, ValidAsOf: now},
+			{ClaimID: "remove", ClaimType: contracts.ClaimCalculation, Statement: "Remove.", CalculationRefs: []string{"receipt-remove"}, NumericalRefs: []string{"derived-remove"}, Confidence: 1, ValidAsOf: now},
+		},
+		Evidence: []contracts.EvidenceRef{
+			{EvidenceID: "evidence-keep", SourceType: "sec_filing", Locator: "keep", ContentSHA: "a", AsOf: now},
+			{EvidenceID: "evidence-remove", SourceType: "sec_filing", Locator: "remove", ContentSHA: "b", AsOf: now},
+		},
+		CalculationReceipts: []contracts.CalculationReceipt{{ReceiptID: "receipt-remove"}},
+		NumericalContext: &contracts.NumericalContext{
+			SchemaVersion: contracts.SchemaVersionV1, ContextID: "numerical-1", RunID: "run-1",
+			Version: contracts.NumericalContextVersionV1, AsOf: now,
+			Variables: []contracts.NumericalVariable{actual, derived},
+		},
+	}}
+
+	narrowed, changed := narrowContextPackets(packets, contracts.CritiqueReport{
+		Issues: []contracts.CritiqueIssue{{ClaimRefs: []string{"remove"}}},
+	})
+	if !changed {
+		t.Fatal("expected numerical authority to be narrowed")
+	}
+	if err := contracts.ValidateContextPacket(narrowed[0]); err != nil {
+		t.Fatalf("narrowed packet is invalid: %v", err)
+	}
+	if narrowed[0].NumericalContext == nil || len(narrowed[0].NumericalContext.Variables) != 1 ||
+		narrowed[0].NumericalContext.Variables[0].VariableID != "actual-keep" {
+		t.Fatalf("unexpected retained numerical context: %+v", narrowed[0].NumericalContext)
+	}
+	if len(narrowed[0].CalculationReceipts) != 0 || len(narrowed[0].Evidence) != 1 ||
+		narrowed[0].Evidence[0].EvidenceID != "evidence-keep" {
+		t.Fatalf("removed numerical authority survived: %+v", narrowed[0])
+	}
+	if len(packets[0].NumericalContext.Variables) != 2 {
+		t.Fatal("narrowing mutated the original numerical context")
+	}
+}
+
+func TestCloseExplicitlyApprovedSubsetClosesNumericalAuthority(t *testing.T) {
+	now := time.Now().UTC()
+	packet := contracts.ContextPacket{
+		SchemaVersion: contracts.SchemaVersionV1, PacketID: "packet-1", RunID: "run-1",
+		StepID: "context-1", SpecialistRole: roles.FinancialQuality, Objective: "Assess quality.",
+		Scope: contracts.Scope{AsOf: now},
+		Findings: []contracts.Finding{
+			{ClaimID: "keep", ClaimType: contracts.ClaimFact, Statement: "Keep.", EvidenceRefs: []string{"evidence-keep"}, NumericalRefs: []string{"actual-keep"}, Confidence: 1, ValidAsOf: now},
+			{ClaimID: "drop", ClaimType: contracts.ClaimCalculation, Statement: "Drop.", CalculationRefs: []string{"receipt-drop"}, NumericalRefs: []string{"derived-drop"}, Confidence: 1, ValidAsOf: now},
+		},
+		Evidence: []contracts.EvidenceRef{
+			{EvidenceID: "evidence-keep", SourceType: "sec_filing", Locator: "keep", ContentSHA: "a", AsOf: now},
+		},
+		CalculationReceipts: []contracts.CalculationReceipt{{ReceiptID: "receipt-drop"}},
+		NumericalContext: &contracts.NumericalContext{
+			SchemaVersion: contracts.SchemaVersionV1, ContextID: "numerical-1", RunID: "run-1",
+			Version: contracts.NumericalContextVersionV1, AsOf: now,
+			Variables: []contracts.NumericalVariable{
+				{
+					VariableID: "actual-keep", EntityID: "adbe", MetricID: "cash", Period: "FY2025",
+					PeriodBasis: contracts.PeriodBasisNominalLabel, ComparisonKey: "adbe:cash:FY2025",
+					ValueKind: contracts.NumericalActual, Value: contracts.Quantity{Value: "10", Unit: "USD", Currency: "USD"},
+					Method: contracts.NormalizationNone, EvidenceRefs: []string{"evidence-keep"}, AsOf: now,
+				},
+				{
+					VariableID: "derived-drop", EntityID: "adbe", MetricID: "quality", Period: "FY2025",
+					PeriodBasis: contracts.PeriodBasisNominalLabel, ComparisonKey: "adbe:quality:FY2025",
+					ValueKind: contracts.NumericalDerivedView, Value: contracts.Quantity{Value: "0.9", Unit: "ratio"},
+					Method: contracts.NormalizationAbsoluteDerived, FormulaVersion: "quality/v1",
+					ReceiptRefs: []string{"receipt-drop"}, AsOf: now,
+				},
+			},
+		},
+	}
+	report := contracts.CritiqueReport{
+		SchemaVersion: contracts.SchemaVersionV1, ReportID: "critique-1", RunID: "run-1",
+		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueRepair,
+		ApprovedClaims: []string{"keep"}, RejectedClaims: []string{"drop"},
+		Issues: []contracts.CritiqueIssue{{
+			IssueID: "drop", Severity: "high", ClaimRefs: []string{"drop"}, Description: "Drop it.",
+		}},
+		RepairPass: 1, CreatedAt: now,
+	}
+
+	closed, _, ok := closeExplicitlyApprovedSubset([]contracts.ContextPacket{packet}, report)
+	if !ok {
+		t.Fatal("expected approved numerical subset to close")
+	}
+	if err := contracts.ValidateContextPacket(closed[0]); err != nil {
+		t.Fatalf("closed numerical subset is invalid: %v", err)
+	}
+	if closed[0].NumericalContext == nil || len(closed[0].NumericalContext.Variables) != 1 ||
+		closed[0].NumericalContext.Variables[0].VariableID != "actual-keep" ||
+		len(closed[0].CalculationReceipts) != 0 {
+		t.Fatalf("closed subset retained rejected numerical authority: %+v", closed[0])
+	}
+}
+
+func TestNarrowContextPacketsRetainsRelationDependencies(t *testing.T) {
+	now := time.Now().UTC()
+	variable := func(id, entity, value string) contracts.NumericalVariable {
+		return contracts.NumericalVariable{
+			VariableID: id, EntityID: entity, MetricID: "margin", Period: "FY2025",
+			PeriodBasis: contracts.PeriodBasisNominalLabel, ComparisonKey: "margin:FY2025",
+			ValueKind: contracts.NumericalActual, Value: contracts.Quantity{Value: value, Unit: "ratio"},
+			Method: contracts.NormalizationNone, EvidenceRefs: []string{"evidence-" + entity}, AsOf: now,
+		}
+	}
+	left, right := variable("left", "msft", "0.4"), variable("right", "googl", "0.3")
+	difference := contracts.Quantity{Value: "0.1", Unit: "ratio"}
+	packet := contracts.ContextPacket{
+		SchemaVersion: contracts.SchemaVersionV1, PacketID: "packet-1", RunID: "run-1",
+		StepID: "context-1", SpecialistRole: roles.FinancialQuality, Objective: "Compare margins.",
+		Scope: contracts.Scope{AsOf: now},
+		Findings: []contracts.Finding{
+			{ClaimID: "keep", ClaimType: contracts.ClaimCalculation, Statement: "Keep relation.", CalculationRefs: []string{"receipt-relation"}, NumericalRefs: []string{"relation-keep"}, Confidence: 1, ValidAsOf: now},
+			{ClaimID: "remove", ClaimType: contracts.ClaimFact, Statement: "Remove.", EvidenceRefs: []string{"evidence-remove"}, Confidence: 1, ValidAsOf: now},
+		},
+		Evidence: []contracts.EvidenceRef{
+			{EvidenceID: "evidence-msft", SourceType: "sec_filing", Locator: "msft", ContentSHA: "a", AsOf: now},
+			{EvidenceID: "evidence-googl", SourceType: "sec_filing", Locator: "googl", ContentSHA: "b", AsOf: now},
+			{EvidenceID: "evidence-remove", SourceType: "sec_filing", Locator: "remove", ContentSHA: "c", AsOf: now},
+		},
+		NumericalContext: &contracts.NumericalContext{
+			SchemaVersion: contracts.SchemaVersionV1, ContextID: "numerical-1", RunID: "run-1",
+			Version: contracts.NumericalContextVersionV1, AsOf: now,
+			Variables: []contracts.NumericalVariable{left, right},
+			Relations: []contracts.NumericalRelation{{
+				RelationID: "relation-keep", MetricID: "margin", LeftVariableID: "left",
+				Operator: contracts.RelationGreaterThan, RightVariableID: "right", Difference: &difference,
+				Tolerance: "0", Comparable: true, FormulaVersion: "relation/v1",
+				ReceiptRefs: []string{"receipt-relation"},
+			}},
+		},
+		CalculationReceipts: []contracts.CalculationReceipt{validRuntimeTestReceipt("receipt-relation", now)},
+	}
+	packet.CalculationReceipts[0].EvidenceRefs = []string{"evidence-msft", "evidence-googl"}
+	if err := contracts.ValidateContextPacket(packet); err != nil {
+		t.Fatalf("relation fixture is invalid: %v", err)
+	}
+
+	narrowed, changed := narrowContextPackets([]contracts.ContextPacket{packet}, contracts.CritiqueReport{
+		Issues: []contracts.CritiqueIssue{{ClaimRefs: []string{"remove"}}},
+	})
+	if !changed {
+		t.Fatal("expected packet to be narrowed")
+	}
+	if err := contracts.ValidateContextPacket(narrowed[0]); err != nil {
+		t.Fatalf("narrowed relation packet is invalid: %v", err)
+	}
+	if len(narrowed[0].NumericalContext.Variables) != 2 || len(narrowed[0].NumericalContext.Relations) != 1 ||
+		len(narrowed[0].CalculationReceipts) != 1 || len(narrowed[0].Evidence) != 2 {
+		t.Fatalf("relation dependencies were not retained: %+v", narrowed[0])
+	}
+}
+
+func validRuntimeTestReceipt(receiptID string, now time.Time) contracts.CalculationReceipt {
+	return contracts.CalculationReceipt{
+		SchemaVersion: contracts.SchemaVersionV1, ReceiptID: receiptID, RequestID: "request-1",
+		EngineID: "test-engine", OperationID: "test-operation", FormulaVersion: "test/v1",
+		Status: contracts.ReceiptSuccess,
+		NormalizedInputs: []contracts.EngineInput{{
+			InputID: "input-1", Status: "assumed",
+			Quantity: contracts.Quantity{Value: "0.2", Unit: "ratio"},
+		}},
+		Outputs: []contracts.ReceiptOutput{{
+			OutputID: "output-1", Status: "available",
+			Quantity: contracts.Quantity{Value: "0.1", Unit: "ratio"},
+		}},
+		SourceAsOf: now, GeneratedAt: now, CodeCommit: "test", InputSHA: "input", ReceiptSHA: "receipt",
 	}
 }
 

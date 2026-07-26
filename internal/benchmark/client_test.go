@@ -102,6 +102,34 @@ func TestCompleteAuthenticatesRemoteCompatibleEndpointWithoutClosingConnection(t
 	}
 }
 
+func TestCompleteSerializesModelSpecificThinkingControl(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		var payload map[string]any
+		if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
+			t.Fatal(err)
+		}
+		thinking, ok := payload["thinking"].(map[string]any)
+		if !ok || thinking["type"] != "disabled" {
+			t.Fatalf("unexpected thinking control: %#v", payload["thinking"])
+		}
+		if _, present := payload["chat_template_kwargs"]; present {
+			t.Fatal("DeepSeek request must not include Qwen chat-template controls")
+		}
+		response.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprintln(response, `data: {"choices":[{"delta":{"content":"{\"ok\":true}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":4,"completion_tokens":2,"total_tokens":6}}`)
+		fmt.Fprintln(response, "data: [DONE]")
+	}))
+	defer server.Close()
+
+	_, err := (Client{BaseURL: server.URL}).Complete(context.Background(), Request{
+		Model: "DeepSeek-V4-Flash", Messages: []Message{{Role: "user", Content: "Test"}}, MaxTokens: 8,
+		Thinking: map[string]any{"type": "disabled"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCompleteRejectsEmptyStream(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		response.Header().Set("Content-Type", "text/event-stream")

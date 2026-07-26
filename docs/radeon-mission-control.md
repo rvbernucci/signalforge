@@ -34,11 +34,81 @@ cat .secrets/grafana-admin-password
 ```
 
 Run a case in the Workspace, then open **Intelligence path / Inspect orchestration**. Mission
-Control collects the same safe execution events. Stop the stack with:
+Control collects the same safe execution events.
+
+The conversation also contains a live, expandable execution plan derived from the same accepted
+backend plan. Eight ordered parent phases remain visible throughout the journey: interpretation,
+planning, context, tools, review, synthesis, memory, and release. Parent phases summarize governed
+activity without becoming artificial progress steps. Each actual step can reveal its bounded
+objective, authority, dependencies, wave, route, attempts, release checks, and safe artifact IDs.
+**Open evidence** resolves authorized source
+references, **Open calculations** resolves deterministic receipts, and **Inspect lineage** opens
+Mission Control's correlated model, retrieval, engine, review, and release record. Neither surface
+exposes raw prompts, raw model output, credentials, or chain-of-thought.
+
+Every accepted live run carries a canonical `run_id` and a deterministic `trace_id` in the
+Workspace run envelope. The expandable plan displays both safe identifiers, and the Intelligence
+Inspector refuses to render a Mission Control record unless both identities match. A stale or
+cross-run observability response therefore fails closed without affecting the research answer.
+
+The safe operational projection includes intent and scope boundaries, plan topology, evidence
+coverage and packet counts, deterministic input/output reference IDs, review disposition counts,
+and final supported-claim coverage. Rejected claim bodies and answer bodies remain private.
+Operational counts explain the gate result; they do not authorize a claim or reconstruct a
+financial value.
+
+Retrieval and deterministic tools use explicit lifecycle events. An observed retrieval reports
+`started` followed by `passed`, `degraded`, or `failed`; BM25 providers include matched, selected,
+and TopK-rejected candidate counts, while providers without rank telemetry report it as
+`unavailable`. A deterministic engine reports `started` followed by `passed` or `failed` and
+identifies only its execution, operation, formula, safe input/output references, invariants,
+warnings, and receipt. A receipt loaded from prior governed computation is not relabeled as a tool
+execution. Legacy adapters may expose only a validated completion boundary and cannot manufacture
+earlier lifecycle states.
+
+The canonical plan can be inspected directly:
+
+```bash
+curl -s http://127.0.0.1:8080/api/v1/runs/<run_id>/execution | jq
+```
+
+## Execution Plan Data Flow
+
+```mermaid
+flowchart LR
+    P["Accepted ResearchPlan"] --> O["Go orchestration runtime"]
+    O --> T["Private authoritative trace"]
+    O --> S["Privacy-safe event allowlist"]
+    S --> C["Canonical signed projection"]
+    C --> G["GET execution snapshot"]
+    S --> E["Resumable SSE deltas"]
+    G --> R["Pure browser reconciler"]
+    E --> R
+    R --> U["Expandable conversation checklist"]
+    S --> M["Radeon Mission Control"]
+    U -. "safe IDs only" .-> M
+    U -. "never authorizes" .-> O
+```
+
+The Go projection is the only public state authority. SSE carries bounded deltas; a reconnect or
+sequence gap reloads the signed snapshot. The reducer renders but never derives a backend
+transition. Workspace and Mission Control correlate through the same canonical `run_id` and
+`trace_id`; the browser verifies that pair before rendering lineage. The private trace remains
+separate.
+
+The JSON response is versioned and SHA-256 signed. A pure browser reconciler deduplicates the SSE
+sequence, detects gaps, and fetches this canonical snapshot after reconnects. It never applies plan
+transitions itself, so observability can recover without becoming an execution authority. Stop the
+stack with:
 
 ```bash
 make mission-control-down
 ```
+
+The observability cache retains at most 256 safe events per run and 64 completed run records.
+Active runs are never evicted, and explicitly saved cases remain in the separate user-controlled
+SQLite store. This bounds long dashboard sessions without turning ephemeral telemetry into durable
+memory.
 
 The same Makefile exposes the complete operating surface:
 
@@ -50,6 +120,64 @@ make stack-logs
 make evidence-export  # Public metadata only; protected bodies are excluded
 make stack-down
 ```
+
+## Synchronized Radeon Captures
+
+The Sprint 32A working tree was exercised through two accepted journeys on the Radeon host. These
+captures prove that the expandable Workspace plan and Mission Control project the same canonical
+run; they do not claim to represent the later exact release image.
+
+| Journey | Model path | Calls | Workspace proof | Mission Control proof |
+| --- | --- | ---: | --- | --- |
+| Local only | Local Gemma through ROCm | 12 | Eight phases, 12/12 terminal steps, accepted release | `local-rocm` provider and route |
+| Hybrid | Provided Radeon API with authorized local ROCm fallback and local review/synthesis | 18 | Eight phases, 12/12 terminal steps, accepted release | `radeon-vllm` plus `local-rocm` under one run and trace |
+
+![Local Radeon execution plan](assets/live-execution-plan-radeon-local-viewport.jpg)
+
+![Local Radeon Mission Control](assets/mission-control-radeon-local-viewport.jpg)
+
+![Hybrid Radeon execution plan with a provided API specialist](assets/live-execution-plan-radeon-hybrid-viewport.jpg)
+
+![Hybrid Radeon Mission Control](assets/mission-control-radeon-hybrid-viewport.jpg)
+
+The public manifests contain only timestamps, UUIDs, hashes, phase states, aggregate counts,
+provider/route identifiers, role IDs, and token totals. They retain no questions, prompts, answers,
+source bodies, credentials, or private reasoning. Validate every identity, capture hash, dimension,
+route boundary, and privacy declaration with:
+
+```bash
+python3 scripts/build_dashboard_radeon_evidence.py \
+  --local evidence/dashboard-radeon-local-journey.json \
+  --hybrid evidence/dashboard-radeon-hybrid-journey.json \
+  --local-plan docs/assets/live-execution-plan-radeon-local-viewport.jpg \
+  --local-mission docs/assets/mission-control-radeon-local-viewport.jpg \
+  --hybrid-plan docs/assets/live-execution-plan-radeon-hybrid-viewport.jpg \
+  --hybrid-mission docs/assets/mission-control-radeon-hybrid-viewport.jpg \
+  --binary-sha256 c0f741b2ffdf2daac8fb8d0fa0f79acc1f88fb1b6dff43113934122c3c1d7992 \
+  --frontend-sha256 c7cfaaf9802c25154dac2719d94a1059afad888392da6dbde4bd4f3078d7bfa7 \
+  --output evidence/dashboard-radeon-synchronized-captures.json \
+  --check
+```
+
+## Execution Plan Troubleshooting
+
+The execution plan is an observability projection, not an execution dependency. A dashboard,
+browser, SSE, or Mission Control failure must never authorize, block, or rewrite a research answer.
+
+| Symptom | Safe interpretation | Operator action |
+|---|---|---|
+| `Reconnecting to signed plan` remains visible | The browser retained the last valid snapshot and detected an unavailable stream or sequence gap. Research continues on the server. | Inspect `GET /api/v1/runs/<run_id>/execution`. Reload only after confirming the same `run_id`; do not resubmit the research question. |
+| The browser shows an older sequence | A delayed GET or SSE response lost a race to a newer canonical snapshot. The reducer rejects cross-run and regressive state. | Compare `last_sequence` and `projection_sha256` with the canonical endpoint, then refresh the page. |
+| Mission Control is unavailable | Deep telemetry is down; the Workspace answer path and private authoritative trace remain independent. | Run `make stack-status` and `make stack-logs`. Restore observability separately without restarting a completed research run. |
+| A browser refresh occurs during a run | The current safe plan is reconstructed from the Go projection and SSE resumes after its last sequence. | Reopen the same run. If the run completed, inspect its final plan; persistence still follows the explicit retention choice. |
+| Evidence or calculation action has no result | No authorized reference of that class was released for the selected step, or the referenced artifact is unavailable. | Treat the item as unavailable. Never infer a body, value, or receipt from the operational row. |
+| A route badge changes from Radeon API to local ROCm | The primary authorized route failed and the bounded fallback completed. | Inspect the safe model-call lineage by `run_id`; do not interpret fallback as duplicate authority. |
+| A model row reports retry or bounded repair | The runtime observed another authorized call for the same plan step after a failure, output-budget increase, or contract correction. | Compare its attempt and route class. Prompt and response bodies remain intentionally absent. |
+| Memory is skipped, unavailable, failed, or deleted | Retention is optional and user-controlled; none of these states invalidates a released answer. | Save explicitly when needed. Inspect the case library for saved snapshots and use its two-step delete control. |
+
+If the canonical projection fails validation or its hash does not match, stop displaying new plan
+state and preserve the last valid snapshot. The final answer remains governed by the orchestration
+and release contracts, never by reconstructed browser state.
 
 `stack-down` stops containers and networks but deliberately preserves named data volumes and the
 externally mounted model. Destructive cleanup is never part of a normal stop. If an operator later
@@ -155,6 +283,22 @@ metrics, and secret checks. It is also a required GitHub Actions gate.
 The release workflow additionally publishes by digest, attaches SBOM and build provenance, runs a
 critical/high vulnerability scan, pulls the exact public digest without build cache, and preserves
 the manifest as release evidence.
+
+## Development Capture Provenance
+
+The public README contains two explicitly development-only CPU captures:
+
+- `docs/assets/live-execution-plan-desktop.jpg` shows the completed golden fixture with all eight
+  parent phases and the bounded approved review subset;
+- `docs/assets/live-execution-plan-recovered-fallback-desktop.jpg` applies only the two safe model
+  lifecycle events in `fixtures/workspace/recovered-fallback-events.json`, proving that a failed
+  Radeon specialist attempt and an authorized local ROCm fallback remain legible as one recovered
+  route.
+
+`TestRecoveredFallbackOverlayProducesValidPassedProjection` reconstructs the second projection from
+the public base fixture and overlay. It requires a passed final projection, route
+`radeon_api_to_local_rocm`, attempt `2/2`, and no retained prompt, response, credential, or
+authorization body. These captures are not substitutes for exact-image Radeon evidence.
 
 ## Radeon-Only Gates
 

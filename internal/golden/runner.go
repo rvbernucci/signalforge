@@ -48,6 +48,7 @@ type RunConfig struct {
 	EventSink            orchestrator.EventSink
 	ModelObserver        intelligenceaudit.ModelObserver
 	RequestOverride      *contracts.ResearchRequest
+	MaterialProvider     localagent.MaterialProvider
 	Assumptions          []string
 	UseAssumptions       bool
 }
@@ -120,17 +121,24 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 	if err := validateRunConfig(config); err != nil {
 		return Report{}, err
 	}
-	snapshot, err := LoadSnapshot(config.SnapshotPath)
-	if err != nil {
-		return Report{}, fmt.Errorf("load financial snapshot: %w", err)
-	}
-	_, chunks, err := retrieval.LoadEvalSet(config.RetrievalPath)
-	if err != nil {
-		return Report{}, fmt.Errorf("load qualitative evidence: %w", err)
-	}
-	provider, err := NewProvider(snapshot, chunks, config.CodeCommit, config.Prices)
-	if err != nil {
-		return Report{}, fmt.Errorf("build golden material provider: %w", err)
+	var snapshot Snapshot
+	var provider localagent.MaterialProvider
+	var err error
+	if config.MaterialProvider != nil {
+		provider = config.MaterialProvider
+	} else {
+		snapshot, err = LoadSnapshot(config.SnapshotPath)
+		if err != nil {
+			return Report{}, fmt.Errorf("load financial snapshot: %w", err)
+		}
+		_, chunks, loadErr := retrieval.LoadEvalSet(config.RetrievalPath)
+		if loadErr != nil {
+			return Report{}, fmt.Errorf("load qualitative evidence: %w", loadErr)
+		}
+		provider, err = NewProvider(snapshot, chunks, config.CodeCommit, config.Prices)
+		if err != nil {
+			return Report{}, fmt.Errorf("build golden material provider: %w", err)
+		}
 	}
 	client := benchmark.Client{BaseURL: strings.TrimRight(config.BaseURL, "/"), HTTPClient: config.HTTPClient}
 	localRecorder := newRecordingCompleterForProvider(client, "local-rocm", config.ModelObserver)
@@ -238,7 +246,6 @@ func goldenRequest(config RunConfig, asOf time.Time) (contracts.ResearchRequest,
 
 func validateRunConfig(config RunConfig) error {
 	for name, value := range map[string]string{
-		"snapshot path": config.SnapshotPath, "retrieval path": config.RetrievalPath,
 		"trace directory": config.TraceDir, "base URL": config.BaseURL,
 		"model": config.Model, "code commit": config.CodeCommit,
 		"question": config.Question, "run ID": config.RunID, "request ID": config.RequestID,
@@ -246,6 +253,13 @@ func validateRunConfig(config RunConfig) error {
 		if strings.TrimSpace(value) == "" {
 			return fmt.Errorf("%s is required", name)
 		}
+	}
+	if config.MaterialProvider == nil {
+		if strings.TrimSpace(config.SnapshotPath) == "" || strings.TrimSpace(config.RetrievalPath) == "" {
+			return errors.New("snapshot and retrieval paths are required without a material provider")
+		}
+	} else if config.RequestOverride == nil {
+		return errors.New("a custom material provider requires a governed request override")
 	}
 	parsed, err := url.Parse(config.BaseURL)
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {

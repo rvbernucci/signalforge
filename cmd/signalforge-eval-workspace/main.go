@@ -43,12 +43,13 @@ type evaluation struct {
 
 func main() {
 	fixturePath := flag.String("fixture", "fixtures/workspace/golden-case.json", "safe public workspace fixture")
+	catalogPath := flag.String("catalog", "fixtures/productscope/technology20-catalog.json", "public-safe Technology 20 catalog")
 	staticDir := flag.String("static-dir", "web/dist", "built frontend directory")
 	output := flag.String("output", "", "optional JSON output path")
 	eventDelay := flag.Duration("event-delay", 5*time.Millisecond, "fixture replay delay")
 	flag.Parse()
 
-	result, err := evaluate(*fixturePath, *staticDir, *eventDelay)
+	result, err := evaluate(*fixturePath, *catalogPath, *staticDir, *eventDelay)
 	if err != nil {
 		fatal(err)
 	}
@@ -66,9 +67,10 @@ func main() {
 	}
 }
 
-func evaluate(fixturePath, staticDir string, eventDelay time.Duration) (evaluation, error) {
+func evaluate(fixturePath, catalogPath, staticDir string, eventDelay time.Duration) (evaluation, error) {
 	workspaceServer, err := workspace.NewServer(workspace.ServerConfig{
-		Mode: workspace.ModeFixture, FixturePath: fixturePath, StaticDir: staticDir, EventDelay: eventDelay,
+		Mode: workspace.ModeFixture, FixturePath: fixturePath, CatalogPath: catalogPath,
+		StaticDir: staticDir, EventDelay: eventDelay,
 	})
 	if err != nil {
 		return evaluation{}, err

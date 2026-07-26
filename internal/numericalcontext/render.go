@@ -2,6 +2,7 @@ package numericalcontext
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -23,14 +24,20 @@ func RenderReferences(references []string, contexts []*contracts.NumericalContex
 			return nil, err
 		}
 		for _, variable := range context.Variables {
-			if _, duplicate := variables[variable.VariableID]; duplicate {
-				return nil, fmt.Errorf("duplicate numerical variable %q across contexts", variable.VariableID)
+			if existing, duplicate := variables[variable.VariableID]; duplicate {
+				if !reflect.DeepEqual(existing, variable) {
+					return nil, fmt.Errorf("conflicting numerical variable %q across contexts", variable.VariableID)
+				}
+				continue
 			}
 			variables[variable.VariableID] = variable
 		}
 		for _, relation := range context.Relations {
-			if _, duplicate := relations[relation.RelationID]; duplicate {
-				return nil, fmt.Errorf("duplicate numerical relation %q across contexts", relation.RelationID)
+			if existing, duplicate := relations[relation.RelationID]; duplicate {
+				if !reflect.DeepEqual(existing, relation) {
+					return nil, fmt.Errorf("conflicting numerical relation %q across contexts", relation.RelationID)
+				}
+				continue
 			}
 			relations[relation.RelationID] = relation
 		}

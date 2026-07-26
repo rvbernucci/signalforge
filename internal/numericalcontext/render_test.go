@@ -38,6 +38,50 @@ func TestRenderReferencesRejectsUnknownID(t *testing.T) {
 	}
 }
 
+func TestRenderReferencesDeduplicatesIdenticalVariablesAcrossContexts(t *testing.T) {
+	asOf := testAsOf()
+	first, err := Compile(Options{
+		ContextID: "context-1", RunID: "run-1", AsOf: asOf,
+		EntityNames: map[string]string{"msft": "Microsoft"},
+	}, []contracts.CalculationReceipt{receipt("receipt-msft", "msft", "FY2025", "0.229", asOf)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	second := first
+	second.ContextID = "context-2"
+	disclosures, err := RenderReferences(
+		[]string{first.Variables[0].VariableID},
+		[]*contracts.NumericalContext{&first, &second},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(disclosures) != 1 || !strings.Contains(disclosures[0], "22.9%") {
+		t.Fatalf("identical cross-context variable was not rendered once: %v", disclosures)
+	}
+}
+
+func TestRenderReferencesRejectsConflictingVariablesAcrossContexts(t *testing.T) {
+	asOf := testAsOf()
+	first, err := Compile(Options{
+		ContextID: "context-1", RunID: "run-1", AsOf: asOf,
+		EntityNames: map[string]string{"msft": "Microsoft"},
+	}, []contracts.CalculationReceipt{receipt("receipt-msft", "msft", "FY2025", "0.229", asOf)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	second := first
+	second.ContextID = "context-2"
+	second.Variables = append([]contracts.NumericalVariable(nil), first.Variables...)
+	second.Variables[0].Value.Value = "0.230"
+	if _, err := RenderReferences(
+		[]string{first.Variables[0].VariableID},
+		[]*contracts.NumericalContext{&first, &second},
+	); err == nil || !strings.Contains(err.Error(), "conflicting numerical variable") {
+		t.Fatalf("conflicting cross-context variable did not fail closed: %v", err)
+	}
+}
+
 func TestRenderIncomparableRelationNamesExactFiscalBoundaries(t *testing.T) {
 	asOf := testAsOf()
 	context, err := Compile(Options{
@@ -60,6 +104,35 @@ func TestRenderIncomparableRelationNamesExactFiscalBoundaries(t *testing.T) {
 	}
 	if len(disclosures) != 1 || !strings.Contains(disclosures[0], "were not compared") || !strings.Contains(disclosures[0], "2025-06-30") || !strings.Contains(disclosures[0], "2025-01-26") {
 		t.Fatalf("incomparable disclosure hid exact period identity: %v", disclosures)
+	}
+}
+
+func TestRenderVariableDoesNotDuplicateExactDateRangeLabel(t *testing.T) {
+	start := time.Date(2024, 11, 30, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2025, 11, 28, 0, 0, 0, 0, time.UTC)
+	variable := contracts.NumericalVariable{
+		VariableID:  "variable-adbe-fcf",
+		EntityID:    "sec-cik:0000796343",
+		EntityLabel: "ADBE",
+		MetricID:    "financial.free_cash_flow.free_cash_flow",
+		Value: contracts.Quantity{
+			Value: "9850000000", Unit: "currency", Currency: "USD",
+		},
+		Period:      "2024-11-30/2025-11-28",
+		PeriodBasis: contracts.PeriodBasisFiscalExact,
+		PeriodStart: &start,
+		PeriodEnd:   &end,
+	}
+
+	rendered := renderVariable(variable)
+
+	if strings.Count(rendered, "2024-11-30") != 1 ||
+		strings.Count(rendered, "2025-11-28") != 1 ||
+		strings.Contains(rendered, "2024-11-30/2025-11-28") {
+		t.Fatalf("exact period was duplicated: %q", rendered)
+	}
+	if !strings.Contains(rendered, "2024-11-30 to 2025-11-28") {
+		t.Fatalf("exact period boundaries were not retained: %q", rendered)
 	}
 }
 

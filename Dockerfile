@@ -41,6 +41,7 @@ COPY --from=web /source/web/dist ./web/dist
 COPY fixtures/workspace ./fixtures/workspace
 COPY fixtures/golden ./fixtures/golden
 COPY fixtures/retrieval ./fixtures/retrieval
+COPY fixtures/productscope ./fixtures/productscope
 USER 10001:10001
 EXPOSE 8080
 VOLUME ["/var/lib/signalforge"]

@@ -1,5 +1,26 @@
 # SignalForge Contracts
 
+## Technology 20 activation
+
+Sprint 32 adds fail-closed product-scope contracts:
+
+- `company-activation.schema.json` records evidence-backed company or peer-lane state changes;
+- `company-research-profile.schema.json` separates issuer identity, listed securities, metric
+  availability, and activation authority;
+- `peer-lane.schema.json` bounds the companies, questions, and metrics allowed in a comparison;
+- `metric-comparability-request.schema.json` carries point-in-time metric operands;
+- `metric-comparability-receipt.schema.json` records deterministic compatibility or refusal;
+- `comparison-bundle.schema.json` permits release only for metrics with approved receipts; and
+- `typed-abstention.schema.json` preserves a useful, machine-readable refusal;
+- `standalone-journey-suite.schema.json` freezes balanced company-level development and holdout
+  expectations without embedding answer text; and
+- `peer-journey-suite.schema.json` freezes metric-level comparison behavior, including useful
+  refusal and the prohibition on pair-level ranking.
+
+The executable validators and content-hash helpers live in `internal/contracts/activation.go`,
+`internal/productscope`, and `internal/comparability`. Models and UI components consume these
+records but cannot promote their state or alter hash-bound authority references.
+
 The current mainline adds two versioned financial-intelligence contracts:
 
 - `metric-registry.schema.json` governs canonical financial definitions, formula ownership,
@@ -39,6 +60,7 @@ Version `signalforge/v1` establishes four boundaries:
 
 Portable JSON Schemas currently cover:
 
+- `execution-plan.schema.json`;
 - `engine-request.schema.json`;
 - `calculation-receipt.schema.json`;
 - `failure-receipt.schema.json`;
@@ -51,6 +73,40 @@ Portable JSON Schemas currently cover:
 - `golden-semantic-rubric.schema.json`;
 - `golden-semantic-evaluation.schema.json`;
 - `demo-evidence.schema.json`.
+
+`execution-plan.schema.json` is the user-visible, privacy-safe projection of the accepted typed
+plan and its lifecycle. It records bounded labels, role authority, dependencies, waves, route reason
+codes, attempts, durations, checklist decisions, and safe artifact references. Prompt bodies,
+model responses, credentials, raw source bodies, and hidden reasoning are not members of the
+contract. The server owns transition validation, monotonic sequence handling, and the projection
+hash; the browser renders this state but cannot authorize execution or release an answer. Validated
+projections always contain the ordered parent phases `interpretation`, `planning`, `context`,
+`tools`, `review`, `synthesis`, `memory`, and `release`. Steps bind to exactly one parent phase.
+Parent phases summarize governed activity but are never counted as execution steps, so an empty or
+embedded tools, memory, or release phase cannot inflate progress. The tools phase derives only from
+observed deterministic executions, memory derives from explicit retention events, and release
+derives from the authoritative run outcome.
+
+Validated
+specialist adapters may append real retrieval `started`, `passed`, `degraded`, or `failed` rows
+using only retrieval, bundle, method, candidate-count, source-class, and as-of metadata. Providers
+that cannot establish candidate counts report that telemetry as unavailable rather than inventing
+it. Deterministic engines may append tool `started`, `passed`, or `failed` rows using only execution,
+engine, operation, formula, input/output-reference, invariant, warning, and receipt metadata.
+Precomputed receipts and capability authorization alone never create a runtime execution row.
+Review and synthesis projections may add bounded counts and coverage ratios, but never claim bodies,
+rejected content, raw answers, formula values, or model reasoning.
+
+Model events retain a privacy-safe route class, observed attempt, and call kind only. The call kind
+is one of `primary`, `retry`, `fallback`, or `bounded_repair`; it is derived from runtime-observed
+route transitions, failures, output-budget changes, and non-persisted prompt fingerprints. Memory
+events use the closed lifecycle `not_requested`, `requested`, `approved`, `saved`, `unavailable`,
+`failed`, and `deleted`. Neither event family carries prompt bodies, response bodies, credentials,
+case contents, or chain-of-thought.
+
+Operational event replay is bounded to the latest 256 events per run, and the in-memory completed-run
+window is bounded to 64 records. Active runs are never evicted. User-retained cases are independent
+SQLite artifacts governed by the explicit memory lifecycle rather than this operational cache.
 
 `orchestration-trace.schema.json` is the runtime state-machine trace. It records only bounded
 identifiers, lifecycle events, artifact references, concurrency, and timestamps. Prompt text,

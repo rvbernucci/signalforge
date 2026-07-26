@@ -35,6 +35,7 @@
     "next_actions": { "$ref": "#/$defs/stringArray" },
     "warnings": { "type": "array", "items": { "$ref": "#/$defs/warning" } },
     "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "execution_plan": { "$ref": "execution-plan.schema.json" },
     "execution": {
       "type": "object", "additionalProperties": false,
       "required": ["local_only", "endpoint_scope", "model", "runtime_label"],

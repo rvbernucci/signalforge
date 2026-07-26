@@ -23,13 +23,13 @@ func Interpret(question string) (Intent, error) {
 		terms  []string
 	}{
 		{ThesisReview, []string{"thesis", "contrary evidence", "invalidate"}},
-		{ConceptEducation, []string{"explain", "teach me", "what is"}},
+		{ConceptEducation, []string{"explain stock-based compensation", "teach me", "what is"}},
 		{MarketBehavior, []string{"drawdown", "volatility", "nasdaq", "share price fell", "sensitivity change"}},
-		{CompanyComparison, []string{"compare", "which company", "these two companies"}},
-		{Valuation, []string{"value range", "current price imply", "embedded in", "price at which", "wacc", "terminal growth"}},
-		{EconomicTransmission, []string{"interest rates", "inflation", "stronger us dollar", "economic"}},
-		{FinancialQuality, []string{"free cash flow", "cash conversion", "margin improvement", "balance-sheet resilience", "reinvestment", "dilution"}},
-		{CompanyUnderstanding, []string{"what does", "business model", "recurring revenue", "customer concentration", "who pays"}},
+		{CompanyComparison, []string{"compare", "comparison", "which company", "these two companies"}},
+		{EconomicTransmission, []string{"macro", "interest rates", "inflation", "stronger us dollar", "economic"}},
+		{Valuation, []string{"valuation", "value range", "current price imply", "embedded in", "price at which", "wacc", "terminal growth"}},
+		{FinancialQuality, []string{"revenue growth", "operating margin", "margin improvement", "cash generation", "cash-generation", "simple fcf", "free cash flow", "cash conversion", "balance-sheet identity", "balance sheet identity", "earnings quality", "capex", "reinvestment", "dilution"}},
+		{CompanyUnderstanding, []string{"makes money", "operating segments", "operating risks", "what does", "business model", "recurring revenue", "customer concentration", "who pays"}},
 	}
 	for _, rule := range rules {
 		for _, term := range rule.terms {

@@ -337,7 +337,15 @@ func incomparabilityWarning(left, right contracts.NumericalVariable) string {
 
 func periodDescription(variable contracts.NumericalVariable) string {
 	if variable.PeriodBasis == contracts.PeriodBasisFiscalExact && variable.PeriodStart != nil && variable.PeriodEnd != nil {
-		return fmt.Sprintf("%s %s to %s", variable.Period, variable.PeriodStart.Format("2006-01-02"), variable.PeriodEnd.Format("2006-01-02"))
+		start := variable.PeriodStart.Format("2006-01-02")
+		end := variable.PeriodEnd.Format("2006-01-02")
+		label := strings.TrimSpace(variable.Period)
+		// Some normalized inputs already use "start/end" as their period label. Rendering the
+		// exact boundaries again produced duplicated user-facing dates without adding authority.
+		if label == "" || (strings.Contains(label, start) && strings.Contains(label, end)) {
+			return fmt.Sprintf("%s to %s", start, end)
+		}
+		return fmt.Sprintf("%s (%s to %s)", label, start, end)
 	}
 	if variable.PeriodBasis == contracts.PeriodBasisAnalysisAsOf {
 		return fmt.Sprintf("%s as of %s", variable.Period, variable.AsOf.Format("2006-01-02"))

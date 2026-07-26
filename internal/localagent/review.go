@@ -128,7 +128,9 @@ func (adapters *Adapters) Review(ctx context.Context, input orchestrator.ReviewI
 		}
 		normalizeCritiqueForInput(&body, input.Packets)
 		if stillMissing := unclassifiedCritiqueClaims(body, input.Packets); len(stillMissing) > 0 {
-			return contracts.CritiqueReport{}, fmt.Errorf("review omitted claim IDs after bounded completeness retry: %s", strings.Join(stillMissing, ", "))
+			if !rejectPersistentlyOmittedCritiqueClaims(&body, stillMissing) {
+				return contracts.CritiqueReport{}, fmt.Errorf("review omitted claim IDs after bounded completeness retry: %s", strings.Join(stillMissing, ", "))
+			}
 		}
 	}
 	report := contracts.CritiqueReport{
@@ -146,6 +148,49 @@ func (adapters *Adapters) Review(ctx context.Context, input orchestrator.ReviewI
 		return contracts.CritiqueReport{}, err
 	}
 	return report, nil
+}
+
+// A partially useful review must never gain authority from an omission. After the one bounded
+// completeness retry, Go may close only the omitted authorized claims as rejected. At least one
+// claim must already have been classified by the model; otherwise an empty or invented response
+// still fails closed rather than being converted into a synthetic review.
+func rejectPersistentlyOmittedCritiqueClaims(body *critiqueBody, missing []string) bool {
+	if len(missing) == 0 || len(body.ApprovedClaims)+len(body.RejectedClaims) == 0 {
+		return false
+	}
+	body.RejectedClaims = uniqueNonEmpty(append(body.RejectedClaims, missing...))
+	rejected := make(map[string]bool, len(body.RejectedClaims))
+	for _, claimID := range body.RejectedClaims {
+		rejected[claimID] = true
+	}
+	issues := make([]contracts.CritiqueIssue, 0, len(body.Issues)+1)
+	for _, issue := range body.Issues {
+		refs := make([]string, 0, len(issue.ClaimRefs))
+		for _, claimID := range issue.ClaimRefs {
+			if rejected[claimID] {
+				refs = append(refs, claimID)
+			}
+		}
+		if len(refs) == 0 {
+			continue
+		}
+		issue.ClaimRefs = uniqueNonEmpty(refs)
+		issues = append(issues, issue)
+	}
+	body.Issues = issues
+	body.Issues = append(body.Issues, contracts.CritiqueIssue{
+		IssueID:     "review-output-omission",
+		Severity:    "high",
+		ClaimRefs:   append([]string(nil), missing...),
+		Description: "The reviewer omitted authorized claims after the bounded completeness retry; the fail-closed output contract rejected them.",
+		RepairHint:  "Re-evaluate each omitted claim explicitly before a later release.",
+	})
+	if len(body.ApprovedClaims) > 0 {
+		body.Decision = contracts.CritiqueNarrow
+	} else {
+		body.Decision = contracts.CritiqueReject
+	}
+	return true
 }
 
 func normalizeCritiqueForInput(body *critiqueBody, packets []contracts.ContextPacket) {

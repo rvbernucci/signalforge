@@ -11,12 +11,17 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/rvbernucci/signalforge/internal/benchmark"
+	"github.com/rvbernucci/signalforge/internal/executionplan"
 	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
+	"github.com/rvbernucci/signalforge/internal/productscope"
+	"github.com/rvbernucci/signalforge/internal/telemetry"
 )
 
 type fakeCaseStore struct {
@@ -108,6 +113,36 @@ func TestFixtureServerExposesSafeConfigurationAndCase(t *testing.T) {
 		{path: "/api/v1/config", read: func(t *testing.T, body []byte) {
 			assertJSONField(t, body, "follow_ups_live", false)
 		}},
+		{path: "/api/v1/catalog", read: func(t *testing.T, body []byte) {
+			var catalog map[string]any
+			if err := json.Unmarshal(body, &catalog); err != nil {
+				t.Fatal(err)
+			}
+			if companies, ok := catalog["companies"].([]any); !ok || len(companies) != 20 {
+				t.Fatalf("catalog companies = %#v", catalog["companies"])
+			}
+			if lanes, ok := catalog["peer_lanes"].([]any); !ok || len(lanes) != 5 {
+				t.Fatalf("catalog peer lanes = %#v", catalog["peer_lanes"])
+			}
+		}},
+		{path: "/api/v1/financials", read: func(t *testing.T, body []byte) {
+			var financials productscope.PublicFinancialSummary
+			if err := json.Unmarshal(body, &financials); err != nil {
+				t.Fatal(err)
+			}
+			if len(financials.Companies) != 20 {
+				t.Fatalf("financial companies = %d", len(financials.Companies))
+			}
+		}},
+		{path: "/api/v1/peer-evaluations", read: func(t *testing.T, body []byte) {
+			var peers productscope.PeerEvaluationSuite
+			if err := json.Unmarshal(body, &peers); err != nil {
+				t.Fatal(err)
+			}
+			if len(peers.Lanes) != 5 {
+				t.Fatalf("peer lanes = %d", len(peers.Lanes))
+			}
+		}},
 		{path: "/api/v1/cases/golden", read: func(t *testing.T, body []byte) {
 			assertJSONField(t, body, "schema_version", SchemaVersionV1)
 		}},
@@ -139,6 +174,10 @@ func TestFixtureRunCompletesAndStreamsOnlySafeEvents(t *testing.T) {
 	}
 	if run.Status != "completed" || run.Result == nil {
 		t.Fatalf("run = %+v", run)
+	}
+	if run.Execution == nil || run.Execution.Status != "passed" || run.Execution.ProgressRatio != 1 ||
+		run.Result.ExecutionPlan == nil || run.Result.ExecutionPlan.ProjectionSHA != run.Execution.ProjectionSHA {
+		t.Fatalf("execution projection was not completed consistently: %+v", run.Execution)
 	}
 	if !strings.Contains(run.Result.Question, "easing interest rates") || !strings.Contains(run.Result.Question, "resilient AI infrastructure spending") {
 		t.Fatalf("scenario was not applied to fixture question: %q", run.Result.Question)
@@ -173,11 +212,64 @@ func TestFixtureRunCompletesAndStreamsOnlySafeEvents(t *testing.T) {
 	if err := scanner.Err(); err != nil {
 		t.Fatal(err)
 	}
-	if eventCount != len(run.Result.Events)+1 {
-		t.Fatalf("streamed events = %d, expected %d", eventCount, len(run.Result.Events)+1)
+	if eventCount != len(run.Result.Events)+2 {
+		t.Fatalf("streamed events = %d, expected %d", eventCount, len(run.Result.Events)+2)
 	}
 	if !terminalSeen {
 		t.Fatal("expected workspace completion event")
+	}
+
+	resumeRequest, err := http.NewRequest(http.MethodGet,
+		httpServer.URL+"/api/v1/runs/"+run.RunID+"/events", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resumeRequest.Header.Set("Last-Event-ID", "5")
+	resumed, err := http.DefaultClient.Do(resumeRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resumed.Body.Close()
+	resumeScanner := bufio.NewScanner(resumed.Body)
+	resumedEvents := 0
+	for resumeScanner.Scan() {
+		line := resumeScanner.Text()
+		if !strings.HasPrefix(line, "data: ") {
+			continue
+		}
+		var event StreamEvent
+		if err := json.Unmarshal([]byte(strings.TrimPrefix(line, "data: ")), &event); err != nil {
+			t.Fatal(err)
+		}
+		if event.Sequence <= 5 {
+			t.Fatalf("resumed stream replayed acknowledged event %d", event.Sequence)
+		}
+		resumedEvents++
+	}
+	if err := resumeScanner.Err(); err != nil {
+		t.Fatal(err)
+	}
+	if resumedEvents != eventCount-5 {
+		t.Fatalf("resumed events = %d, expected %d", resumedEvents, eventCount-5)
+	}
+
+	executionResponse := getRaw(t, httpServer.URL+"/api/v1/runs/"+run.RunID+"/execution")
+	defer executionResponse.Body.Close()
+	if executionResponse.StatusCode != http.StatusOK {
+		t.Fatalf("execution status = %d, body = %s", executionResponse.StatusCode, readBody(t, executionResponse))
+	}
+	var execution map[string]any
+	if err := json.NewDecoder(executionResponse.Body).Decode(&execution); err != nil {
+		t.Fatal(err)
+	}
+	if execution["projection_sha256"] != run.Execution.ProjectionSHA || execution["progress_ratio"] != float64(1) {
+		t.Fatalf("execution endpoint = %#v", execution)
+	}
+	payload, _ := json.Marshal(execution)
+	for _, forbidden := range []string{"api_key", "password", "raw_prompt", "chain_of_thought", "response_body"} {
+		if strings.Contains(strings.ToLower(string(payload)), forbidden) {
+			t.Fatalf("execution projection leaked %q", forbidden)
+		}
 	}
 }
 
@@ -239,6 +331,229 @@ func TestFixtureServerRejectsInvalidInputsAndExplainsFollowUpDegradation(t *test
 	}
 }
 
+func TestPublicModelRouteKeepsOnlyBoundedExecutionClass(t *testing.T) {
+	cases := map[string]string{
+		"local-rocm":           "local_rocm",
+		"loopback-llama":       "local_rocm",
+		"radeon-specialists":   "radeon_api",
+		"third-party-provider": "authorized_model_api",
+	}
+	for providerID, expected := range cases {
+		if actual := publicModelRoute(providerID); actual != expected {
+			t.Fatalf("provider %q route = %q, expected %q", providerID, actual, expected)
+		}
+	}
+}
+
+func TestModelObserverClassifiesObservedAttemptsWithoutRetainingPrompts(t *testing.T) {
+	server := newFixtureTestServer(t)
+	record, err := server.newRun("", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	observer := runModelObserver{server: server, record: record}
+	request := benchmark.Request{
+		Messages:  []benchmark.Message{{Role: "system", Content: "private primary prompt"}},
+		MaxTokens: 100,
+	}
+	observer.ObserveModelCall(context.Background(), "request-interpreter/v1", "local-rocm",
+		request, benchmark.Completion{}, nil)
+	request.MaxTokens = 200
+	observer.ObserveModelCall(context.Background(), "request-interpreter/v1", "local-rocm",
+		request, benchmark.Completion{}, nil)
+	fallbackErr := errors.New("fallback temporarily unavailable")
+	observer.ObserveModelCall(context.Background(), "request-interpreter/v1", "radeon-specialists",
+		request, benchmark.Completion{}, fallbackErr)
+	observer.ObserveModelCall(context.Background(), "request-interpreter/v1", "radeon-specialists",
+		request, benchmark.Completion{}, nil)
+
+	server.mu.RLock()
+	events := append([]StreamEvent(nil), record.events...)
+	projection := cloneExecutionPlan(*record.execution)
+	server.mu.RUnlock()
+	if len(events) != 4 {
+		t.Fatalf("model events = %d, expected 4", len(events))
+	}
+	expectedKinds := []string{"primary", "bounded_repair", "fallback", "retry"}
+	expectedStatuses := []string{"completed", "completed", "failed", "completed"}
+	for index, event := range events {
+		if event.Type != "model" || event.Status != expectedStatuses[index] ||
+			event.Attributes["call_kind"] != expectedKinds[index] ||
+			event.Attributes["attempt"] != strconv.Itoa(index+1) {
+			t.Fatalf("event %d = %+v", index, event)
+		}
+		payload, _ := json.Marshal(event)
+		if strings.Contains(string(payload), "private primary prompt") {
+			t.Fatalf("model event retained prompt: %s", payload)
+		}
+	}
+	step := projection.Steps[0]
+	if step.Attempt != 1 || step.MaxAttempts != 1 || step.Route != "local_rocm_to_radeon_api" {
+		t.Fatalf("observed attempt projection = %+v", step)
+	}
+}
+
+func TestWorkspaceExecutionRouteMatrix(t *testing.T) {
+	cases := []struct {
+		name  string
+		calls []struct {
+			provider string
+			err      error
+		}
+		expectedRoute   string
+		expectedAttempt int
+	}{
+		{
+			name: "local-only",
+			calls: []struct {
+				provider string
+				err      error
+			}{{provider: "local-rocm"}},
+			expectedRoute: "local_rocm", expectedAttempt: 1,
+		},
+		{
+			name: "hybrid-specialist",
+			calls: []struct {
+				provider string
+				err      error
+			}{{provider: "radeon-specialists"}},
+			expectedRoute: "radeon_api", expectedAttempt: 1,
+		},
+		{
+			name: "hybrid-fallback-to-local",
+			calls: []struct {
+				provider string
+				err      error
+			}{
+				{provider: "radeon-specialists", err: errors.New("specialist endpoint unavailable")},
+				{provider: "local-rocm"},
+			},
+			expectedRoute: "radeon_api_to_local_rocm", expectedAttempt: 2,
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			server := newFixtureTestServer(t)
+			record, err := server.newRun("", false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			plan, err := fixtureResearchPlan(server.fixture)
+			if err != nil {
+				t.Fatal(err)
+			}
+			runSink{server: server, record: record}.AcceptPlan(plan, server.config.Now())
+			observer := runModelObserver{server: server, record: record}
+			request := benchmark.Request{
+				Messages:  []benchmark.Message{{Role: "system", Content: "private route-matrix prompt"}},
+				MaxTokens: 800,
+			}
+			for _, call := range testCase.calls {
+				observer.ObserveModelCall(
+					context.Background(), "business-strategy/v1", call.provider,
+					request, benchmark.Completion{}, call.err,
+				)
+			}
+
+			server.mu.RLock()
+			projection := cloneExecutionPlan(*record.execution)
+			events := append([]StreamEvent(nil), record.events...)
+			server.mu.RUnlock()
+			var step *executionplan.Step
+			for index := range projection.Steps {
+				if projection.Steps[index].StepID == "context-01" {
+					step = &projection.Steps[index]
+					break
+				}
+			}
+			if step == nil || step.Route != testCase.expectedRoute ||
+				step.Attempt != testCase.expectedAttempt {
+				t.Fatalf("route matrix projection = %+v", step)
+			}
+			payload, err := json.Marshal(struct {
+				Projection executionplan.Projection `json:"projection"`
+				Events     []StreamEvent            `json:"events"`
+			}{Projection: projection, Events: events})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(string(payload), "private route-matrix prompt") {
+				t.Fatalf("route matrix retained a model prompt: %s", payload)
+			}
+		})
+	}
+}
+
+func TestRecoveredFallbackOverlayProducesValidPassedProjection(t *testing.T) {
+	var overlay struct {
+		SchemaVersion       string      `json:"schema_version"`
+		BaseFixture         string      `json:"base_fixture"`
+		InsertAfterSequence int         `json:"insert_after_sequence"`
+		Events              []SafeEvent `json:"events"`
+	}
+	overlayPayload, err := os.ReadFile(filepath.Join("..", "..", "fixtures", "workspace", "recovered-fallback-events.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(overlayPayload, &overlay); err != nil {
+		t.Fatal(err)
+	}
+	if overlay.SchemaVersion != "signalforge/workspace-lifecycle-overlay/v1" ||
+		overlay.BaseFixture != "fixtures/workspace/golden-case.json" ||
+		overlay.InsertAfterSequence < 1 || len(overlay.Events) != 2 {
+		t.Fatalf("invalid recovered-fallback overlay: %+v", overlay)
+	}
+	basePayload, err := os.ReadFile(filepath.Join("..", "..", overlay.BaseFixture))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var projection Projection
+	if err := json.Unmarshal(basePayload, &projection); err != nil {
+		t.Fatal(err)
+	}
+	events := make([]SafeEvent, 0, len(projection.Events)+len(overlay.Events))
+	for _, event := range projection.Events {
+		if event.Sequence <= overlay.InsertAfterSequence {
+			events = append(events, event)
+		}
+	}
+	events = append(events, overlay.Events...)
+	for _, event := range projection.Events {
+		if event.Sequence <= overlay.InsertAfterSequence {
+			continue
+		}
+		event.Sequence += len(overlay.Events)
+		events = append(events, event)
+	}
+	projection.Events = events
+	if err := hydrateFixtureExecution(&projection); err != nil {
+		t.Fatal(err)
+	}
+	if projection.ExecutionPlan == nil || projection.ExecutionPlan.Status != executionplan.StatusPassed {
+		t.Fatalf("recovered fallback did not preserve a passed projection: %+v", projection.ExecutionPlan)
+	}
+	var recovered *executionplan.Step
+	for index := range projection.ExecutionPlan.Steps {
+		if projection.ExecutionPlan.Steps[index].StepID == "context-01" {
+			recovered = &projection.ExecutionPlan.Steps[index]
+			break
+		}
+	}
+	if recovered == nil || recovered.Route != "radeon_api_to_local_rocm" ||
+		recovered.Attempt != 2 || recovered.Status != executionplan.StatusPassed {
+		t.Fatalf("fallback route was not recovered safely: %+v", recovered)
+	}
+	payload, err := json.Marshal(projection.ExecutionPlan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, forbidden := range []string{"private prompt", "response body", "authorization"} {
+		if strings.Contains(strings.ToLower(string(payload)), forbidden) {
+			t.Fatalf("recovered projection retained forbidden content: %s", payload)
+		}
+	}
+}
+
 func TestRetentionIsOptInAndSupportsInspectExportDelete(t *testing.T) {
 	store := newFakeCaseStore()
 	server := newFixtureTestServerWithConfig(t, ServerConfig{CaseStore: store})
@@ -263,26 +578,51 @@ func TestRetentionIsOptInAndSupportsInspectExportDelete(t *testing.T) {
 	if unsaved.Retention.Status != "not_requested" || store.saveCount() != 0 {
 		t.Fatalf("unsaved retention = %+v, saves = %d", unsaved.Retention, store.saveCount())
 	}
+	assertRetentionEvents(t, server, unsaved.RunID, []string{"not_requested"})
 
 	saved := postRun(t, httpServer.URL, `{"question":"Saved case","scenario":{},"retain":true}`)
 	saved = waitForRun(t, httpServer.URL, saved)
-	if saved.Status != "completed" || saved.Retention.Status != "saved" || saved.Retention.CaseID == "" || store.saveCount() != 1 {
+	if saved.Status != "completed" || saved.Retention.Status != "saved" || saved.Retention.CaseID == "" ||
+		saved.Execution == nil || store.saveCount() != 1 {
 		t.Fatalf("saved run = %+v, saves = %d", saved, store.saveCount())
 	}
+	assertRetentionEvents(t, server, saved.RunID, []string{"requested", "approved", "saved"})
 
 	list := getRaw(t, httpServer.URL+"/api/v1/cases")
 	if list.StatusCode != http.StatusOK || !strings.Contains(readBody(t, list), saved.Retention.CaseID) {
 		t.Fatal("saved case was not listed")
 	}
 	inspect := getRaw(t, httpServer.URL+"/api/v1/cases/"+saved.Retention.CaseID)
-	if inspect.StatusCode != http.StatusOK || !strings.Contains(readBody(t, inspect), `"case"`) {
-		t.Fatal("saved case was not inspectable")
+	if inspect.StatusCode != http.StatusOK {
+		t.Fatalf("inspect status = %d", inspect.StatusCode)
+	}
+	var inspected struct {
+		Case Projection `json:"case"`
+	}
+	if err := json.NewDecoder(inspect.Body).Decode(&inspected); err != nil {
+		inspect.Body.Close()
+		t.Fatal(err)
+	}
+	inspect.Body.Close()
+	if inspected.Case.ExecutionPlan == nil ||
+		executionplan.Validate(*inspected.Case.ExecutionPlan) != nil {
+		t.Fatal("saved case did not preserve a valid signed execution plan")
 	}
 	exported := getRaw(t, httpServer.URL+"/api/v1/cases/"+saved.Retention.CaseID+"/export")
 	if exported.StatusCode != http.StatusOK || !strings.Contains(exported.Header.Get("Content-Disposition"), saved.Retention.CaseID) {
 		t.Fatalf("export status = %d, disposition = %q", exported.StatusCode, exported.Header.Get("Content-Disposition"))
 	}
+	var export CaseExport
+	if err := json.NewDecoder(exported.Body).Decode(&export); err != nil {
+		exported.Body.Close()
+		t.Fatal(err)
+	}
 	exported.Body.Close()
+	if export.Case.ExecutionPlan == nil ||
+		executionplan.Validate(*export.Case.ExecutionPlan) != nil ||
+		export.Case.ExecutionPlan.ProjectionSHA != inspected.Case.ExecutionPlan.ProjectionSHA {
+		t.Fatal("export did not preserve the saved signed execution plan")
+	}
 
 	request, err := http.NewRequest(http.MethodDelete, httpServer.URL+"/api/v1/cases/"+saved.Retention.CaseID, nil)
 	if err != nil {
@@ -296,6 +636,11 @@ func TestRetentionIsOptInAndSupportsInspectExportDelete(t *testing.T) {
 	if deleted.StatusCode != http.StatusOK {
 		t.Fatalf("delete status = %d", deleted.StatusCode)
 	}
+	deletedRun := getRun(t, httpServer.URL, saved.RunID)
+	if deletedRun.Retention.Status != "deleted" || deletedRun.Execution == nil {
+		t.Fatalf("deleted retention state = %+v", deletedRun)
+	}
+	assertRetentionEvents(t, server, saved.RunID, []string{"requested", "approved", "saved", "deleted"})
 	missing := getRaw(t, httpServer.URL+"/api/v1/cases/"+saved.Retention.CaseID)
 	if missing.StatusCode != http.StatusNotFound {
 		t.Fatalf("missing status = %d", missing.StatusCode)
@@ -317,6 +662,40 @@ func TestRetentionFailureDoesNotInvalidateCompletedResearch(t *testing.T) {
 	}
 	if run.Retention.Status != "failed" || run.Retention.ErrorCode != "case_save_failed" {
 		t.Fatalf("retention = %+v", run.Retention)
+	}
+	assertRetentionEvents(t, server, run.RunID, []string{"requested", "approved", "failed"})
+}
+
+func TestRequestedRetentionIsExplicitlyUnavailableWithoutCaseStore(t *testing.T) {
+	server := newFixtureTestServer(t)
+	httpServer := httptest.NewServer(server.Handler())
+	t.Cleanup(httpServer.Close)
+
+	run := postRun(t, httpServer.URL, `{"question":"Keep if available","scenario":{},"retain":true}`)
+	run = waitForRun(t, httpServer.URL, run)
+	if run.Status != "completed" || run.Result == nil || run.Retention.Status != "unavailable" ||
+		run.Retention.ErrorCode != "case_store_unavailable" {
+		t.Fatalf("unavailable retention invalidated or obscured the run: %+v", run)
+	}
+	assertRetentionEvents(t, server, run.RunID, []string{"requested", "unavailable"})
+}
+
+func assertRetentionEvents(t *testing.T, server *Server, runID string, expected []string) {
+	t.Helper()
+	record, ok := server.record(runID)
+	if !ok {
+		t.Fatalf("run %q not found", runID)
+	}
+	server.mu.RLock()
+	var actual []string
+	for _, event := range record.events {
+		if event.Type == "retention" {
+			actual = append(actual, event.Status)
+		}
+	}
+	server.mu.RUnlock()
+	if strings.Join(actual, ",") != strings.Join(expected, ",") {
+		t.Fatalf("retention events = %v, expected %v", actual, expected)
 	}
 }
 
@@ -385,6 +764,9 @@ func TestIntelligenceInspectorSeparatesMetadataAndProtectedBodies(t *testing.T) 
 	httpServer := httptest.NewServer(server.Handler())
 	t.Cleanup(httpServer.Close)
 	run := waitForRun(t, httpServer.URL, postRun(t, httpServer.URL, `{"question":"Compare Microsoft and NVIDIA.","scenario":{}}`))
+	if run.TraceID != telemetry.TraceIDForRun(run.RunID) {
+		t.Fatalf("workspace trace ID = %q, want canonical identity", run.TraceID)
+	}
 
 	metadata := getRaw(t, httpServer.URL+"/api/v1/runs/"+run.RunID+"/intelligence")
 	if metadata.StatusCode != http.StatusOK {
@@ -394,6 +776,14 @@ func TestIntelligenceInspectorSeparatesMetadataAndProtectedBodies(t *testing.T) 
 	if !strings.Contains(metadataBody, `"engine_calls"`) || !strings.Contains(metadataBody, `"retrievals"`) ||
 		strings.Contains(metadataBody, `"question"`) {
 		t.Fatalf("unexpected metadata body: %s", metadataBody)
+	}
+	var metadataRecord intelligenceaudit.Record
+	if err := json.Unmarshal([]byte(metadataBody), &metadataRecord); err != nil {
+		t.Fatal(err)
+	}
+	if metadataRecord.RunID != run.RunID || metadataRecord.TraceID != run.TraceID {
+		t.Fatalf("workspace/mission-control identity mismatch: run=%q/%q trace=%q/%q",
+			run.RunID, metadataRecord.RunID, run.TraceID, metadataRecord.TraceID)
 	}
 
 	denied := getRaw(t, httpServer.URL+"/api/v1/runs/"+run.RunID+"/intelligence/protected")
@@ -441,6 +831,10 @@ func TestGoldenFixtureHasImmediateIntelligenceLineage(t *testing.T) {
 		len(record.Engines) != len(server.fixture.Calculations) {
 		t.Fatalf("record = %+v", record)
 	}
+	if record.RunID != server.fixture.RunID ||
+		record.TraceID != telemetry.TraceIDForRun(server.fixture.RunID) {
+		t.Fatalf("fixture lineage identity = run %q trace %q", record.RunID, record.TraceID)
+	}
 }
 
 func newFixtureTestServer(t *testing.T) *Server {
@@ -453,6 +847,7 @@ func newFixtureTestServerWithConfig(t *testing.T, overrides ServerConfig) *Serve
 	config := overrides
 	config.Mode = ModeFixture
 	config.FixturePath = filepath.Join("..", "..", "fixtures", "workspace", "golden-case.json")
+	config.CatalogPath = filepath.Join("..", "..", "fixtures", "productscope", "technology20-catalog.json")
 	config.EventDelay = time.Millisecond
 	server, err := NewServer(config)
 	if err != nil {
@@ -536,5 +931,75 @@ func assertJSONField(t *testing.T, body []byte, key string, expected any) {
 	}
 	if value[key] != expected {
 		t.Fatalf("%s = %#v, expected %#v", key, value[key], expected)
+	}
+}
+
+func TestSafeStreamAttributesKeepsReceiptMetadataAndDropsBodies(t *testing.T) {
+	safe := safeStreamAttributes(map[string]string{
+		"packet_id":                "packet-1",
+		"evidence_count":           "4",
+		"source_classes":           "sec_filing+investor_relations",
+		"formula_version":          "fcf/v2",
+		"input_ref_ids":            "operating-cash-flow+capex",
+		"receipt_id":               "receipt-1",
+		"receipt_sha256":           strings.Repeat("a", 64),
+		"output_ref_ids":           "free-cash-flow",
+		"retrieval_id":             "retrieval-1",
+		"bundle_id":                "bundle-1",
+		"retrieval_method":         "bm25/v1",
+		"candidate_count":          "8",
+		"selected_candidate_count": "4",
+		"rejected_candidate_count": "4",
+		"candidate_count_state":    "available",
+		"tool_execution_id":        "calc-1",
+		"primary_intent":           "company_comparison",
+		"entity_count":             "2",
+		"entity_ids":               "company-msft+company-nvda",
+		"role_count":               "9",
+		"completion_conditions":    "review_approved+single_final_answer",
+		"abstention_conditions":    "missing_primary_evidence+deadline_exceeded",
+		"finding_count":            "3",
+		"counterevidence_count":    "1",
+		"missing_evidence_count":   "2",
+		"evidence_coverage":        "3_of_4",
+		"approved_claim_count":     "3",
+		"rejected_claim_count":     "1",
+		"issue_count":              "2",
+		"repair_pass":              "1",
+		"mandatory_review_count":   "3",
+		"claim_count":              "4",
+		"supported_claim_coverage": "3_of_4",
+		"evidence_ref_count":       "6",
+		"receipt_ref_count":        "2",
+		"limitation_count":         "1",
+		"section_count":            "3",
+		"raw_prompt":               "private",
+		"response_body":            "private",
+		"claim_body":               "private",
+		"answer_body":              "private",
+		"authorization":            "Bearer-secret",
+		"financial_values":         "private",
+	})
+	for _, key := range []string{
+		"packet_id", "evidence_count", "source_classes", "formula_version",
+		"input_ref_ids", "receipt_id", "receipt_sha256", "output_ref_ids",
+		"retrieval_id", "bundle_id", "retrieval_method", "candidate_count",
+		"selected_candidate_count", "rejected_candidate_count", "candidate_count_state",
+		"tool_execution_id",
+		"primary_intent", "entity_count", "entity_ids", "role_count",
+		"completion_conditions", "abstention_conditions",
+		"finding_count", "counterevidence_count", "missing_evidence_count", "evidence_coverage",
+		"approved_claim_count", "rejected_claim_count", "issue_count", "repair_pass",
+		"mandatory_review_count", "claim_count", "supported_claim_coverage",
+		"evidence_ref_count", "receipt_ref_count", "limitation_count", "section_count",
+	} {
+		if safe[key] == "" {
+			t.Fatalf("safe operational attribute %q was dropped: %#v", key, safe)
+		}
+	}
+	for _, key := range []string{"raw_prompt", "response_body", "claim_body", "answer_body", "authorization", "financial_values"} {
+		if _, exists := safe[key]; exists {
+			t.Fatalf("private attribute %q crossed the stream boundary: %#v", key, safe)
+		}
 	}
 }

@@ -7,33 +7,35 @@ import (
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/executionplan"
 	"github.com/rvbernucci/signalforge/internal/golden"
 )
 
 const SchemaVersionV1 = "signalforge/research-workspace/v1"
 
 type Projection struct {
-	SchemaVersion string               `json:"schema_version"`
-	CaseID        string               `json:"case_id"`
-	RunID         string               `json:"run_id"`
-	RequestID     string               `json:"request_id"`
-	Status        string               `json:"status"`
-	Title         string               `json:"title"`
-	Question      string               `json:"question"`
-	AsOf          time.Time            `json:"as_of"`
-	Intent        string               `json:"intent"`
-	Companies     []Company            `json:"companies"`
-	Sections      []Section            `json:"sections"`
-	Evidence      []EvidenceCard       `json:"evidence"`
-	Calculations  []CalculationCard    `json:"calculations"`
-	Assumptions   []string             `json:"assumptions,omitempty"`
-	Limitations   []string             `json:"limitations,omitempty"`
-	NextActions   []string             `json:"next_actions,omitempty"`
-	Warnings      []Warning            `json:"warnings,omitempty"`
-	Events        []SafeEvent          `json:"events"`
-	Execution     Execution            `json:"execution"`
-	Metrics       Metrics              `json:"metrics"`
-	FollowUps     []FollowUpSuggestion `json:"follow_up_suggestions"`
+	SchemaVersion string                    `json:"schema_version"`
+	CaseID        string                    `json:"case_id"`
+	RunID         string                    `json:"run_id"`
+	RequestID     string                    `json:"request_id"`
+	Status        string                    `json:"status"`
+	Title         string                    `json:"title"`
+	Question      string                    `json:"question"`
+	AsOf          time.Time                 `json:"as_of"`
+	Intent        string                    `json:"intent"`
+	Companies     []Company                 `json:"companies"`
+	Sections      []Section                 `json:"sections"`
+	Evidence      []EvidenceCard            `json:"evidence"`
+	Calculations  []CalculationCard         `json:"calculations"`
+	Assumptions   []string                  `json:"assumptions,omitempty"`
+	Limitations   []string                  `json:"limitations,omitempty"`
+	NextActions   []string                  `json:"next_actions,omitempty"`
+	Warnings      []Warning                 `json:"warnings,omitempty"`
+	Events        []SafeEvent               `json:"events"`
+	ExecutionPlan *executionplan.Projection `json:"execution_plan,omitempty"`
+	Execution     Execution                 `json:"execution"`
+	Metrics       Metrics                   `json:"metrics"`
+	FollowUps     []FollowUpSuggestion      `json:"follow_up_suggestions"`
 }
 
 type Company struct {
@@ -191,6 +193,15 @@ func Validate(projection Projection) error {
 	}
 	if !projection.Execution.LocalOnly || projection.Execution.EndpointScope != "loopback_only" {
 		return errors.New("research workspace must preserve local-only execution identity")
+	}
+	if projection.ExecutionPlan != nil {
+		if err := executionplan.Validate(*projection.ExecutionPlan); err != nil {
+			return errors.New("research workspace execution plan is invalid")
+		}
+		if projection.ExecutionPlan.RunID != projection.RunID ||
+			projection.ExecutionPlan.RequestID != projection.RequestID {
+			return errors.New("research workspace execution plan identity mismatch")
+		}
 	}
 	evidence := map[string]bool{}
 	for _, item := range projection.Evidence {

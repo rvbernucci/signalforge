@@ -33,6 +33,7 @@ type Request struct {
 	ToolChoice         any            `json:"tool_choice,omitempty"`
 	ResponseFormat     map[string]any `json:"response_format,omitempty"`
 	ChatTemplateKwargs map[string]any `json:"chat_template_kwargs,omitempty"`
+	Thinking           map[string]any `json:"thinking,omitempty"`
 }
 
 type Usage struct {

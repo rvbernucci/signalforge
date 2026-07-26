@@ -30,6 +30,13 @@ type LexicalIndex struct {
 	b             float64
 }
 
+type SearchStats struct {
+	EligibleCandidates int
+	MatchedCandidates  int
+	SelectedCandidates int
+	RejectedCandidates int
+}
+
 func NewLexicalIndex(chunks []Chunk) (*LexicalIndex, error) {
 	if len(chunks) == 0 {
 		return nil, errors.New("at least one chunk is required")
@@ -59,15 +66,24 @@ func NewLexicalIndex(chunks []Chunk) (*LexicalIndex, error) {
 }
 
 func (index *LexicalIndex) Search(query Query) ([]Hit, error) {
+	hits, _, err := index.SearchWithStats(query)
+	return hits, err
+}
+
+// SearchWithStats exposes bounded ranking telemetry without exposing query or document bodies.
+// RejectedCandidates counts matched, eligible candidates that were not selected by TopK.
+func (index *LexicalIndex) SearchWithStats(query Query) ([]Hit, SearchStats, error) {
 	if err := ValidateQuery(query); err != nil {
-		return nil, err
+		return nil, SearchStats{}, err
 	}
 	terms := expandedQueryTerms(query.Text)
 	hits := make([]Hit, 0, len(index.chunks))
+	stats := SearchStats{}
 	for position, chunk := range index.chunks {
 		if !eligible(chunk, query) {
 			continue
 		}
+		stats.EligibleCandidates++
 		score := 0.0
 		for _, term := range terms {
 			tf := index.frequencies[position][term]
@@ -84,13 +100,16 @@ func (index *LexicalIndex) Search(query Query) ([]Hit, error) {
 		}
 	}
 	sortHits(hits)
+	stats.MatchedCandidates = len(hits)
 	if len(hits) > query.TopK {
 		hits = hits[:query.TopK]
 	}
+	stats.SelectedCandidates = len(hits)
+	stats.RejectedCandidates = stats.MatchedCandidates - stats.SelectedCandidates
 	for index := range hits {
 		hits[index].Rank = index + 1
 	}
-	return hits, nil
+	return hits, stats, nil
 }
 
 func expandedQueryTerms(text string) []string {

@@ -70,7 +70,7 @@ metrics="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/metrics)"
 grep -q '^signalforge_journeys_total' <<<"$metrics"
 
 if grep -R -E 'FIREWORKS_API_KEY|hf_[A-Za-z0-9]{20,}|Bearer [A-Za-z0-9_-]{20,}' \
-  Dockerfile compose.yaml deploy .env.container.example; then
+  Dockerfile compose.yaml deploy container.env.example; then
   echo "Potential credential embedded in container configuration" >&2
   exit 1
 fi

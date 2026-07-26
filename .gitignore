@@ -80,6 +80,7 @@ extracted/
 # Go build output
 bin/
 vendor/
+.artifacts/
 .tmp-bin/
 .tmp-sprint11/
 tmp/

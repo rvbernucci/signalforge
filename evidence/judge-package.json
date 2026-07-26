@@ -25,7 +25,7 @@
     },
     "demo_script": {
       "path": "docs/demo-script.md",
-      "sha256": "7f94a5d8d3ef9738d426814cedcb700dc7b2deb5de9fce44140be6dcc024ffc2",
+      "sha256": "f300af179f772014b8d8a70b2772674cdf404469f4b041aba434c1b6a4cfccf8",
       "final_duration_seconds": 252.9,
       "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/demo-script.md"
     },

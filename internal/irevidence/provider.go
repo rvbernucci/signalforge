@@ -113,6 +113,7 @@ func (provider *Provider) Load(ctx context.Context, request contracts.ContextReq
 	items := make([]contracts.EvidenceItem, 0, perCompany*len(request.Scope.CompanyIDs))
 	missing := make([]string, 0)
 	seen := make(map[string]bool)
+	retrievalStats := retrieval.SearchStats{}
 	for _, companyID := range request.Scope.CompanyIDs {
 		if _, ok := provider.rights[companyID]; !ok {
 			return localagent.Material{}, fmt.Errorf("company %q is outside the IR registry", companyID)
@@ -122,13 +123,17 @@ func (provider *Provider) Load(ctx context.Context, request contracts.ContextReq
 			missing = append(missing, "No eligible official investor-relations evidence was collected for "+companyID+".")
 			continue
 		}
-		hits, err := provider.index.Search(retrieval.Query{
+		hits, stats, err := provider.index.SearchWithStats(retrieval.Query{
 			Text: request.ResearchQuestion + " " + request.Objective + " " + retrievalProfile(request.SpecialistRole),
 			AsOf: request.Scope.AsOf, CompanyIDs: []string{companyID}, DocumentTypes: documentTypes, TopK: perCompany,
 		})
 		if err != nil {
 			return localagent.Material{}, err
 		}
+		retrievalStats.EligibleCandidates += stats.EligibleCandidates
+		retrievalStats.MatchedCandidates += stats.MatchedCandidates
+		retrievalStats.SelectedCandidates += stats.SelectedCandidates
+		retrievalStats.RejectedCandidates += stats.RejectedCandidates
 		if len(hits) == 0 {
 			missing = append(missing, "No point-in-time official investor-relations evidence matched "+companyID+".")
 			continue
@@ -180,7 +185,16 @@ func (provider *Provider) Load(ctx context.Context, request contracts.ContextReq
 	if err := contracts.ValidateEvidenceBundle(bundle); err != nil {
 		return localagent.Material{}, err
 	}
-	return localagent.Material{Evidence: bundle}, nil
+	return localagent.Material{
+		Evidence: bundle,
+		Retrieval: localagent.RetrievalTrace{
+			Method:                 "bm25/v1",
+			CandidateCount:         retrievalStats.MatchedCandidates,
+			SelectedCandidateCount: retrievalStats.SelectedCandidates,
+			RejectedCandidateCount: retrievalStats.RejectedCandidates,
+			CandidateCountsKnown:   true,
+		},
+	}, nil
 }
 
 func documentTypesForRole(roleID string) []string {

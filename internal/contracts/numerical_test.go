@@ -36,6 +36,14 @@ func TestNumericalContextRejectsFutureLeakageAndDuplicateIDs(t *testing.T) {
 	}
 }
 
+func TestNumericalContextRejectsCrossKindIdentifierCollision(t *testing.T) {
+	context := numericalFixture()
+	context.Relations[0].RelationID = context.Variables[0].VariableID
+	if err := ValidateNumericalContext(context); err == nil || !strings.Contains(err.Error(), "collides with a variable") {
+		t.Fatalf("expected cross-kind identifier collision, got %v", err)
+	}
+}
+
 func TestNumericalContextRejectsUnknownAndIncompatibleReferences(t *testing.T) {
 	context := numericalFixture()
 	context.Relations[0].RightVariableID = "unknown"

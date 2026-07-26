@@ -25,24 +25,27 @@ type ComparisonScope struct {
 }
 
 type ResearchRequest struct {
-	SchemaVersion       string          `json:"schema_version"`
-	RequestID           string          `json:"request_id"`
-	RunID               string          `json:"run_id"`
-	ParentRequestID     string          `json:"parent_request_id,omitempty"`
-	LineageEvidenceRefs []string        `json:"lineage_evidence_refs,omitempty"`
-	LineageReceiptRefs  []string        `json:"lineage_receipt_refs,omitempty"`
-	UserText            string          `json:"user_text"`
-	PrimaryIntent       string          `json:"primary_intent"`
-	SecondaryIntents    []string        `json:"secondary_intents,omitempty"`
-	Entities            []EntityRef     `json:"entities,omitempty"`
-	Period              PeriodScope     `json:"period"`
-	AsOf                time.Time       `json:"as_of"`
-	Comparison          ComparisonScope `json:"comparison"`
-	AnswerDepth         string          `json:"answer_depth"`
-	RequestedOutputs    []string        `json:"requested_outputs"`
-	Assumptions         []string        `json:"assumptions,omitempty"`
-	Ambiguities         []string        `json:"ambiguities,omitempty"`
-	RiskFlags           []string        `json:"risk_flags,omitempty"`
+	SchemaVersion        string          `json:"schema_version"`
+	RequestID            string          `json:"request_id"`
+	RunID                string          `json:"run_id"`
+	ParentRequestID      string          `json:"parent_request_id,omitempty"`
+	LineageEvidenceRefs  []string        `json:"lineage_evidence_refs,omitempty"`
+	LineageReceiptRefs   []string        `json:"lineage_receipt_refs,omitempty"`
+	UserText             string          `json:"user_text"`
+	PrimaryIntent        string          `json:"primary_intent"`
+	SecondaryIntents     []string        `json:"secondary_intents,omitempty"`
+	Entities             []EntityRef     `json:"entities,omitempty"`
+	Period               PeriodScope     `json:"period"`
+	AsOf                 time.Time       `json:"as_of"`
+	Comparison           ComparisonScope `json:"comparison"`
+	AnswerDepth          string          `json:"answer_depth"`
+	RequestedOutputs     []string        `json:"requested_outputs"`
+	Assumptions          []string        `json:"assumptions,omitempty"`
+	Ambiguities          []string        `json:"ambiguities,omitempty"`
+	RiskFlags            []string        `json:"risk_flags,omitempty"`
+	AuthorityState       string          `json:"authority_state,omitempty"`
+	AuthorityRefs        []string        `json:"authority_refs,omitempty"`
+	AuthorityReasonCodes []string        `json:"authority_reason_codes,omitempty"`
 }
 
 type PlanStep struct {
@@ -73,19 +76,22 @@ type ResearchPlan struct {
 }
 
 type ContextRequest struct {
-	SchemaVersion    string   `json:"schema_version"`
-	ContextRequestID string   `json:"context_request_id"`
-	RunID            string   `json:"run_id"`
-	StepID           string   `json:"step_id"`
-	SpecialistRole   string   `json:"specialist_role"`
-	Objective        string   `json:"objective"`
-	ResearchQuestion string   `json:"research_question"`
-	Scope            Scope    `json:"scope"`
-	CapabilityIDs    []string `json:"capability_ids,omitempty"`
-	EvidenceRefs     []string `json:"evidence_refs,omitempty"`
-	ReceiptRefs      []string `json:"receipt_refs,omitempty"`
-	Assumptions      []string `json:"assumptions,omitempty"`
-	TokenBudget      int      `json:"token_budget"`
+	SchemaVersion        string   `json:"schema_version"`
+	ContextRequestID     string   `json:"context_request_id"`
+	RunID                string   `json:"run_id"`
+	StepID               string   `json:"step_id"`
+	SpecialistRole       string   `json:"specialist_role"`
+	Objective            string   `json:"objective"`
+	ResearchQuestion     string   `json:"research_question"`
+	Scope                Scope    `json:"scope"`
+	CapabilityIDs        []string `json:"capability_ids,omitempty"`
+	EvidenceRefs         []string `json:"evidence_refs,omitempty"`
+	ReceiptRefs          []string `json:"receipt_refs,omitempty"`
+	Assumptions          []string `json:"assumptions,omitempty"`
+	AuthorityState       string   `json:"authority_state,omitempty"`
+	AuthorityRefs        []string `json:"authority_refs,omitempty"`
+	AuthorityReasonCodes []string `json:"authority_reason_codes,omitempty"`
+	TokenBudget          int      `json:"token_budget"`
 }
 
 type EvidenceState string

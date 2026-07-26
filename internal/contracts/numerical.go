@@ -126,6 +126,9 @@ func ValidateNumericalContext(context NumericalContext) error {
 		if relations[relation.RelationID] {
 			return fmt.Errorf("relations[%d] duplicates %q", index, relation.RelationID)
 		}
+		if _, collides := variables[relation.RelationID]; collides {
+			return fmt.Errorf("relations[%d] identifier %q collides with a variable", index, relation.RelationID)
+		}
 		relations[relation.RelationID] = true
 		if err := validateNumericalRelation(relation, variables); err != nil {
 			return fmt.Errorf("relations[%d]: %w", index, err)

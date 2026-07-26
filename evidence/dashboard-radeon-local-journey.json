@@ -1,0 +1,91 @@
+{
+  "completed_at": "2026-07-26T00:17:48.927654034Z",
+  "execution_plan": {
+    "max_parallel_specialists": 4,
+    "phases": [
+      {
+        "phase_id": "interpretation",
+        "status": "passed"
+      },
+      {
+        "phase_id": "planning",
+        "status": "passed"
+      },
+      {
+        "phase_id": "context",
+        "status": "passed"
+      },
+      {
+        "phase_id": "tools",
+        "status": "passed"
+      },
+      {
+        "phase_id": "review",
+        "status": "degraded"
+      },
+      {
+        "phase_id": "synthesis",
+        "status": "passed"
+      },
+      {
+        "phase_id": "memory",
+        "status": "skipped"
+      },
+      {
+        "phase_id": "release",
+        "status": "passed"
+      }
+    ],
+    "plan_id": "plan-request-019f9bc5-eca5-7c99-b510-b8c469373b54",
+    "progress_ratio": 1,
+    "projection_sha256": "e88b2a14899aa891d83974183c8ca427306c01c758ab8d71a5cb1d7722561234",
+    "route_summary": [
+      "local_rocm"
+    ],
+    "schema_version": "signalforge/execution-plan/v1",
+    "status": "passed",
+    "terminal_steps": 12,
+    "total_steps": 12
+  },
+  "intelligence": {
+    "capture_status": "disabled",
+    "context_packets": 6,
+    "engine_receipts": 18,
+    "input_tokens": 102395,
+    "model_calls": 12,
+    "output_tokens": 12206,
+    "providers": [
+      "local-rocm"
+    ],
+    "release_status": "released",
+    "reviews": 5,
+    "roles": [
+      "accounting-reporting/v1",
+      "business-strategy/v1",
+      "economics-transmission/v1",
+      "evidence-critic/v1",
+      "final-research-analyst/v1",
+      "financial-quality/v1",
+      "market-behavior/v1",
+      "risk-contrarian/v1",
+      "valuation/v1"
+    ],
+    "routes": [
+      "local_rocm"
+    ],
+    "schema_version": "signalforge/intelligence-lineage/v1"
+  },
+  "mode": "local_only",
+  "privacy": {
+    "credentials_retained": false,
+    "prompt_bodies_retained": false,
+    "response_bodies_retained": false,
+    "source_bodies_retained": false
+  },
+  "run_id": "run-019f9bc5-eca5-7c99-b510-b8c469373b54",
+  "schema_version": "signalforge/dashboard-radeon-journey/v1",
+  "source_trace_sha256": "fa55ed753d0fd293aed79d37f220350f13b190834977e1f4b1a69414d2711f3a",
+  "started_at": "2026-07-26T00:14:27.493706713Z",
+  "status": "completed",
+  "trace_id": "df40f73c20b1d90153263320b2bfc5e1"
+}

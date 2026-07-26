@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -59,6 +60,55 @@ type Specialist interface {
 	Run(context.Context, contracts.ContextRequest) (contracts.ContextPacket, error)
 }
 
+type RetrievalLifecycle struct {
+	RetrievalID            string
+	BundleID               string
+	Method                 string
+	EvidenceCount          int
+	SourceClasses          []string
+	AsOf                   time.Time
+	MissingEvidenceCount   int
+	CandidateCount         int
+	SelectedCandidateCount int
+	RejectedCandidateCount int
+	CandidateCountsKnown   bool
+	FailureCode            string
+}
+
+type ToolLifecycle struct {
+	ToolExecutionID  string
+	ReceiptID        string
+	ReceiptSHA       string
+	EngineID         string
+	OperationID      string
+	FormulaVersion   string
+	InputRefIDs      []string
+	OutputRefIDs     []string
+	InputCount       int
+	OutputCount      int
+	InvariantCount   int
+	InvariantsPassed bool
+	WarningCount     int
+	FailureCode      string
+}
+
+// SpecialistLifecycleObserver receives only bounded operational metadata. It cannot receive
+// prompts, model responses, evidence bodies, numerical values, or authorization material.
+type SpecialistLifecycleObserver interface {
+	RetrievalStarted(RetrievalLifecycle)
+	RetrievalPassed(RetrievalLifecycle)
+	RetrievalDegraded(RetrievalLifecycle)
+	RetrievalFailed(RetrievalLifecycle)
+	ToolStarted(ToolLifecycle)
+	ToolPassed(ToolLifecycle)
+	ToolFailed(ToolLifecycle)
+}
+
+// ObservedSpecialist is optional so existing specialist implementations remain compatible.
+type ObservedSpecialist interface {
+	RunObserved(context.Context, contracts.ContextRequest, SpecialistLifecycleObserver) (contracts.ContextPacket, error)
+}
+
 type Reviewer interface {
 	Review(context.Context, ReviewInput) (contracts.CritiqueReport, error)
 }
@@ -69,6 +119,12 @@ type Synthesizer interface {
 
 type EventSink interface {
 	Emit(Event)
+}
+
+// PlanSink lets an observability adapter project the validated plan without
+// making the execution dashboard part of the orchestration authority.
+type PlanSink interface {
+	AcceptPlan(contracts.ResearchPlan, time.Time)
 }
 
 type Dependencies struct {
@@ -118,9 +174,18 @@ func (runtime *Runtime) Run(parent context.Context, request contracts.ResearchRe
 	}
 	plan, err := runtime.Planner.Build(request)
 	if err != nil {
+		if errors.Is(err, planner.ErrClarificationRequired) {
+			emitter.emit("interpret-request", "interpretation", "clarification_required", interpretationAttributes(request))
+			return runtime.fail(&trace, emitter, request.RunID, "interpret-request", "clarification_required", err, false)
+		}
 		return runtime.fail(&trace, emitter, request.RunID, "planning", classify(err), err, false)
 	}
 	trace.PlanID = plan.PlanID
+	if sink, ok := runtime.Deps.Sink.(PlanSink); ok {
+		acceptPlanSafely(sink, plan, runtime.Now())
+	}
+	emitter.emit("interpret-request", "interpretation", "completed", interpretationAttributes(request))
+	emitter.emit("build-plan", "planning", "completed", planningAttributes(plan))
 	emitter.emit("", "plan", "accepted", map[string]string{"plan_id": plan.PlanID})
 	ctx, cancel := context.WithTimeout(parent, time.Duration(plan.DeadlineMS)*time.Millisecond)
 	defer cancel()
@@ -168,7 +233,9 @@ func (runtime *Runtime) Run(parent context.Context, request contracts.ResearchRe
 		return attachPartial(runtime.fail(&trace, emitter, request.RunID, synthesisStep.StepID, classify(err), err, retryable(err)), packets, critiques, failures)
 	}
 	trace.AnswerID = answer.AnswerID
-	emitter.emit(synthesisStep.StepID, "run", "completed", map[string]string{"answer_id": answer.AnswerID})
+	releaseAttributes := releaseOperationalAttributes(answer, approvedCritiques)
+	emitter.emit(synthesisStep.StepID, "synthesis", "passed", releaseAttributes)
+	emitter.emit(synthesisStep.StepID, "run", "completed", releaseAttributes)
 	trace.CompletedAt = runtime.Now()
 	if err := runtime.Deps.TraceStore.Save(trace); err != nil {
 		return attachPartial(runtime.fail(&trace, emitter, request.RunID, "trace", "trace_persistence_failed", err, false), packets, critiques, failures)
@@ -247,14 +314,25 @@ func (runtime *Runtime) runContextWave(ctx context.Context, request contracts.Re
 				}
 				emitter.emit(step.StepID, "context", "started", routeAttributes(step))
 				contextRequest := contextRequest(request, step)
-				packet, err := runtime.callSpecialist(ctx, contextRequest, step)
+				lifecycle := specialistLifecycleEventAdapter{emitter: emitter, stepID: step.StepID}
+				_, observed := runtime.Deps.Specialist.(ObservedSpecialist)
+				packet, err := runtime.callSpecialist(ctx, contextRequest, step, lifecycle)
 				if err != nil {
 					outcomes <- outcome{index: index, failure: failure(contextRequest.RunID, step.StepID, classify(err), err, retryable(err), runtime.Now())}
 					emitter.emit(step.StepID, "context", "failed", map[string]string{"code": classify(err)})
 					return
 				}
+				packetAttributes := packetOperationalAttributes(packet)
+				if !observed {
+					// A legacy specialist exposes only its validated packet boundary. Do not
+					// manufacture starts or failures that its adapter did not observe.
+					emitter.emit(step.StepID, "retrieval", "completed", packetAttributes)
+					for _, receipt := range packet.CalculationReceipts {
+						emitter.emit(step.StepID, "tool", "completed", calculationReceiptAttributes(receipt))
+					}
+				}
 				outcomes <- outcome{index: index, packet: packet}
-				emitter.emit(step.StepID, "context", "completed", map[string]string{"packet_id": packet.PacketID})
+				emitter.emit(step.StepID, "context", "completed", packetAttributes)
 			}(index, step)
 		}
 		if end-start > maximum {
@@ -284,14 +362,215 @@ func (runtime *Runtime) runContextWave(ctx context.Context, request contracts.Re
 	return packets, failures, maximum
 }
 
-func (runtime *Runtime) callSpecialist(parent context.Context, request contracts.ContextRequest, step contracts.PlanStep) (contracts.ContextPacket, error) {
+func sourceClasses(evidence []contracts.EvidenceRef) string {
+	seen := map[string]bool{}
+	for _, item := range evidence {
+		value := strings.TrimSpace(item.SourceType)
+		if value != "" {
+			seen[value] = true
+		}
+	}
+	result := make([]string, 0, len(seen))
+	for value := range seen {
+		result = append(result, value)
+	}
+	sort.Strings(result)
+	return strings.Join(result, "+")
+}
+
+func packetOperationalAttributes(packet contracts.ContextPacket) map[string]string {
+	totalClaims := len(packet.Findings) + len(packet.Counterevidence)
+	supportedClaims := 0
+	findings := append(append([]contracts.Finding(nil), packet.Findings...), packet.Counterevidence...)
+	for _, finding := range findings {
+		if len(finding.EvidenceRefs) > 0 {
+			supportedClaims++
+		}
+	}
+	return map[string]string{
+		"packet_id":              packet.PacketID,
+		"evidence_count":         fmt.Sprintf("%d", len(packet.Evidence)),
+		"source_classes":         sourceClasses(packet.Evidence),
+		"as_of":                  packet.Scope.AsOf.UTC().Format(time.DateOnly),
+		"finding_count":          fmt.Sprintf("%d", len(packet.Findings)),
+		"counterevidence_count":  fmt.Sprintf("%d", len(packet.Counterevidence)),
+		"missing_evidence_count": fmt.Sprintf("%d", len(packet.MissingEvidence)),
+		"conflict_count":         fmt.Sprintf("%d", len(packet.Conflicts)),
+		"uncertainty_count":      fmt.Sprintf("%d", len(packet.Uncertainties)),
+		"evidence_coverage":      fmt.Sprintf("%d_of_%d", supportedClaims, totalClaims),
+		"authority_state":        packet.AuthorityState,
+	}
+}
+
+func interpretationAttributes(request contracts.ResearchRequest) map[string]string {
+	entityIDs := make([]string, 0, len(request.Entities))
+	for _, entity := range request.Entities {
+		if entity.Resolved && strings.TrimSpace(entity.EntityID) != "" {
+			entityIDs = append(entityIDs, entity.EntityID)
+		}
+	}
+	sort.Strings(entityIDs)
+	return map[string]string{
+		"primary_intent":         request.PrimaryIntent,
+		"entity_count":           fmt.Sprintf("%d", len(entityIDs)),
+		"entity_ids":             strings.Join(entityIDs, "+"),
+		"as_of":                  request.AsOf.UTC().Format("2006-01-02"),
+		"answer_depth":           request.AnswerDepth,
+		"ambiguity_count":        fmt.Sprintf("%d", len(request.Ambiguities)),
+		"requested_output_count": fmt.Sprintf("%d", len(request.RequestedOutputs)),
+	}
+}
+
+func planningAttributes(plan contracts.ResearchPlan) map[string]string {
+	rolesSeen := map[string]bool{}
+	maximumWave := 0
+	for _, step := range plan.Steps {
+		if step.RoleID != "" {
+			rolesSeen[step.RoleID] = true
+		}
+		if step.Wave > maximumWave {
+			maximumWave = step.Wave
+		}
+	}
+	return map[string]string{
+		"role_count":                 fmt.Sprintf("%d", len(rolesSeen)),
+		"wave_count":                 fmt.Sprintf("%d", maximumWave),
+		"max_parallel_specialists":   fmt.Sprintf("%d", plan.MaxParallelSpecialists),
+		"max_repair_passes":          fmt.Sprintf("%d", plan.MaxRepairPasses),
+		"deadline_ms":                fmt.Sprintf("%d", plan.DeadlineMS),
+		"completion_condition_count": fmt.Sprintf("%d", len(plan.CompletionConditions)),
+		"abstention_condition_count": fmt.Sprintf("%d", len(plan.AbstentionConditions)),
+		"completion_conditions":      strings.Join(plan.CompletionConditions, "+"),
+		"abstention_conditions":      strings.Join(plan.AbstentionConditions, "+"),
+	}
+}
+
+func invariantsPassed(results []contracts.InvariantResult) bool {
+	for _, result := range results {
+		if !result.Passed {
+			return false
+		}
+	}
+	return true
+}
+
+func receiptInputIDs(receipt contracts.CalculationReceipt) string {
+	values := make([]string, 0, len(receipt.NormalizedInputs))
+	for _, input := range receipt.NormalizedInputs {
+		values = append(values, input.InputID)
+	}
+	return boundedSafeIDs(values)
+}
+
+func receiptOutputIDs(receipt contracts.CalculationReceipt) string {
+	values := make([]string, 0, len(receipt.Outputs))
+	for _, output := range receipt.Outputs {
+		values = append(values, output.OutputID)
+	}
+	return boundedSafeIDs(values)
+}
+
+func calculationReceiptAttributes(receipt contracts.CalculationReceipt) map[string]string {
+	return map[string]string{
+		"tool_execution_id": receipt.RequestID,
+		"engine_id":         receipt.EngineID,
+		"formula_version":   receipt.FormulaVersion,
+		"input_count":       fmt.Sprintf("%d", len(receipt.NormalizedInputs)),
+		"input_ref_ids":     receiptInputIDs(receipt),
+		"invariant_count":   fmt.Sprintf("%d", len(receipt.InvariantResults)),
+		"invariants_passed": fmt.Sprintf("%t", invariantsPassed(receipt.InvariantResults)),
+		"operation_id":      receipt.OperationID,
+		"output_count":      fmt.Sprintf("%d", len(receipt.Outputs)),
+		"output_ref_ids":    receiptOutputIDs(receipt),
+		"receipt_id":        receipt.ReceiptID,
+		"receipt_sha256":    receipt.ReceiptSHA,
+		"warning_count":     fmt.Sprintf("%d", len(receipt.Warnings)),
+	}
+}
+
+func boundedSafeIDs(values []string) string {
+	const maximumIDs = 12
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		result = append(result, value)
+		if len(result) == maximumIDs {
+			break
+		}
+	}
+	sort.Strings(result)
+	return strings.Join(result, "+")
+}
+
+func reviewOperationalAttributes(report contracts.CritiqueReport) map[string]string {
+	return map[string]string{
+		"report_id":            report.ReportID,
+		"approved_claim_count": fmt.Sprintf("%d", len(report.ApprovedClaims)),
+		"rejected_claim_count": fmt.Sprintf("%d", len(report.RejectedClaims)),
+		"issue_count":          fmt.Sprintf("%d", len(report.Issues)),
+		"repair_pass":          fmt.Sprintf("%d", report.RepairPass),
+	}
+}
+
+func releaseOperationalAttributes(answer contracts.FinalAnswer, critiques []contracts.CritiqueReport) map[string]string {
+	answerClaims := map[string]bool{}
+	evidenceRefs := map[string]bool{}
+	receiptRefs := map[string]bool{}
+	for _, section := range answer.Sections {
+		for _, claimID := range section.ClaimRefs {
+			answerClaims[claimID] = true
+		}
+		for _, evidenceID := range section.EvidenceRefs {
+			evidenceRefs[evidenceID] = true
+		}
+		for _, receiptID := range section.ReceiptRefs {
+			receiptRefs[receiptID] = true
+		}
+	}
+	approved := map[string]bool{}
+	for _, critique := range critiques {
+		for _, claimID := range critique.ApprovedClaims {
+			approved[claimID] = true
+		}
+	}
+	supported := 0
+	for claimID := range answerClaims {
+		if approved[claimID] {
+			supported++
+		}
+	}
+	return map[string]string{
+		"answer_id":                answer.AnswerID,
+		"mandatory_review_count":   fmt.Sprintf("%d", len(critiques)),
+		"claim_count":              fmt.Sprintf("%d", len(answerClaims)),
+		"supported_claim_coverage": fmt.Sprintf("%d_of_%d", supported, len(answerClaims)),
+		"evidence_ref_count":       fmt.Sprintf("%d", len(evidenceRefs)),
+		"receipt_ref_count":        fmt.Sprintf("%d", len(receiptRefs)),
+		"limitation_count":         fmt.Sprintf("%d", len(answer.Limitations)),
+		"section_count":            fmt.Sprintf("%d", len(answer.Sections)),
+	}
+}
+
+func (runtime *Runtime) callSpecialist(parent context.Context, request contracts.ContextRequest, step contracts.PlanStep, lifecycle SpecialistLifecycleObserver) (contracts.ContextPacket, error) {
 	role, _ := runtime.Roles.Get(step.RoleID)
 	var last error
 	for attempt := 0; attempt <= role.MaxRetries; attempt++ {
 		ctx, cancel := context.WithTimeout(parent, time.Duration(step.TimeoutMS)*time.Millisecond)
-		packet, err := runtime.Deps.Specialist.Run(ctx, request)
+		var packet contracts.ContextPacket
+		var err error
+		if observed, ok := runtime.Deps.Specialist.(ObservedSpecialist); ok {
+			packet, err = observed.RunObserved(ctx, request, lifecycle)
+		} else {
+			packet, err = runtime.Deps.Specialist.Run(ctx, request)
+		}
 		cancel()
 		if err == nil {
+			if authorityErr := bindPacketAuthority(&packet, request); authorityErr != nil {
+				return contracts.ContextPacket{}, authorityErr
+			}
 			if validationErr := validatePacket(packet, request); validationErr != nil {
 				return contracts.ContextPacket{}, validationErr
 			}
@@ -326,12 +605,12 @@ func (runtime *Runtime) runReview(parent context.Context, request contracts.Rese
 			approvedPackets, approval, ok := closeExplicitlyApprovedSubset(working, report)
 			if ok {
 				history = append(history, approval)
-				emitter.emit(step.StepID, "review", "approved_subset", map[string]string{"report_id": approval.ReportID})
+				emitter.emit(step.StepID, "review", "approved_subset", reviewOperationalAttributes(approval))
 				return history, approvedPackets, nil
 			}
 		}
 		if report.Decision == contracts.CritiqueApprove || report.Decision == contracts.CritiqueReject || pass == plan.MaxRepairPasses {
-			emitter.emit(step.StepID, "review", string(report.Decision), map[string]string{"report_id": report.ReportID})
+			emitter.emit(step.StepID, "review", string(report.Decision), reviewOperationalAttributes(report))
 			return history, working, nil
 		}
 		// A repair asks the same reviewer to reconsider the unchanged claims with its prior issue
@@ -341,17 +620,17 @@ func (runtime *Runtime) runReview(parent context.Context, request contracts.Rese
 		// approved subset above or remains non-approved.
 		if report.Decision == contracts.CritiqueRepair {
 			reviewContext = append(reviewContext, report)
-			emitter.emit(step.StepID, "review", "repair_requested", map[string]string{"report_id": report.ReportID})
+			emitter.emit(step.StepID, "review", "repair_requested", reviewOperationalAttributes(report))
 			continue
 		}
 		narrowed, changed := narrowContextPackets(working, report)
 		if !changed {
-			emitter.emit(step.StepID, "review", "repair_unresolved", map[string]string{"report_id": report.ReportID})
+			emitter.emit(step.StepID, "review", "repair_unresolved", reviewOperationalAttributes(report))
 			return history, working, nil
 		}
 		working = narrowed
 		reviewContext = append(reviewContext, report)
-		emitter.emit(step.StepID, "review", "narrowed", map[string]string{"report_id": report.ReportID})
+		emitter.emit(step.StepID, "review", "narrowed", reviewOperationalAttributes(report))
 	}
 	return history, working, errors.New("review exhausted repair budget")
 }
@@ -383,6 +662,9 @@ func closeExplicitlyApprovedSubset(packets []contracts.ContextPacket, report con
 		result[index].Findings = filter(result[index].Findings)
 		result[index].Counterevidence = filter(result[index].Counterevidence)
 		prunePacketReferences(&result[index])
+		if err := contracts.ValidateContextPacket(result[index]); err != nil {
+			return packets, contracts.CritiqueReport{}, false
+		}
 	}
 	if len(retained) != len(approved) {
 		return packets, contracts.CritiqueReport{}, false
@@ -406,6 +688,12 @@ func clonePackets(packets []contracts.ContextPacket) []contracts.ContextPacket {
 		result[index].Counterevidence = append([]contracts.Finding(nil), packets[index].Counterevidence...)
 		result[index].Evidence = append([]contracts.EvidenceRef(nil), packets[index].Evidence...)
 		result[index].CalculationReceipts = append([]contracts.CalculationReceipt(nil), packets[index].CalculationReceipts...)
+		if packets[index].NumericalContext != nil {
+			numerical := *packets[index].NumericalContext
+			numerical.Variables = append([]contracts.NumericalVariable(nil), numerical.Variables...)
+			numerical.Relations = append([]contracts.NumericalRelation(nil), numerical.Relations...)
+			result[index].NumericalContext = &numerical
+		}
 	}
 	return result
 }
@@ -429,6 +717,9 @@ func narrowContextPackets(packets []contracts.ContextPacket, report contracts.Cr
 		result[index].Findings, changed = filterClaims(result[index].Findings, rejected, changed)
 		result[index].Counterevidence, changed = filterClaims(result[index].Counterevidence, rejected, changed)
 		prunePacketReferences(&result[index])
+		if err := contracts.ValidateContextPacket(result[index]); err != nil {
+			return packets, false
+		}
 	}
 	return result, changed
 }
@@ -446,7 +737,7 @@ func filterClaims(findings []contracts.Finding, rejected map[string]bool, change
 }
 
 func prunePacketReferences(packet *contracts.ContextPacket) {
-	evidence, receipts := map[string]bool{}, map[string]bool{}
+	evidence, receipts, numerical := map[string]bool{}, map[string]bool{}, map[string]bool{}
 	for _, finding := range append(append([]contracts.Finding(nil), packet.Findings...), packet.Counterevidence...) {
 		for _, evidenceID := range finding.EvidenceRefs {
 			evidence[evidenceID] = true
@@ -454,7 +745,90 @@ func prunePacketReferences(packet *contracts.ContextPacket) {
 		for _, receiptID := range finding.CalculationRefs {
 			receipts[receiptID] = true
 		}
+		for _, numericalID := range finding.NumericalRefs {
+			numerical[numericalID] = true
+		}
 	}
+
+	if packet.NumericalContext != nil {
+		variables := make(map[string]contracts.NumericalVariable, len(packet.NumericalContext.Variables))
+		relations := make(map[string]contracts.NumericalRelation, len(packet.NumericalContext.Relations))
+		for _, variable := range packet.NumericalContext.Variables {
+			variables[variable.VariableID] = variable
+		}
+		for _, relation := range packet.NumericalContext.Relations {
+			relations[relation.RelationID] = relation
+		}
+
+		retainedVariables, retainedRelations := map[string]bool{}, map[string]bool{}
+		var retainVariable func(string)
+		retainVariable = func(variableID string) {
+			if retainedVariables[variableID] {
+				return
+			}
+			variable, exists := variables[variableID]
+			if !exists {
+				return
+			}
+			retainedVariables[variableID] = true
+			for _, baselineID := range variable.BaselineRefs {
+				retainVariable(baselineID)
+			}
+		}
+		for numericalID := range numerical {
+			if relation, exists := relations[numericalID]; exists {
+				retainedRelations[numericalID] = true
+				retainVariable(relation.LeftVariableID)
+				retainVariable(relation.RightVariableID)
+				continue
+			}
+			retainVariable(numericalID)
+		}
+
+		keptVariables := make([]contracts.NumericalVariable, 0, len(retainedVariables))
+		for _, variable := range packet.NumericalContext.Variables {
+			if !retainedVariables[variable.VariableID] {
+				continue
+			}
+			keptVariables = append(keptVariables, variable)
+			for _, evidenceID := range variable.EvidenceRefs {
+				evidence[evidenceID] = true
+			}
+			for _, receiptID := range variable.ReceiptRefs {
+				receipts[receiptID] = true
+			}
+		}
+		keptRelations := make([]contracts.NumericalRelation, 0, len(retainedRelations))
+		for _, relation := range packet.NumericalContext.Relations {
+			if !retainedRelations[relation.RelationID] {
+				continue
+			}
+			keptRelations = append(keptRelations, relation)
+			for _, evidenceID := range relation.EvidenceRefs {
+				evidence[evidenceID] = true
+			}
+			for _, receiptID := range relation.ReceiptRefs {
+				receipts[receiptID] = true
+			}
+		}
+		if len(keptVariables) == 0 {
+			packet.NumericalContext = nil
+		} else {
+			packet.NumericalContext.Variables = keptVariables
+			packet.NumericalContext.Relations = keptRelations
+		}
+	}
+
+	keptReceipts := make([]contracts.CalculationReceipt, 0, len(packet.CalculationReceipts))
+	for _, receipt := range packet.CalculationReceipts {
+		if receipts[receipt.ReceiptID] {
+			keptReceipts = append(keptReceipts, receipt)
+			for _, evidenceID := range receipt.EvidenceRefs {
+				evidence[evidenceID] = true
+			}
+		}
+	}
+	packet.CalculationReceipts = keptReceipts
 	keptEvidence := make([]contracts.EvidenceRef, 0, len(packet.Evidence))
 	for _, item := range packet.Evidence {
 		if evidence[item.EvidenceID] {
@@ -462,13 +836,6 @@ func prunePacketReferences(packet *contracts.ContextPacket) {
 		}
 	}
 	packet.Evidence = keptEvidence
-	keptReceipts := make([]contracts.CalculationReceipt, 0, len(packet.CalculationReceipts))
-	for _, receipt := range packet.CalculationReceipts {
-		if receipts[receipt.ReceiptID] {
-			keptReceipts = append(keptReceipts, receipt)
-		}
-	}
-	packet.CalculationReceipts = keptReceipts
 }
 
 func (runtime *Runtime) callReviewer(parent context.Context, input ReviewInput) (contracts.CritiqueReport, error) {
@@ -558,10 +925,37 @@ func contextRequest(request contracts.ResearchRequest, step contracts.PlanStep) 
 		ResearchQuestion: request.UserText,
 		Scope:            contracts.Scope{CompanyIDs: companyIDs, AsOf: request.AsOf},
 		CapabilityIDs:    append([]string(nil), step.CapabilityIDs...), TokenBudget: step.ContextBudget,
-		EvidenceRefs: append([]string(nil), request.LineageEvidenceRefs...),
-		ReceiptRefs:  append([]string(nil), request.LineageReceiptRefs...),
-		Assumptions:  append([]string(nil), request.Assumptions...),
+		EvidenceRefs:         append([]string(nil), request.LineageEvidenceRefs...),
+		ReceiptRefs:          append([]string(nil), request.LineageReceiptRefs...),
+		Assumptions:          append([]string(nil), request.Assumptions...),
+		AuthorityState:       request.AuthorityState,
+		AuthorityRefs:        append([]string(nil), request.AuthorityRefs...),
+		AuthorityReasonCodes: append([]string(nil), request.AuthorityReasonCodes...),
 	}
+}
+
+func bindPacketAuthority(packet *contracts.ContextPacket, request contracts.ContextRequest) error {
+	if packet.AuthorityState != "" && packet.AuthorityState != request.AuthorityState {
+		return errors.New("specialist attempted to mutate deterministic authority state")
+	}
+	if len(packet.AuthorityRefs) > 0 && !stringSlicesEqual(packet.AuthorityRefs, request.AuthorityRefs) {
+		return errors.New("specialist attempted to mutate deterministic authority references")
+	}
+	packet.AuthorityState = request.AuthorityState
+	packet.AuthorityRefs = append([]string(nil), request.AuthorityRefs...)
+	return nil
+}
+
+func stringSlicesEqual(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for index := range left {
+		if left[index] != right[index] {
+			return false
+		}
+	}
+	return true
 }
 
 func routeAttributes(step contracts.PlanStep) map[string]string {
@@ -631,6 +1025,93 @@ type eventEmitter struct {
 	trace *Trace
 }
 
+type specialistLifecycleEventAdapter struct {
+	emitter *eventEmitter
+	stepID  string
+}
+
+func (adapter specialistLifecycleEventAdapter) RetrievalStarted(lifecycle RetrievalLifecycle) {
+	adapter.emitRetrieval("started", lifecycle)
+}
+
+func (adapter specialistLifecycleEventAdapter) RetrievalPassed(lifecycle RetrievalLifecycle) {
+	adapter.emitRetrieval("passed", lifecycle)
+}
+
+func (adapter specialistLifecycleEventAdapter) RetrievalDegraded(lifecycle RetrievalLifecycle) {
+	adapter.emitRetrieval("degraded", lifecycle)
+}
+
+func (adapter specialistLifecycleEventAdapter) RetrievalFailed(lifecycle RetrievalLifecycle) {
+	adapter.emitRetrieval("failed", lifecycle)
+}
+
+func (adapter specialistLifecycleEventAdapter) ToolStarted(lifecycle ToolLifecycle) {
+	adapter.emitTool("started", lifecycle)
+}
+
+func (adapter specialistLifecycleEventAdapter) ToolPassed(lifecycle ToolLifecycle) {
+	adapter.emitTool("passed", lifecycle)
+}
+
+func (adapter specialistLifecycleEventAdapter) ToolFailed(lifecycle ToolLifecycle) {
+	adapter.emitTool("failed", lifecycle)
+}
+
+func (adapter specialistLifecycleEventAdapter) emitRetrieval(status string, lifecycle RetrievalLifecycle) {
+	if adapter.emitter == nil {
+		return
+	}
+	attributes := map[string]string{
+		"retrieval_id":           lifecycle.RetrievalID,
+		"bundle_id":              lifecycle.BundleID,
+		"retrieval_method":       lifecycle.Method,
+		"evidence_count":         fmt.Sprintf("%d", lifecycle.EvidenceCount),
+		"source_classes":         boundedSafeIDs(lifecycle.SourceClasses),
+		"missing_evidence_count": fmt.Sprintf("%d", lifecycle.MissingEvidenceCount),
+	}
+	if !lifecycle.AsOf.IsZero() {
+		attributes["as_of"] = lifecycle.AsOf.UTC().Format(time.DateOnly)
+	}
+	if lifecycle.CandidateCountsKnown {
+		attributes["candidate_count"] = fmt.Sprintf("%d", lifecycle.CandidateCount)
+		attributes["selected_candidate_count"] = fmt.Sprintf("%d", lifecycle.SelectedCandidateCount)
+		attributes["rejected_candidate_count"] = fmt.Sprintf("%d", lifecycle.RejectedCandidateCount)
+		attributes["candidate_count_state"] = "available"
+	} else {
+		attributes["candidate_count_state"] = "unavailable"
+	}
+	if lifecycle.FailureCode != "" {
+		attributes["code"] = lifecycle.FailureCode
+	}
+	adapter.emitter.emit(adapter.stepID, "retrieval", status, attributes)
+}
+
+func (adapter specialistLifecycleEventAdapter) emitTool(status string, lifecycle ToolLifecycle) {
+	if adapter.emitter == nil {
+		return
+	}
+	attributes := map[string]string{
+		"tool_execution_id": lifecycle.ToolExecutionID,
+		"receipt_id":        lifecycle.ReceiptID,
+		"receipt_sha256":    lifecycle.ReceiptSHA,
+		"engine_id":         lifecycle.EngineID,
+		"operation_id":      lifecycle.OperationID,
+		"formula_version":   lifecycle.FormulaVersion,
+		"input_ref_ids":     boundedSafeIDs(lifecycle.InputRefIDs),
+		"output_ref_ids":    boundedSafeIDs(lifecycle.OutputRefIDs),
+		"input_count":       fmt.Sprintf("%d", lifecycle.InputCount),
+		"output_count":      fmt.Sprintf("%d", lifecycle.OutputCount),
+		"invariant_count":   fmt.Sprintf("%d", lifecycle.InvariantCount),
+		"invariants_passed": fmt.Sprintf("%t", lifecycle.InvariantsPassed),
+		"warning_count":     fmt.Sprintf("%d", lifecycle.WarningCount),
+	}
+	if lifecycle.FailureCode != "" {
+		attributes["code"] = lifecycle.FailureCode
+	}
+	adapter.emitter.emit(adapter.stepID, "tool", status, attributes)
+}
+
 func newEmitter(runID string, sink EventSink, now func() time.Time, trace *Trace) *eventEmitter {
 	return &eventEmitter{runID: runID, sink: sink, now: now, trace: trace}
 }
@@ -641,6 +1122,20 @@ func (emitter *eventEmitter) emit(stepID, eventType, status string, attributes m
 	event := Event{Sequence: len(emitter.trace.Events) + 1, RunID: emitter.runID, StepID: stepID, Type: eventType, Status: status, At: emitter.now(), Attributes: attributes}
 	emitter.trace.Events = append(emitter.trace.Events, event)
 	if emitter.sink != nil {
-		emitter.sink.Emit(event)
+		emitSafely(emitter.sink, event)
 	}
+}
+
+func acceptPlanSafely(sink PlanSink, plan contracts.ResearchPlan, at time.Time) {
+	defer func() {
+		_ = recover()
+	}()
+	sink.AcceptPlan(plan, at)
+}
+
+func emitSafely(sink EventSink, event Event) {
+	defer func() {
+		_ = recover()
+	}()
+	sink.Emit(event)
 }

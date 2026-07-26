@@ -1,6 +1,10 @@
 import type {
   CaseSummary,
+  ExecutionPlan,
   IntelligenceRecord,
+  FinancialSummary,
+  PeerEvaluationSuite,
+  ProductCatalog,
   Projection,
   ProtectedIntelligenceRecord,
   RunView,
@@ -23,6 +27,18 @@ export async function getConfig(): Promise<WorkspaceConfig> {
   return readJSON(await fetch("/api/v1/config"));
 }
 
+export async function getCatalog(): Promise<ProductCatalog> {
+  return readJSON(await fetch("/api/v1/catalog"));
+}
+
+export async function getFinancials(): Promise<FinancialSummary> {
+  return readJSON(await fetch("/api/v1/financials"));
+}
+
+export async function getPeerEvaluations(): Promise<PeerEvaluationSuite> {
+  return readJSON(await fetch("/api/v1/peer-evaluations"));
+}
+
 export async function getGoldenCase(): Promise<Projection> {
   return readJSON(await fetch("/api/v1/cases/golden"));
 }
@@ -37,6 +53,10 @@ export async function createRun(question: string, scenario: ScenarioControl, ret
 
 export async function getRun(runID: string): Promise<RunView> {
   return readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}`));
+}
+
+export async function getExecutionPlan(runID: string): Promise<ExecutionPlan> {
+  return readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}/execution`));
 }
 
 export async function createFollowUp(runID: string, question: string, retain: boolean): Promise<RunView> {

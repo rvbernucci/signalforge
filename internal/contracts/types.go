@@ -65,6 +65,8 @@ type ContextPacket struct {
 	Conflicts           []string             `json:"conflicts,omitempty"`
 	Uncertainties       []string             `json:"uncertainties,omitempty"`
 	HandoffNotes        []string             `json:"handoff_notes,omitempty"`
+	AuthorityState      string               `json:"authority_state,omitempty"`
+	AuthorityRefs       []string             `json:"authority_refs,omitempty"`
 }
 
 type Quantity struct {

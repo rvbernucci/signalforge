@@ -45,6 +45,12 @@ Editing disclosure: shown at 1.15x playback. The output is unchanged.
 Judge proof: task decomposition, local inference, bounded orchestration, scenario execution, and
 responsive progress.
 
+Expand the live execution plan while the run is active. Show planning, parallel specialist waves,
+evidence and deterministic capability checks, independent review, repair or approved-subset state
+when present, and final synthesis. Open one **Proof layer** reference and then **Inspect lineage**
+to demonstrate that the visible checklist and Mission Control share the same run identity. State
+explicitly that this is governed execution metadata, not chain-of-thought.
+
 ### 2:22-2:29 - Primary Evidence
 
 Screen: expanded Microsoft filing card with primary-source locator, filing section, as-of date,

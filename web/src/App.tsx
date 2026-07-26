@@ -1,22 +1,27 @@
 import { startTransition, useEffect, useState } from "react";
-import { getConfig, getGoldenCase } from "./api";
+import { getCatalog, getConfig, getFinancials, getGoldenCase, getPeerEvaluations } from "./api";
 import { CaseNotes, InsightPanel } from "./components/InsightPanel";
 import { MobileHeader, Navigation } from "./components/Navigation";
 import { ProofDrawer } from "./components/ProofDrawer";
 import { IntelligenceDrawer } from "./components/IntelligenceDrawer";
+import { LiveExecutionPlan } from "./components/LiveExecutionPlan";
 import { RunProgress } from "./components/RunProgress";
 import { ScenarioBar } from "./components/ScenarioBar";
+import { ResearchScope } from "./components/ResearchScope";
 import { ArrowIcon, ChipIcon, ShieldIcon, SparkIcon } from "./components/Icons";
 import { MemoryControls } from "./components/CaseLibrary";
 import { useResearchRun } from "./hooks/useResearchRun";
 import { displayCaseTitle, displayCompany } from "./format";
-import type { Projection, ScenarioControl, WorkspaceConfig } from "./types";
+import type { FinancialSummary, PeerEvaluationSuite, ProductCatalog, Projection, ScenarioControl, WorkspaceConfig } from "./types";
 
 const fallbackScenario: ScenarioControl = { rates: "higher_for_longer", ai_spending: "slower" };
 
 export function App() {
   const [fixture, setFixture] = useState<Projection | null>(null);
   const [config, setConfig] = useState<WorkspaceConfig | null>(null);
+  const [catalog, setCatalog] = useState<ProductCatalog | null>(null);
+  const [financials, setFinancials] = useState<FinancialSummary | null>(null);
+  const [peerEvaluations, setPeerEvaluations] = useState<PeerEvaluationSuite | null>(null);
   const [bootError, setBootError] = useState(false);
   const [question, setQuestion] = useState("");
   const [scenario, setScenario] = useState<ScenarioControl>(fallbackScenario);
@@ -33,11 +38,14 @@ export function App() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([getGoldenCase(), getConfig()]).then(([nextFixture, nextConfig]) => {
+    Promise.all([getGoldenCase(), getConfig(), getCatalog(), getFinancials(), getPeerEvaluations()]).then(([nextFixture, nextConfig, nextCatalog, nextFinancials, nextPeers]) => {
       if (!active) return;
       startTransition(() => {
         setFixture(nextFixture);
         setConfig(nextConfig);
+        setCatalog(nextCatalog);
+        setFinancials(nextFinancials);
+        setPeerEvaluations(nextPeers);
         setQuestion(nextFixture.question);
         setScenario(nextConfig.scenario_defaults);
         setActiveSection(nextFixture.sections[0]?.section_type ?? "");
@@ -66,7 +74,7 @@ export function App() {
 
   if (bootError) return <BootFailure />;
   const projection = research.projection ?? fixture;
-  if (!projection || !config) return <BootScreen />;
+  if (!projection || !config || !catalog || !financials || !peerEvaluations) return <BootScreen />;
 
   function openProof(tab: "evidence" | "calculations", refs: string[] = []) {
     setDrawerTab(tab);
@@ -95,6 +103,14 @@ export function App() {
         </header>
 
         <div className="research-canvas">
+          <ResearchScope
+            catalog={catalog}
+            financials={financials}
+            peers={peerEvaluations}
+            scenario={scenario}
+            live={config.mode === "live"}
+            onQuestion={setQuestion}
+          />
           <ScenarioBar question={question} scenario={scenario} running={research.running} onQuestion={setQuestion} onScenario={setScenario} onRun={() => void research.start(question, scenario, retain)} />
           <MemoryControls
             available={config.retention_available}
@@ -111,7 +127,17 @@ export function App() {
             }}
           />
           {research.error && <div className="degraded-banner" role="alert"><ShieldIcon /><span><strong>Fail-safe state</strong>{research.error}</span></div>}
-          <RunProgress events={research.events} running={research.running} />
+          {research.executionPlan ?? projection.execution_plan
+            ? <LiveExecutionPlan
+                plan={research.executionPlan ?? projection.execution_plan ?? null}
+                traceID={research.run?.trace_id}
+                running={research.running}
+                connection={research.executionConnection}
+                onProof={(refs) => openProof("evidence", refs)}
+                onCalculations={(refs) => openProof("calculations", refs)}
+                onLineage={() => setIntelligenceOpen(true)}
+              />
+            : <RunProgress events={research.events} running={research.running} />}
 
           <section className="case-overview" aria-label="Case overview">
             <div><span className="eyebrow">Companies</span><strong>{projection.companies.map((company) => displayCompany(company.label)).join(" × ")}</strong></div>
@@ -125,11 +151,12 @@ export function App() {
           <CaseNotes projection={projection} />
           <FollowUpPanel projection={projection} enabled={config.follow_ups_live} value={followUp} running={research.running} onValue={setFollowUp} onSubmit={submitFollowUp} />
         </div>
-        <footer className="site-footer"><span>SignalForge · Private investor intelligence</span><span><ShieldIcon /> Local core inference · No model-authored financial values</span></footer>
+        <footer className="site-footer"><span>SignalForge · Private investor intelligence</span><span><ShieldIcon /> AI research can be inaccurate. Verify evidence and deterministic receipts before acting.</span></footer>
       </main>
       <ProofDrawer projection={projection} open={drawerOpen} tab={drawerTab} refs={drawerRefs} onTab={setDrawerTab} onClose={() => setDrawerOpen(false)} />
       <IntelligenceDrawer
         runID={projection.run_id}
+        traceID={research.run?.run_id === projection.run_id ? research.run.trace_id : undefined}
         open={intelligenceOpen}
         protectedCapture={config.protected_capture}
         onClose={() => setIntelligenceOpen(false)}

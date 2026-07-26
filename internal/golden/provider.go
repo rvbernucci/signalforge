@@ -86,7 +86,7 @@ func (provider *Provider) Load(ctx context.Context, request contracts.ContextReq
 	if err != nil {
 		return localagent.Material{}, err
 	}
-	items, err := provider.qualitativeEvidence(request, companies)
+	items, retrievalStats, err := provider.qualitativeEvidence(request, companies)
 	if err != nil {
 		return localagent.Material{}, err
 	}
@@ -107,7 +107,7 @@ func (provider *Provider) Load(ctx context.Context, request contracts.ContextReq
 	if request.SpecialistRole == roles.EconomicsTransmission && contains(request.CapabilityIDs, "economics.yield_curve") {
 		missing = append(missing, "No authoritative point-in-time yield-curve observation was supplied; higher-for-longer rates remain an explicit scenario rather than an observed causal estimate.")
 	}
-	receipts, err := provider.calculationReceipts(request, companies)
+	receipts, err := provider.calculationReceipts(ctx, request, companies)
 	if err != nil {
 		return localagent.Material{}, err
 	}
@@ -123,7 +123,16 @@ func (provider *Provider) Load(ctx context.Context, request contracts.ContextReq
 	if err := contracts.ValidateEvidenceBundle(bundle); err != nil {
 		return localagent.Material{}, err
 	}
-	material := localagent.Material{Evidence: bundle, CalculationReceipts: receipts}
+	material := localagent.Material{
+		Evidence: bundle, CalculationReceipts: receipts,
+		Retrieval: localagent.RetrievalTrace{
+			Method:                 "bm25/v1+deterministic_authority/v1",
+			CandidateCount:         retrievalStats.MatchedCandidates,
+			SelectedCandidateCount: retrievalStats.SelectedCandidates,
+			RejectedCandidateCount: retrievalStats.RejectedCandidates,
+			CandidateCountsKnown:   true,
+		},
+	}
 	if numericalcontext.HasEligibleOutputs(receipts) {
 		entityNames := make(map[string]string, len(companies))
 		fiscalPeriods := make(map[string]numericalcontext.FiscalPeriod, len(companies))
@@ -158,7 +167,7 @@ func (provider *Provider) companies(ids []string) ([]Company, error) {
 	return result, nil
 }
 
-func (provider *Provider) qualitativeEvidence(request contracts.ContextRequest, companies []Company) ([]contracts.EvidenceItem, error) {
+func (provider *Provider) qualitativeEvidence(request contracts.ContextRequest, companies []Company) ([]contracts.EvidenceItem, retrieval.SearchStats, error) {
 	profile := map[string]string{
 		roles.BusinessStrategy:      "business model products customers segments revenue mechanisms demand competition history risk factors",
 		roles.AccountingReporting:   "accounting comparability reporting classification margin capital expenditure commitments inventory disclosure",
@@ -168,22 +177,27 @@ func (provider *Provider) qualitativeEvidence(request contracts.ContextRequest, 
 		roles.MarketBehavior:        "market price demand management framing interest-rate risk export controls concentration",
 	}[request.SpecialistRole]
 	if profile == "" {
-		return nil, fmt.Errorf("role %q has no golden retrieval profile", request.SpecialistRole)
+		return nil, retrieval.SearchStats{}, fmt.Errorf("role %q has no golden retrieval profile", request.SpecialistRole)
 	}
 	seen := map[string]bool{}
 	items := []contracts.EvidenceItem{}
+	aggregate := retrieval.SearchStats{}
 	topK := 6
 	if request.SpecialistRole == roles.FinancialQuality || request.SpecialistRole == roles.Valuation {
 		topK = 4
 	}
 	for _, company := range companies {
-		hits, err := provider.index.Search(retrieval.Query{
+		hits, stats, err := provider.index.SearchWithStats(retrieval.Query{
 			Text: request.ResearchQuestion + " " + profile, AsOf: request.Scope.AsOf,
 			CompanyIDs: []string{company.CompanyID}, AuthorityTiers: []string{"A", "B", "C", "D"}, TopK: topK,
 		})
 		if err != nil {
-			return nil, err
+			return nil, retrieval.SearchStats{}, err
 		}
+		aggregate.EligibleCandidates += stats.EligibleCandidates
+		aggregate.MatchedCandidates += stats.MatchedCandidates
+		aggregate.SelectedCandidates += stats.SelectedCandidates
+		aggregate.RejectedCandidates += stats.RejectedCandidates
 		for _, hit := range hits {
 			if seen[hit.Chunk.ChunkID] {
 				continue
@@ -208,9 +222,9 @@ func (provider *Provider) qualitativeEvidence(request contracts.ContextRequest, 
 		}
 	}
 	if len(items) == 0 {
-		return nil, errors.New("golden retrieval returned no authoritative qualitative evidence")
+		return nil, retrieval.SearchStats{}, errors.New("golden retrieval returned no authoritative qualitative evidence")
 	}
-	return items, nil
+	return items, aggregate, nil
 }
 
 func (provider *Provider) metricEvidence(roleID string, companies []Company) []contracts.EvidenceItem {
@@ -282,7 +296,7 @@ func (provider *Provider) priceEvidence(roleID string, companies []Company) []co
 	return items
 }
 
-func (provider *Provider) calculationReceipts(request contracts.ContextRequest, companies []Company) ([]contracts.CalculationReceipt, error) {
+func (provider *Provider) calculationReceipts(ctx context.Context, request contracts.ContextRequest, companies []Company) ([]contracts.CalculationReceipt, error) {
 	allowed := stringSet(request.CapabilityIDs)
 	operations := []string{}
 	switch request.SpecialistRole {
@@ -304,7 +318,7 @@ func (provider *Provider) calculationReceipts(request contracts.ContextRequest, 
 			if err != nil {
 				return nil, err
 			}
-			receipt, err := provider.execute(request, company, operationID, company.Ticker, inputs, nil)
+			receipt, err := provider.execute(ctx, request, company, operationID, company.Ticker, inputs, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -330,7 +344,7 @@ func (provider *Provider) calculationReceipts(request contracts.ContextRequest, 
 			}
 			assumption := scenarioAssumption(company, scenario, base)
 			inputs := forecastInputs(company, forecast, scenario.DiscountRate, scenario.TerminalGrowth)
-			receipt, err := provider.execute(request, company, "valuation.fcff_dcf", company.Ticker+"-"+scenario.Name, inputs, []string{assumption})
+			receipt, err := provider.execute(ctx, request, company, "valuation.fcff_dcf", company.Ticker+"-"+scenario.Name, inputs, []string{assumption})
 			if err != nil {
 				return nil, err
 			}
@@ -344,7 +358,7 @@ func (provider *Provider) calculationReceipts(request contracts.ContextRequest, 
 			}
 			inputs := sensitivityInputs(company, forecast)
 			assumption := "Illustrative sensitivity grid using the disclosed bear, base, and bull discount-rate and terminal-growth axes; it is not a price forecast or investment recommendation."
-			receipt, err := provider.execute(request, company, "scenario.sensitivity_matrix", company.Ticker+"-grid", inputs, []string{assumption})
+			receipt, err := provider.execute(ctx, request, company, "scenario.sensitivity_matrix", company.Ticker+"-grid", inputs, []string{assumption})
 			if err != nil {
 				return nil, err
 			}
@@ -358,7 +372,7 @@ func (provider *Provider) calculationReceipts(request contracts.ContextRequest, 
 					input("market_value", price.Value, "currency_per_share", price.Currency, price.AsOf.Format("2006-01-02"), "reported", []string{priceEvidenceID(company.Ticker)}, &price.AsOf),
 					metricInput("metric_value", eps, company.FiscalPeriod),
 				}
-				receipt, err := provider.execute(request, company, "valuation.peer_multiple", company.Ticker+"-pe", inputs, nil)
+				receipt, err := provider.execute(ctx, request, company, "valuation.peer_multiple", company.Ticker+"-pe", inputs, nil)
 				if err != nil {
 					return nil, err
 				}
@@ -369,7 +383,7 @@ func (provider *Provider) calculationReceipts(request contracts.ContextRequest, 
 	return receipts, nil
 }
 
-func (provider *Provider) execute(request contracts.ContextRequest, company Company, operationID, suffix string, inputs []contracts.EngineInput, assumptions []string) (contracts.CalculationReceipt, error) {
+func (provider *Provider) execute(ctx context.Context, request contracts.ContextRequest, company Company, operationID, suffix string, inputs []contracts.EngineInput, assumptions []string) (contracts.CalculationReceipt, error) {
 	operation, ok := provider.registry.Get(operationID)
 	if !ok || !provider.registry.Authorizes(request.SpecialistRole, operationID) {
 		return contracts.CalculationReceipt{}, fmt.Errorf("operation %q is not authorized for %q", operationID, request.SpecialistRole)
@@ -383,10 +397,13 @@ func (provider *Provider) execute(request contracts.ContextRequest, company Comp
 		Inputs: inputs, Assumptions: assumptions, PrecisionPolicy: operation.NumericalPolicy,
 		RequestedOutputs: append([]string(nil), operation.Outputs...),
 	}
+	localagent.ObserveToolStarted(ctx, engineRequest)
 	result := provider.executor.Execute(engineRequest)
 	if result.Failure != nil {
+		localagent.ObserveToolFailed(ctx, engineRequest, "engine_execution_failed")
 		return contracts.CalculationReceipt{}, fmt.Errorf("%s for %s failed: %s", operationID, company.Ticker, result.Failure.Message)
 	}
+	localagent.ObserveToolPassed(ctx, *result.Receipt)
 	return *result.Receipt, nil
 }
 

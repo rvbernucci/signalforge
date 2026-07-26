@@ -44,7 +44,12 @@ func (builder Builder) Build(request contracts.ResearchRequest) (contracts.Resea
 		return contracts.ResearchPlan{}, ErrClarificationRequired
 	}
 	contextRoles := make([]string, 0, len(route.ContextRoles))
-	reviewRoles := append([]string(nil), route.ReviewRoles...)
+	// Every releasable answer crosses both independent gates. The risk reviewer challenges the
+	// thesis first; the evidence reviewer remains the final authority gate.
+	reviewRoles := []string{roles.RiskContrarian, roles.EvidenceCritic}
+	for _, roleID := range route.ReviewRoles {
+		reviewRoles = appendUnique(reviewRoles, roleID)
+	}
 	for _, roleID := range route.ContextRoles {
 		role, ok := builder.Roles.Get(roleID)
 		if !ok {
@@ -56,6 +61,13 @@ func (builder Builder) Build(request contracts.ResearchRequest) (contracts.Resea
 		}
 		contextRoles = append(contextRoles, roleID)
 	}
+	// The final comparison contract requires business, accounting, and financial authority.
+	// Taxonomy terms may add further specialists, but no peer answer can omit this minimum join.
+	if intent == taxonomy.CompanyComparison {
+		contextRoles = appendUnique(contextRoles, roles.BusinessStrategy)
+		contextRoles = appendUnique(contextRoles, roles.AccountingReporting)
+		contextRoles = appendUnique(contextRoles, roles.FinancialQuality)
+	}
 	if len(contextRoles) > 8 {
 		return contracts.ResearchPlan{}, errors.New("route exceeds bounded context specialist capacity")
 	}
@@ -63,7 +75,7 @@ func (builder Builder) Build(request contracts.ResearchRequest) (contracts.Resea
 		SchemaVersion: contracts.SchemaVersionV1, PlanID: "plan-" + request.RequestID,
 		RunID: request.RunID, RequestID: request.RequestID, MaxParallelSpecialists: 4,
 		MaxRepairPasses: 1, DeadlineMS: builder.DeadlineMS,
-		CompletionConditions: []string{"evidence_critic_approved", "single_final_answer"},
+		CompletionConditions: []string{"risk_contrarian_approved", "evidence_critic_approved", "single_final_answer"},
 		AbstentionConditions: []string{"missing_primary_evidence", "unresolved_material_conflict", "deadline_exceeded"},
 	}
 	contextIDs := make([]string, 0, len(contextRoles))
@@ -157,12 +169,16 @@ func detectOperations(text string) []string {
 		terms     []string
 		operation string
 	}{
-		{[]string{"free cash flow"}, "financial.free_cash_flow"},
+		{[]string{"revenue growth", "sales growth", "top-line growth"}, "financial.revenue_growth"},
+		{[]string{"free cash flow", "simple fcf", " fcf "}, "financial.free_cash_flow"},
 		{[]string{"cash conversion", "supported by cash", "backed by cash"}, "financial.cash_conversion"},
+		{[]string{"quality of earnings", "earnings quality"}, "financial.quality_of_earnings"},
+		{[]string{"operating margin"}, "financial.operating_margin"},
 		{[]string{"margin", "operating leverage"}, "financial.margin"},
+		{[]string{"balance-sheet identity", "balance sheet identity"}, "accounting.balance_sheet_identity"},
 		{[]string{"dilution"}, "financial.dilution"},
 		{[]string{"net debt", "balance sheet", "balance-sheet"}, "financial.net_debt"},
-		{[]string{"reinvestment burden", "capex intensity"}, "financial.capex_intensity"},
+		{[]string{"reinvestment burden", "capex intensity", "approved capex", "capex"}, "financial.capex_intensity"},
 		{[]string{"dcf", "value range"}, "valuation.fcff_dcf"},
 		{[]string{"current price imply", "embedded in"}, "valuation.reverse_dcf"},
 		{[]string{"wacc"}, "valuation.wacc"},

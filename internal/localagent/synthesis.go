@@ -120,9 +120,19 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 	placeApprovedCounterevidenceClaims(body.Sections, material.Claims)
 	canonicalizeRequestedAssumptions(&body, material)
 	placeRequiredSemanticAuthority(body.Sections, material)
+	placeApprovedNumericalClaims(body.Sections, material.Claims)
 	repairReceiptAvailabilityClaims(&body, material)
 	neutralizeInternalReferenceMentions(&body, material)
+	ensureVisibleComparisonBoundary(&body, material)
 	draftErr := validateNumericallySilentDraft(body)
+	if draftErr != nil {
+		// Numerical Silence is Go-owned: safely narrow model-authored numerical prose before
+		// spending a second inference. Every remaining semantic and authority contract below is
+		// still revalidated, and an unrepairable draft remains fail-closed.
+		if repairErr := repairAuthorizedNumericalDraft(&body, material); repairErr == nil {
+			draftErr = validateNumericallySilentDraft(body)
+		}
+	}
 	if draftErr == nil {
 		draftErr = validateRequiredDecisionSections(body, input.Request.RequestedOutputs, material.Claims)
 	}
@@ -158,10 +168,17 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 		placeApprovedCounterevidenceClaims(body.Sections, material.Claims)
 		canonicalizeRequestedAssumptions(&body, material)
 		placeRequiredSemanticAuthority(body.Sections, material)
+		placeApprovedNumericalClaims(body.Sections, material.Claims)
 		repairReceiptAvailabilityClaims(&body, material)
 		neutralizeInternalReferenceMentions(&body, material)
+		ensureVisibleComparisonBoundary(&body, material)
 		if err := validateNumericallySilentDraft(body); err != nil {
-			return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded numerical-silence retry: %w", err)
+			if repairErr := repairAuthorizedNumericalDraft(&body, material); repairErr != nil {
+				return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded numerical-silence retry: %w", err)
+			}
+			if err := validateNumericallySilentDraft(body); err != nil {
+				return contracts.FinalAnswer{}, fmt.Errorf("final answer after deterministic numerical-silence repair: %w", err)
+			}
 		}
 		if err := validateRequiredDecisionSections(body, input.Request.RequestedOutputs, material.Claims); err != nil {
 			return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded decision-section retry: %w", err)
@@ -300,6 +317,29 @@ func appendSentence(content, sentence string) string {
 		return content
 	}
 	return content + " " + sentence
+}
+
+const comparisonBoundaryDisclosure = "Direct cross-company conclusions are limited to measures with aligned definitions and fiscal periods; unavailable or not-comparable measures remain withheld."
+
+// Comparability authority is computed by Go before synthesis. When the request is explicitly
+// comparative, publish that already-validated boundary deterministically instead of relying on
+// the model to repeat it in every answer shape.
+func ensureVisibleComparisonBoundary(body *finalBody, material synthesisPromptInput) {
+	question := strings.ToLower(material.Request.Question)
+	comparative := strings.Contains(question, "compare") ||
+		strings.Contains(question, "comparison") ||
+		strings.Contains(question, "relative-quality") ||
+		strings.Contains(question, "cross-company") ||
+		strings.Contains(question, "peer")
+	if !comparative {
+		return
+	}
+	for _, limitation := range body.Limitations {
+		if limitation == comparisonBoundaryDisclosure {
+			return
+		}
+	}
+	body.Limitations = append(body.Limitations, comparisonBoundaryDisclosure)
 }
 
 func placeApprovedNumericalClaims(sections []answerSectionDraft, claims []synthesisClaimView) {

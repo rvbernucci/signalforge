@@ -3,6 +3,7 @@ package workspace
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,17 +11,21 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
 
+	"github.com/rvbernucci/signalforge/internal/benchmark"
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/executionplan"
 	"github.com/rvbernucci/signalforge/internal/golden"
 	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
 	"github.com/rvbernucci/signalforge/internal/missioncontrol"
 	"github.com/rvbernucci/signalforge/internal/orchestrator"
 	"github.com/rvbernucci/signalforge/internal/permissions"
+	"github.com/rvbernucci/signalforge/internal/productscope"
 	"github.com/rvbernucci/signalforge/internal/requestparser"
 	"github.com/rvbernucci/signalforge/internal/resilience"
 	"github.com/rvbernucci/signalforge/internal/runid"
@@ -30,51 +35,75 @@ import (
 const (
 	ModeFixture = "fixture"
 	ModeLive    = "live"
+
+	maximumStoredRunEvents = 256
+	maximumStoredRuns      = 64
 )
 
 type ServerConfig struct {
-	Mode           string
-	FixturePath    string
-	StaticDir      string
-	Golden         golden.RunConfig
-	EventDelay     time.Duration
-	Now            func() time.Time
-	RunTimeout     time.Duration
-	MaxBodyBytes   int64
-	CaseStore      CaseStore
-	RuntimeBreaker *resilience.Breaker
-	AuditStore     *intelligenceaudit.Store
-	BuildVersion   string
+	Mode               string
+	FixturePath        string
+	CatalogPath        string
+	FinancialsPath     string
+	PeerEvaluationPath string
+	StaticDir          string
+	Golden             golden.RunConfig
+	EventDelay         time.Duration
+	Now                func() time.Time
+	RunTimeout         time.Duration
+	MaxBodyBytes       int64
+	CaseStore          CaseStore
+	RuntimeBreaker     *resilience.Breaker
+	AuditStore         *intelligenceaudit.Store
+	BuildVersion       string
 }
 
 type Server struct {
-	config  ServerConfig
-	fixture Projection
-	mu      sync.RWMutex
-	runs    map[string]*runRecord
-	breaker *resilience.Breaker
+	config     ServerConfig
+	fixture    Projection
+	catalog    productscope.PublicCatalog
+	financials productscope.PublicFinancialSummary
+	peers      productscope.PeerEvaluationSuite
+	mu         sync.RWMutex
+	runs       map[string]*runRecord
+	runOrder   []string
+	breaker    *resilience.Breaker
 }
 
 type runRecord struct {
 	view         RunView
 	events       []StreamEvent
+	nextSequence int
+	execution    *executionplan.Projection
 	report       *golden.Report
 	subscribers  map[chan StreamEvent]struct{}
 	terminalOnce sync.Once
 	cancel       context.CancelFunc
 	retain       bool
 	parentRunID  string
+	retentionSet bool
+	modelCalls   map[string]modelAttemptState
+}
+
+type modelAttemptState struct {
+	Attempts      int
+	LastRoute     string
+	LastFailed    bool
+	LastMaxTokens int
+	LastSystemSHA string
 }
 
 type RunView struct {
-	RunID       string         `json:"run_id"`
-	ParentRunID string         `json:"parent_run_id,omitempty"`
-	Status      string         `json:"status"`
-	StartedAt   time.Time      `json:"started_at"`
-	CompletedAt *time.Time     `json:"completed_at,omitempty"`
-	Result      *Projection    `json:"result,omitempty"`
-	Failure     *PublicFailure `json:"failure,omitempty"`
-	Retention   RetentionView  `json:"retention"`
+	RunID       string                    `json:"run_id"`
+	TraceID     string                    `json:"trace_id"`
+	ParentRunID string                    `json:"parent_run_id,omitempty"`
+	Status      string                    `json:"status"`
+	StartedAt   time.Time                 `json:"started_at"`
+	CompletedAt *time.Time                `json:"completed_at,omitempty"`
+	Result      *Projection               `json:"result,omitempty"`
+	Execution   *executionplan.Projection `json:"execution_plan,omitempty"`
+	Failure     *PublicFailure            `json:"failure,omitempty"`
+	Retention   RetentionView             `json:"retention"`
 }
 
 type PublicFailure struct {
@@ -83,13 +112,14 @@ type PublicFailure struct {
 }
 
 type StreamEvent struct {
-	Sequence int       `json:"sequence"`
-	RunID    string    `json:"run_id"`
-	StepID   string    `json:"step_id,omitempty"`
-	Type     string    `json:"type"`
-	Status   string    `json:"status"`
-	Label    string    `json:"label"`
-	At       time.Time `json:"at"`
+	Sequence   int               `json:"sequence"`
+	RunID      string            `json:"run_id"`
+	StepID     string            `json:"step_id,omitempty"`
+	Type       string            `json:"type"`
+	Status     string            `json:"status"`
+	Label      string            `json:"label"`
+	At         time.Time         `json:"at"`
+	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
 type RunRequest struct {
@@ -145,6 +175,16 @@ func NewServer(config ServerConfig) (*Server, error) {
 	if strings.TrimSpace(config.FixturePath) == "" {
 		return nil, errors.New("workspace fixture path is required")
 	}
+	if strings.TrimSpace(config.CatalogPath) == "" {
+		return nil, errors.New("workspace product catalog path is required")
+	}
+	if strings.TrimSpace(config.FinancialsPath) == "" {
+		config.FinancialsPath = filepath.Join(filepath.Dir(config.CatalogPath), "technology20-financial-summary.json")
+	}
+	if strings.TrimSpace(config.PeerEvaluationPath) == "" {
+		config.PeerEvaluationPath = filepath.Join(filepath.Dir(config.CatalogPath), "technology20-peer-evaluation.json")
+	}
+	server.config = config
 	payload, err := os.ReadFile(config.FixturePath)
 	if err != nil {
 		return nil, fmt.Errorf("read workspace fixture: %w", err)
@@ -154,6 +194,39 @@ func NewServer(config ServerConfig) (*Server, error) {
 	}
 	if err := Validate(server.fixture); err != nil {
 		return nil, fmt.Errorf("validate workspace fixture: %w", err)
+	}
+	if err := hydrateFixtureExecution(&server.fixture); err != nil {
+		return nil, fmt.Errorf("project workspace fixture execution: %w", err)
+	}
+	catalogPayload, err := os.ReadFile(config.CatalogPath)
+	if err != nil {
+		return nil, fmt.Errorf("read workspace product catalog: %w", err)
+	}
+	if err := json.Unmarshal(catalogPayload, &server.catalog); err != nil {
+		return nil, fmt.Errorf("decode workspace product catalog: %w", err)
+	}
+	if err := productscope.ValidatePublicCatalog(server.catalog); err != nil {
+		return nil, fmt.Errorf("validate workspace product catalog: %w", err)
+	}
+	financialPayload, err := os.ReadFile(config.FinancialsPath)
+	if err != nil {
+		return nil, fmt.Errorf("read workspace financial summary: %w", err)
+	}
+	if err := json.Unmarshal(financialPayload, &server.financials); err != nil {
+		return nil, fmt.Errorf("decode workspace financial summary: %w", err)
+	}
+	if err := productscope.ValidatePublicFinancialSummary(server.financials); err != nil {
+		return nil, fmt.Errorf("validate workspace financial summary: %w", err)
+	}
+	peerPayload, err := os.ReadFile(config.PeerEvaluationPath)
+	if err != nil {
+		return nil, fmt.Errorf("read workspace peer evaluation: %w", err)
+	}
+	if err := json.Unmarshal(peerPayload, &server.peers); err != nil {
+		return nil, fmt.Errorf("decode workspace peer evaluation: %w", err)
+	}
+	if err := productscope.ValidatePeerEvaluationSuite(server.peers); err != nil {
+		return nil, fmt.Errorf("validate workspace peer evaluation: %w", err)
 	}
 	if config.AuditStore != nil {
 		recorder, auditErr := config.AuditStore.Begin(context.Background(), server.fixture.RunID,
@@ -173,6 +246,9 @@ func (server *Server) Handler() http.Handler {
 	api.HandleFunc("GET /api/v1/health", server.handleHealth)
 	api.Handle("GET /metrics", missioncontrol.MetricsHandler{Store: server.config.AuditStore, Version: server.config.BuildVersion})
 	api.HandleFunc("GET /api/v1/config", server.handleConfig)
+	api.HandleFunc("GET /api/v1/catalog", server.handleCatalog)
+	api.HandleFunc("GET /api/v1/financials", server.handleFinancials)
+	api.HandleFunc("GET /api/v1/peer-evaluations", server.handlePeerEvaluations)
 	api.HandleFunc("GET /api/v1/cases/golden", server.handleGoldenCase)
 	api.HandleFunc("GET /api/v1/cases", server.handleListCases)
 	api.HandleFunc("GET /api/v1/cases/{caseID}", server.handleGetCase)
@@ -181,6 +257,7 @@ func (server *Server) Handler() http.Handler {
 	api.HandleFunc("POST /api/v1/runs", server.handleCreateRun)
 	api.HandleFunc("GET /api/v1/runs/{runID}", server.handleGetRun)
 	api.HandleFunc("GET /api/v1/runs/{runID}/events", server.handleEvents)
+	api.HandleFunc("GET /api/v1/runs/{runID}/execution", server.handleExecutionPlan)
 	api.HandleFunc("GET /api/v1/runs/{runID}/intelligence", server.handleIntelligence)
 	api.HandleFunc("GET /api/v1/runs/{runID}/intelligence/protected", server.handleProtectedIntelligence)
 	api.HandleFunc("DELETE /api/v1/runs/{runID}/intelligence/protected", server.handlePurgeProtectedIntelligence)
@@ -232,6 +309,18 @@ func (server *Server) handleConfig(writer http.ResponseWriter, _ *http.Request) 
 		IntelligenceAudit:  server.config.AuditStore != nil,
 		ProtectedCapture:   server.config.AuditStore != nil && server.config.AuditStore.Enabled(),
 	})
+}
+
+func (server *Server) handleCatalog(writer http.ResponseWriter, _ *http.Request) {
+	writeJSON(writer, http.StatusOK, server.catalog)
+}
+
+func (server *Server) handleFinancials(writer http.ResponseWriter, _ *http.Request) {
+	writeJSON(writer, http.StatusOK, server.financials)
+}
+
+func (server *Server) handlePeerEvaluations(writer http.ResponseWriter, _ *http.Request) {
+	writeJSON(writer, http.StatusOK, server.peers)
 }
 
 func (server *Server) handleGoldenCase(writer http.ResponseWriter, _ *http.Request) {
@@ -329,6 +418,7 @@ func (server *Server) handleDeleteCase(writer http.ResponseWriter, request *http
 		server.writeCaseStoreProblem(writer, err, "case_delete_failed")
 		return
 	}
+	server.markCaseDeleted(caseID)
 	writeJSON(writer, http.StatusOK, map[string]string{"status": "deleted", "case_id": caseID})
 }
 
@@ -423,6 +513,23 @@ func (server *Server) handleGetRun(writer http.ResponseWriter, request *http.Req
 	writeJSON(writer, http.StatusOK, view)
 }
 
+func (server *Server) handleExecutionPlan(writer http.ResponseWriter, request *http.Request) {
+	record, ok := server.record(request.PathValue("runID"))
+	if !ok {
+		writeProblem(writer, http.StatusNotFound, "run_not_found")
+		return
+	}
+	server.mu.RLock()
+	if record.execution == nil {
+		server.mu.RUnlock()
+		writeProblem(writer, http.StatusNotFound, "execution_plan_not_found")
+		return
+	}
+	projection := cloneExecutionPlan(*record.execution)
+	server.mu.RUnlock()
+	writeJSON(writer, http.StatusOK, projection)
+}
+
 func (server *Server) handleIntelligence(writer http.ResponseWriter, request *http.Request) {
 	runID := request.PathValue("runID")
 	if server.config.AuditStore == nil {
@@ -500,7 +607,8 @@ func (server *Server) handleEvents(writer http.ResponseWriter, request *http.Req
 	writer.Header().Set("Content-Type", "text/event-stream")
 	writer.Header().Set("Cache-Control", "no-cache, no-transform")
 	writer.Header().Set("Connection", "keep-alive")
-	channel := make(chan StreamEvent, 32)
+	channel := make(chan StreamEvent, 128)
+	lastSequence, _ := strconv.Atoi(strings.TrimSpace(request.Header.Get("Last-Event-ID")))
 	server.mu.Lock()
 	existing := append([]StreamEvent(nil), record.events...)
 	terminal := record.view.Status != "running"
@@ -514,6 +622,9 @@ func (server *Server) handleEvents(writer http.ResponseWriter, request *http.Req
 		server.mu.Unlock()
 	}()
 	for _, event := range existing {
+		if event.Sequence <= lastSequence {
+			continue
+		}
 		if err := writeSSE(writer, event); err != nil {
 			return
 		}
@@ -539,21 +650,34 @@ func (server *Server) handleEvents(writer http.ResponseWriter, request *http.Req
 }
 
 func (server *Server) newRun(parentRunID string, retain bool) (*runRecord, error) {
-	value, err := runid.New(server.config.Now())
+	now := server.config.Now()
+	value, err := runid.New(now)
+	if err != nil {
+		return nil, err
+	}
+	runID := "run-" + value
+	requestID := "request-" + value
+	execution, err := executionplan.Pending(runID, requestID, now)
 	if err != nil {
 		return nil, err
 	}
 	record := &runRecord{
 		view: RunView{
-			RunID: "run-" + value, ParentRunID: parentRunID, Status: "running", StartedAt: server.config.Now(),
+			RunID: runID, TraceID: telemetry.TraceIDForRun(runID),
+			ParentRunID: parentRunID, Status: "running", StartedAt: now,
+			Execution: cloneExecutionPlanPointer(&execution),
 			Retention: retentionInitialStatus(retain, server.config.CaseStore != nil),
 		},
+		execution:   &execution,
 		subscribers: map[chan StreamEvent]struct{}{},
 		retain:      retain,
 		parentRunID: parentRunID,
+		modelCalls:  map[string]modelAttemptState{},
 	}
 	server.mu.Lock()
 	server.runs[record.view.RunID] = record
+	server.runOrder = append(server.runOrder, record.view.RunID)
+	server.evictCompletedRunsLocked()
 	server.mu.Unlock()
 	return record, nil
 }
@@ -570,6 +694,9 @@ func (server *Server) replayFixture(record *runRecord, question string, assumpti
 	projection.Assumptions = append([]string(nil), assumptions...)
 	projection.Status = "completed"
 	audit := server.beginAudit(journeyContext, record.view.RunID, projection.RequestID, question)
+	if plan, err := fixtureResearchPlan(projection); err == nil {
+		runSink{server: server, record: record}.AcceptPlan(plan, server.config.Now())
+	}
 	for _, fixtureEvent := range projection.Events {
 		if server.config.EventDelay > 0 {
 			time.Sleep(server.config.EventDelay)
@@ -577,6 +704,7 @@ func (server *Server) replayFixture(record *runRecord, question string, assumpti
 		server.publish(record, StreamEvent{
 			StepID: fixtureEvent.StepID, Type: fixtureEvent.Type, Status: fixtureEvent.Status,
 			Label: eventLabel(fixtureEvent.Type, fixtureEvent.Status), At: server.config.Now(),
+			Attributes: safeStreamAttributes(fixtureEvent.Attributes),
 		})
 	}
 	if audit != nil {
@@ -605,7 +733,9 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 	config.Timeout = server.config.RunTimeout
 	config.EventSink = runSink{server: server, record: record}
 	audit := server.beginAudit(ctx, record.view.RunID, config.RequestID, question)
-	config.ModelObserver = audit
+	config.ModelObserver = runModelObserver{
+		audit: audit, server: server, record: record,
+	}
 	config.RequestOverride = requestOverride
 	if requestOverride == nil {
 		config.UseAssumptions = true
@@ -717,8 +847,19 @@ func auditFixtureProjection(startedAt, completedAt time.Time, projection Project
 }
 
 func (server *Server) complete(record *runRecord, projection Projection, report *golden.Report) {
+	server.initializeRetention(record)
 	record.terminalOnce.Do(func() {
 		now := server.config.Now()
+		server.mu.Lock()
+		if record.execution != nil {
+			completed := cloneExecutionPlan(*record.execution)
+			if executionplan.MarkCompleted(&completed, now) == nil {
+				record.execution = &completed
+				record.view.Execution = cloneExecutionPlanPointer(&completed)
+				projection.ExecutionPlan = cloneExecutionPlanPointer(&completed)
+			}
+		}
+		server.mu.Unlock()
 		retention := retentionInitialStatus(record.retain, server.config.CaseStore != nil)
 		if record.retain && server.config.CaseStore != nil {
 			var err error
@@ -737,50 +878,78 @@ func (server *Server) complete(record *runRecord, projection Projection, report 
 				retention.CaseID = projection.CaseID
 			}
 		}
+		if record.retain && server.config.CaseStore != nil {
+			status := "saved"
+			label := "Research case saved locally"
+			attributes := map[string]string{"case_id": retention.CaseID}
+			if retention.Status != "saved" {
+				status = "failed"
+				label = "Research completed; local save failed"
+				attributes = map[string]string{"code": retention.ErrorCode}
+			}
+			server.publish(record, StreamEvent{
+				Type: "retention", Status: status, Label: label, At: now, Attributes: attributes,
+			})
+		}
+		server.publish(record, StreamEvent{Type: "workspace", Status: "completed", Label: "Research case ready", At: now})
 		server.mu.Lock()
+		if record.execution != nil {
+			projection.ExecutionPlan = cloneExecutionPlanPointer(record.execution)
+		}
 		record.view.Status = "completed"
 		record.view.CompletedAt = &now
 		record.view.Result = &projection
 		record.view.Retention = retention
 		record.report = report
+		server.evictCompletedRunsLocked()
 		server.mu.Unlock()
-		if record.retain {
-			status := "completed"
-			label := "Research case saved locally"
-			if retention.Status != "saved" {
-				status = "failed"
-				label = "Research completed; local save unavailable"
-			}
-			server.publish(record, StreamEvent{Type: "retention", Status: status, Label: label, At: now})
-		}
-		server.publish(record, StreamEvent{Type: "workspace", Status: "completed", Label: "Research case ready", At: now})
 	})
 }
 
 func (server *Server) fail(record *runRecord, code string, retryable bool) {
+	server.initializeRetention(record)
 	record.terminalOnce.Do(func() {
 		now := server.config.Now()
 		status := "failed"
 		if code == "context_cancelled" {
 			status = "cancelled"
 		}
+		server.publish(record, StreamEvent{Type: "workspace", Status: status, Label: failureLabel(code), At: now})
 		server.mu.Lock()
 		record.view.Status = status
 		record.view.CompletedAt = &now
 		record.view.Failure = &PublicFailure{Code: code, Retryable: retryable}
+		server.evictCompletedRunsLocked()
 		server.mu.Unlock()
-		server.publish(record, StreamEvent{Type: "workspace", Status: status, Label: failureLabel(code), At: now})
 	})
 }
 
 func (server *Server) publish(record *runRecord, event StreamEvent) {
 	server.mu.Lock()
-	event.Sequence = len(record.events) + 1
+	record.nextSequence++
+	event.Sequence = record.nextSequence
 	event.RunID = record.view.RunID
 	if event.At.IsZero() {
 		event.At = server.config.Now()
 	}
+	event.Attributes = safeStreamAttributes(event.Attributes)
+	if record.execution != nil {
+		next := cloneExecutionPlan(*record.execution)
+		if executionplan.Apply(&next, executionplan.Event{
+			Sequence: event.Sequence, StepID: event.StepID, Type: event.Type,
+			Status: event.Status, At: event.At, Attributes: event.Attributes,
+		}) == nil {
+			record.execution = &next
+			record.view.Execution = cloneExecutionPlanPointer(&next)
+			if record.view.Result != nil {
+				record.view.Result.ExecutionPlan = cloneExecutionPlanPointer(&next)
+			}
+		}
+	}
 	record.events = append(record.events, event)
+	if len(record.events) > maximumStoredRunEvents {
+		record.events = append([]StreamEvent(nil), record.events[len(record.events)-maximumStoredRunEvents:]...)
+	}
 	for subscriber := range record.subscribers {
 		select {
 		case subscriber <- event:
@@ -795,6 +964,27 @@ func (server *Server) record(runID string) (*runRecord, bool) {
 	record, ok := server.runs[runID]
 	server.mu.RUnlock()
 	return record, ok
+}
+
+func (server *Server) evictCompletedRunsLocked() {
+	if len(server.runs) <= maximumStoredRuns {
+		return
+	}
+	kept := make([]string, 0, len(server.runOrder))
+	for _, runID := range server.runOrder {
+		record, ok := server.runs[runID]
+		if !ok {
+			continue
+		}
+		if len(server.runs) > maximumStoredRuns &&
+			record.view.Status != "running" &&
+			len(record.subscribers) == 0 {
+			delete(server.runs, runID)
+			continue
+		}
+		kept = append(kept, runID)
+	}
+	server.runOrder = kept
 }
 
 func (server *Server) writeCaseStoreProblem(writer http.ResponseWriter, err error, fallback string) {
@@ -814,6 +1004,66 @@ func retentionInitialStatus(requested, available bool) RetentionView {
 		view.ErrorCode = "case_store_unavailable"
 	}
 	return view
+}
+
+func (server *Server) initializeRetention(record *runRecord) {
+	server.mu.Lock()
+	if record.retentionSet {
+		server.mu.Unlock()
+		return
+	}
+	record.retentionSet = true
+	requested := record.retain
+	available := server.config.CaseStore != nil
+	server.mu.Unlock()
+
+	now := server.config.Now()
+	if !requested {
+		server.publish(record, StreamEvent{
+			Type: "retention", Status: "not_requested",
+			Label: "Research remains ephemeral", At: now,
+		})
+		return
+	}
+	server.publish(record, StreamEvent{
+		Type: "retention", Status: "requested",
+		Label: "Local case retention requested", At: now,
+	})
+	if !available {
+		server.publish(record, StreamEvent{
+			Type: "retention", Status: "unavailable",
+			Label: "Local case retention unavailable", At: now,
+			Attributes: map[string]string{"code": "case_store_unavailable"},
+		})
+		return
+	}
+	server.publish(record, StreamEvent{
+		Type: "retention", Status: "approved",
+		Label: "Local case retention authorized", At: now,
+	})
+}
+
+func (server *Server) markCaseDeleted(caseID string) {
+	var record *runRecord
+	server.mu.RLock()
+	for _, candidate := range server.runs {
+		if candidate.view.Retention.CaseID == caseID {
+			record = candidate
+			break
+		}
+	}
+	server.mu.RUnlock()
+	if record == nil {
+		return
+	}
+	server.publish(record, StreamEvent{
+		Type: "retention", Status: "deleted", Label: "Local research case deleted",
+		At: server.config.Now(), Attributes: map[string]string{"case_id": caseID},
+	})
+	server.mu.Lock()
+	record.view.Retention.Status = "deleted"
+	record.view.Retention.ErrorCode = ""
+	server.mu.Unlock()
 }
 
 func validCaseID(value string) (string, bool) {
@@ -860,11 +1110,246 @@ type runSink struct {
 	record *runRecord
 }
 
+type runModelObserver struct {
+	audit  *intelligenceaudit.Recorder
+	server *Server
+	record *runRecord
+}
+
+func (observer runModelObserver) ObserveModelCall(
+	ctx context.Context,
+	roleID string,
+	providerID string,
+	request benchmark.Request,
+	completion benchmark.Completion,
+	callErr error,
+) {
+	if observer.audit != nil {
+		observer.audit.ObserveModelCall(ctx, roleID, providerID, request, completion, callErr)
+	}
+	stepID := observer.stepID(roleID)
+	if stepID == "" {
+		return
+	}
+	route := publicModelRoute(providerID)
+	attempt, callKind, previousRoute := observer.classifyAttempt(stepID, route, request, callErr)
+	status := "completed"
+	if callErr != nil {
+		status = "failed"
+	}
+	label := "Authorized primary model call " + status
+	if callKind != "primary" {
+		label = "Authorized " + strings.ReplaceAll(callKind, "_", " ") + " model call " + status
+	}
+	attributes := map[string]string{
+		"role_id":   roleID,
+		"route":     route,
+		"attempt":   strconv.Itoa(attempt),
+		"call_kind": callKind,
+	}
+	if previousRoute != "" {
+		attributes["previous_route"] = previousRoute
+	}
+	observer.server.publish(observer.record, StreamEvent{
+		StepID: stepID, Type: "model", Status: status,
+		Label: label, At: observer.server.config.Now(), Attributes: attributes,
+	})
+}
+
+func (observer runModelObserver) classifyAttempt(
+	stepID string,
+	route string,
+	request benchmark.Request,
+	callErr error,
+) (int, string, string) {
+	systemSHA := ""
+	if len(request.Messages) > 0 {
+		sum := sha256.Sum256([]byte(request.Messages[0].Content))
+		systemSHA = fmt.Sprintf("%x", sum[:])
+	}
+	observer.server.mu.Lock()
+	defer observer.server.mu.Unlock()
+	if observer.record.modelCalls == nil {
+		observer.record.modelCalls = map[string]modelAttemptState{}
+	}
+	state := observer.record.modelCalls[stepID]
+	previousRoute := state.LastRoute
+	callKind := "primary"
+	if state.Attempts > 0 {
+		switch {
+		case previousRoute != "" && previousRoute != route:
+			callKind = "fallback"
+		case state.LastFailed:
+			callKind = "retry"
+		case request.MaxTokens > state.LastMaxTokens ||
+			systemSHA != "" && state.LastSystemSHA != "" && systemSHA != state.LastSystemSHA:
+			callKind = "bounded_repair"
+		default:
+			callKind = "retry"
+		}
+	}
+	state.Attempts++
+	state.LastRoute = route
+	state.LastFailed = callErr != nil
+	state.LastMaxTokens = request.MaxTokens
+	state.LastSystemSHA = systemSHA
+	observer.record.modelCalls[stepID] = state
+	return state.Attempts, callKind, previousRoute
+}
+
+func (observer runModelObserver) stepID(roleID string) string {
+	observer.server.mu.RLock()
+	defer observer.server.mu.RUnlock()
+	if observer.record.execution == nil {
+		return ""
+	}
+	for _, step := range observer.record.execution.Steps {
+		if step.RoleID == roleID {
+			return step.StepID
+		}
+	}
+	return ""
+}
+
+func publicModelRoute(providerID string) string {
+	value := strings.ToLower(strings.TrimSpace(providerID))
+	if strings.Contains(value, "local") || strings.Contains(value, "loopback") ||
+		strings.Contains(value, "rocm") {
+		return "local_rocm"
+	}
+	if strings.Contains(value, "radeon") || strings.Contains(value, "specialist") {
+		return "radeon_api"
+	}
+	return "authorized_model_api"
+}
+
+func (sink runSink) AcceptPlan(plan contracts.ResearchPlan, at time.Time) {
+	projection, err := executionplan.FromPlan(plan, at)
+	if err != nil {
+		return
+	}
+	sink.server.mu.Lock()
+	sink.record.execution = &projection
+	sink.record.view.Execution = cloneExecutionPlanPointer(&projection)
+	sink.server.mu.Unlock()
+	sink.server.initializeRetention(sink.record)
+}
+
 func (sink runSink) Emit(event orchestrator.Event) {
 	sink.server.publish(sink.record, StreamEvent{
 		StepID: event.StepID, Type: event.Type, Status: event.Status,
 		Label: eventLabel(event.Type, event.Status), At: event.At,
+		Attributes: safeStreamAttributes(event.Attributes),
 	})
+}
+
+func fixtureResearchPlan(projection Projection) (contracts.ResearchPlan, error) {
+	plan := contracts.ResearchPlan{
+		SchemaVersion: contracts.SchemaVersionV1, RunID: projection.RunID, RequestID: projection.RequestID,
+		MaxParallelSpecialists: 4, MaxRepairPasses: 1, DeadlineMS: 180000,
+		CompletionConditions: []string{"review_approved", "single_final_answer"},
+		AbstentionConditions: []string{"missing_primary_evidence"},
+	}
+	seen := map[string]bool{}
+	contextIDs := []string{}
+	reviewIDs := []string{}
+	for _, event := range projection.Events {
+		if event.Type == "plan" && plan.PlanID == "" {
+			plan.PlanID = event.Attributes["plan_id"]
+		}
+		if event.StepID == "" || seen[event.StepID] ||
+			(event.Type != "context" && event.Type != "review" && event.Type != "synthesis") {
+			continue
+		}
+		seen[event.StepID] = true
+		roleID := event.Attributes["role_id"]
+		if roleID == "" {
+			roleID = map[string]string{
+				"context": "business-strategy/v1", "review": "evidence-critic/v1",
+				"synthesis": "final-research-analyst/v1",
+			}[event.Type]
+		}
+		step := contracts.PlanStep{
+			StepID: event.StepID, Kind: event.Type, Objective: fixtureStepObjective(event.Type),
+			RoleID: roleID, Mandatory: true, ContextBudget: 1200, TimeoutMS: 30000,
+		}
+		switch event.Type {
+		case "context":
+			step.Wave = 1
+			if len(contextIDs) >= plan.MaxParallelSpecialists {
+				step.Wave = 2
+				step.DependsOn = append([]string(nil), contextIDs[:plan.MaxParallelSpecialists]...)
+			}
+			contextIDs = append(contextIDs, step.StepID)
+		case "review":
+			if len(reviewIDs) == 0 {
+				step.DependsOn = append([]string(nil), contextIDs...)
+			} else {
+				step.DependsOn = []string{reviewIDs[len(reviewIDs)-1]}
+			}
+			reviewIDs = append(reviewIDs, step.StepID)
+		case "synthesis":
+			if len(reviewIDs) > 0 {
+				step.DependsOn = []string{reviewIDs[len(reviewIDs)-1]}
+			} else {
+				step.DependsOn = append([]string(nil), contextIDs...)
+			}
+		}
+		plan.Steps = append(plan.Steps, step)
+	}
+	if plan.PlanID == "" {
+		plan.PlanID = "plan-fixture-" + projection.RunID
+	}
+	if err := contracts.ValidateResearchPlan(plan); err != nil {
+		return contracts.ResearchPlan{}, err
+	}
+	return plan, nil
+}
+
+func hydrateFixtureExecution(projection *Projection) error {
+	if projection == nil {
+		return errors.New("workspace fixture is required")
+	}
+	plan, err := fixtureResearchPlan(*projection)
+	if err != nil {
+		return err
+	}
+	createdAt := projection.AsOf
+	completedAt := projection.AsOf
+	if len(projection.Events) > 0 && !projection.Events[0].At.IsZero() {
+		createdAt = projection.Events[0].At
+		completedAt = projection.Events[len(projection.Events)-1].At
+	}
+	execution, err := executionplan.FromPlan(plan, createdAt)
+	if err != nil {
+		return err
+	}
+	for _, event := range projection.Events {
+		if err := executionplan.Apply(&execution, executionplan.Event{
+			Sequence: event.Sequence, StepID: event.StepID, Type: event.Type,
+			Status: event.Status, At: event.At, Attributes: safeStreamAttributes(event.Attributes),
+		}); err != nil {
+			return err
+		}
+	}
+	if err := executionplan.MarkCompleted(&execution, completedAt); err != nil {
+		return err
+	}
+	projection.ExecutionPlan = &execution
+	return Validate(*projection)
+}
+
+func fixtureStepObjective(kind string) string {
+	switch kind {
+	case "context":
+		return "Compile governed evidence and deterministic receipts for the selected research scope."
+	case "review":
+		return "Independently review evidence, calculations, assumptions, and release boundaries."
+	case "synthesis":
+		return "Compose one evidence-grounded answer from material approved by the review gates."
+	default:
+		return "Execute the governed research step."
+	}
 }
 
 func normalizedScenario(question string, scenario ScenarioControl) (string, []string, error) {
@@ -899,15 +1384,22 @@ func normalizedScenario(question string, scenario ScenarioControl) (string, []st
 
 func eventLabel(eventType, status string) string {
 	labels := map[string]string{
-		"plan:accepted":       "Research plan accepted",
-		"context:started":     "Specialist context started",
-		"context:completed":   "Specialist context ready",
-		"context:failed":      "Specialist context degraded",
-		"review:started":      "Independent review started",
-		"review:completed":    "Independent review complete",
-		"synthesis:started":   "Final synthesis started",
-		"synthesis:completed": "Final synthesis complete",
-		"run:completed":       "Research run completed",
+		"interpretation:completed":              "Governed request interpretation complete",
+		"interpretation:clarification_required": "Clarification required before planning",
+		"planning:completed":                    "Bounded research plan complete",
+		"plan:accepted":                         "Research plan accepted",
+		"context:started":                       "Specialist context started",
+		"context:completed":                     "Specialist context ready",
+		"context:failed":                        "Specialist context degraded",
+		"retrieval:completed":                   "Authorized evidence retrieval complete",
+		"retrieval:failed":                      "Authorized evidence retrieval unavailable",
+		"tool:completed":                        "Deterministic engine receipt ready",
+		"tool:failed":                           "Deterministic engine receipt unavailable",
+		"review:started":                        "Independent review started",
+		"review:completed":                      "Independent review complete",
+		"synthesis:started":                     "Final synthesis started",
+		"synthesis:completed":                   "Final synthesis complete",
+		"run:completed":                         "Research run completed",
 	}
 	if label := labels[eventType+":"+status]; label != "" {
 		return label
@@ -932,6 +1424,8 @@ func failureLabel(code string) string {
 		return "Research run cancelled"
 	case "context_deadline_exceeded":
 		return "Local model timed out"
+	case "clarification_required":
+		return "Clarification required before planning"
 	case "evidence_rejected":
 		return "Evidence review rejected the draft"
 	case "local_runtime_temporarily_unavailable":
@@ -953,6 +1447,74 @@ func cloneRunView(view RunView) RunView {
 	var clone RunView
 	_ = json.Unmarshal(payload, &clone)
 	return clone
+}
+
+func cloneExecutionPlan(projection executionplan.Projection) executionplan.Projection {
+	payload, _ := json.Marshal(projection)
+	var clone executionplan.Projection
+	_ = json.Unmarshal(payload, &clone)
+	return clone
+}
+
+func cloneExecutionPlanPointer(projection *executionplan.Projection) *executionplan.Projection {
+	if projection == nil {
+		return nil
+	}
+	clone := cloneExecutionPlan(*projection)
+	return &clone
+}
+
+func safeStreamAttributes(attributes map[string]string) map[string]string {
+	allowed := map[string]bool{
+		"answer_id": true, "code": true, "packet_id": true, "plan_id": true,
+		"report_id": true, "role_id": true, "route": true, "route_reason_code": true,
+		"attempt": true, "call_kind": true, "previous_route": true, "case_id": true,
+		"as_of": true, "engine_id": true, "evidence_count": true, "formula_version": true,
+		"input_count": true, "input_ref_ids": true, "invariant_count": true, "invariants_passed": true,
+		"operation_id": true, "output_count": true, "output_ref_ids": true, "receipt_id": true,
+		"receipt_sha256": true, "source_classes": true, "warning_count": true,
+		"retrieval_id": true, "bundle_id": true, "retrieval_method": true,
+		"candidate_count": true, "selected_candidate_count": true,
+		"rejected_candidate_count": true, "candidate_count_state": true,
+		"tool_execution_id": true,
+		"primary_intent":    true, "entity_count": true, "entity_ids": true,
+		"answer_depth": true, "ambiguity_count": true, "requested_output_count": true,
+		"role_count": true, "wave_count": true, "max_parallel_specialists": true,
+		"max_repair_passes": true, "deadline_ms": true, "completion_condition_count": true,
+		"abstention_condition_count": true,
+		"completion_conditions":      true, "abstention_conditions": true,
+		"finding_count": true, "counterevidence_count": true,
+		"missing_evidence_count": true, "conflict_count": true,
+		"uncertainty_count": true, "evidence_coverage": true, "authority_state": true,
+		"approved_claim_count": true, "rejected_claim_count": true,
+		"issue_count": true, "repair_pass": true,
+		"mandatory_review_count": true, "claim_count": true,
+		"supported_claim_coverage": true, "evidence_ref_count": true,
+		"receipt_ref_count": true, "limitation_count": true, "section_count": true,
+	}
+	safe := map[string]string{}
+	for key, value := range attributes {
+		value = strings.TrimSpace(value)
+		if !allowed[key] || value == "" || len(value) > 256 {
+			continue
+		}
+		valid := true
+		for index, character := range value {
+			if !(character >= 'a' && character <= 'z' || character >= 'A' && character <= 'Z' ||
+				character >= '0' && character <= '9' || strings.ContainsRune("._:/@+-", character)) ||
+				index == 0 && strings.ContainsRune(".:", character) {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			safe[key] = value
+		}
+	}
+	if len(safe) == 0 {
+		return nil
+	}
+	return safe
 }
 
 func writeSSE(writer io.Writer, event StreamEvent) error {
