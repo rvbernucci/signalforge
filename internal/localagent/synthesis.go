@@ -731,7 +731,14 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 	}
 	renderOperationIDs := func(value string) string {
 		for operation, label := range displayNames {
-			pattern := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(operation) + `\b`)
+			parts := strings.Split(operation, ".")
+			escaped := make([]string, 0, len(parts))
+			for _, part := range parts {
+				escaped = append(escaped, regexp.QuoteMeta(part))
+			}
+			leaf := escaped[len(escaped)-1]
+			pattern := regexp.MustCompile(`(?i)\b` + strings.Join(escaped, `\.\s*`) +
+				`(?:\.\s*` + leaf + `)?\b`)
 			value = pattern.ReplaceAllString(value, label)
 		}
 		return value

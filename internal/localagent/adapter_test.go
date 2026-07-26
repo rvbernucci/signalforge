@@ -1418,7 +1418,7 @@ func TestRepairReceiptAvailabilityClaimsRendersOperationIDsBeforeSentenceParsing
 	body := finalBody{
 		Sections: []answerSectionDraft{{
 			SectionType: "valuation_range",
-			Content:     "financial.free_cash_flow is available. valuation.fcff_dcf remains unavailable.",
+			Content:     "financial. free_cash_flow. free_cash_flow is available. valuation. fcff_dcf remains unavailable.",
 		}},
 		Limitations: []string{"valuation.peer_multiple remains unavailable."},
 	}
