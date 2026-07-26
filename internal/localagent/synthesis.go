@@ -124,13 +124,16 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 	repairReceiptAvailabilityClaims(&body, material)
 	neutralizeInternalReferenceMentions(&body, material)
 	ensureVisibleComparisonBoundary(&body, material)
-	draftErr := validateNumericallySilentDraft(body)
-	if draftErr != nil {
-		// Numerical Silence is Go-owned: safely narrow model-authored numerical prose before
-		// spending a second inference. Every remaining semantic and authority contract below is
-		// still revalidated, and an unrepairable draft remains fail-closed.
-		if repairErr := repairAuthorizedNumericalDraft(&body, material); repairErr == nil {
-			draftErr = validateNumericallySilentDraft(body)
+	draftErr := validateRequestedSectionSet(body.Sections, input.Request.RequestedOutputs)
+	if draftErr == nil {
+		draftErr = validateNumericallySilentDraft(body)
+		if draftErr != nil {
+			// Numerical Silence is Go-owned: safely narrow model-authored numerical prose before
+			// spending a second inference. Every remaining semantic and authority contract below
+			// is still revalidated, and an unrepairable draft remains fail-closed.
+			if repairErr := repairAuthorizedNumericalDraft(&body, material); repairErr == nil {
+				draftErr = validateNumericallySilentDraft(body)
+			}
 		}
 	}
 	if draftErr == nil {
@@ -156,7 +159,7 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 			return contracts.FinalAnswer{}, draftErr
 		}
 		retryPrompt := prompt
-		retryPrompt.System += " The previous semantic draft was rejected by application code. On this single bounded repair, use qualitative language, normal English spelling, and approved claim_refs only. Do not repeat, mask, replace, or paraphrase any number; Go will render every authorized quantity after synthesis. Do not state which company has a higher, lower, greater, or smaller financial metric, valuation, price, return, margin, growth rate, cash flow, or multiple; select the approved claim_refs and let Go render direction. Never say that DCF, sensitivity, multiples, or another calculation is missing when a corresponding calculation_receipt is present. When counterevidence or invalidation_conditions is requested, each section must cite at least one approved claim whose disposition is counterevidence. State an explicit testable invalidation condition without inventing a numerical threshold. A comparison section must cite approved business-strategy, accounting-reporting, and financial-quality claims. A transmission_mechanisms section must cite an approved economics-transmission claim. A market_measurement section must cite an approved market-behavior claim. A scenarios section must cite both an approved valuation claim and an approved scenario-grounded economics-transmission claim. In transmission_mechanisms and market_measurement, never use caused, causes, resulted from, resulted in, because of, or due to. Never claim that correlation, co-movement, or timing proves causality. Never tell the user to buy, sell, or hold a security and never promise a return, profit, upside, or certainty."
+		retryPrompt.System += " The previous semantic draft was rejected by application code. On this single bounded repair, return every requested section_type exactly once, with no duplicates and no additional section types. Use qualitative language, normal English spelling, and approved claim_refs only. Do not repeat, mask, replace, or paraphrase any number; Go will render every authorized quantity after synthesis. Do not state which company has a higher, lower, greater, or smaller financial metric, valuation, price, return, margin, growth rate, cash flow, or multiple; select the approved claim_refs and let Go render direction. Never say that DCF, sensitivity, multiples, or another calculation is missing when a corresponding calculation_receipt is present. When counterevidence or invalidation_conditions is requested, each section must cite at least one approved claim whose disposition is counterevidence. State an explicit testable invalidation condition without inventing a numerical threshold. A comparison section must cite approved business-strategy, accounting-reporting, and financial-quality claims. A transmission_mechanisms section must cite an approved economics-transmission claim. A market_measurement section must cite an approved market-behavior claim. A scenarios section must cite both an approved valuation claim and an approved scenario-grounded economics-transmission claim. In transmission_mechanisms and market_measurement, never use caused, causes, resulted from, resulted in, because of, or due to. Never claim that correlation, co-movement, or timing proves causality. Never tell the user to buy, sell, or hold a security and never promise a return, profit, upside, or certainty."
 		completion, err = adapters.complete(ctx, retryPrompt, string(payload))
 		if err != nil {
 			return contracts.FinalAnswer{}, err
@@ -172,6 +175,9 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 		repairReceiptAvailabilityClaims(&body, material)
 		neutralizeInternalReferenceMentions(&body, material)
 		ensureVisibleComparisonBoundary(&body, material)
+		if err := validateRequestedSectionSet(body.Sections, input.Request.RequestedOutputs); err != nil {
+			return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded section-set retry: %w", err)
+		}
 		if err := validateNumericallySilentDraft(body); err != nil {
 			if repairErr := repairAuthorizedNumericalDraft(&body, material); repairErr != nil {
 				return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded numerical-silence retry: %w", err)
@@ -811,15 +817,12 @@ func assembleFinalSections(
 	requested []string,
 	packets []contracts.ContextPacket,
 ) ([]contracts.AnswerSection, error) {
+	if err := validateRequestedSectionSet(drafts, requested); err != nil {
+		return nil, err
+	}
 	byType := make(map[string]answerSectionDraft, len(drafts))
 	for _, draft := range drafts {
-		if _, exists := byType[draft.SectionType]; exists {
-			return nil, fmt.Errorf("final answer duplicated section %q", draft.SectionType)
-		}
 		byType[draft.SectionType] = draft
-	}
-	if len(byType) != len(requested) {
-		return nil, fmt.Errorf("final answer produced %d unique sections for %d requested outputs", len(byType), len(requested))
 	}
 
 	claimAuthority := make(map[string]contracts.Finding)
@@ -869,6 +872,32 @@ func assembleFinalSections(
 		sections = append(sections, section)
 	}
 	return sections, nil
+}
+
+func validateRequestedSectionSet(drafts []answerSectionDraft, requested []string) error {
+	expected := make(map[string]bool, len(requested))
+	for _, sectionType := range requested {
+		if expected[sectionType] {
+			return fmt.Errorf("request duplicated section type %q", sectionType)
+		}
+		expected[sectionType] = true
+	}
+	seen := make(map[string]bool, len(drafts))
+	for _, draft := range drafts {
+		if !expected[draft.SectionType] {
+			return fmt.Errorf("final answer produced unrequested section %q", draft.SectionType)
+		}
+		if seen[draft.SectionType] {
+			return fmt.Errorf("final answer duplicated section %q", draft.SectionType)
+		}
+		seen[draft.SectionType] = true
+	}
+	for _, sectionType := range requested {
+		if !seen[sectionType] {
+			return fmt.Errorf("final answer omitted requested section %q", sectionType)
+		}
+	}
+	return nil
 }
 
 func dedupeStrings(values []string) []string {

@@ -952,6 +952,45 @@ func TestSynthesizerRetriesIncompleteJSONOnce(t *testing.T) {
 	}
 }
 
+func TestSynthesizerRepairsDuplicatedAndMissingSectionOnce(t *testing.T) {
+	now := time.Now().UTC()
+	invalid := `{"sections":[
+	  {"section_type":"business_overview","title":"Overview","content":"Revenue grew.","claim_refs":["claim-1"]},
+	  {"section_type":"business_overview","title":"Duplicate","content":"Another overview.","claim_refs":["claim-1"]},
+	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
+	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
+	safe := `{"sections":[
+	  {"section_type":"business_overview","title":"Overview","content":"Revenue grew.","claim_refs":["claim-1"]},
+	  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":[]},
+	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
+	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
+	client := &fakeCompleter{answers: []string{invalid, safe}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+	critique := contracts.CritiqueReport{
+		SchemaVersion: contracts.SchemaVersionV1, ReportID: "critique-1", RunID: "run-1",
+		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueApprove,
+		ApprovedClaims: []string{"claim-1"}, CreatedAt: now,
+	}
+	answer, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
+		Request: validResearchRequest(now), Packets: []contracts.ContextPacket{validPacket(now)},
+		Critiques: []contracts.CritiqueReport{critique},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(client.requests) != 2 ||
+		!strings.Contains(client.requests[1].Messages[0].Content, "every requested section_type exactly once") {
+		t.Fatalf("section-set repair was not bounded and explicit: %+v", client.requests)
+	}
+	if got := []string{
+		answer.Sections[0].SectionType,
+		answer.Sections[1].SectionType,
+		answer.Sections[2].SectionType,
+	}; !slices.Equal(got, validResearchRequest(now).RequestedOutputs) {
+		t.Fatalf("Go did not reconstruct requested section order: %v", got)
+	}
+}
+
 func TestSynthesizerRepairsAuthorizedNumericalSilenceViolationWithoutRetry(t *testing.T) {
 	now := time.Now().UTC()
 	client := &fakeCompleter{answers: []string{
@@ -1262,6 +1301,30 @@ func TestAssembleFinalSectionsOwnsOrderAndAuthorityJoins(t *testing.T) {
 	}
 	if !slices.Equal(sections[0].EvidenceRefs, []string{"evidence-1"}) || !slices.Equal(sections[0].ReceiptRefs, []string{"receipt-2"}) {
 		t.Fatalf("Go did not derive authority joins: %+v", sections[0])
+	}
+}
+
+func TestValidateRequestedSectionSetRejectsMalformedShape(t *testing.T) {
+	requested := []string{"business_overview", "evidence", "limitations"}
+	if err := validateRequestedSectionSet([]answerSectionDraft{
+		{SectionType: "business_overview"},
+		{SectionType: "business_overview"},
+		{SectionType: "limitations"},
+	}, requested); err == nil || !strings.Contains(err.Error(), "duplicated section") {
+		t.Fatalf("duplicate section was not rejected: %v", err)
+	}
+	if err := validateRequestedSectionSet([]answerSectionDraft{
+		{SectionType: "business_overview"},
+		{SectionType: "limitations"},
+	}, requested); err == nil || !strings.Contains(err.Error(), "omitted requested section") {
+		t.Fatalf("missing section was not rejected: %v", err)
+	}
+	if err := validateRequestedSectionSet([]answerSectionDraft{
+		{SectionType: "business_overview"},
+		{SectionType: "evidence"},
+		{SectionType: "unexpected"},
+	}, requested); err == nil || !strings.Contains(err.Error(), "unrequested section") {
+		t.Fatalf("unrequested section was not rejected: %v", err)
 	}
 }
 
