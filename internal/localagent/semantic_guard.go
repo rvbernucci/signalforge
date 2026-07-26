@@ -50,7 +50,9 @@ func validateSpecialistSemantics(packet contracts.ContextPacket) error {
 				Detail: "assertive causal language requires an explicit conditional boundary",
 			}
 		}
-		if finding.ClaimType == contracts.ClaimFact && scenarioPattern.MatchString(statement) {
+		if finding.ClaimType == contracts.ClaimFact &&
+			scenarioPattern.MatchString(statement) &&
+			!isGovernedScenarioBoundaryFinding(finding) {
 			return semanticViolation{
 				Code: semanticScenarioAsFact, ClaimID: finding.ClaimID,
 				Detail: "scenario or forecast language cannot be released as an observed fact",
@@ -88,6 +90,33 @@ func validateSpecialistSemantics(packet contracts.ContextPacket) error {
 		}
 	}
 	return nil
+}
+
+func isGovernedScenarioBoundaryFinding(finding contracts.Finding) bool {
+	if finding.Origin != contracts.FindingOriginSourceExtraction ||
+		len(finding.EvidenceRefs) == 0 {
+		return false
+	}
+	for _, evidenceID := range finding.EvidenceRefs {
+		if !strings.HasPrefix(evidenceID, "product-scope:") {
+			return false
+		}
+	}
+	lower := strings.ToLower(finding.Statement)
+	for _, boundary := range []string{
+		"does not activate",
+		"is not activated",
+		"not activated",
+		"unavailable",
+		"withheld",
+		"must abstain",
+		"remains an explicit conditional hypothesis",
+	} {
+		if strings.Contains(lower, boundary) {
+			return true
+		}
+	}
+	return false
 }
 
 // quarantineModelSemanticViolations applies the fail-closed boundary at claim granularity.

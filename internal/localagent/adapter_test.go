@@ -2243,12 +2243,16 @@ func TestResponsibleUseRejectsDirectTradingInstructionsAndGuaranteedOutcomes(t *
 func TestGoPlacesMandatorySemanticAuthorityWithoutInventingClaims(t *testing.T) {
 	assumption := "Higher rates are an explicit scenario."
 	material := synthesisPromptInput{
-		Request: synthesisRequestView{Assumptions: []string{assumption}},
+		Request: synthesisRequestView{
+			PrimaryIntent: "economic_transmission",
+			Assumptions:   []string{assumption},
+		},
 		Claims: []synthesisClaimView{
 			{SpecialistRole: roles.BusinessStrategy, Finding: contracts.Finding{ClaimID: "business", EvidenceRefs: []string{"nvda-export-controls"}}},
 			{SpecialistRole: roles.AccountingReporting, Finding: contracts.Finding{ClaimID: "accounting", EvidenceRefs: []string{"comparison:fiscal-period-boundary"}}},
 			{SpecialistRole: roles.FinancialQuality, Finding: contracts.Finding{ClaimID: "financial"}},
 			{SpecialistRole: roles.EconomicsTransmission, Finding: contracts.Finding{ClaimID: "economics", ClaimType: contracts.ClaimHypothesis, AssumptionRefs: []string{assumption}}},
+			{SpecialistRole: roles.EconomicsTransmission, Finding: contracts.Finding{ClaimID: "economics-boundary", EvidenceRefs: []string{"product-scope:economics-transmission/v1"}}},
 			{SpecialistRole: roles.Valuation, Finding: contracts.Finding{ClaimID: "valuation"}},
 			{SpecialistRole: roles.MarketBehavior, Finding: contracts.Finding{ClaimID: "market"}},
 		},
@@ -2262,14 +2266,61 @@ func TestGoPlacesMandatorySemanticAuthorityWithoutInventingClaims(t *testing.T) 
 	placeRequiredSemanticAuthority(sections, material)
 	if !slices.Contains(sections[0].ClaimRefs, "accounting") ||
 		!slices.Contains(sections[1].ClaimRefs, "economics") ||
+		!slices.Contains(sections[1].ClaimRefs, "economics-boundary") ||
 		!slices.Contains(sections[1].ClaimRefs, "business") ||
 		!slices.Contains(sections[2].ClaimRefs, "market") ||
-		!slices.Contains(sections[3].ClaimRefs, "valuation") || !slices.Contains(sections[3].ClaimRefs, "economics") {
+		!slices.Contains(sections[3].ClaimRefs, "economics") ||
+		!slices.Contains(sections[3].ClaimRefs, "economics-boundary") {
 		t.Fatalf("mandatory authority join is incomplete: %+v", sections)
 	}
 	if strings.Contains(strings.Join(sections[0].ClaimRefs, ","), "invented") ||
 		!strings.Contains(sections[0].Content, "reporting comparability") {
 		t.Fatalf("authority join invented or hid its semantic boundary: %+v", sections[0])
+	}
+}
+
+func TestEconomicTransmissionSectionsReceiveEvidenceBackedBoundaryAuthority(t *testing.T) {
+	assumption := "Higher rates are an explicit scenario."
+	hypothesis := contracts.Finding{
+		ClaimID: "economics-hypothesis", ClaimType: contracts.ClaimHypothesis,
+		AssumptionRefs: []string{assumption},
+	}
+	boundary := contracts.Finding{
+		ClaimID: "economics-boundary", ClaimType: contracts.ClaimFact,
+		EvidenceRefs: []string{"product-scope:economics-transmission/v1"},
+	}
+	material := synthesisPromptInput{
+		Request: synthesisRequestView{
+			PrimaryIntent: "economic_transmission",
+			Assumptions:   []string{assumption},
+		},
+		Claims: []synthesisClaimView{
+			{SpecialistRole: roles.EconomicsTransmission, Finding: hypothesis},
+			{SpecialistRole: roles.EconomicsTransmission, Finding: boundary},
+		},
+	}
+	drafts := []answerSectionDraft{
+		{SectionType: "transmission_mechanisms", Title: "Transmission", Content: "Conditional pathways."},
+		{SectionType: "scenarios", Title: "Scenarios", Content: "Conditional scenarios."},
+	}
+	placeRequiredSemanticAuthority(drafts, material)
+	sections, err := assembleFinalSections(
+		drafts,
+		[]string{"transmission_mechanisms", "scenarios"},
+		[]contracts.ContextPacket{{
+			SpecialistRole: roles.EconomicsTransmission,
+			Findings:       []contracts.Finding{hypothesis, boundary},
+		}},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, section := range sections {
+		if !slices.Contains(section.ClaimRefs, hypothesis.ClaimID) ||
+			!slices.Contains(section.ClaimRefs, boundary.ClaimID) ||
+			!slices.Equal(section.EvidenceRefs, boundary.EvidenceRefs) {
+			t.Fatalf("section lacks hypothesis plus evidence-backed boundary authority: %+v", section)
+		}
 	}
 }
 

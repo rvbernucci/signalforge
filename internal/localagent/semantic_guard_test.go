@@ -48,6 +48,30 @@ func TestSemanticGuardRejectsScenarioAsFact(t *testing.T) {
 	}
 }
 
+func TestSemanticGuardAllowsSourceBackedUnavailableScenarioBoundary(t *testing.T) {
+	packet := semanticPacket(
+		roles.Valuation,
+		contracts.ClaimFact,
+		"Valuation scenario authority is unavailable; unsupported conclusions must abstain.",
+		nil,
+	)
+	packet.Findings[0].Origin = contracts.FindingOriginSourceExtraction
+	packet.Findings[0].EvidenceRefs = []string{"product-scope:valuation/v1"}
+	if err := validateSpecialistSemantics(packet); err != nil {
+		t.Fatalf("governed unavailable boundary was rejected: %v", err)
+	}
+
+	packet.Findings[0].Statement = "The scenario would increase enterprise value."
+	if err := validateSpecialistSemantics(packet); err == nil {
+		t.Fatal("source-extracted scenario assertion was accepted as a scope boundary")
+	}
+	packet.Findings[0].Statement = "Valuation scenario authority is unavailable."
+	packet.Findings[0].EvidenceRefs = []string{"sec-filing:item-7"}
+	if err := validateSpecialistSemantics(packet); err == nil {
+		t.Fatal("non-policy evidence bypassed the scenario-as-fact guard")
+	}
+}
+
 func TestSemanticGuardRequiresEconomicScenarioAssumption(t *testing.T) {
 	packet := semanticPacket(roles.EconomicsTransmission, contracts.ClaimHypothesis, "Higher rates could affect refinancing.", nil)
 	err := validateSpecialistSemantics(packet)

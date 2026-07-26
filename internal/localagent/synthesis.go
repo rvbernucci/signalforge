@@ -252,6 +252,15 @@ func placeRequiredSemanticAuthority(sections []answerSectionDraft, material synt
 		}
 		return byRole[roleID][0].Finding.ClaimID
 	}
+	firstSupported := func(roleID string) string {
+		for _, claim := range byRole[roleID] {
+			finding := claim.Finding
+			if len(finding.EvidenceRefs)+len(finding.CalculationRefs)+len(finding.NumericalRefs) > 0 {
+				return finding.ClaimID
+			}
+		}
+		return ""
+	}
 	claimByEvidence := func(match func(string) bool) string {
 		for _, claim := range material.Claims {
 			for _, evidenceID := range claim.Finding.EvidenceRefs {
@@ -282,6 +291,7 @@ func placeRequiredSemanticAuthority(sections []answerSectionDraft, material synt
 		case "transmission_mechanisms":
 			appendRef(section, first(roles.EconomicsTransmission))
 			appendRef(section, macroAuthority)
+			appendRef(section, firstSupported(roles.EconomicsTransmission))
 			section.Content = appendSentence(section.Content, "Transmission is presented as a conditional scenario mechanism.")
 			section.Content = appendSentence(section.Content, "Macro transmission remains anchored to issuer-disclosed currency, rate, export-control, or supply-chain risk.")
 		case "market_measurement":
@@ -290,6 +300,7 @@ func placeRequiredSemanticAuthority(sections []answerSectionDraft, material synt
 		case "scenarios":
 			if material.Request.PrimaryIntent == "economic_transmission" {
 				appendRef(section, first(roles.EconomicsTransmission))
+				appendRef(section, firstSupported(roles.EconomicsTransmission))
 				section.Content = appendSentence(section.Content, "Scenarios remain conditional on approved economic-transmission mechanisms.")
 			} else {
 				appendRef(section, first(roles.Valuation))
