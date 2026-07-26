@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "evidence/hardening-matrix.json",
-          "sha256": "68302cfff578297e2862d968552f425240b8a3b1fedd305d4db00654b9e0d281"
+          "sha256": "5eeb47952640de70542fbc1db1583099e6924ef34f9221eceb2a91a23aaa7bec"
         },
         {
           "path": "configs/hardening/sprint12-matrix-v1.json",
@@ -332,7 +332,7 @@
         },
         {
           "path": "internal/localagent/synthesis.go",
-          "sha256": "dadb213eb80936edd681356e9f4e4166f1c0959c906e5c2012e09caacd154d6e"
+          "sha256": "5464ad8589b529426059e485892b7512d0c93fb7d163d83b350eb696395babff"
         },
         {
           "path": "scripts/verify_clean_startup.sh",

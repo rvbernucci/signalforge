@@ -991,6 +991,34 @@ func TestSynthesizerRepairsDuplicatedAndMissingSectionOnce(t *testing.T) {
 	}
 }
 
+func TestSynthesizerDeterministicallyRepairsOnlyAuxiliarySectionAfterBoundedRetry(t *testing.T) {
+	now := time.Now().UTC()
+	invalid := `{"sections":[
+	  {"section_type":"business_overview","title":"Overview","content":"Revenue grew.","claim_refs":["claim-1"]},
+	  {"section_type":"business_overview","title":"Duplicate","content":"Another overview.","claim_refs":["claim-1"]},
+	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
+	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
+	client := &fakeCompleter{answers: []string{invalid, invalid}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+	critique := contracts.CritiqueReport{
+		SchemaVersion: contracts.SchemaVersionV1, ReportID: "critique-1", RunID: "run-1",
+		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueApprove,
+		ApprovedClaims: []string{"claim-1"}, CreatedAt: now,
+	}
+	answer, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
+		Request: validResearchRequest(now), Packets: []contracts.ContextPacket{validPacket(now)},
+		Critiques: []contracts.CritiqueReport{critique},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(client.requests) != 2 || answer.Sections[1].SectionType != "evidence" ||
+		!slices.Equal(answer.Sections[1].ClaimRefs, []string{"claim-1"}) ||
+		!slices.Equal(answer.Sections[1].EvidenceRefs, []string{"evidence-1"}) {
+		t.Fatalf("application-owned evidence section was not reconstructed safely: %+v", answer.Sections)
+	}
+}
+
 func TestSynthesizerRepairsAuthorizedNumericalSilenceViolationWithoutRetry(t *testing.T) {
 	now := time.Now().UTC()
 	client := &fakeCompleter{answers: []string{
@@ -1325,6 +1353,64 @@ func TestValidateRequestedSectionSetRejectsMalformedShape(t *testing.T) {
 		{SectionType: "unexpected"},
 	}, requested); err == nil || !strings.Contains(err.Error(), "unrequested section") {
 		t.Fatalf("unrequested section was not rejected: %v", err)
+	}
+}
+
+func TestApplicationOwnedSectionRepairRefusesMissingAnalyticalSection(t *testing.T) {
+	body := finalBody{
+		Sections: []answerSectionDraft{
+			{SectionType: "evidence"},
+			{SectionType: "limitations"},
+			{SectionType: "limitations"},
+		},
+		Limitations: []string{"One period."},
+	}
+	err := repairApplicationOwnedSectionSet(
+		&body,
+		[]string{"business_overview", "evidence", "limitations"},
+		[]synthesisClaimView{{Finding: contracts.Finding{
+			ClaimID: "claim-1", EvidenceRefs: []string{"evidence-1"},
+		}}},
+	)
+	if err == nil || !strings.Contains(err.Error(), "analytical section") {
+		t.Fatalf("missing analytical section was repaired instead of rejected: %v", err)
+	}
+}
+
+func TestNormalizeApplicationOwnedSectionAuthorityFiltersUnsupportedHypotheses(t *testing.T) {
+	sections := []answerSectionDraft{
+		{SectionType: "transmission_mechanisms", ClaimRefs: []string{"hypothesis"}},
+		{SectionType: "evidence", ClaimRefs: []string{"hypothesis", "supported"}},
+		{SectionType: "limitations", ClaimRefs: []string{"supported"}},
+	}
+	claims := []synthesisClaimView{
+		{Finding: contracts.Finding{ClaimID: "hypothesis"}},
+		{Finding: contracts.Finding{ClaimID: "supported", EvidenceRefs: []string{"evidence-1"}}},
+	}
+	normalizeApplicationOwnedSectionAuthority(sections, claims)
+	if !slices.Equal(sections[0].ClaimRefs, []string{"hypothesis"}) {
+		t.Fatalf("analytical section was modified: %+v", sections[0])
+	}
+	if !slices.Equal(sections[1].ClaimRefs, []string{"supported"}) {
+		t.Fatalf("evidence section retained unsupported authority: %+v", sections[1])
+	}
+	if len(sections[2].ClaimRefs) != 0 {
+		t.Fatalf("application-owned limitation retained model references: %+v", sections[2])
+	}
+}
+
+func TestNormalizeApplicationOwnedEvidenceUsesSupportedFallback(t *testing.T) {
+	sections := []answerSectionDraft{{
+		SectionType: "evidence",
+		ClaimRefs:   []string{"hypothesis"},
+	}}
+	claims := []synthesisClaimView{
+		{Finding: contracts.Finding{ClaimID: "hypothesis"}},
+		{Finding: contracts.Finding{ClaimID: "supported", CalculationRefs: []string{"receipt-1"}}},
+	}
+	normalizeApplicationOwnedSectionAuthority(sections, claims)
+	if !slices.Equal(sections[0].ClaimRefs, []string{"supported"}) {
+		t.Fatalf("evidence section did not receive supported fallback authority: %+v", sections[0])
 	}
 }
 

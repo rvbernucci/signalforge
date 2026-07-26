@@ -121,6 +121,7 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 	canonicalizeRequestedAssumptions(&body, material)
 	placeRequiredSemanticAuthority(body.Sections, material)
 	placeApprovedNumericalClaims(body.Sections, material.Claims)
+	normalizeApplicationOwnedSectionAuthority(body.Sections, material.Claims)
 	repairReceiptAvailabilityClaims(&body, material)
 	neutralizeInternalReferenceMentions(&body, material)
 	ensureVisibleComparisonBoundary(&body, material)
@@ -172,11 +173,14 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 		canonicalizeRequestedAssumptions(&body, material)
 		placeRequiredSemanticAuthority(body.Sections, material)
 		placeApprovedNumericalClaims(body.Sections, material.Claims)
+		normalizeApplicationOwnedSectionAuthority(body.Sections, material.Claims)
 		repairReceiptAvailabilityClaims(&body, material)
 		neutralizeInternalReferenceMentions(&body, material)
 		ensureVisibleComparisonBoundary(&body, material)
 		if err := validateRequestedSectionSet(body.Sections, input.Request.RequestedOutputs); err != nil {
-			return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded section-set retry: %w", err)
+			if repairErr := repairApplicationOwnedSectionSet(&body, input.Request.RequestedOutputs, material.Claims); repairErr != nil {
+				return contracts.FinalAnswer{}, fmt.Errorf("final answer after bounded section-set retry: %w", err)
+			}
 		}
 		if err := validateNumericallySilentDraft(body); err != nil {
 			if repairErr := repairAuthorizedNumericalDraft(&body, material); repairErr != nil {
@@ -903,6 +907,115 @@ func validateRequestedSectionSet(drafts []answerSectionDraft, requested []string
 		}
 	}
 	return nil
+}
+
+func repairApplicationOwnedSectionSet(
+	body *finalBody,
+	requested []string,
+	claims []synthesisClaimView,
+) error {
+	expected := make(map[string]bool, len(requested))
+	for _, sectionType := range requested {
+		expected[sectionType] = true
+	}
+	firstByType := make(map[string]answerSectionDraft, len(body.Sections))
+	for _, section := range body.Sections {
+		if !expected[section.SectionType] {
+			return fmt.Errorf("cannot repair unrequested section %q", section.SectionType)
+		}
+		if _, exists := firstByType[section.SectionType]; !exists {
+			firstByType[section.SectionType] = section
+		}
+	}
+	missing := make([]string, 0)
+	for _, sectionType := range requested {
+		if _, exists := firstByType[sectionType]; !exists {
+			missing = append(missing, sectionType)
+		}
+	}
+	if len(missing) == 0 {
+		return errors.New("deterministic section repair requires a missing application-owned section")
+	}
+	for _, sectionType := range missing {
+		switch sectionType {
+		case "assumptions":
+			firstByType[sectionType] = answerSectionDraft{
+				SectionType: sectionType,
+				Title:       "Assumptions",
+				Content:     noAuthorizedAssumptions,
+			}
+		case "limitations":
+			firstByType[sectionType] = answerSectionDraft{
+				SectionType: sectionType,
+				Title:       "Limitations",
+				Content:     "Application-authorized limitations are listed below.",
+			}
+		case "evidence":
+			refs := supportedSynthesisClaimIDs(claims, 8)
+			if len(refs) == 0 {
+				return errors.New("cannot reconstruct evidence section without supported authority")
+			}
+			firstByType[sectionType] = answerSectionDraft{
+				SectionType: sectionType,
+				Title:       "Evidence",
+				Content:     "Approved evidence and deterministic authority define the factual boundary of this answer.",
+				ClaimRefs:   refs,
+			}
+		default:
+			return fmt.Errorf("cannot deterministically reconstruct analytical section %q", sectionType)
+		}
+	}
+	body.Sections = body.Sections[:0]
+	for _, sectionType := range requested {
+		body.Sections = append(body.Sections, firstByType[sectionType])
+	}
+	return validateRequestedSectionSet(body.Sections, requested)
+}
+
+func supportedSynthesisClaimIDs(claims []synthesisClaimView, limit int) []string {
+	result := make([]string, 0, limit)
+	for _, claim := range claims {
+		finding := claim.Finding
+		if len(finding.EvidenceRefs)+len(finding.CalculationRefs)+len(finding.NumericalRefs) == 0 {
+			continue
+		}
+		result = append(result, finding.ClaimID)
+		if len(result) == limit {
+			break
+		}
+	}
+	return result
+}
+
+// Evidence, assumptions, and limitations are application-owned presentation sections. Preserve
+// model-selected evidence claims only when they carry real authority, and bind a supported fallback
+// when the model selected hypotheses alone. Analytical sections remain entirely model-owned.
+func normalizeApplicationOwnedSectionAuthority(
+	sections []answerSectionDraft,
+	claims []synthesisClaimView,
+) {
+	supported := supportedSynthesisClaimIDs(claims, 8)
+	supportedSet := make(map[string]bool, len(supported))
+	for _, claimID := range supported {
+		supportedSet[claimID] = true
+	}
+	for index := range sections {
+		switch sections[index].SectionType {
+		case "evidence":
+			filtered := make([]string, 0, len(sections[index].ClaimRefs))
+			for _, claimID := range sections[index].ClaimRefs {
+				if supportedSet[claimID] {
+					filtered = append(filtered, claimID)
+				}
+			}
+			if len(filtered) == 0 {
+				filtered = append(filtered, supported...)
+			}
+			sections[index].ClaimRefs = dedupeStrings(filtered)
+		case "assumptions", "limitations":
+			sections[index].ClaimRefs = nil
+		}
+	}
 }
 
 func dedupeStrings(values []string) []string {
