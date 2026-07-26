@@ -37,6 +37,10 @@ class ActivationSchemaTests(unittest.TestCase):
     def test_public_sprint32_populations_match_portable_schemas(self) -> None:
         cases = (
             ("standalone-journey-suite.schema.json", "technology20-standalone-development.json"),
+            (
+                "standalone-journey-suite.schema.json",
+                "technology20-standalone-domain-augmentation.json",
+            ),
             ("peer-journey-suite.schema.json", "technology20-peer-development.json"),
         )
         for schema_name, fixture_name in cases:

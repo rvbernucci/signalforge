@@ -46,9 +46,9 @@ func main() {
 	}
 	var suite productscope.StandaloneJourneySuite
 	readJSON(*suitePath, &suite)
-	expectedCases := 80
-	if suite.Split == "sealed_holdout" {
-		expectedCases = 40
+	expectedCases, err := expectedSuiteCases(suite.Split)
+	if err != nil {
+		fatal(err)
 	}
 	if err := productscope.ValidateStandaloneJourneySuite(suite, expectedCases); err != nil {
 		fatal(err)
@@ -131,6 +131,19 @@ func main() {
 	fmt.Printf("standalone evaluation: %d/%d contracts passed; %d runtime failures\n",
 		evaluation.ContractsPassed, evaluation.CasesCompleted, evaluation.RuntimeFailures,
 	)
+}
+
+func expectedSuiteCases(split string) (int, error) {
+	switch split {
+	case productscope.StandaloneDevelopmentSplit:
+		return 80, nil
+	case productscope.StandaloneAugmentationSplit:
+		return 60, nil
+	case productscope.StandaloneSealedSplit:
+		return 40, nil
+	default:
+		return 0, fmt.Errorf("unsupported standalone journey split %q", split)
+	}
 }
 
 func specialistHTTPClient(config modelapi.Config) *http.Client {

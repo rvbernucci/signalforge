@@ -12,8 +12,8 @@ Sprint 32 adds fail-closed product-scope contracts:
 - `metric-comparability-receipt.schema.json` records deterministic compatibility or refusal;
 - `comparison-bundle.schema.json` permits release only for metrics with approved receipts; and
 - `typed-abstention.schema.json` preserves a useful, machine-readable refusal;
-- `standalone-journey-suite.schema.json` freezes balanced company-level development and holdout
-  expectations without embedding answer text; and
+- `standalone-journey-suite.schema.json` freezes balanced company-level development, an isolated
+  public domain-coverage augmentation, and holdout expectations without embedding answer text; and
 - `peer-journey-suite.schema.json` freezes metric-level comparison behavior, including useful
   refusal and the prohibition on pair-level ranking.
 
@@ -127,6 +127,16 @@ frozen rubric establishes contract conformance, not universal factual accuracy.
 All decimal values are JSON strings. Production Go validation remains
 authoritative; the schemas make the boundary portable to fixtures, CI, and
 independent consumers.
+
+The standalone domain augmentation is generated independently with:
+
+```bash
+go run ./cmd/signalforge-build-standalone-augmentation
+```
+
+It adds three inspectable development journeys per Technology 20 company: economics transmission,
+valuation readiness or typed abstention, and thesis monitoring. The command has no sealed input or
+output flag and cannot regenerate the frozen holdout.
 
 Material facts require primary-evidence references. Material calculations require successful,
 replayable receipts. Inferences require both support and explicit assumptions. A confidence score

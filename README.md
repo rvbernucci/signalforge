@@ -27,7 +27,8 @@ The vNext lane currently provides:
 
 - a governed issuer and share-class catalog for twenty companies;
 - SEC-first point-in-time data authority and deterministic financial-activation reports;
-- typed standalone development and sealed evaluation populations;
+- 80 baseline standalone development journeys plus a separate 60-case public augmentation for
+  economics, valuation-readiness, and thesis monitoring; sealed evaluation remains isolated;
 - five bounded peer lanes with metric-level `comparable`,
   `comparable_with_caveat`, `not_comparable`, or `unavailable` dispositions;
 - a value-free peer-boundary matrix exposing definitions, fiscal periods, taxonomy, units,

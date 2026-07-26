@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": {"const": "signalforge/technology20-standalone-journeys/v1"},
     "universe_id": {"const": "us-technology-20-v2"},
-    "split": {"enum": ["development", "sealed_holdout"]},
+    "split": {"enum": ["development", "development_augmentation", "sealed_holdout"]},
     "as_of": {"type": "string", "format": "date-time"},
     "policy_version": {"const": "technology20-standalone-journey-policy/v1"},
     "claim_boundary": {"type": "string", "minLength": 20},
