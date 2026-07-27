@@ -77,11 +77,13 @@ while IFS= read -r -d '' json_file; do
 done < <(find contracts evidence fixtures configs -type f -name '*.json' -print0)
 
 bash -n scripts/serve_llama_rocm.sh scripts/run_radeon_profile.sh scripts/verify_clean_startup.sh \
-  scripts/stage_gemma_model.sh scripts/prepare_container_secrets.sh scripts/verify_container_fixture.sh
+  scripts/stage_gemma_model.sh scripts/prepare_container_secrets.sh scripts/verify_container_fixture.sh \
+  scripts/build_runtime_license_bundle.sh
 python3 scripts/validate_observability.py
 python3 scripts/audit_restricted_egress.py >/dev/null
 python3 -m py_compile deploy/observability/radeon-exporter/exporter.py scripts/validate_observability.py
 python3 scripts/build_radeon_optimization_report.py --check
+python3 scripts/verify_sprint33_latency_tournament.py >/dev/null
 python3 scripts/render_radeon_optimization.py \
   --output "$tmp_dir/radeon-optimization.svg"
 cmp evidence/radeon-optimization.svg "$tmp_dir/radeon-optimization.svg"

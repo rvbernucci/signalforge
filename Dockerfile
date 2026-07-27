@@ -4,7 +4,12 @@ WORKDIR /source/web
 COPY web/package.json web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 COPY web/ ./
-RUN npm run build
+RUN npm run build \
+    && mkdir -p /out/font-licenses/ibm-plex-mono /out/font-licenses/newsreader \
+    && cp node_modules/@fontsource/ibm-plex-mono/LICENSE \
+      /out/font-licenses/ibm-plex-mono/OFL-1.1.txt \
+    && cp node_modules/@fontsource/newsreader/LICENSE \
+      /out/font-licenses/newsreader/OFL-1.1.txt
 
 FROM golang:1.25.12-alpine3.23@sha256:cc985ef6f9c3bf9ece7488129c9abe0a150388ccdfa428d886fc709dca0b230a AS backend
 WORKDIR /source
@@ -18,6 +23,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
       -trimpath -ldflags="-s -w -X main.buildCommit=${SOURCE_COMMIT}" \
       -o /out/signalforge-workspace ./cmd/signalforge-workspace
+RUN sh scripts/build_runtime_license_bundle.sh /out/licenses
 
 FROM alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
 ARG SOURCE_COMMIT=unknown
@@ -38,10 +44,22 @@ RUN apk add --no-cache ca-certificates tzdata \
 WORKDIR /app
 COPY --from=backend /out/signalforge-workspace /usr/local/bin/signalforge-workspace
 COPY --from=web /source/web/dist ./web/dist
+COPY --from=backend /out/licenses ./licenses
+COPY --from=web /out/font-licenses ./licenses/fonts
 COPY fixtures/workspace ./fixtures/workspace
 COPY fixtures/golden ./fixtures/golden
 COPY fixtures/retrieval ./fixtures/retrieval
 COPY fixtures/productscope ./fixtures/productscope
+RUN cd /app/licenses \
+    && find . -type f ! -name SHA256SUMS -print \
+      | LC_ALL=C sort \
+      | xargs sha256sum > SHA256SUMS \
+    && test -s project/LICENSE \
+    && test -s project/NOTICE \
+    && test -s project/THIRD_PARTY_NOTICES.md \
+    && test -s fonts/ibm-plex-mono/OFL-1.1.txt \
+    && test -s fonts/newsreader/OFL-1.1.txt \
+    && test -s GO_MODULES.tsv
 USER 10001:10001
 EXPOSE 8080
 VOLUME ["/var/lib/signalforge"]

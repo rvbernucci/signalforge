@@ -97,6 +97,8 @@ COPY web/ ./
 FROM alpine:3
 COPY --from=backend /out/signalforge-workspace /usr/local/bin/signalforge-workspace
 COPY --from=web /source/web/dist /app/web/dist
+COPY --from=backend /out/licenses /app/licenses
+COPY --from=web /out/font-licenses /app/licenses/fonts
 COPY fixtures/workspace /app/fixtures/workspace
 COPY fixtures/golden /app/fixtures/golden
 COPY fixtures/retrieval /app/fixtures/retrieval
@@ -104,7 +106,7 @@ COPY fixtures/productscope /app/fixtures/productscope
 """
         findings, observed = MODULE.audit_final_image_copy_boundary(dockerfile)
         self.assertEqual(findings, [])
-        self.assertEqual(len(observed), 6)
+        self.assertEqual(len(observed), 8)
 
     def test_jsonl_blocked_rights_with_body_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -165,6 +167,8 @@ FROM alpine:3
 RUN --mount=type=bind,source=.,target=/context cp /context/leak /app/leak
 COPY --from=backend /out/signalforge-workspace /usr/local/bin/signalforge-workspace
 COPY --from=web /source/web/dist /app/web/dist
+COPY --from=backend /out/licenses /app/licenses
+COPY --from=web /out/font-licenses /app/licenses/fonts
 COPY fixtures/workspace /app/fixtures/workspace
 COPY fixtures/golden /app/fixtures/golden
 COPY fixtures/retrieval /app/fixtures/retrieval

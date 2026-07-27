@@ -77,7 +77,8 @@
         "the selected four-context-worker golden journey passed 44/44 frozen semantic checks in 157.47 seconds",
         "the passing three-worker control required 222.31 seconds, making the selected path 29.17% faster end to end",
         "forced flash attention, larger micro-batch, Q8 KV, and two-worker product concurrency remain recorded as rejected alternatives",
-        "raw synthetic measurements, native runtime metrics, telemetry, manifests, safe replays, semantic evaluations, and a reproducible public decision are preserved under evidence/runs/sprint11"
+        "raw synthetic measurements, native runtime metrics, telemetry, manifests, safe replays, semantic evaluations, and a reproducible public decision are preserved under evidence/runs/sprint11",
+        "a separate public non-sealed tournament over eight journeys per mode measured 8/8 contract passes, 2.7777x aggregate speedup, and a 64.37% p50 reduction for local four-worker execution versus the local two-worker baseline"
       ]
     },
     {
@@ -90,7 +91,8 @@
         "one complete accepted hybrid journey reached all 12 terminal steps across eight governed phases and recorded 17 model calls across the provided radeon-vllm route and authorized local-rocm route",
         "local Radeon evidence and risk review, final synthesis, deterministic authority, and fail-closed publication remain active in the hybrid path",
         "API loss replayed the complete specialist role locally, while model loss and retrieval loss failed closed",
-        "the hybrid journey, privacy-safe telemetry, synchronized Workspace and Mission Control captures, and failure matrix are hash-bound in evidence/sprint34-radeon-runtime.json and its referenced artifacts"
+        "the hybrid journey, privacy-safe telemetry, synchronized Workspace and Mission Control captures, and failure matrix are hash-bound in evidence/sprint34-radeon-runtime.json and its referenced artifacts",
+        "a separate public non-sealed tournament over eight journeys per mode recorded 8/8 hybrid contract passes, 20 successful Radeon API calls, and one locally recovered remote failure"
       ]
     }
   ]

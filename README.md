@@ -32,39 +32,6 @@ Build a private research desk where specialist agents can:
 - preserve local memory;
 - produce clear, evidence-grounded analysis.
 
-## Technology 20 vNext Evaluation Lane
-
-The current `main` branch contains a guarded expansion from the immutable Microsoft/NVIDIA
-baseline to twenty US-listed technology issuers. All twenty companies are discoverable in the
-workspace and have explicit machine-readable activation states. This does **not** mean that every
-company, metric, or pair is research-ready.
-
-The vNext lane currently provides:
-
-- a governed issuer and share-class catalog for twenty companies;
-- SEC-first point-in-time data authority and deterministic financial-activation reports;
-- 80 baseline standalone development journeys plus a separate 60-case public augmentation for
-  economics, valuation-readiness, and thesis monitoring; sealed evaluation remains isolated;
-- five bounded peer lanes with metric-level `comparable`,
-  `comparable_with_caveat`, `not_comparable`, or `unavailable` dispositions;
-- a value-free peer-boundary matrix exposing definitions, fiscal periods, taxonomy, units,
-  dimensions, accounting perimeters, segment scope, security identity, caveats, and explicit
-  non-activation of market dates and security classes;
-- a peer policy that prevents individually valid company metrics from becoming an unauthorized
-  cross-company direction;
-- local Radeon semantic evaluation with both independent critics and one final synthesis; and
-- a workspace that exposes company authority, evidence recency, governed periods, explicit
-  unavailable price dates, scenario assumptions, deterministic receipts, abstentions,
-  metric-level peer dispositions, and adjacent comparison caveats without enabling a guarded
-  company or pair;
-- fail-closed workspace states that preserve the last accepted case when the local model,
-  optional API, retrieval, or a deterministic tool is unavailable.
-
-Peer lanes that have not completed their company-specific evidence and domain gates remain
-evaluation-only. Private prompts, responses, source bodies, model weights, sealed labels, and raw
-evaluation reports are intentionally absent from this repository. The public fixtures and tests
-prove contracts and deterministic authority; they do not claim universal factual accuracy.
-
 ## Golden Vertical
 
 The first complete journey compares Microsoft (`CIK 0000789019`) and NVIDIA
@@ -72,6 +39,20 @@ The first complete journey compares Microsoft (`CIK 0000789019`) and NVIDIA
 infrastructure spending. SignalForge will expose the financial evidence, transmission mechanisms,
 valuation assumptions, scenarios, and thesis-invalidating observations rather than naming an
 unqualified winner.
+
+## What Can I Ask?
+
+SignalForge is designed for bounded research questions such as:
+
+- "How would higher-for-longer interest rates affect Microsoft and NVIDIA through operating
+  performance, financing conditions, and valuation assumptions?"
+- "Which evidence supports or weakens NVIDIA's current investment thesis, and what should I monitor
+  next?"
+- "Is Microsoft comparable with Alphabet on this metric, or do accounting perimeter, segment, and
+  fiscal-period differences make the comparison unsafe?"
+
+The system may narrow or decline a question when evidence, temporal scope, company activation, or
+comparison authority is insufficient.
 
 ## Quick Start
 
@@ -101,6 +82,39 @@ make mission-control-up  # Workspace plus Grafana, Prometheus, Loki, Tempo, and 
 Both ports bind to loopback. Fixture inference requires no GPU, model, credential, or remote API.
 See [Radeon Mission Control](docs/radeon-mission-control.md) for the four dashboards, the protected
 Inference Inspector, privacy boundaries, and exact validation commands.
+
+## Technology 20 vNext Evaluation Lane
+
+The current `main` branch contains a guarded expansion from the immutable Microsoft/NVIDIA
+baseline to twenty US-listed technology issuers. All twenty companies are discoverable in the
+workspace and have explicit machine-readable activation states. This does **not** mean that every
+company, metric, or pair is research-ready.
+
+The vNext lane currently provides:
+
+- a governed issuer and share-class catalog for twenty companies;
+- SEC-first point-in-time data authority and deterministic financial-activation reports;
+- 80 baseline standalone development journeys plus a separate 60-case public augmentation for
+  economics, valuation-readiness, and thesis monitoring; sealed evaluation remains isolated;
+- five bounded peer lanes with metric-level `comparable`,
+  `comparable_with_caveat`, `not_comparable`, or `unavailable` dispositions;
+- a value-free peer-boundary matrix exposing definitions, fiscal periods, taxonomy, units,
+  dimensions, accounting perimeters, segment scope, security identity, caveats, and explicit
+  non-activation of market dates and security classes;
+- a peer policy that prevents individually valid company metrics from becoming an unauthorized
+  cross-company direction;
+- local Radeon semantic evaluation with both independent critics and one final synthesis;
+- a workspace that exposes company authority, evidence recency, governed periods, explicit
+  unavailable price dates, scenario assumptions, deterministic receipts, abstentions,
+  metric-level peer dispositions, and adjacent comparison caveats without enabling a guarded
+  company or pair; and
+- fail-closed workspace states that preserve the last accepted case when the local model,
+  optional API, retrieval, or a deterministic tool is unavailable.
+
+Peer lanes that have not completed their company-specific evidence and domain gates remain
+evaluation-only. Private prompts, responses, source bodies, model weights, sealed labels, and raw
+evaluation reports are intentionally absent from this repository. The public fixtures and tests
+prove contracts and deterministic authority; they do not claim universal factual accuracy.
 
 ## Project Documentation
 
@@ -247,6 +261,19 @@ These are controlled workload results, not universal model-quality claims.
 
 The complete decision, rejected candidates, artifact hashes, and privacy-safe run projections are
 in [`evidence/radeon-optimization.json`](evidence/radeon-optimization.json).
+
+### Bounded Three-Mode Latency Tournament
+
+In a bounded, non-sealed development tournament of eight public journeys per mode, local
+four-worker execution passed 8/8 contracts and achieved a 2.7777x aggregate speedup with a 64.37%
+p50 reduction versus the local two-worker baseline; hybrid four-worker execution passed 8/8 and
+recorded 20 successful Radeon API calls with one failed remote call recovered locally.
+<!-- evidence-claim:sprint33-latency-tournament -->
+
+The result is workload-specific development evidence, not external factual accuracy or universal
+GPU performance. The privacy-safe [aggregate](evidence/sprint33-latency-tournament.json) omits
+prompts, responses, per-case identifiers, excerpts, private reasoning, and credentials. Recompute
+every published delta with `python3 scripts/verify_sprint33_latency_tournament.py`.
 
 ## Adversarial Hardening
 

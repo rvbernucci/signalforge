@@ -13,8 +13,18 @@ matrix is in [Track 2 Compliance](docs/track2-compliance.md).
 2. Open the [six-slide judge deck](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Judge-Deck.pptx).
 3. Read the [six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Project-Specification.pdf).
 4. Inspect the [architecture](docs/architecture.svg), [Radeon runtime record](evidence/sprint34-radeon-runtime.json),
-   and [release attestation](evidence/sprint34-release-attestation.json).
+   [bounded latency tournament](evidence/sprint33-latency-tournament.json), and
+   [release attestation](evidence/sprint34-release-attestation.json).
 5. Reproduce the deterministic workspace or pull the exact public image.
+
+## Questions To Try
+
+- How would higher-for-longer rates affect Microsoft and NVIDIA?
+- Which evidence weakens NVIDIA's investment thesis, and what should be monitored next?
+- Is a Microsoft/Alphabet metric comparison authorized, caveated, or unavailable?
+
+SignalForge may narrow or abstain when evidence, time boundaries, issuer activation, or peer
+comparison authority are insufficient. That behavior is part of the product contract.
 
 ## What The Product Demonstrates
 
@@ -44,12 +54,18 @@ the judges retain final scoring authority.
 | Decomposition, tools, RAG, and memory - 20 | Demo `0:26-3:05`; project specification pages 3-4; deck slides 3-4 |
 | Smooth multi-turn experience - 20 | Demo `3:05-3:47`; governed follow-up and memory controls |
 | Core inference on AMD Radeon - 20 | Demo local run; [runtime identity and telemetry](evidence/sprint34-radeon-runtime.json) |
-| Targeted ROCm optimization - 20 | Demo `3:47-4:00`; deck slide 5; [optimization evidence](evidence/radeon-optimization.json) |
-| Optional Radeon Cloud Model API bonus - 20 | [Accepted hybrid journey](evidence/dashboard-radeon-hybrid-journey.json), [correlated capture](docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg), and [failure recovery](evidence/runs/sprint34/failure-matrix.json) |
+| Targeted ROCm optimization - 20 | Demo `3:47-4:00`; deck slide 5; [optimization evidence](evidence/radeon-optimization.json); [recomputable three-mode tournament](evidence/sprint33-latency-tournament.json) |
+| Optional Radeon Cloud Model API bonus - 20 | [Accepted hybrid journey](evidence/dashboard-radeon-hybrid-journey.json), [recomputable tournament](evidence/sprint33-latency-tournament.json), [correlated capture](docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg), and [failure recovery](evidence/runs/sprint34/failure-matrix.json) |
 
 The recorded hybrid journey completed all 12 terminal steps across the eight governed phases. It
 used both `radeon-vllm` and `local-rocm` under one run and trace identity. API loss exercised the
 authorized local fallback; model or evidence loss remained fail-closed.
+
+The separate Sprint 33 development tournament used eight public, non-sealed journeys per mode.
+Local four-worker execution passed `8/8` contracts with `2.7777x` aggregate speedup versus the
+two-worker baseline. Hybrid four-worker execution also passed `8/8`, accepted 20 Radeon API calls,
+and recovered one failed remote call locally. These are bounded workload results, not universal
+performance or factual-accuracy claims.
 
 ## Authority Boundary
 
@@ -113,4 +129,3 @@ The selected Radeon model and runtime reproduction is documented in
 - The demo is the recorded local-only Radeon journey. The later hybrid Radeon API journey is
   separately hash-bound in the Sprint 34 evidence above and is not misrepresented as part of the
   earlier recording.
-

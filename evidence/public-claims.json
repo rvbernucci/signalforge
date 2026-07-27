@@ -418,6 +418,24 @@
       "public_files": [
         "README.md"
       ]
+    },
+    {
+      "claim_id": "sprint33-latency-tournament",
+      "text": "In a bounded, non-sealed development tournament of eight public journeys per mode, local four-worker execution passed 8/8 contracts and achieved a 2.7777x aggregate speedup with a 64.37% p50 reduction versus the local two-worker baseline; hybrid four-worker execution passed 8/8 and recorded 20 successful Radeon API calls with one failed remote call recovered locally.",
+      "status": "measured",
+      "evidence": [
+        {
+          "path": "evidence/sprint33-latency-tournament.json",
+          "sha256": "200a89c7d4c90de197d11656afd524287fae98c6b8383392991b681547bf0599"
+        },
+        {
+          "path": "scripts/verify_sprint33_latency_tournament.py",
+          "sha256": "37dfcaf6e095d3ed26d471300194ffe868449b8c2ca72b79246ecf4efc508b09"
+        }
+      ],
+      "public_files": [
+        "README.md"
+      ]
     }
   ]
 }

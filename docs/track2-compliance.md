@@ -58,8 +58,8 @@ SignalForge implements all five listed capability families; the rule requires at
 | Task decomposition, tools, RAG, and memory | 20 | Demonstrated | All five capability families; demo live journey; architecture and deterministic receipts |
 | Smooth multi-turn interaction | 20 | Demonstrated | Governed follow-up, opt-in memory, inspect/export/delete, progressive execution plan |
 | Core inference on AMD Radeon | 20 | Measured | Local Gemma route on `gfx1100`/ROCm 7.2.1 with hash-pinned runtime evidence |
-| Targeted inference-speed optimization | 20 | Measured | Four-worker profile passed 44/44 frozen checks in 157.47 seconds, 29.17% faster than the passing three-worker control |
-| Optional Radeon Cloud Model API path | 20 | Demonstrated | Complete accepted hybrid journey with `radeon-vllm`, local review/synthesis, and local fallback |
+| Targeted inference-speed optimization | 20 | Measured | Four-worker profile passed 44/44 frozen checks in 157.47 seconds, 29.17% faster than the passing three-worker control; a separate eight-journey-per-mode tournament measured `2.7777x` aggregate local speedup versus the two-worker baseline |
+| Optional Radeon Cloud Model API path | 20 | Demonstrated | Complete accepted hybrid journey with `radeon-vllm`, local review/synthesis, and local fallback; the bounded tournament recorded 20 accepted Radeon API calls and one locally recovered remote failure |
 
 These statuses mean that the required evidence exists and is reviewable. They do not pre-award
 points or replace the judges' qualitative assessment.
@@ -75,6 +75,7 @@ Evidence:
 
 - [Hybrid architecture and configuration](hybrid-vllm-specialists.md)
 - [Accepted hybrid journey](../evidence/dashboard-radeon-hybrid-journey.json)
+- [Recomputable public latency tournament](../evidence/sprint33-latency-tournament.json)
 - [Correlated Workspace and Mission Control capture](assets/mission-control-radeon-hybrid-sprint34-viewport.jpg)
 - [API-loss, model-loss, and retrieval-loss matrix](../evidence/runs/sprint34/failure-matrix.json)
 
@@ -115,4 +116,3 @@ the event's complete terms.
   through separate hash-bound evidence and synchronized captures.
 - Native Radeon evidence is correctly described as pre-freeze execution of the Sprint 34 source
   candidate, not execution of the final OCI artifact.
-

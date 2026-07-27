@@ -72,7 +72,9 @@ FINAL_RUNTIME_DATA_ROOTS = {
 STRUCTURED_DATA_SUFFIXES = {".json", ".jsonl"}
 FINAL_COPY_ALLOWLIST = {
     ("backend", "/out/signalforge-workspace"),
+    ("backend", "/out/licenses"),
     ("web", "/source/web/dist"),
+    ("web", "/out/font-licenses"),
     (None, "fixtures/golden"),
     (None, "fixtures/productscope"),
     (None, "fixtures/retrieval"),

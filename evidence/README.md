@@ -115,6 +115,27 @@ python3 scripts/render_radeon_optimization.py --output /tmp/radeon-optimization.
 cmp evidence/radeon-optimization.svg /tmp/radeon-optimization.svg
 ```
 
+## Sprint 33 Public Latency Tournament
+
+[`sprint33-latency-tournament.json`](sprint33-latency-tournament.json) is the privacy-safe aggregate
+of a bounded three-mode tournament over eight public, non-sealed development journeys per mode.
+All three modes passed `8/8` runtime and answer contracts. Relative to the two-worker local
+baseline, four-worker local execution produced a `2.7777x` aggregate speedup and a `64.37%` p50
+reduction. Four-worker hybrid execution produced a `2.0756x` aggregate speedup and a `57.46%` p50
+reduction, with 20 successful Radeon API calls and one failed remote call recovered locally.
+
+These results are workload-specific development evidence. Contract success is not external factual
+accuracy, professional review, rights approval, or a claim of universal GPU performance. The
+public aggregate excludes prompts, responses, source excerpts, private reasoning, credentials,
+case identifiers, and per-case measurements. It remains hash-linked to the private source
+artifact and exact evaluation binary.
+
+Recompute every published comparison and reject raw or per-case fields with:
+
+```bash
+python3 scripts/verify_sprint33_latency_tournament.py
+```
+
 ## Adversarial Hardening
 
 `hardening-matrix.json` is the deterministic Sprint 12 result for the frozen 26-case matrix in
