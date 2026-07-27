@@ -87,7 +87,7 @@ jobs:
           SIGNALFORGE_SKIP_BUILD: "1"
           SIGNALFORGE_TEST_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
           SIGNALFORGE_EXPECTED_SOURCE_COMMIT: ${{ github.sha }}
-          SIGNALFORGE_EXPECTED_VERSION: ${{ github.ref_name }}
+          SIGNALFORGE_EXPECTED_VERSION: ${{ steps.meta.outputs.version }}
         run: scripts/verify_container_fixture.sh
 
       - name: Export release identity
