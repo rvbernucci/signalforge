@@ -54,8 +54,17 @@ The judges retain final scoring authority. Each row below points to the fastest 
 | Decomposition, tools, RAG, and memory - 20 | Demo `0:22-3:12`; specification pages 3-4; deck slides 3-4 |
 | Smooth multi-turn experience - 20 | Demo `2:52-3:12`; governed follow-up and local memory controls |
 | Core inference on AMD Radeon - 20 | Demo `0:22-2:22`; [current local journey](evidence/sprint36-radeon-local-journey.json); [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json) |
-| Targeted ROCm optimization - 20 | Demo `3:12-3:38`; deck slide 5; [optimization evidence](evidence/radeon-optimization.json); [three-mode tournament](evidence/sprint33-latency-tournament.json) |
+| Targeted ROCm optimization - 20 | Demo `3:12-3:38`; deck slide 5; [three-profile model selection](evidence/radeon-baseline.json); [optimization evidence](evidence/radeon-optimization.json); [three-mode tournament](evidence/sprint33-latency-tournament.json) |
 | Optional Radeon Cloud Model API bonus - 20 | Demo `1:12-2:22` and `3:38-4:02`; [current hybrid journey](evidence/sprint36-radeon-hybrid-journey.json), [current demo journey](evidence/sprint36-radeon-demo-journey.json), and [failure recovery](evidence/sprint36-radeon-resilience.json) |
+
+The frozen Radeon model tournament compared three hash-pinned deployment profiles. Gemma 4 26B
+A4B QAT Q4_0 on `llama.cpp` passed `40/40` deterministic contract checks at `86.46` median decode
+tokens/s; Qwen3 8B BF16 on vLLM passed `40/40` at `26.39`; Granite 4.1 8B BF16 on vLLM passed
+`35/40` at `24.99`. Google's
+[upstream model card](https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/blob/d1c082be9cf3c8a514acf63b8761f4b41935842e/README.md)
+reports `25.2B` total and `3.8B` active parameters for the selected Gemma MoE. Because model,
+runtime, and precision differed, this establishes a bounded application deployment decision, not
+a universal model ranking or dense-model microbenchmark.
 
 The Sprint 33 development tournament used eight public, non-sealed journeys per mode. Local
 four-worker execution passed `8/8` contracts with `2.7777x` aggregate speedup versus the recorded

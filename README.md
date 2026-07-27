@@ -233,12 +233,21 @@ optimization are implemented and independently reproducible.
 
 ## Radeon Baseline
 
-The frozen eight-workload tournament selected the official Gemma 4 26B A4B Instruct QAT Q4_0
-GGUF on ROCm `llama.cpp`. It passed 40/40 deterministic contract checks and reached 86.46 median
-decode tokens/s on the allocated `gfx1100` Radeon. Qwen3 8B BF16 also passed 40/40 and remains a
-long-context alternate; Granite 4.1 8B passed 35/40. These are contract checks, not a general
-model-quality benchmark.
+The frozen eight-workload tournament compared three hash-pinned Radeon deployment profiles and
+selected the official Gemma 4 26B A4B Instruct QAT Q4_0 GGUF on ROCm `llama.cpp`. Gemma passed
+40/40 deterministic contract checks and reached 86.46 median decode tokens/s on the allocated
+`gfx1100` Radeon. Qwen3 8B BF16 on vLLM also passed 40/40 and remains a long-context alternate;
+Granite 4.1 8B BF16 on vLLM passed 35/40 and failed all five short structured-output contract
+checks. These results compare complete deployment profiles under the same bounded application
+suite, not universal model quality.
 <!-- evidence-claim:radeon-model-baseline -->
+
+Google's
+[upstream model card](https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/blob/d1c082be9cf3c8a514acf63b8761f4b41935842e/README.md)
+reports 25.2B total and 3.8B active parameters for the Gemma 4 26B A4B MoE model. SignalForge uses
+the QAT Q4_0 GGUF variant. The 86.46 median decode rate above comes from five repetitions of the
+frozen eight-workload deterministic-contract suite; it is not a single-stream dense-model
+microbenchmark and should not be generalized across models, runtimes, precisions, or workloads.
 
 ![Radeon model baseline](evidence/model-baseline-comparison.svg)
 
@@ -275,6 +284,10 @@ four-worker execution passed 8/8 contracts and achieved a 2.7777x aggregate spee
 p50 reduction versus the local two-worker baseline; hybrid four-worker execution passed 8/8 and
 recorded 20 successful Radeon API calls with one failed remote call recovered locally.
 <!-- evidence-claim:sprint33-latency-tournament -->
+
+These are journey-level measurements of complete governed multi-agent cases on the selected Gemma
+deployment profile, including planning, specialist execution, retrieval, deterministic engines,
+review, and synthesis. They are distinct from the eight-workload decode measurement above.
 
 The result is workload-specific development evidence, not external factual accuracy or universal
 GPU performance. The privacy-safe [aggregate](evidence/sprint33-latency-tournament.json) omits
