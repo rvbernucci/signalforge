@@ -42,3 +42,6 @@ remains the 252.9-second Sprint 13 capture: it contains a real local run, source
 deterministic receipt, a governed follow-up, memory controls, optimization evidence, and hardening
 evidence. Sprint 34 adds separate hash-bound desktop/mobile Workspace captures and accepted local
 and hybrid journey manifests; it does not misrepresent the earlier video as a new recording.
+The public artifact release and exact `v1.1.0` source/image disposition are recorded in
+[`judge-package.json`](../evidence/judge-package.json) and
+[`sprint34-release-attestation.json`](../evidence/sprint34-release-attestation.json).

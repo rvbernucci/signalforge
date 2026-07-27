@@ -55,9 +55,10 @@ Radeon/ROCm/model identity. It excludes prompts, responses, source excerpts, fre
 messages, and private reasoning. The verifier rejects unknown fields, unsafe identifiers, broken
 claim references, incomplete runtime attestation, and privacy flags that are not explicitly true.
 
-The final release checklist is intentionally fail-closed. It remains pending
-until later Sprints produce the Radeon trace, golden demo, licenses, public
-artifacts, secret scan, and SG-05 freeze.
+The final release checklist is fail-closed and is complete for `v1.1.0`. The exact source commit,
+public `linux/amd64` image digest, clean-run workflows, native Radeon evidence, judge artifacts,
+human decisions, and SG-05 disposition are bound in
+[`sprint34-release-attestation.json`](sprint34-release-attestation.json).
 
 ## Retrieval Evidence
 

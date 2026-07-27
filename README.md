@@ -44,11 +44,10 @@ The vNext lane currently provides:
 - fail-closed workspace states that preserve the last accepted case when the local model,
   optional API, retrieval, or a deterministic tool is unavailable.
 
-All five peer lanes remain evaluation-only until semantic execution, sealed testing, named
-professional review, and exact-release rights review are complete. Private prompts, responses,
-source bodies, model weights, sealed labels, and raw evaluation reports are intentionally absent
-from this repository. The public fixtures and tests prove contracts and deterministic authority;
-they do not claim universal factual accuracy or promote the vNext release.
+Peer lanes that have not completed their company-specific evidence and domain gates remain
+evaluation-only. Private prompts, responses, source bodies, model weights, sealed labels, and raw
+evaluation reports are intentionally absent from this repository. The public fixtures and tests
+prove contracts and deterministic authority; they do not claim universal factual accuracy.
 
 ## Golden Vertical
 
@@ -96,18 +95,21 @@ Inference Inspector, privacy boundaries, and exact validation commands.
 - [Final demo cut sheet](docs/demo-script.md)
 - [Evidence and reproduction guide](evidence/README.md)
 - [Radeon Mission Control and container guide](docs/radeon-mission-control.md)
-- [Public Sprint 13 judge-artifact release](https://github.com/rvbernucci/signalforge/releases/tag/sprint13-demo-v1)
+- [Public Sprint 34 judge-artifact release](https://github.com/rvbernucci/signalforge/releases/tag/sprint34-artifacts-v1)
+- [Exact Sprint 34 release attestation](evidence/sprint34-release-attestation.json)
 <!-- evidence-claim:judge-evidence-drafts -->
 
 ![SignalForge local-first architecture](docs/architecture.svg)
 
 ## Status
 
-Foundation under active development. Tag `v1.0.0` remains the immutable, independently
-reproducible hackathon baseline. The current `main` line integrates the post-v1 financial
-intelligence, investor-relations evidence, validation, lineage, and optional hybrid specialist
-work in one reviewable history. New capabilities are not represented as Radeon performance or
-model-quality claims until their dedicated evidence gates pass.
+Tag `v1.1.0` is the immutable Sprint 34 application release at
+`ghcr.io/rvbernucci/signalforge@sha256:1354ccbbbd6138119111e23657ad69c1665f4189d75b9adcdecd53084870a4af`.
+Its source, public `linux/amd64` image, SBOM, provenance, clean-run verification, judge artifacts,
+and accepted human decisions are bound in
+[`sprint34-release-attestation.json`](evidence/sprint34-release-attestation.json). Tag `v1.0.0`
+remains the independently reproducible baseline. Native Radeon measurements remain bounded to
+their recorded workloads and are not universal model-quality claims.
 
 - versioned Go contracts for specialist context, deterministic engine requests and receipts, and evaluation evidence;
 - fail-closed validation for unsupported facts, unproven numerical inputs, and failed invariants;
@@ -353,7 +355,8 @@ authorized local ROCm fallback, while both surfaces displayed the same run and t
 Four 1280×720 captures and two sanitized journey manifests are hash-bound in
 [`dashboard-radeon-synchronized-captures.json`](evidence/dashboard-radeon-synchronized-captures.json).
 The artifact explicitly records `exact_release_artifact: false`: it closes the synchronized
-working-tree Radeon proof, not the later exact-image promotion gate.
+native Radeon proof. The separate exact-image gate is closed by the public `v1.1.0` digest,
+clean-run workflow, and release attestation rather than by relabeling this earlier native run.
 
 ![Accepted local Radeon journey with the expandable execution plan](docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg)
 
