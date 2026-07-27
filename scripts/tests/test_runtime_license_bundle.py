@@ -56,6 +56,47 @@ class RuntimeLicenseBundleTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("usage:", result.stderr)
 
+    def test_bundle_rejects_relative_output_directory(self) -> None:
+        result = subprocess.run(
+            ["sh", str(SCRIPT), "relative-output"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("absolute", result.stderr)
+
+    def test_bundle_rejects_nonempty_output_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "licenses"
+            output.mkdir()
+            (output / "sentinel").write_text("preserve", encoding="utf-8")
+            result = subprocess.run(
+                ["sh", str(SCRIPT), str(output)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("empty", result.stderr)
+            self.assertEqual((output / "sentinel").read_text(encoding="utf-8"), "preserve")
+
+    def test_bundle_rejects_symlink_output_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.mkdir()
+            output = root / "licenses"
+            output.symlink_to(target, target_is_directory=True)
+            result = subprocess.run(
+                ["sh", str(SCRIPT), str(output)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("symbolic link", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

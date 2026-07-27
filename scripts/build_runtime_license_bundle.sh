@@ -7,10 +7,31 @@ if [ "$#" -ne 1 ]; then
 fi
 
 output_directory=$1
+case "$output_directory" in
+  /*) ;;
+  *)
+    echo "output directory must be an absolute path" >&2
+    exit 2
+    ;;
+esac
+
+if [ -L "$output_directory" ]; then
+  echo "output directory must not be a symbolic link" >&2
+  exit 2
+fi
+if [ -e "$output_directory" ] && [ ! -d "$output_directory" ]; then
+  echo "output path exists and is not a directory" >&2
+  exit 2
+fi
+if [ -d "$output_directory" ] \
+  && [ -n "$(find "$output_directory" -mindepth 1 -print -quit)" ]; then
+  echo "output directory must be empty" >&2
+  exit 2
+fi
+
 project_directory="$output_directory/project"
 module_directory="$output_directory/go-modules"
 
-rm -rf "$output_directory"
 mkdir -p "$project_directory" "$module_directory"
 
 cp LICENSE NOTICE THIRD_PARTY_NOTICES.md "$project_directory/"
