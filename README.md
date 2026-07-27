@@ -347,22 +347,31 @@ deterministic `trace_id`. The browser verifies both identifiers before displayin
 fails closed on a stale or cross-run observability record without affecting the answer path.
 
 Two accepted working-tree journeys on the Radeon host now prove this correlation end to end. The
-local-only journey completed 12 model calls through local ROCm. The hybrid journey completed 18
-observed calls across the provided Radeon API and the authorized local ROCm fallback, while both
-surfaces displayed the same run and trace identities. Four 1280×720 captures and two sanitized
-journey manifests are hash-bound in
+local-only journey completed 11 model calls through local ROCm in 182.189 seconds. The hybrid
+journey completed 17 observed calls in 230.222 seconds across the provided Radeon API and the
+authorized local ROCm fallback, while both surfaces displayed the same run and trace identities.
+Four 1280×720 captures and two sanitized journey manifests are hash-bound in
 [`dashboard-radeon-synchronized-captures.json`](evidence/dashboard-radeon-synchronized-captures.json).
 The artifact explicitly records `exact_release_artifact: false`: it closes the synchronized
 working-tree Radeon proof, not the later exact-image promotion gate.
 
-![Accepted local Radeon journey with the expandable execution plan](docs/assets/live-execution-plan-radeon-local-viewport.jpg)
+![Accepted local Radeon journey with the expandable execution plan](docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg)
 
 _Accepted local-only working-tree journey. Every phase remains independently expandable._
 
-![Accepted hybrid Radeon journey correlated in Mission Control](docs/assets/mission-control-radeon-hybrid-viewport.jpg)
+![Accepted hybrid Radeon journey correlated in Mission Control](docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg)
 
 _Accepted hybrid working-tree journey. Mission Control shows provided Radeon API calls and local
 ROCm execution under one run and trace identity._
+
+The same workspace was verified at a 390×844 responsive breakpoint without horizontal overflow.
+Two additional hybrid retries reached every required phase but failed the final synthesis contract
+and were stopped safely rather than releasing an unverified answer. That negative-path evidence is
+preserved separately from the accepted journey and demonstrates the fail-closed release boundary.
+
+![Responsive SignalForge workspace at 390 by 844](docs/assets/sprint34-radeon-hybrid-workspace-mobile-390x844.jpg)
+
+![Hybrid retry stopped safely at the release boundary](docs/assets/sprint34-radeon-hybrid-safe-stop-1280x720.jpg)
 
 Observed specialist adapters now publish the real authorized-retrieval lifecycle: started, passed,
 degraded, or failed. BM25 providers report matched, selected, and rejected candidate counts; a
@@ -417,8 +426,9 @@ The Go server has two modes:
 - `fixture` replays the complete privacy-safe golden case without a GPU or model download;
 - `live` runs the same interface against the loopback-only Gemma endpoint on Radeon/ROCm.
 
-The measured fixture evaluation loaded the initial case in 1.14 ms, surfaced the first safe progress
-event in 7.22 ms, and completed its 21-event replay in 114.36 ms on the dated development run. These
+The measured fixture evaluation loaded the initial case in 1.257 ms, surfaced the first safe
+progress event in 4.438 ms, and completed its 40-event replay in 324.573 ms on the dated
+development run. These
 are reproducible demo-path measurements, not Radeon inference latency. The accepted full Radeon
 journey remains the separately reported 154.33-second v57 run.
 <!-- evidence-claim:research-workspace -->

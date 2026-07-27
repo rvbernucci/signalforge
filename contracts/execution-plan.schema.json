@@ -45,6 +45,7 @@
     "text": { "type": "string", "minLength": 1, "maxLength": 512 },
     "idArray": {
       "type": "array",
+      "maxItems": 64,
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/id" }
     },
@@ -111,7 +112,11 @@
         "route_reason_code": { "$ref": "#/$defs/id" },
         "authorized_capability_ids": { "$ref": "#/$defs/idArray" },
         "evidence_requirement_classes": { "$ref": "#/$defs/idArray" },
-        "checklist": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+        "checklist": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/check" }
+        },
         "started_at": { "type": "string", "format": "date-time" },
         "completed_at": { "type": "string", "format": "date-time" },
         "duration_ms": { "type": "integer", "minimum": 0 },

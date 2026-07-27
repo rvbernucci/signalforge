@@ -3,13 +3,14 @@ import { getIntelligence, getProtectedIntelligence, purgeProtectedIntelligence }
 import type {
   EngineCallAudit,
   IntelligenceRecord,
+  LifecycleAudit,
   ModelCallAudit,
   ProtectedIntelligenceRecord,
   RetrievalAudit
 } from "../types";
 import { CheckIcon, CloseIcon, ShieldIcon } from "./Icons";
 
-type InspectorTab = "pipeline" | "evidence" | "engines" | "prompts";
+type InspectorTab = "pipeline" | "trace" | "evidence" | "engines" | "prompts";
 
 type Props = {
   runID: string;
@@ -104,7 +105,7 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
         </header>
 
         <div className="intelligence-tabs" role="tablist" aria-label="Intelligence views">
-          {(["pipeline", "evidence", "engines", "prompts"] as InspectorTab[]).map((item) => (
+          {(["pipeline", "trace", "evidence", "engines", "prompts"] as InspectorTab[]).map((item) => (
             <button key={item} role="tab" aria-selected={tab === item} onClick={() => setTab(item)}>{item}</button>
           ))}
         </div>
@@ -114,6 +115,7 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
           {status === "error" && <InspectorState title="Lineage unavailable" detail="The answer remains available; observability failed independently." />}
           {record && <RunHeader record={record} />}
           {record && tab === "pipeline" && <Pipeline record={record} />}
+          {record && tab === "trace" && <TraceTimeline record={record} />}
           {record && tab === "evidence" && <Retrievals items={record.retrievals} />}
           {record && tab === "engines" && <Engines items={record.engine_calls} />}
           {record && tab === "prompts" && (
@@ -141,6 +143,57 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
 
 function sameIdentity(record: IntelligenceRecord, runID: string, traceID?: string): boolean {
   return record.run_id === runID && (!traceID || record.trace_id === traceID);
+}
+
+function TraceTimeline({ record }: { record: IntelligenceRecord }) {
+  const timeline = record.timeline ?? [];
+  if (timeline.length === 0) {
+    return <InspectorState title="No correlated lifecycle trace" detail="This historical record predates the bounded orchestration timeline." />;
+  }
+  return (
+    <section className="judge-trace" aria-label="Judge-facing correlated execution trace">
+      <header>
+        <div>
+          <span className="eyebrow">Same journey · bounded operational facts</span>
+          <h3>Conversation-to-trace timeline</h3>
+        </div>
+        <code>{shortID(record.trace_id)}</code>
+      </header>
+      <ol>
+        {timeline.map((event) => <TraceEvent key={`${event.sequence}-${event.event_type}-${event.step_id ?? "run"}`} event={event} />)}
+      </ol>
+    </section>
+  );
+}
+
+function TraceEvent({ event }: { event: LifecycleAudit }) {
+  const statusClass = event.status.replaceAll("_", "-");
+  const counts = [
+    event.specialist_count ? `${event.specialist_count} specialists` : "",
+    event.concurrency_limit ? `limit ${event.concurrency_limit}` : "",
+    event.succeeded_count ? `${event.succeeded_count} passed` : "",
+    event.failed_count ? `${event.failed_count} failed` : "",
+    event.observed_concurrency ? `concurrency ${event.observed_concurrency}` : ""
+  ].filter(Boolean);
+  return (
+    <li className={`trace-event status-${statusClass}`}>
+      <span className="trace-sequence">{String(event.sequence).padStart(2, "0")}</span>
+      <div>
+        <span className="eyebrow">
+          {humanize(event.event_type)}
+          {event.wave ? ` · wave ${event.wave}` : ""}
+        </span>
+        <strong>{humanize(event.step_id ?? "run")}</strong>
+        <small>
+          {event.role_id ? humanize(event.role_id) : "Runtime authority"}
+          {event.route ? ` · ${humanize(event.route)}` : ""}
+          {counts.length > 0 ? ` · ${counts.join(" · ")}` : ""}
+        </small>
+      </div>
+      <span className="trace-status">{humanize(event.status)}</span>
+      <time dateTime={event.at}>{formatDateTime(event.at)}</time>
+    </li>
+  );
 }
 
 function RunHeader({ record }: { record: IntelligenceRecord }) {

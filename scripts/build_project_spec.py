@@ -91,7 +91,7 @@ def cover_page(canvas, doc) -> None:
 
     cards = [
         ("11", "logical roles"),
-        ("28", "deterministic tools"),
+        ("80", "deterministic tools"),
         ("44/44", "golden semantic gates"),
         ("29.17%", "end-to-end improvement"),
     ]
@@ -110,7 +110,7 @@ def cover_page(canvas, doc) -> None:
 
     canvas.setFillColor(colors.HexColor("#dbe9e4"))
     canvas.setFont("Helvetica", 9)
-    canvas.drawString(22 * mm, 20 * mm, "Evidence date: 22 July 2026 · github.com/rvbernucci/signalforge")
+    canvas.drawString(22 * mm, 20 * mm, "Evidence date: 27 July 2026 · github.com/rvbernucci/signalforge")
     canvas.restoreState()
 
 

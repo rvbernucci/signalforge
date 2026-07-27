@@ -61,6 +61,7 @@ Version `signalforge/v1` establishes four boundaries:
 Portable JSON Schemas currently cover:
 
 - `execution-plan.schema.json`;
+- `execution-presentation.schema.json`;
 - `engine-request.schema.json`;
 - `calculation-receipt.schema.json`;
 - `failure-receipt.schema.json`;
@@ -87,15 +88,44 @@ embedded tools, memory, or release phase cannot inflate progress. The tools phas
 observed deterministic executions, memory derives from explicit retention events, and release
 derives from the authoritative run outcome.
 
+`execution-presentation.schema.json` is the bounded browser-side `Summary`, `Details`, and `Proof`
+adapter over that signed plan. It adds plain-language labels, typed proof references, parallel-wave
+groups, attention states, and a deterministic SHA-256 over the exact expanded presentation without
+adding execution authority or new runtime facts. The source projection hash and presentation hash
+remain separate: the former binds backend authority, while the latter detects any change in the
+derived browser contract. Both schemas cap steps, checklist rows, references, arrays, and rendered
+text.
+
+Both contracts are currently `v1` and reject unknown fields. Documentation clarifications and
+implementation fixes that preserve the exact JSON shape remain on `v1`. Any added, removed, renamed,
+or semantically redefined field requires a new schema version and a parallel reader; the `v1`
+reader remains available until persisted projections and supported clients have migrated. The
+presentation adapter may evolve independently, but it can never reinterpret an authorization,
+planned capability, or model completion as executed proof.
+
 Validated
 specialist adapters may append real retrieval `started`, `passed`, `degraded`, or `failed` rows
 using only retrieval, bundle, method, candidate-count, source-class, and as-of metadata. Providers
 that cannot establish candidate counts report that telemetry as unavailable rather than inventing
 it. Deterministic engines may append tool `started`, `passed`, or `failed` rows using only execution,
 engine, operation, formula, input/output-reference, invariant, warning, and receipt metadata.
-Precomputed receipts and capability authorization alone never create a runtime execution row.
+Every completed tool row declares its verification scope. `canonical_verified` means the complete
+receipt hash was recomputed from canonical content; `metadata_only` means only the bounded
+projection contract was checked and must not be presented as cryptographic receipt verification.
+In live mode, precomputed receipts and capability authorization alone never create a runtime
+execution row. Fixture replay is the narrow exception: its recorded successful calculation
+receipts are replayed as `tool` events against one synthetic, non-mandatory
+`fixture-calculation` step so the demonstration reflects the deterministic work already preserved
+in the fixture. Fixture rows are explicitly `metadata_only`; replay does not execute, alter,
+re-authorize, or cryptographically re-verify a formula.
 Review and synthesis projections may add bounded counts and coverage ratios, but never claim bodies,
 rejected content, raw answers, formula values, or model reasoning.
+
+Validated specialist packet summaries may also expose aggregate counts for facts, calculations,
+inferences, hypotheses, and explicit assumptions. They do not infer management assertions or
+scenarios from a source class. Retrieval presentation distinguishes an empty authorized result from
+provider failure and source-rights exclusion; none of those states may be silently relabeled as
+successful evidence.
 
 Model events retain a privacy-safe route class, observed attempt, and call kind only. The call kind
 is one of `primary`, `retry`, `fallback`, or `bounded_repair`; it is derived from runtime-observed
@@ -111,6 +141,13 @@ SQLite artifacts governed by the explicit memory lifecycle rather than this oper
 `orchestration-trace.schema.json` is the runtime state-machine trace. It records only bounded
 identifiers, lifecycle events, artifact references, concurrency, and timestamps. Prompt text,
 answers, credentials, tokens, and secret-shaped metadata are outside this contract by design.
+Context-wave events use the closed lifecycle `started`, `completed`, `degraded`, or `failed` and
+carry only the wave number, specialist counts, the configured concurrency bound, and observed
+concurrency. The public intelligence-lineage projection keeps at most the newest 256 accepted
+events, emits the same typed metadata to privacy-safe JSONL logs, and closes terminal events as
+OpenTelemetry spans. Its `run_id` and `trace_id` are the same identities used by Workspace, Proof
+Drawer, Loki, Tempo, and Radeon Mission Control; none of those surfaces receives prompt, response,
+source-body, calculation-value, private-memory, or chain-of-thought fields.
 
 `safe-decision-replay.schema.json` is the public, privacy-safe projection of a golden run. It keeps
 route reason codes, content hashes, claim dispositions and their explicit assumption authority,

@@ -428,6 +428,25 @@ export type ReleaseAudit = {
   status: string;
 };
 
+export type LifecycleAudit = {
+  sequence: number;
+  step_id?: string;
+  event_type: string;
+  status: string;
+  wave?: number;
+  role_id?: string;
+  route?: string;
+  route_reason_code?: string;
+  attempt?: number;
+  specialist_count?: number;
+  concurrency_limit?: number;
+  succeeded_count?: number;
+  failed_count?: number;
+  observed_concurrency?: number;
+  failure_code?: string;
+  at: string;
+};
+
 export type IntelligenceRecord = {
   schema_version: string;
   run_id: string;
@@ -437,6 +456,7 @@ export type IntelligenceRecord = {
   capture: CaptureState;
   started_at: string;
   completed_at?: string;
+  timeline: LifecycleAudit[];
   model_calls: ModelCallAudit[];
   retrievals: RetrievalAudit[];
   engine_calls: EngineCallAudit[];

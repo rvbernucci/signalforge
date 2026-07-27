@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/benchmark"
+	"github.com/rvbernucci/signalforge/internal/contracts"
 	"github.com/rvbernucci/signalforge/internal/executionplan"
 	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
 	"github.com/rvbernucci/signalforge/internal/productscope"
@@ -196,11 +197,15 @@ func TestFixtureRunCompletesAndStreamsOnlySafeEvents(t *testing.T) {
 	}
 	scanner := bufio.NewScanner(response.Body)
 	eventCount := 0
+	toolEventCount := 0
 	terminalSeen := false
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "data: ") {
 			eventCount++
+			if strings.Contains(line, `"type":"tool"`) {
+				toolEventCount++
+			}
 			if strings.Contains(line, `"type":"workspace"`) && strings.Contains(line, `"status":"completed"`) {
 				terminalSeen = true
 			}
@@ -212,8 +217,10 @@ func TestFixtureRunCompletesAndStreamsOnlySafeEvents(t *testing.T) {
 	if err := scanner.Err(); err != nil {
 		t.Fatal(err)
 	}
-	if eventCount != len(run.Result.Events)+2 {
-		t.Fatalf("streamed events = %d, expected %d", eventCount, len(run.Result.Events)+2)
+	expectedEvents := len(run.Result.Events) + len(run.Result.Calculations) + 2
+	if eventCount != expectedEvents || toolEventCount != len(run.Result.Calculations) {
+		t.Fatalf("streamed events = %d (%d tools), expected %d (%d tools)",
+			eventCount, toolEventCount, expectedEvents, len(run.Result.Calculations))
 	}
 	if !terminalSeen {
 		t.Fatal("expected workspace completion event")
@@ -271,6 +278,73 @@ func TestFixtureRunCompletesAndStreamsOnlySafeEvents(t *testing.T) {
 			t.Fatalf("execution projection leaked %q", forbidden)
 		}
 	}
+}
+
+func TestFixtureHydrationProjectsDeterministicReceipts(t *testing.T) {
+	server := newFixtureTestServer(t)
+	execution := server.fixture.ExecutionPlan
+	if execution == nil {
+		t.Fatal("fixture execution plan is missing")
+	}
+	var toolStep *executionplan.Step
+	for index := range execution.Steps {
+		if execution.Steps[index].StepID == "fixture-calculation" {
+			toolStep = &execution.Steps[index]
+			break
+		}
+	}
+	if toolStep == nil || toolStep.ParentPhaseID != "tools" ||
+		toolStep.Status != executionplan.StatusPassed ||
+		len(toolStep.Checklist) != len(server.fixture.Calculations) {
+		t.Fatalf("fixture deterministic step = %+v", toolStep)
+	}
+	toolsPhase := executionPhase(execution, "tools")
+	if toolsPhase == nil || toolsPhase.Status != executionplan.StatusPassed ||
+		len(toolsPhase.StepIDs) != 1 || toolsPhase.StepIDs[0] != toolStep.StepID ||
+		!strings.Contains(toolsPhase.SafeSummary, "18 deterministic calculation records") {
+		t.Fatalf("fixture tools phase = %+v", toolsPhase)
+	}
+	for _, check := range toolStep.Checklist {
+		if check.Authority != "engine" || check.Status != executionplan.StatusPassed ||
+			len(check.ReferenceIDs) == 0 {
+			t.Fatalf("fixture tool check = %+v", check)
+		}
+	}
+}
+
+func TestFixtureCalculationEventsRejectUnverifiedSuccess(t *testing.T) {
+	valid := CalculationCard{
+		ReceiptID: "receipt-1", OperationID: "financial.free_cash_flow",
+		EngineID: "financial-engine/v1", FormulaVersion: "fcf/v2",
+		Status:           contracts.ReceiptSuccess,
+		Outputs:          []contracts.ReceiptOutput{{OutputID: "free-cash-flow", Status: "available"}},
+		InvariantResults: []contracts.InvariantResult{{InvariantID: "finite-output", Passed: true}},
+		ReceiptSHA:       strings.Repeat("a", 64),
+	}
+	if events, err := fixtureCalculationEvents([]CalculationCard{valid}, time.Now()); err != nil || len(events) != 1 {
+		t.Fatalf("valid fixture receipt = events %d, error %v", len(events), err)
+	}
+
+	failedInvariant := valid
+	failedInvariant.InvariantResults = []contracts.InvariantResult{{InvariantID: "finite-output", Passed: false}}
+	if _, err := fixtureCalculationEvents([]CalculationCard{failedInvariant}, time.Now()); err == nil {
+		t.Fatal("expected failed invariant to reject a successful fixture receipt")
+	}
+
+	malformedHash := valid
+	malformedHash.ReceiptSHA = "not-a-hash"
+	if _, err := fixtureCalculationEvents([]CalculationCard{malformedHash}, time.Now()); err == nil {
+		t.Fatal("expected malformed fixture receipt hash to be rejected")
+	}
+}
+
+func executionPhase(plan *executionplan.Projection, phaseID string) *executionplan.Phase {
+	for index := range plan.Phases {
+		if plan.Phases[index].PhaseID == phaseID {
+			return &plan.Phases[index]
+		}
+	}
+	return nil
 }
 
 func TestFixtureServerRejectsInvalidInputsAndExplainsFollowUpDegradation(t *testing.T) {
@@ -785,6 +859,9 @@ func TestIntelligenceInspectorSeparatesMetadataAndProtectedBodies(t *testing.T) 
 		t.Fatalf("workspace/mission-control identity mismatch: run=%q/%q trace=%q/%q",
 			run.RunID, metadataRecord.RunID, run.TraceID, metadataRecord.TraceID)
 	}
+	if len(metadataRecord.Timeline) == 0 {
+		t.Fatal("Mission Control did not expose the correlated public lifecycle timeline")
+	}
 
 	denied := getRaw(t, httpServer.URL+"/api/v1/runs/"+run.RunID+"/intelligence/protected")
 	if denied.StatusCode != http.StatusForbidden {
@@ -827,7 +904,7 @@ func TestGoldenFixtureHasImmediateIntelligenceLineage(t *testing.T) {
 	if err := json.Unmarshal(response.Body.Bytes(), &record); err != nil {
 		t.Fatal(err)
 	}
-	if record.Release == nil || len(record.Retrievals) != 1 ||
+	if record.Release == nil || len(record.Timeline) == 0 || len(record.Retrievals) != 1 ||
 		len(record.Engines) != len(server.fixture.Calculations) {
 		t.Fatalf("record = %+v", record)
 	}
@@ -943,6 +1020,7 @@ func TestSafeStreamAttributesKeepsReceiptMetadataAndDropsBodies(t *testing.T) {
 		"input_ref_ids":            "operating-cash-flow+capex",
 		"receipt_id":               "receipt-1",
 		"receipt_sha256":           strings.Repeat("a", 64),
+		"receipt_verification":     "canonical_verified",
 		"output_ref_ids":           "free-cash-flow",
 		"retrieval_id":             "retrieval-1",
 		"bundle_id":                "bundle-1",
@@ -973,6 +1051,12 @@ func TestSafeStreamAttributesKeepsReceiptMetadataAndDropsBodies(t *testing.T) {
 		"receipt_ref_count":        "2",
 		"limitation_count":         "1",
 		"section_count":            "3",
+		"freshness_state":          "bounded_by_as_of",
+		"fact_count":               "3",
+		"calculation_count":        "2",
+		"inference_count":          "1",
+		"hypothesis_count":         "1",
+		"assumption_count":         "2",
 		"raw_prompt":               "private",
 		"response_body":            "private",
 		"claim_body":               "private",
@@ -982,7 +1066,7 @@ func TestSafeStreamAttributesKeepsReceiptMetadataAndDropsBodies(t *testing.T) {
 	})
 	for _, key := range []string{
 		"packet_id", "evidence_count", "source_classes", "formula_version",
-		"input_ref_ids", "receipt_id", "receipt_sha256", "output_ref_ids",
+		"input_ref_ids", "receipt_id", "receipt_sha256", "receipt_verification", "output_ref_ids",
 		"retrieval_id", "bundle_id", "retrieval_method", "candidate_count",
 		"selected_candidate_count", "rejected_candidate_count", "candidate_count_state",
 		"tool_execution_id",
@@ -992,6 +1076,8 @@ func TestSafeStreamAttributesKeepsReceiptMetadataAndDropsBodies(t *testing.T) {
 		"approved_claim_count", "rejected_claim_count", "issue_count", "repair_pass",
 		"mandatory_review_count", "claim_count", "supported_claim_coverage",
 		"evidence_ref_count", "receipt_ref_count", "limitation_count", "section_count",
+		"freshness_state", "fact_count", "calculation_count", "inference_count",
+		"hypothesis_count", "assumption_count",
 	} {
 		if safe[key] == "" {
 			t.Fatalf("safe operational attribute %q was dropped: %#v", key, safe)

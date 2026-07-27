@@ -43,6 +43,7 @@ class OrchestrationTraceSchemaTests(unittest.TestCase):
             "interpretation",
             "planning",
             "plan",
+            "wave",
             "context",
             "model",
             "retrieval",

@@ -8,10 +8,18 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from release_path_policy import resolve_candidate_file
+
+
 DEFAULT_OUTPUT = ROOT / "evidence" / "release-audit.json"
 MAX_PUBLIC_FILE_BYTES = 10 * 1024 * 1024
 
@@ -81,6 +89,8 @@ def public_files(root: Path, output: Path) -> list[Path]:
 def forbidden_path_reason(path: Path) -> str | None:
     parts = set(path.parts)
     lower = path.as_posix().lower()
+    if lower.startswith("experiments/sprint32/holdout/"):
+        return "sealed evaluation material"
     if path.name.startswith(".env") and path.name != ".env.example":
         return "private environment file"
     if parts.intersection({"strategy", "Contabilidade", "corpus", "models", "var"}):
@@ -125,7 +135,10 @@ def scan_secrets(relative: Path, text: str) -> list[dict[str, object]]:
 
 def validate_env_example(root: Path) -> list[str]:
     problems: list[str] = []
-    path = root / ".env.example"
+    path, reason = resolve_candidate_file(root, Path(".env.example"))
+    if reason:
+        return [f".env.example is unsafe: {reason}"]
+    assert path is not None
     if not path.is_file():
         return [".env.example is missing"]
     for line_number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -140,15 +153,26 @@ def validate_env_example(root: Path) -> list[str]:
 
 
 def validate_release_files(root: Path) -> list[str]:
-    problems = [f"required release file is missing: {name}" for name in sorted(REQUIRED_RELEASE_FILES) if not (root / name).is_file()]
-    readme = root / "README.md"
+    problems: list[str] = []
+    for name in sorted(REQUIRED_RELEASE_FILES):
+        path, reason = resolve_candidate_file(root, Path(name))
+        if reason:
+            problems.append(f"required release file is unsafe: {name}: {reason}")
+        elif path is None or not path.is_file():
+            problems.append(f"required release file is missing: {name}")
+    readme, reason = resolve_candidate_file(root, Path("README.md"))
+    if reason or readme is None:
+        return problems
     if readme.is_file() and "To be defined before the first implementation release." in readme.read_text(encoding="utf-8"):
         problems.append("README license section is unresolved")
     return problems
 
 
 def verify_judge_artifacts(root: Path) -> tuple[list[dict[str, object]], list[str]]:
-    package_path = root / "evidence" / "judge-package.json"
+    package_path, reason = resolve_candidate_file(root, Path("evidence/judge-package.json"))
+    if reason:
+        return [], [f"evidence/judge-package.json is unsafe: {reason}"]
+    assert package_path is not None
     if not package_path.is_file():
         return [], ["evidence/judge-package.json is missing"]
     package = json.loads(package_path.read_text(encoding="utf-8"))
@@ -160,7 +184,11 @@ def verify_judge_artifacts(root: Path) -> tuple[list[dict[str, object]], list[st
         if not relative or not expected:
             problems.append(f"judge artifact {artifact_id} lacks path or sha256")
             continue
-        path = root / relative
+        path, reason = resolve_candidate_file(root, Path(relative))
+        if reason:
+            problems.append(f"judge artifact {artifact_id} is unsafe: {reason}")
+            continue
+        assert path is not None
         actual = sha256(path) if path.is_file() else "unavailable"
         matches = actual == expected
         results.append({"artifact_id": artifact_id, "path": relative, "sha256": actual, "matches": matches})
@@ -179,15 +207,25 @@ def build(root: Path, output: Path) -> dict[str, object]:
     text_files = 0
     total_bytes = 0
     for relative in files:
-        path = root / relative
+        reason = forbidden_path_reason(relative)
+        if reason:
+            forbidden.append({"path": relative.as_posix(), "reason": reason})
+            continue
+        path, containment_reason = resolve_candidate_file(root, relative)
+        if containment_reason:
+            forbidden.append(
+                {
+                    "path": relative.as_posix(),
+                    "reason": f"candidate containment failed: {containment_reason}",
+                }
+            )
+            continue
+        assert path is not None
         if not path.is_file():
             forbidden.append({"path": relative.as_posix(), "reason": "not a regular file"})
             continue
         size = path.stat().st_size
         total_bytes += size
-        reason = forbidden_path_reason(relative)
-        if reason:
-            forbidden.append({"path": relative.as_posix(), "reason": reason})
         if size > MAX_PUBLIC_FILE_BYTES:
             oversized.append({"path": relative.as_posix(), "bytes": size})
         text = text_payload(path)

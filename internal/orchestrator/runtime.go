@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/capability"
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/engine"
 	"github.com/rvbernucci/signalforge/internal/planner"
 	"github.com/rvbernucci/signalforge/internal/roles"
 )
@@ -82,20 +84,21 @@ type RetrievalLifecycle struct {
 }
 
 type ToolLifecycle struct {
-	ToolExecutionID  string
-	ReceiptID        string
-	ReceiptSHA       string
-	EngineID         string
-	OperationID      string
-	FormulaVersion   string
-	InputRefIDs      []string
-	OutputRefIDs     []string
-	InputCount       int
-	OutputCount      int
-	InvariantCount   int
-	InvariantsPassed bool
-	WarningCount     int
-	FailureCode      string
+	ToolExecutionID     string
+	ReceiptID           string
+	ReceiptSHA          string
+	ReceiptVerification string
+	EngineID            string
+	OperationID         string
+	FormulaVersion      string
+	InputRefIDs         []string
+	OutputRefIDs        []string
+	InputCount          int
+	OutputCount         int
+	InvariantCount      int
+	InvariantsPassed    bool
+	WarningCount        int
+	FailureCode         string
 }
 
 // SpecialistLifecycleObserver receives only bounded operational metadata. It cannot receive
@@ -282,9 +285,26 @@ func (runtime *Runtime) runContextWaves(ctx context.Context, request contracts.R
 		if len(waveSteps) == 0 {
 			continue
 		}
+		waveStepID := "context-wave-" + strconv.Itoa(wave)
+		waveAttributes := map[string]string{
+			"wave":              strconv.Itoa(wave),
+			"specialist_count":  strconv.Itoa(len(waveSteps)),
+			"concurrency_limit": strconv.Itoa(limit),
+		}
+		emitter.emit(waveStepID, "wave", "started", waveAttributes)
 		wavePackets, waveFailures, concurrent := runtime.runContextWave(ctx, request, waveSteps, limit, emitter)
 		packets = append(packets, wavePackets...)
 		failures = append(failures, waveFailures...)
+		waveStatus := "completed"
+		if len(wavePackets) == 0 {
+			waveStatus = "failed"
+		} else if len(waveFailures) > 0 {
+			waveStatus = "degraded"
+		}
+		waveAttributes["succeeded_count"] = strconv.Itoa(len(wavePackets))
+		waveAttributes["failed_count"] = strconv.Itoa(len(waveFailures))
+		waveAttributes["observed_concurrency"] = strconv.Itoa(concurrent)
+		emitter.emit(waveStepID, "wave", waveStatus, waveAttributes)
 		if concurrent > maximumConcurrent {
 			maximumConcurrent = concurrent
 		}
@@ -395,18 +415,26 @@ func packetOperationalAttributes(packet contracts.ContextPacket) map[string]stri
 	totalClaims := len(packet.Findings) + len(packet.Counterevidence)
 	supportedClaims := 0
 	findings := append(append([]contracts.Finding(nil), packet.Findings...), packet.Counterevidence...)
+	claimCounts := map[contracts.ClaimType]int{}
 	for _, finding := range findings {
 		if len(finding.EvidenceRefs) > 0 {
 			supportedClaims++
 		}
+		claimCounts[finding.ClaimType]++
 	}
 	return map[string]string{
 		"packet_id":              packet.PacketID,
 		"evidence_count":         fmt.Sprintf("%d", len(packet.Evidence)),
 		"source_classes":         sourceClasses(packet.Evidence),
 		"as_of":                  packet.Scope.AsOf.UTC().Format(time.DateOnly),
+		"freshness_state":        "bounded_by_as_of",
 		"finding_count":          fmt.Sprintf("%d", len(packet.Findings)),
 		"counterevidence_count":  fmt.Sprintf("%d", len(packet.Counterevidence)),
+		"fact_count":             fmt.Sprintf("%d", claimCounts[contracts.ClaimFact]),
+		"calculation_count":      fmt.Sprintf("%d", claimCounts[contracts.ClaimCalculation]),
+		"inference_count":        fmt.Sprintf("%d", claimCounts[contracts.ClaimInference]),
+		"hypothesis_count":       fmt.Sprintf("%d", claimCounts[contracts.ClaimHypothesis]),
+		"assumption_count":       fmt.Sprintf("%d", len(packet.Assumptions)),
 		"missing_evidence_count": fmt.Sprintf("%d", len(packet.MissingEvidence)),
 		"conflict_count":         fmt.Sprintf("%d", len(packet.Conflicts)),
 		"uncertainty_count":      fmt.Sprintf("%d", len(packet.Uncertainties)),
@@ -459,6 +487,9 @@ func planningAttributes(plan contracts.ResearchPlan) map[string]string {
 }
 
 func invariantsPassed(results []contracts.InvariantResult) bool {
+	if len(results) == 0 {
+		return false
+	}
 	for _, result := range results {
 		if !result.Passed {
 			return false
@@ -484,20 +515,25 @@ func receiptOutputIDs(receipt contracts.CalculationReceipt) string {
 }
 
 func calculationReceiptAttributes(receipt contracts.CalculationReceipt) map[string]string {
+	verification := "metadata_only"
+	if engine.VerifyReceipt(receipt) == nil {
+		verification = "canonical_verified"
+	}
 	return map[string]string{
-		"tool_execution_id": receipt.RequestID,
-		"engine_id":         receipt.EngineID,
-		"formula_version":   receipt.FormulaVersion,
-		"input_count":       fmt.Sprintf("%d", len(receipt.NormalizedInputs)),
-		"input_ref_ids":     receiptInputIDs(receipt),
-		"invariant_count":   fmt.Sprintf("%d", len(receipt.InvariantResults)),
-		"invariants_passed": fmt.Sprintf("%t", invariantsPassed(receipt.InvariantResults)),
-		"operation_id":      receipt.OperationID,
-		"output_count":      fmt.Sprintf("%d", len(receipt.Outputs)),
-		"output_ref_ids":    receiptOutputIDs(receipt),
-		"receipt_id":        receipt.ReceiptID,
-		"receipt_sha256":    receipt.ReceiptSHA,
-		"warning_count":     fmt.Sprintf("%d", len(receipt.Warnings)),
+		"tool_execution_id":    receipt.RequestID,
+		"engine_id":            receipt.EngineID,
+		"formula_version":      receipt.FormulaVersion,
+		"input_count":          fmt.Sprintf("%d", len(receipt.NormalizedInputs)),
+		"input_ref_ids":        receiptInputIDs(receipt),
+		"invariant_count":      fmt.Sprintf("%d", len(receipt.InvariantResults)),
+		"invariants_passed":    fmt.Sprintf("%t", invariantsPassed(receipt.InvariantResults)),
+		"operation_id":         receipt.OperationID,
+		"output_count":         fmt.Sprintf("%d", len(receipt.Outputs)),
+		"output_ref_ids":       receiptOutputIDs(receipt),
+		"receipt_id":           receipt.ReceiptID,
+		"receipt_sha256":       receipt.ReceiptSHA,
+		"receipt_verification": verification,
+		"warning_count":        fmt.Sprintf("%d", len(receipt.Warnings)),
 	}
 }
 
@@ -989,11 +1025,19 @@ func routeAttributes(step contracts.PlanStep) map[string]string {
 	case "synthesis":
 		reason = "single_release_authority"
 	}
-	return map[string]string{
+	wave := step.Wave
+	if wave <= 0 && step.Kind == "context" {
+		wave = 1
+	}
+	attributes := map[string]string{
 		"role_id":           step.RoleID,
 		"route_reason_code": reason,
 		"capability_ids":    strings.Join(step.CapabilityIDs, ","),
 	}
+	if wave > 0 {
+		attributes["wave"] = strconv.Itoa(wave)
+	}
+	return attributes
 }
 
 func validatePacket(packet contracts.ContextPacket, request contracts.ContextRequest) error {
@@ -1109,19 +1153,20 @@ func (adapter specialistLifecycleEventAdapter) emitTool(status string, lifecycle
 		return
 	}
 	attributes := map[string]string{
-		"tool_execution_id": lifecycle.ToolExecutionID,
-		"receipt_id":        lifecycle.ReceiptID,
-		"receipt_sha256":    lifecycle.ReceiptSHA,
-		"engine_id":         lifecycle.EngineID,
-		"operation_id":      lifecycle.OperationID,
-		"formula_version":   lifecycle.FormulaVersion,
-		"input_ref_ids":     boundedSafeIDs(lifecycle.InputRefIDs),
-		"output_ref_ids":    boundedSafeIDs(lifecycle.OutputRefIDs),
-		"input_count":       fmt.Sprintf("%d", lifecycle.InputCount),
-		"output_count":      fmt.Sprintf("%d", lifecycle.OutputCount),
-		"invariant_count":   fmt.Sprintf("%d", lifecycle.InvariantCount),
-		"invariants_passed": fmt.Sprintf("%t", lifecycle.InvariantsPassed),
-		"warning_count":     fmt.Sprintf("%d", lifecycle.WarningCount),
+		"tool_execution_id":    lifecycle.ToolExecutionID,
+		"receipt_id":           lifecycle.ReceiptID,
+		"receipt_sha256":       lifecycle.ReceiptSHA,
+		"receipt_verification": lifecycle.ReceiptVerification,
+		"engine_id":            lifecycle.EngineID,
+		"operation_id":         lifecycle.OperationID,
+		"formula_version":      lifecycle.FormulaVersion,
+		"input_ref_ids":        boundedSafeIDs(lifecycle.InputRefIDs),
+		"output_ref_ids":       boundedSafeIDs(lifecycle.OutputRefIDs),
+		"input_count":          fmt.Sprintf("%d", lifecycle.InputCount),
+		"output_count":         fmt.Sprintf("%d", lifecycle.OutputCount),
+		"invariant_count":      fmt.Sprintf("%d", lifecycle.InvariantCount),
+		"invariants_passed":    fmt.Sprintf("%t", lifecycle.InvariantsPassed),
+		"warning_count":        fmt.Sprintf("%d", lifecycle.WarningCount),
 	}
 	if lifecycle.FailureCode != "" {
 		attributes["code"] = lifecycle.FailureCode
@@ -1136,7 +1181,11 @@ func newEmitter(runID string, sink EventSink, now func() time.Time, trace *Trace
 func (emitter *eventEmitter) emit(stepID, eventType, status string, attributes map[string]string) {
 	emitter.mu.Lock()
 	defer emitter.mu.Unlock()
-	event := Event{Sequence: len(emitter.trace.Events) + 1, RunID: emitter.runID, StepID: stepID, Type: eventType, Status: status, At: emitter.now(), Attributes: attributes}
+	snapshot := make(map[string]string, len(attributes))
+	for key, value := range attributes {
+		snapshot[key] = value
+	}
+	event := Event{Sequence: len(emitter.trace.Events) + 1, RunID: emitter.runID, StepID: stepID, Type: eventType, Status: status, At: emitter.now(), Attributes: snapshot}
 	emitter.trace.Events = append(emitter.trace.Events, event)
 	if emitter.sink != nil {
 		emitSafely(emitter.sink, event)

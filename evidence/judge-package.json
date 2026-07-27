@@ -1,45 +1,46 @@
 {
   "schema_version": "signalforge/judge-package/v1",
   "status": "public_artifacts_verified",
-  "evidence_date": "2026-07-22",
+  "evidence_date": "2026-07-27",
   "artifacts": {
     "project_specification": {
       "path": "output/pdf/SignalForge-Project-Specification.pdf",
-      "sha256": "e29f1834faf334469e132382f6708996ef5107bf54ebcb5761dd84b58eb6aa3f",
+      "sha256": "ff118c158c5db35605de4ed3516dc46aff1f110b3e62eba6bc7d4e3acd2e021c",
       "pages": 6,
       "visual_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/SignalForge-Project-Specification.pdf"
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Project-Specification.pdf"
     },
     "judge_deck": {
       "path": "output/presentation/SignalForge-Judge-Deck.pptx",
-      "sha256": "9a870f197b7d942fd75e7725002027fa27939712f9385ad3a456301db793186d",
+      "sha256": "bec7d742fd5d0c9d1636845e665291b05b412161e997707096f59063222295a9",
       "slides": 6,
       "external_render_review": "passed",
+      "template_fidelity_gate": "passed",
       "canvas_overflow_gate": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/SignalForge-Judge-Deck.pptx"
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Judge-Deck.pptx"
     },
     "architecture": {
       "path": "docs/architecture.svg",
       "sha256": "fb640176c7f827a4878c261a069f817e8c789d1758982eb9bc595041c033c968",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/architecture.svg"
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/architecture.svg"
     },
     "demo_script": {
       "path": "docs/demo-script.md",
       "sha256": "f300af179f772014b8d8a70b2772674cdf404469f4b041aba434c1b6a4cfccf8",
       "final_duration_seconds": 252.9,
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/demo-script.md"
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/demo-script.md"
     },
     "demo_voiceover": {
       "path": "docs/demo-voiceover.txt",
       "sha256": "8e6e69aa6d1c20dbfd6086e91a76dae8a7beeecb3723b33a6e20cc9892415a72",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/demo-voiceover.txt"
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/demo-voiceover.txt"
     },
     "live_demo_capture": {
       "path": "evidence/runs/sprint13/live-demo-capture.json",
       "sha256": "11fe92cad8d9eb7cfaacf094f5474e71d139957d92a47594ac8daa9a7d9c2d45",
       "safe_export_path": "evidence/runs/sprint13/live-demo-safe-export.json",
       "safe_export_sha256": "042ea765543053bd8d3973af8464827a8cdf96c1da95dddc0b01b1ae1da21d59",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/live-demo-capture.json"
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/live-demo-capture.json"
     },
     "demo_video": {
       "path": "output/video/SignalForge-Radeon-Demo.mp4",
@@ -48,13 +49,46 @@
       "resolution": "1280x720",
       "visual_review": "passed",
       "audio_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint13-demo-v1/SignalForge-Radeon-Demo.mp4"
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Radeon-Demo.mp4"
+    },
+    "sprint34_runtime": {
+      "path": "evidence/sprint34-radeon-runtime.json",
+      "sha256": "4fc8d3255f03d325406911b603effdc92518b9387a7f8c2ba742b8143acb5e8b",
+      "privacy_review": "passed",
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/sprint34-radeon-runtime.json"
+    },
+    "synchronized_captures": {
+      "path": "evidence/dashboard-radeon-synchronized-captures.json",
+      "sha256": "91248b357a47445b8f9a3b6a2384084ab6e205bf202402dacfdb58e9189285ab",
+      "status": "passed",
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/dashboard-radeon-synchronized-captures.json"
+    },
+    "desktop_workspace_capture": {
+      "path": "docs/assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg",
+      "sha256": "9130b70006c67f48dc79083b8ff24eaaefbca676999e2ae6f9800d473cbb5ee5",
+      "resolution": "1280x720",
+      "visual_review": "passed",
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg"
+    },
+    "mobile_workspace_capture": {
+      "path": "docs/assets/sprint34-radeon-hybrid-workspace-mobile-390x844.jpg",
+      "sha256": "1942ea2cbe2b0c65d35d7a15c9accf08428038387cce17de4a04f0201fe6c66a",
+      "resolution": "390x844",
+      "visual_review": "passed",
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/sprint34-radeon-hybrid-workspace-mobile-390x844.jpg"
+    },
+    "safe_stop_capture": {
+      "path": "docs/assets/sprint34-radeon-hybrid-safe-stop-1280x720.jpg",
+      "sha256": "f8e63c68b82325432c8efe99c4833a1ed61bcc0f08dd71e45b565126385ffcfa",
+      "resolution": "1280x720",
+      "visual_review": "passed",
+      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/sprint34-radeon-hybrid-safe-stop-1280x720.jpg"
     }
   },
   "claim_authority": "All quantitative narrative is derived from evidence/public-claims.json and its hash-bound artifacts.",
-  "public_release_page": "https://github.com/rvbernucci/signalforge/releases/tag/sprint13-demo-v1",
+  "public_release_page": "https://github.com/rvbernucci/signalforge/releases/tag/sprint34-artifacts-v1",
   "public_link_verification": {
-    "verified_at": "2026-07-22T12:02:48Z",
+    "verified_at": "2026-07-27T13:31:38Z",
     "authentication": "none",
     "repository_http_status": 200,
     "release_http_status": 200,

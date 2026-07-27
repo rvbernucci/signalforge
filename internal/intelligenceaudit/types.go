@@ -25,11 +25,33 @@ type Record struct {
 	Capture       CaptureState      `json:"capture"`
 	StartedAt     time.Time         `json:"started_at"`
 	CompletedAt   *time.Time        `json:"completed_at,omitempty"`
+	Timeline      []LifecycleEvent  `json:"timeline"`
 	ModelCalls    []ModelCall       `json:"model_calls"`
 	Retrievals    []RetrievalRecord `json:"retrievals"`
 	Engines       []EngineCall      `json:"engine_calls"`
 	Reviews       []ReviewRecord    `json:"reviews"`
 	Release       *ReleaseRecord    `json:"release,omitempty"`
+}
+
+// LifecycleEvent is the bounded, public operational trace. It intentionally excludes prompt,
+// response, evidence, calculation-value, memory, and error bodies.
+type LifecycleEvent struct {
+	Sequence            int       `json:"sequence"`
+	StepID              string    `json:"step_id,omitempty"`
+	EventType           string    `json:"event_type"`
+	Status              string    `json:"status"`
+	Wave                int       `json:"wave,omitempty"`
+	RoleID              string    `json:"role_id,omitempty"`
+	Route               string    `json:"route,omitempty"`
+	RouteReasonCode     string    `json:"route_reason_code,omitempty"`
+	Attempt             int       `json:"attempt,omitempty"`
+	SpecialistCount     int       `json:"specialist_count,omitempty"`
+	ConcurrencyLimit    int       `json:"concurrency_limit,omitempty"`
+	SucceededCount      int       `json:"succeeded_count,omitempty"`
+	FailedCount         int       `json:"failed_count,omitempty"`
+	ObservedConcurrency int       `json:"observed_concurrency,omitempty"`
+	FailureCode         string    `json:"failure_code,omitempty"`
+	At                  time.Time `json:"at"`
 }
 
 type CaptureState struct {

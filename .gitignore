@@ -68,6 +68,15 @@ evidence/runs/sprint11/golden-context-4-auto/*
 evidence/runs/sprint13/*
 !evidence/runs/sprint13/live-demo-capture.json
 !evidence/runs/sprint13/live-demo-safe-export.json
+!evidence/runs/sprint34/
+evidence/runs/sprint34/*
+!evidence/runs/sprint34/failure-matrix.json
+!evidence/runs/sprint34/hybrid-journey-timing.json
+!evidence/runs/sprint34/hybrid-startup.json
+!evidence/runs/sprint34/hybrid-telemetry-summary.json
+!evidence/runs/sprint34/local-journey-timing.json
+!evidence/runs/sprint34/local-startup.json
+!evidence/runs/sprint34/local-telemetry-summary.json
 evidence/local/
 models/
 var/

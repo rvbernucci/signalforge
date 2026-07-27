@@ -1,5 +1,5 @@
 {
-  "completed_at": "2026-07-26T00:17:48.927654034Z",
+  "completed_at": "2026-07-27T12:28:44.726109871Z",
   "execution_plan": {
     "max_parallel_specialists": 4,
     "phases": [
@@ -36,9 +36,9 @@
         "status": "passed"
       }
     ],
-    "plan_id": "plan-request-019f9bc5-eca5-7c99-b510-b8c469373b54",
+    "plan_id": "plan-request-019fa389-c4e7-7cf6-b210-d76bdc7055cb",
     "progress_ratio": 1,
-    "projection_sha256": "e88b2a14899aa891d83974183c8ca427306c01c758ab8d71a5cb1d7722561234",
+    "projection_sha256": "958fe0f5c29e51ac6737282cb39f9abb8e3da10fc36e0a14b8ec9e90ff7290d8",
     "route_summary": [
       "local_rocm"
     ],
@@ -51,14 +51,14 @@
     "capture_status": "disabled",
     "context_packets": 6,
     "engine_receipts": 18,
-    "input_tokens": 102395,
-    "model_calls": 12,
-    "output_tokens": 12206,
+    "input_tokens": 95611,
+    "model_calls": 11,
+    "output_tokens": 10959,
     "providers": [
       "local-rocm"
     ],
     "release_status": "released",
-    "reviews": 5,
+    "reviews": 6,
     "roles": [
       "accounting-reporting/v1",
       "business-strategy/v1",
@@ -82,10 +82,10 @@
     "response_bodies_retained": false,
     "source_bodies_retained": false
   },
-  "run_id": "run-019f9bc5-eca5-7c99-b510-b8c469373b54",
+  "run_id": "run-019fa389-c4e7-7cf6-b210-d76bdc7055cb",
   "schema_version": "signalforge/dashboard-radeon-journey/v1",
-  "source_trace_sha256": "fa55ed753d0fd293aed79d37f220350f13b190834977e1f4b1a69414d2711f3a",
-  "started_at": "2026-07-26T00:14:27.493706713Z",
+  "source_trace_sha256": "45de0de968d0802b8c21dfaaf838f3b4127ea5ea4026f3bddde6171dd9ce8af4",
+  "started_at": "2026-07-27T12:25:42.887788287Z",
   "status": "completed",
-  "trace_id": "df40f73c20b1d90153263320b2bfc5e1"
+  "trace_id": "5d054f0d8dfa531910d0b45cc24a7ce9"
 }

@@ -5,37 +5,37 @@
     "workspace_and_mission_control_share_run_and_trace_identity": true
   },
   "build_identity": {
-    "frontend_index_sha256": "c7cfaaf9802c25154dac2719d94a1059afad888392da6dbde4bd4f3078d7bfa7",
+    "frontend_index_sha256": "7b362551b93737ea208e1c787dab85f856434869a478526520a789da3081a399",
     "source_identity": "working-tree-j08; not an accepted release image",
-    "workspace_binary_sha256": "c0f741b2ffdf2daac8fb8d0fa0f79acc1f88fb1b6dff43113934122c3c1d7992"
+    "workspace_binary_sha256": "0302c4580e1c8195547553bcc0b9b700452a11f00126a7d3fc76a5de1136ba4a"
   },
   "captures": {
     "hybrid_mission_control": {
       "format": "jpeg",
       "height": 720,
-      "path": "docs/assets/mission-control-radeon-hybrid-viewport.jpg",
-      "sha256": "98fea7bef445ad3a19cc953fb6a1a54d124b3308d37cdce2e6a80018865a7413",
+      "path": "docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg",
+      "sha256": "a9698ec8ae7d242bc95e6d78d11048b7b941556ded0938c1bd85dda626a79267",
       "width": 1280
     },
     "hybrid_plan": {
       "format": "jpeg",
       "height": 720,
-      "path": "docs/assets/live-execution-plan-radeon-hybrid-viewport.jpg",
-      "sha256": "bdb6a78e125b017fa2c7695699265610210f457310ee0bf42a6494c57831e27e",
+      "path": "docs/assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg",
+      "sha256": "9130b70006c67f48dc79083b8ff24eaaefbca676999e2ae6f9800d473cbb5ee5",
       "width": 1280
     },
     "local_mission_control": {
       "format": "jpeg",
       "height": 720,
-      "path": "docs/assets/mission-control-radeon-local-viewport.jpg",
-      "sha256": "b3dc2c5821e16119792ebd8d80ed4d8612ee710d261be58b180ce1ac6db2ace2",
+      "path": "docs/assets/sprint34-radeon-local-mission-control-1280x720.jpg",
+      "sha256": "3c3a622ee8a1cf39cd832640212bc9b0cbea538e03fe1ba7226d77facac0964c",
       "width": 1280
     },
     "local_plan": {
       "format": "jpeg",
       "height": 720,
-      "path": "docs/assets/live-execution-plan-radeon-local-viewport.jpg",
-      "sha256": "07448eeae71d11b990e2e4ff2116e835da999dffcecd1de272a42236c0c45254",
+      "path": "docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg",
+      "sha256": "00fc415456bae92765b1fc37a7ca26467a3debce81161c1cc3794b94294c8bff",
       "width": 1280
     }
   },
@@ -46,8 +46,8 @@
   },
   "journeys": {
     "hybrid": {
-      "manifest_sha256": "6122651ab0fee3f35d61431307edd5f63725006be47f67ccfc4286b30a53b05a",
-      "model_calls": 18,
+      "manifest_sha256": "d0e1af57346a10638efc7e25a805ba2b1be4d077b9cbf8bbe1166abfb1f57d8a",
+      "model_calls": 17,
       "providers": [
         "local-rocm",
         "radeon-vllm"
@@ -56,20 +56,20 @@
         "local_rocm",
         "provided_radeon_api"
       ],
-      "run_id": "run-019f9bdc-8dbf-76eb-af66-79b51324629c",
-      "trace_id": "1b5e3a27df2e686ef6a31d87d1e63dbc"
+      "run_id": "run-019fa38f-5953-7449-a1b8-d5c77bbd04cb",
+      "trace_id": "cc07bf5142093aac1804f9d9d905f589"
     },
     "local": {
-      "manifest_sha256": "1adb9547f323adadca2a18d89e27d6045f3a650675928bdde4b84c3a34d839ba",
-      "model_calls": 12,
+      "manifest_sha256": "5dc37bd7f77828cbcd4a3712b978fe963bc5b3d17459ffd433f1e98a1e7a35fc",
+      "model_calls": 11,
       "providers": [
         "local-rocm"
       ],
       "routes": [
         "local_rocm"
       ],
-      "run_id": "run-019f9bc5-eca5-7c99-b510-b8c469373b54",
-      "trace_id": "df40f73c20b1d90153263320b2bfc5e1"
+      "run_id": "run-019fa389-c4e7-7cf6-b210-d76bdc7055cb",
+      "trace_id": "5d054f0d8dfa531910d0b45cc24a7ce9"
     }
   },
   "privacy": {

@@ -13,12 +13,14 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/benchmark"
+	"github.com/rvbernucci/signalforge/internal/orchestrator"
 	"github.com/rvbernucci/signalforge/internal/telemetry"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -27,26 +29,30 @@ import (
 )
 
 const (
-	defaultTTL      = 15 * time.Minute
-	defaultMaxBytes = 16 << 20
+	defaultTTL        = 15 * time.Minute
+	defaultMaxBytes   = 16 << 20
+	defaultMaxRecords = 64
+	maxTimelineItems  = 256
 )
 
 var safeIdentity = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/@+\-]{0,255}$`)
 
 type Config struct {
-	Directory string
-	Enabled   bool
-	Token     string
-	TTL       time.Duration
-	MaxBytes  int64
-	Now       func() time.Time
-	LogWriter io.Writer
+	Directory  string
+	Enabled    bool
+	Token      string
+	TTL        time.Duration
+	MaxBytes   int64
+	MaxRecords int
+	Now        func() time.Time
+	LogWriter  io.Writer
 }
 
 type Store struct {
-	config  Config
-	mu      sync.RWMutex
-	records map[string]*storedRecord
+	config     Config
+	mu         sync.RWMutex
+	records    map[string]*storedRecord
+	removeFile func(string) error
 }
 
 type storedRecord struct {
@@ -55,10 +61,12 @@ type storedRecord struct {
 }
 
 type Recorder struct {
-	store   *Store
-	runID   string
-	ctx     context.Context
-	counter atomic.Uint64
+	store            *Store
+	runID            string
+	ctx              context.Context
+	counter          atomic.Uint64
+	lifecycleMu      sync.Mutex
+	lifecycleStarted map[string]time.Time
 }
 
 func NewStore(config Config) (*Store, error) {
@@ -71,13 +79,18 @@ func NewStore(config Config) (*Store, error) {
 	if config.MaxBytes <= 0 {
 		config.MaxBytes = defaultMaxBytes
 	}
+	if config.MaxRecords <= 0 {
+		config.MaxRecords = defaultMaxRecords
+	}
 	if config.Now == nil {
 		config.Now = func() time.Time { return time.Now().UTC() }
 	}
 	if config.Enabled && strings.TrimSpace(config.Token) == "" {
 		return nil, errors.New("enabled intelligence audit capture requires an operator token")
 	}
-	return &Store{config: config, records: map[string]*storedRecord{}}, nil
+	return &Store{
+		config: config, records: map[string]*storedRecord{}, removeFile: os.Remove,
+	}, nil
 }
 
 func (store *Store) Begin(ctx context.Context, runID, requestID, question string) (*Recorder, error) {
@@ -110,6 +123,7 @@ func (store *Store) Begin(ctx context.Context, runID, requestID, question string
 		public: Record{
 			SchemaVersion: SchemaVersionV1, RunID: runID, RequestID: requestID,
 			TraceID: traceID, Status: "running", Capture: capture, StartedAt: now,
+			Timeline:   []LifecycleEvent{},
 			ModelCalls: []ModelCall{}, Retrievals: []RetrievalRecord{},
 			Engines: []EngineCall{}, Reviews: []ReviewRecord{},
 		},
@@ -127,7 +141,188 @@ func (store *Store) Begin(ctx context.Context, runID, requestID, question string
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return &Recorder{store: store, runID: runID, ctx: ctx}, nil
+	return &Recorder{
+		store: store, runID: runID, ctx: ctx,
+		lifecycleStarted: map[string]time.Time{},
+	}, nil
+}
+
+// ObserveLifecycle projects only closed, low-cardinality orchestration metadata into the public
+// timeline, Loki JSONL stream, and Tempo trace. Invalid or mismatched events fail closed.
+func (recorder *Recorder) ObserveLifecycle(ctx context.Context, event orchestrator.Event) {
+	if recorder == nil || recorder.store == nil || event.RunID != recorder.runID {
+		return
+	}
+	projected, ok := projectLifecycleEvent(event)
+	if !ok {
+		return
+	}
+	if ctx == nil {
+		ctx = recorder.ctx
+	}
+	startedAt := projected.At
+	key := projected.EventType + "\x00" + projected.StepID
+	recorder.lifecycleMu.Lock()
+	if projected.Status == "started" {
+		recorder.lifecycleStarted[key] = projected.At
+	} else if candidate, exists := recorder.lifecycleStarted[key]; exists {
+		startedAt = candidate
+		delete(recorder.lifecycleStarted, key)
+	}
+	recorder.lifecycleMu.Unlock()
+	if projected.At.Before(startedAt) {
+		startedAt = projected.At
+	}
+
+	if projected.Status != "started" {
+		attributes := []attribute.KeyValue{
+			attribute.String("signalforge.run_id", recorder.runID),
+			attribute.String("signalforge.step_id", projected.StepID),
+			attribute.String("signalforge.event_type", projected.EventType),
+			attribute.String("signalforge.status", projected.Status),
+		}
+		if projected.Wave > 0 {
+			attributes = append(attributes, attribute.Int("signalforge.wave", projected.Wave))
+		}
+		if projected.ConcurrencyLimit > 0 {
+			attributes = append(attributes,
+				attribute.Int("signalforge.concurrency_limit", projected.ConcurrencyLimit))
+		}
+		if projected.RoleID != "" {
+			attributes = append(attributes,
+				attribute.String("signalforge.role_id", projected.RoleID),
+				attribute.String("signalforge.role_class", roleClass(projected.RoleID)),
+			)
+		}
+		if projected.RouteReasonCode != "" {
+			attributes = append(attributes,
+				attribute.String("signalforge.route_reason_code", projected.RouteReasonCode))
+		}
+		_, span := otel.Tracer("signalforge/orchestration").Start(
+			ctx,
+			"signalforge."+projected.EventType,
+			trace.WithTimestamp(startedAt),
+			trace.WithAttributes(attributes...),
+		)
+		if projected.Status == "failed" || projected.Status == "cancelled" {
+			span.SetStatus(codes.Error, projected.Status)
+			span.RecordError(errors.New(projected.Status))
+		}
+		span.End(trace.WithTimestamp(projected.At))
+	}
+
+	recorder.store.mu.Lock()
+	defer recorder.store.mu.Unlock()
+	record, exists := recorder.store.records[recorder.runID]
+	if !exists || timelineContains(record.public.Timeline, projected.Sequence) {
+		return
+	}
+	record.public.Timeline = append(record.public.Timeline, projected)
+	sort.Slice(record.public.Timeline, func(i, j int) bool {
+		return record.public.Timeline[i].Sequence < record.public.Timeline[j].Sequence
+	})
+	if len(record.public.Timeline) > maxTimelineItems {
+		record.public.Timeline = append([]LifecycleEvent(nil),
+			record.public.Timeline[len(record.public.Timeline)-maxTimelineItems:]...)
+	}
+	recorder.store.emitLocked(
+		"orchestration."+projected.EventType,
+		lifecycleLogFields(recorder.runID, record.public.TraceID, projected),
+	)
+	_ = recorder.store.persistLocked(record)
+}
+
+func projectLifecycleEvent(event orchestrator.Event) (LifecycleEvent, bool) {
+	if event.Sequence <= 0 || event.At.IsZero() || !safeIdentity.MatchString(event.RunID) ||
+		event.StepID != "" && !safeIdentity.MatchString(event.StepID) ||
+		!allowedLifecyclePair(event.Type, event.Status) {
+		return LifecycleEvent{}, false
+	}
+	result := LifecycleEvent{
+		Sequence: event.Sequence, StepID: event.StepID, EventType: event.Type,
+		Status: event.Status, At: event.At.UTC(),
+	}
+	result.Wave = boundedAttributeInt(event.Attributes["wave"], 0, 64)
+	result.Attempt = boundedAttributeInt(event.Attributes["attempt"], 0, 16)
+	result.SpecialistCount = boundedAttributeInt(event.Attributes["specialist_count"], 0, 64)
+	result.ConcurrencyLimit = boundedAttributeInt(event.Attributes["concurrency_limit"], 0, 4)
+	result.SucceededCount = boundedAttributeInt(event.Attributes["succeeded_count"], 0, 64)
+	result.FailedCount = boundedAttributeInt(event.Attributes["failed_count"], 0, 64)
+	result.ObservedConcurrency = boundedAttributeInt(event.Attributes["observed_concurrency"], 0, 4)
+	for source, target := range map[string]*string{
+		"role_id": &result.RoleID, "route": &result.Route,
+		"route_reason_code": &result.RouteReasonCode, "code": &result.FailureCode,
+	} {
+		value := strings.TrimSpace(event.Attributes[source])
+		if value != "" && safeIdentity.MatchString(value) {
+			*target = value
+		}
+	}
+	return result, true
+}
+
+func allowedLifecyclePair(eventType, status string) bool {
+	allowed := map[string]map[string]bool{
+		"interpretation": {"completed": true, "clarification_required": true},
+		"planning":       {"completed": true}, "plan": {"accepted": true},
+		"wave":      {"started": true, "completed": true, "degraded": true, "failed": true},
+		"context":   {"started": true, "completed": true, "failed": true},
+		"retrieval": {"started": true, "passed": true, "completed": true, "degraded": true, "failed": true, "unavailable": true},
+		"tool":      {"started": true, "passed": true, "completed": true, "failed": true, "unavailable": true},
+		"review":    {"started": true, "approve": true, "reject": true, "repair_requested": true, "narrowed": true, "approved_subset": true, "repair_unresolved": true},
+		"synthesis": {"started": true, "passed": true, "completed": true},
+		"run":       {"completed": true, "failed": true},
+		"retention": {"not_requested": true, "requested": true, "approved": true, "saved": true, "unavailable": true, "failed": true, "deleted": true},
+		"workspace": {"completed": true, "cancelled": true, "failed": true},
+	}
+	return allowed[eventType][status]
+}
+
+func boundedAttributeInt(value string, minimum, maximum int) int {
+	parsed, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil || parsed < minimum || parsed > maximum {
+		return 0
+	}
+	return parsed
+}
+
+func timelineContains(items []LifecycleEvent, sequence int) bool {
+	for _, item := range items {
+		if item.Sequence == sequence {
+			return true
+		}
+	}
+	return false
+}
+
+func lifecycleLogFields(runID, traceID string, event LifecycleEvent) map[string]any {
+	fields := map[string]any{
+		"run_id": runID, "trace_id": traceID, "sequence": event.Sequence,
+		"step_id": event.StepID, "event_type": event.EventType, "status": event.Status,
+	}
+	if event.Wave > 0 {
+		fields["wave"] = event.Wave
+	}
+	if event.RoleID != "" {
+		fields["role_id"] = event.RoleID
+		fields["role_class"] = roleClass(event.RoleID)
+	}
+	if event.Route != "" {
+		fields["route"] = event.Route
+	}
+	if event.SpecialistCount > 0 {
+		fields["specialist_count"] = event.SpecialistCount
+	}
+	if event.ConcurrencyLimit > 0 {
+		fields["concurrency_limit"] = event.ConcurrencyLimit
+	}
+	if event.SucceededCount > 0 {
+		fields["succeeded_count"] = event.SucceededCount
+	}
+	if event.FailedCount > 0 {
+		fields["failed_count"] = event.FailedCount
+	}
+	return fields
 }
 
 func (recorder *Recorder) ObserveModelCall(ctx context.Context, roleID, providerID string, request benchmark.Request, completion benchmark.Completion, callErr error) {
@@ -291,7 +486,81 @@ func (recorder *Recorder) Complete(input ProjectionInput) error {
 		"retrievals": len(record.public.Retrievals), "engine_calls": len(record.public.Engines),
 		"reviews": len(record.public.Reviews), "released": record.public.Release != nil,
 	})
-	return recorder.store.persistLocked(record)
+	if err := recorder.store.persistLocked(record); err != nil {
+		return err
+	}
+	recorder.store.evictCompletedLocked()
+	return nil
+}
+
+func (store *Store) evictCompletedLocked() {
+	for store.completedRecordCountLocked() > store.config.MaxRecords {
+		oldestRunID := ""
+		var oldestStartedAt time.Time
+		for runID, record := range store.records {
+			if record.public.Status == "running" {
+				continue
+			}
+			if oldestRunID == "" || record.public.StartedAt.Before(oldestStartedAt) ||
+				record.public.StartedAt.Equal(oldestStartedAt) && runID < oldestRunID {
+				oldestRunID = runID
+				oldestStartedAt = record.public.StartedAt
+			}
+		}
+		if oldestRunID == "" {
+			return
+		}
+		record := store.records[oldestRunID]
+		if err := store.removeIfPresentLocked(store.publicPath(oldestRunID)); err != nil {
+			store.emitEvictionFailureLocked(oldestRunID, record.public.TraceID, "public_metadata", err)
+			return
+		}
+		if err := store.removeIfPresentLocked(store.protectedPath(oldestRunID)); err != nil {
+			store.emitEvictionFailureLocked(oldestRunID, record.public.TraceID, "protected_capture", err)
+			return
+		}
+		delete(store.records, oldestRunID)
+		store.emitLocked("audit.evicted", map[string]any{
+			"run_id": oldestRunID, "trace_id": record.public.TraceID,
+			"reason": "bounded_completed_history",
+		})
+	}
+}
+
+func (store *Store) completedRecordCountLocked() int {
+	count := 0
+	for _, record := range store.records {
+		if record.public.Status != "running" {
+			count++
+		}
+	}
+	return count
+}
+
+func (store *Store) removeIfPresentLocked(path string) error {
+	err := store.removeFile(path)
+	if err == nil || errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	return err
+}
+
+func (store *Store) emitEvictionFailureLocked(runID, traceID, artifact string, err error) {
+	store.emitLocked("audit.eviction_failed", map[string]any{
+		"run_id": runID, "trace_id": traceID, "artifact": artifact,
+		"reason": "durable_cleanup_failed", "error_class": evictionErrorClass(err),
+	})
+}
+
+func evictionErrorClass(err error) string {
+	switch {
+	case errors.Is(err, os.ErrPermission):
+		return "permission_denied"
+	case errors.Is(err, os.ErrNotExist):
+		return "already_absent"
+	default:
+		return "io_failure"
+	}
 }
 
 func (store *Store) Public(runID string) (Record, error) {

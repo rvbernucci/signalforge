@@ -737,7 +737,11 @@ func TestRuntimeExecutesBoundedInspectableWorkflow(t *testing.T) {
 			retrievals++
 			if event.Attributes["packet_id"] == "" || event.Attributes["evidence_count"] != "1" ||
 				event.Attributes["source_classes"] != "sec_filing" || event.Attributes["as_of"] != "2026-07-21" ||
-				event.Attributes["finding_count"] != "1" || event.Attributes["evidence_coverage"] != "1_of_1" {
+				event.Attributes["finding_count"] != "1" || event.Attributes["evidence_coverage"] != "1_of_1" ||
+				event.Attributes["freshness_state"] != "bounded_by_as_of" ||
+				event.Attributes["fact_count"] != "1" || event.Attributes["calculation_count"] != "0" ||
+				event.Attributes["inference_count"] != "0" || event.Attributes["hypothesis_count"] != "0" ||
+				event.Attributes["assumption_count"] != "0" {
 				t.Fatalf("retrieval event omitted its safe packet metadata: %+v", event)
 			}
 		}
@@ -1059,6 +1063,38 @@ func TestRuntimeExecutesGoldenSpecialistsInTwoBoundedWaves(t *testing.T) {
 	}
 	if len(result.Trace.PacketIDs) != 6 || specialist.maximum != 4 || result.Trace.MaxConcurrentContext != 4 {
 		t.Fatalf("expected six packets with maximum fan-out four: trace=%+v max=%d", result.Trace, specialist.maximum)
+	}
+	waveEvents := make([]Event, 0, 4)
+	for _, event := range result.Trace.Events {
+		if event.Type == "wave" {
+			waveEvents = append(waveEvents, event)
+		}
+	}
+	if len(waveEvents) != 4 {
+		t.Fatalf("wave lifecycle events=%+v, want two started and two terminal events", waveEvents)
+	}
+	want := []struct {
+		stepID      string
+		status      string
+		wave        string
+		specialists string
+		succeeded   string
+		concurrency string
+	}{
+		{"context-wave-1", "started", "1", "4", "", ""},
+		{"context-wave-1", "completed", "1", "4", "4", "4"},
+		{"context-wave-2", "started", "2", "2", "", ""},
+		{"context-wave-2", "completed", "2", "2", "2", "2"},
+	}
+	for index, expected := range want {
+		event := waveEvents[index]
+		if event.StepID != expected.stepID || event.Status != expected.status ||
+			event.Attributes["wave"] != expected.wave ||
+			event.Attributes["specialist_count"] != expected.specialists ||
+			event.Attributes["succeeded_count"] != expected.succeeded ||
+			event.Attributes["observed_concurrency"] != expected.concurrency {
+			t.Fatalf("wave event %d=%+v, want %+v", index, event, expected)
+		}
 	}
 }
 
@@ -1417,7 +1453,11 @@ func validRuntimeTestReceipt(receiptID string, now time.Time) contracts.Calculat
 			OutputID: "output-1", Status: "available",
 			Quantity: contracts.Quantity{Value: "0.1", Unit: "ratio"},
 		}},
-		SourceAsOf: now, GeneratedAt: now, CodeCommit: "test", InputSHA: "input", ReceiptSHA: "receipt",
+		InvariantResults: []contracts.InvariantResult{{
+			InvariantID: "finite-output", Passed: true,
+		}},
+		SourceAsOf: now, GeneratedAt: now, CodeCommit: "test", InputSHA: "input",
+		ReceiptSHA: strings.Repeat("a", 64),
 	}
 }
 

@@ -29,6 +29,7 @@ python3 -m py_compile \
   scripts/build_dashboard_cpu_evidence.py \
   scripts/capture_dashboard_radeon_journey.py \
   scripts/build_dashboard_radeon_evidence.py \
+  scripts/build_sprint34_radeon_runtime_evidence.py \
   scripts/verify_dashboard_cpu_ablation.py
 python3 scripts/run_hardening_matrix.py --check
 python3 scripts/build_dashboard_cpu_evidence.py \
@@ -39,13 +40,26 @@ python3 scripts/build_dashboard_cpu_evidence.py \
 python3 scripts/build_dashboard_radeon_evidence.py \
   --local evidence/dashboard-radeon-local-journey.json \
   --hybrid evidence/dashboard-radeon-hybrid-journey.json \
-  --local-plan docs/assets/live-execution-plan-radeon-local-viewport.jpg \
-  --local-mission docs/assets/mission-control-radeon-local-viewport.jpg \
-  --hybrid-plan docs/assets/live-execution-plan-radeon-hybrid-viewport.jpg \
-  --hybrid-mission docs/assets/mission-control-radeon-hybrid-viewport.jpg \
-  --binary-sha256 c0f741b2ffdf2daac8fb8d0fa0f79acc1f88fb1b6dff43113934122c3c1d7992 \
-  --frontend-sha256 c7cfaaf9802c25154dac2719d94a1059afad888392da6dbde4bd4f3078d7bfa7 \
+  --local-plan docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg \
+  --local-mission docs/assets/sprint34-radeon-local-mission-control-1280x720.jpg \
+  --hybrid-plan docs/assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg \
+  --hybrid-mission docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg \
+  --binary-sha256 0302c4580e1c8195547553bcc0b9b700452a11f00126a7d3fc76a5de1136ba4a \
+  --frontend-sha256 7b362551b93737ea208e1c787dab85f856434869a478526520a789da3081a399 \
   --output evidence/dashboard-radeon-synchronized-captures.json \
+  --check
+python3 scripts/build_sprint34_radeon_runtime_evidence.py \
+  --local-journey evidence/dashboard-radeon-local-journey.json \
+  --local-startup evidence/runs/sprint34/local-startup.json \
+  --local-timing evidence/runs/sprint34/local-journey-timing.json \
+  --local-telemetry evidence/runs/sprint34/local-telemetry-summary.json \
+  --hybrid-journey evidence/dashboard-radeon-hybrid-journey.json \
+  --hybrid-startup evidence/runs/sprint34/hybrid-startup.json \
+  --hybrid-timing evidence/runs/sprint34/hybrid-journey-timing.json \
+  --hybrid-telemetry evidence/runs/sprint34/hybrid-telemetry-summary.json \
+  --failure-matrix evidence/runs/sprint34/failure-matrix.json \
+  --source-identity working-tree-pre-freeze \
+  --output evidence/sprint34-radeon-runtime.json \
   --check
 jq -e '
   .schema_version == "signalforge/hardening-report/v1" and
@@ -65,6 +79,7 @@ done < <(find contracts evidence fixtures configs -type f -name '*.json' -print0
 bash -n scripts/serve_llama_rocm.sh scripts/run_radeon_profile.sh scripts/verify_clean_startup.sh \
   scripts/stage_gemma_model.sh scripts/prepare_container_secrets.sh scripts/verify_container_fixture.sh
 python3 scripts/validate_observability.py
+python3 scripts/audit_restricted_egress.py >/dev/null
 python3 -m py_compile deploy/observability/radeon-exporter/exporter.py scripts/validate_observability.py
 python3 scripts/build_radeon_optimization_report.py --check
 python3 scripts/render_radeon_optimization.py \
@@ -154,6 +169,13 @@ jq -e '
   .journey.evidence_items == 12 and
   .journey.calculation_receipts == 18 and
   .journey.private_fields_excluded == true
+' evidence/workspace-evaluation.json >/dev/null
+jq -e --slurpfile fresh "$tmp_dir/workspace-evaluation.json" '
+  .journey.streamed_events == $fresh[0].journey.streamed_events and
+  .journey.sections == $fresh[0].journey.sections and
+  .journey.evidence_items == $fresh[0].journey.evidence_items and
+  .journey.calculation_receipts == $fresh[0].journey.calculation_receipts and
+  .journey.private_fields_excluded == $fresh[0].journey.private_fields_excluded
 ' evidence/workspace-evaluation.json >/dev/null
 
 go run ./cmd/signalforge-validate-replay \

@@ -85,6 +85,7 @@ const intelligence: IntelligenceRecord = {
   capture: { enabled: false, available: false, status: "disabled", stored_bytes: 0, maximum_bytes: 16777216 },
   started_at: fixture.events[0]?.at ?? fixture.as_of,
   completed_at: fixture.events.at(-1)?.at ?? fixture.as_of,
+  timeline: [],
   model_calls: [],
   retrievals: [{
     retrieval_id: "retrieval-accounting",

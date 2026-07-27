@@ -15,7 +15,12 @@ import (
 	"github.com/rvbernucci/signalforge/internal/contracts"
 )
 
-const SchemaVersionV1 = "signalforge/execution-plan/v1"
+const (
+	SchemaVersionV1           = "signalforge/execution-plan/v1"
+	maximumChecklistItems     = 64
+	maximumReferenceIDs       = 64
+	maximumExecutionPlanSteps = 24
+)
 
 type Status string
 
@@ -116,6 +121,7 @@ type Event struct {
 }
 
 var safeID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/@+\-]{0,255}$`)
+var sha256Hex = regexp.MustCompile(`^[a-f0-9]{64}$`)
 var unsafeText = regexp.MustCompile(`(?i)(bearer\s+|api[_-]?key|password|private[_ -]?token|chain[_ -]?of[_ -]?thought|raw[_ -]?prompt|response[_ -]?body)`)
 
 var canonicalPhases = []Phase{
@@ -261,7 +267,7 @@ func projectPlanStep(planStep contracts.PlanStep) Step {
 	for index, capabilityID := range planStep.CapabilityIDs {
 		checklist = append(checklist, ChecklistItem{
 			CheckID: fmt.Sprintf("capability-%02d", index+1), Label: humanizeID(capabilityID) + " authorized",
-			Status: StatusPassed, Authority: "engine", Required: false,
+			Status: StatusPassed, Authority: "capability", Required: false,
 			ReferenceIDs: []string{capabilityID}, SafeDetail: "The capability is allowlisted for this role.",
 		})
 	}
@@ -293,6 +299,11 @@ func Apply(projection *Projection, event Event) error {
 		return fmt.Errorf("unsupported execution event %q:%q", event.Type, event.Status)
 	}
 	attributes := safeAttributes(event.Attributes)
+	if event.Type == "tool" && (event.Status == "passed" || event.Status == "completed") {
+		if err := validateCompletedToolAttributes(attributes); err != nil {
+			return err
+		}
+	}
 	if event.Type == "plan" && event.Status == "accepted" {
 		projection.Status = StatusRunning
 		projection.LastSequence = event.Sequence
@@ -300,6 +311,12 @@ func Apply(projection *Projection, event Event) error {
 		return signAndValidate(projection)
 	}
 	step := findStep(projection, event.StepID)
+	if step == nil && event.Type == "tool" {
+		if reference(attributes, "tool_execution_id") == "" {
+			return errors.New("synthetic tool event requires a tool_execution_id")
+		}
+		step = ensureSyntheticToolStep(projection, event, attributes)
+	}
 	if step != nil && terminal(step.Status) && !compatibleTerminalEvent(step.Status, event) {
 		projection.LastSequence = event.Sequence
 		recalculate(projection)
@@ -341,6 +358,7 @@ func validEventPair(eventType, status string) bool {
 		"interpretation": {"completed": true, "clarification_required": true},
 		"planning":       {"completed": true},
 		"plan":           {"accepted": true},
+		"wave":           {"started": true, "completed": true, "degraded": true, "failed": true},
 		"context":        {"started": true, "completed": true, "failed": true},
 		"model":          {"completed": true, "failed": true},
 		"retrieval": {
@@ -450,7 +468,7 @@ func validateStructure(projection Projection) error {
 	if projection.PlanID != "" && !safeID.MatchString(projection.PlanID) {
 		return errors.New("execution projection plan_id is invalid")
 	}
-	if !validStatus(projection.Status) || len(projection.Steps) < 2 || len(projection.Steps) > 24 {
+	if !validStatus(projection.Status) || len(projection.Steps) < 2 || len(projection.Steps) > maximumExecutionPlanSteps {
 		return errors.New("execution projection status or step count is invalid")
 	}
 	if len(projection.Phases) != len(canonicalPhases) {
@@ -488,6 +506,12 @@ func validateStructure(projection Projection) error {
 		if unsafeText.MatchString(step.SafeLabel + " " + step.SafeObjective + " " + step.SafeSummary) {
 			return fmt.Errorf("execution step %q contains unsafe text", step.StepID)
 		}
+		if len(step.ReferenceIDs) > maximumReferenceIDs {
+			return fmt.Errorf("execution step %q exceeds the reference limit", step.StepID)
+		}
+		if len(step.Checklist) > maximumChecklistItems {
+			return fmt.Errorf("execution step %q exceeds the checklist limit", step.StepID)
+		}
 		for _, referenceID := range step.ReferenceIDs {
 			if !safeID.MatchString(referenceID) {
 				return fmt.Errorf("execution step %q has an invalid reference", step.StepID)
@@ -501,6 +525,9 @@ func validateStructure(projection Projection) error {
 				return fmt.Errorf("execution checklist item %q is invalid", check.CheckID)
 			}
 			for _, referenceID := range check.ReferenceIDs {
+				if len(check.ReferenceIDs) > maximumReferenceIDs {
+					return fmt.Errorf("execution checklist item %q exceeds the reference limit", check.CheckID)
+				}
 				if !safeID.MatchString(referenceID) {
 					return fmt.Errorf("execution checklist item %q has an invalid reference", check.CheckID)
 				}
@@ -643,6 +670,13 @@ func applyContext(step *Step, event Event, attributes map[string]string) {
 				attributes["missing_evidence_count"] + " missing-evidence declarations; evidence coverage is " +
 				humanizeCoverage(attributes["evidence_coverage"]) + "."
 		}
+		summary += epistemicCountDetail(attributes)
+		if asOf := attributes["as_of"]; asOf != "" {
+			summary += " Evidence freshness is bounded by the governed as-of date " + asOf + "."
+		}
+		if authority := attributes["authority_state"]; authority != "" {
+			summary += " Evidence authority state: " + humanizeID(authority) + "."
+		}
 		markStepPassed(step, event.At, summary)
 		reference := reference(attributes, "packet_id")
 		appendReference(step, reference)
@@ -727,7 +761,11 @@ func applyRetrieval(step *Step, event Event, attributes map[string]string) {
 	checkID := derivedCheckID("retrieval", checkReference)
 	detail := "The specialist received an authorized evidence bundle; inspect the packet lineage for its bounded contents."
 	if count := attributes["evidence_count"]; count != "" {
-		detail = "The validated packet contains " + count + " authorized evidence references"
+		if count == "0" && safeCount(attributes["missing_evidence_count"]) != "0" {
+			detail = "No evidence item satisfied the governed request; this is explicit evidence absence, not a retrieval failure"
+		} else {
+			detail = "The validated packet contains " + count + " authorized evidence references"
+		}
 		if classes := attributes["source_classes"]; classes != "" {
 			detail += " across " + humanizeID(strings.ReplaceAll(classes, "+", "_and_")) + " source classes"
 		}
@@ -784,12 +822,13 @@ func applyRetrieval(step *Step, event Event, attributes map[string]string) {
 		if event.Status == "unavailable" {
 			status = StatusUnavailable
 		}
+		failureDetail := retrievalFailureDetail(event.Status, attributes["code"])
 		upsertChecklist(step, ChecklistItem{
 			CheckID: checkID, Label: "Authorized evidence retrieval unavailable",
 			Status: status, Authority: "retrieval", Required: false,
 			ReferenceIDs: compactRefs([]string{retrievalID}),
 			CompletedAt:  event.At.UTC(),
-			SafeDetail:   "Retrieval released no evidence bundle for this step; failure code " + humanizeID(attributes["code"]) + ".",
+			SafeDetail:   failureDetail,
 		})
 	}
 }
@@ -808,11 +847,19 @@ func applyTool(step *Step, event Event, attributes map[string]string) {
 	}
 	checkID := derivedCheckID("tool", checkReference)
 	refs := compactRefs([]string{executionID, receiptID})
-	label := "Deterministic engine receipt validated"
+	verification := attributes["receipt_verification"]
+	label := "Deterministic calculation metadata accepted"
 	if operationID != "" {
-		label = humanizeID(operationID) + " receipt validated"
+		label = humanizeID(operationID) + " metadata accepted"
 	}
-	detail := "A deterministic engine completed and released a validated receipt."
+	detail := "A deterministic engine completed and its bounded calculation metadata passed contract checks."
+	if verification == "canonical_verified" {
+		label = "Deterministic engine receipt verified"
+		if operationID != "" {
+			label = humanizeID(operationID) + " receipt verified"
+		}
+		detail = "A deterministic engine completed and its receipt hash matched canonical content."
+	}
 	if formula := attributes["formula_version"]; formula != "" {
 		engineLabel := "deterministic engine"
 		if engineID != "" {
@@ -836,7 +883,11 @@ func applyTool(step *Step, event Event, attributes map[string]string) {
 			if len(receiptSHA) > 12 {
 				receiptSHA = receiptSHA[:12]
 			}
-			detail += " Receipt hash " + receiptSHA + "."
+			if verification == "canonical_verified" {
+				detail += " Verified receipt hash " + receiptSHA + "."
+			} else {
+				detail += " Declared receipt identity " + receiptSHA + "."
+			}
 		}
 	}
 	switch event.Status {
@@ -865,6 +916,34 @@ func applyTool(step *Step, event Event, attributes map[string]string) {
 			SafeDetail: "The deterministic engine released no valid receipt; failure code " + humanizeID(attributes["code"]) + ".",
 		})
 	}
+	if step.Kind == "tool" {
+		refreshSyntheticToolStep(step, event.At)
+	}
+}
+
+func validateCompletedToolAttributes(attributes map[string]string) error {
+	for _, key := range []string{"receipt_id", "operation_id", "engine_id"} {
+		if reference(attributes, key) == "" {
+			return fmt.Errorf("completed tool event requires %s", key)
+		}
+	}
+	if !sha256Hex.MatchString(attributes["receipt_sha256"]) {
+		return errors.New("completed tool event requires a valid receipt_sha256")
+	}
+	switch attributes["receipt_verification"] {
+	case "canonical_verified", "metadata_only":
+	default:
+		return errors.New("completed tool event requires an explicit receipt_verification scope")
+	}
+	outputCount, outputErr := strconv.Atoi(attributes["output_count"])
+	invariantCount, invariantErr := strconv.Atoi(attributes["invariant_count"])
+	if outputErr != nil || outputCount < 1 {
+		return errors.New("completed tool event requires at least one output")
+	}
+	if invariantErr != nil || invariantCount < 1 || attributes["invariants_passed"] != "true" {
+		return errors.New("completed tool event requires passed invariants")
+	}
+	return nil
 }
 
 func applyReview(step *Step, event Event, attributes map[string]string) {
@@ -1089,6 +1168,58 @@ func upsertSyntheticStep(projection *Projection, step Step) {
 	projection.Steps = append(projection.Steps, step)
 }
 
+func ensureSyntheticToolStep(projection *Projection, event Event, attributes map[string]string) *Step {
+	stepID := safeIDValue(event.StepID)
+	if stepID == "" {
+		stepID = "deterministic-tools"
+	}
+	upsertSyntheticStep(projection, Step{
+		StepID: stepID, ParentPhaseID: "tools", Phase: "tools", Kind: "tool",
+		SafeLabel:     "Run deterministic calculations",
+		SafeObjective: "Execute governed formulas and expose only validated receipt metadata.",
+		RoleID:        "deterministic-engine/v1", Mandatory: false, Status: StatusPending,
+		Route: "local_deterministic", RouteReasonCode: "deterministic_receipt",
+		Attempt: 0, MaxAttempts: 1, Checklist: []ChecklistItem{},
+		SafeSummary: "Waiting for deterministic receipt validation.",
+	})
+	return findStep(projection, stepID)
+}
+
+func refreshSyntheticToolStep(step *Step, at time.Time) {
+	if step == nil {
+		return
+	}
+	statuses := make([]Status, 0, len(step.Checklist))
+	passed := 0
+	for _, check := range step.Checklist {
+		if check.Authority != "engine" || !strings.HasPrefix(check.CheckID, "tool-") {
+			continue
+		}
+		statuses = append(statuses, check.Status)
+		if check.Status == StatusPassed {
+			passed++
+		}
+	}
+	if len(statuses) == 0 {
+		return
+	}
+	status := aggregateStatuses(statuses)
+	if status == StatusFailed || status == StatusUnavailable {
+		status = StatusDegraded
+	}
+	step.Status = status
+	if step.StartedAt.IsZero() {
+		step.StartedAt = at.UTC()
+	}
+	step.Attempt = 1
+	step.SafeSummary = strconv.Itoa(passed) + " of " + strconv.Itoa(len(statuses)) +
+		" deterministic calculation records passed contract checks."
+	if terminal(status) {
+		step.CompletedAt = at.UTC()
+		step.DurationMS = durationMS(step.StartedAt, step.CompletedAt)
+	}
+}
+
 func initialPhases() []Phase {
 	phases := make([]Phase, len(canonicalPhases))
 	for index, spec := range canonicalPhases {
@@ -1133,6 +1264,7 @@ func recalculatePhases(projection *Projection) {
 	for index := range phases {
 		phase := &phases[index]
 		statuses := []Status{}
+		toolStatuses := []Status{}
 		for _, step := range projection.Steps {
 			if step.ParentPhaseID != phase.PhaseID {
 				continue
@@ -1144,9 +1276,12 @@ func recalculatePhases(projection *Projection) {
 			for _, step := range projection.Steps {
 				for _, check := range step.Checklist {
 					if check.Authority == "engine" && strings.HasPrefix(check.CheckID, "tool-") {
-						statuses = append(statuses, check.Status)
+						toolStatuses = append(toolStatuses, check.Status)
 					}
 				}
+			}
+			if len(phase.StepIDs) == 0 {
+				statuses = append(statuses, toolStatuses...)
 			}
 		}
 		if phase.PhaseID == "release" {
@@ -1162,8 +1297,31 @@ func recalculatePhases(projection *Projection) {
 		}
 		phase.Status = aggregateStatuses(statuses)
 		phase.SafeSummary = phaseSummary(phase.Status, len(statuses))
+		if phase.PhaseID == "tools" && len(toolStatuses) > 0 {
+			phase.SafeSummary = toolPhaseSummary(phase.Status, toolStatuses)
+		}
 	}
 	projection.Phases = phases
+}
+
+func toolPhaseSummary(status Status, toolStatuses []Status) string {
+	passed := 0
+	for _, toolStatus := range toolStatuses {
+		if toolStatus == StatusPassed {
+			passed++
+		}
+	}
+	total := len(toolStatuses)
+	switch status {
+	case StatusPassed:
+		return strconv.Itoa(total) + " deterministic calculation records passed contract checks."
+	case StatusRunning, StatusReady, StatusPending:
+		return strconv.Itoa(passed) + " of " + strconv.Itoa(total) +
+			" deterministic calculation records have passed contract checks."
+	default:
+		return strconv.Itoa(passed) + " of " + strconv.Itoa(total) +
+			" deterministic calculation records passed contract checks; the remainder is explicitly bounded."
+	}
 }
 
 func aggregateStatuses(statuses []Status) Status {
@@ -1328,7 +1486,8 @@ func safeAttributes(attributes map[string]string) map[string]string {
 		"as_of": true, "engine_id": true, "evidence_count": true, "formula_version": true,
 		"input_count": true, "input_ref_ids": true, "invariant_count": true, "invariants_passed": true,
 		"operation_id": true, "output_count": true, "output_ref_ids": true, "receipt_id": true,
-		"receipt_sha256": true, "source_classes": true, "warning_count": true,
+		"receipt_sha256": true, "receipt_verification": true,
+		"source_classes": true, "warning_count": true,
 		"retrieval_id": true, "bundle_id": true, "retrieval_method": true,
 		"candidate_count": true, "selected_candidate_count": true,
 		"rejected_candidate_count": true, "candidate_count_state": true,
@@ -1347,6 +1506,10 @@ func safeAttributes(attributes map[string]string) map[string]string {
 		"mandatory_review_count": true, "claim_count": true,
 		"supported_claim_coverage": true, "evidence_ref_count": true,
 		"receipt_ref_count": true, "limitation_count": true, "section_count": true,
+		"freshness_state": true, "fact_count": true, "calculation_count": true,
+		"inference_count": true, "hypothesis_count": true, "assumption_count": true,
+		"wave": true, "specialist_count": true, "concurrency_limit": true,
+		"succeeded_count": true, "failed_count": true, "observed_concurrency": true,
 	}
 	result := map[string]string{}
 	for key, value := range attributes {
@@ -1385,6 +1548,38 @@ func humanizeCoverage(value string) string {
 		return "unavailable"
 	}
 	return parts[0] + " of " + parts[1] + " claims referenced"
+}
+
+func epistemicCountDetail(attributes map[string]string) string {
+	keys := []string{"fact_count", "calculation_count", "inference_count", "hypothesis_count", "assumption_count"}
+	for _, key := range keys {
+		if attributes[key] == "" {
+			return ""
+		}
+	}
+	return " The packet explicitly distinguishes " +
+		safeCount(attributes["fact_count"]) + " facts, " +
+		safeCount(attributes["calculation_count"]) + " calculations, " +
+		safeCount(attributes["inference_count"]) + " inferences, " +
+		safeCount(attributes["hypothesis_count"]) + " hypotheses, and " +
+		safeCount(attributes["assumption_count"]) +
+		" assumptions; management assertions and scenarios are not inferred from source class."
+}
+
+func retrievalFailureDetail(status, code string) string {
+	safeCode := safeIDValue(code)
+	lowerCode := strings.ToLower(safeCode)
+	switch {
+	case strings.Contains(lowerCode, "rights") || strings.Contains(lowerCode, "license"):
+		return "Retrieval was excluded by the source-rights policy; no restricted body or evidence bundle was released. Failure code " +
+			humanizeID(safeCode) + "."
+	case status == "unavailable":
+		return "The authorized retrieval provider was unavailable and released no evidence bundle. Failure code " +
+			humanizeID(safeCode) + "."
+	default:
+		return "The authorized retrieval operation failed and released no evidence bundle. Failure code " +
+			humanizeID(safeCode) + "."
+	}
 }
 
 func reviewCountDetail(attributes map[string]string) string {
@@ -1480,6 +1675,8 @@ func compatibleTerminalEvent(status Status, event Event) bool {
 			status == StatusFailed && (event.Status == "reject" || event.Status == "repair_unresolved")
 	case "synthesis":
 		return status == StatusPassed && (event.Status == "passed" || event.Status == "completed")
+	case "tool":
+		return true
 	case "run":
 		return status == StatusPassed && event.Status == "completed" || event.Status == "failed"
 	case "retention":

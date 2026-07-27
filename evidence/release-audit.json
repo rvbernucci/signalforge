@@ -51,10 +51,16 @@
       "sha256": "8e6e69aa6d1c20dbfd6086e91a76dae8a7beeecb3723b33a6e20cc9892415a72"
     },
     {
+      "artifact_id": "desktop_workspace_capture",
+      "matches": true,
+      "path": "docs/assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg",
+      "sha256": "9130b70006c67f48dc79083b8ff24eaaefbca676999e2ae6f9800d473cbb5ee5"
+    },
+    {
       "artifact_id": "judge_deck",
       "matches": true,
       "path": "output/presentation/SignalForge-Judge-Deck.pptx",
-      "sha256": "9a870f197b7d942fd75e7725002027fa27939712f9385ad3a456301db793186d"
+      "sha256": "bec7d742fd5d0c9d1636845e665291b05b412161e997707096f59063222295a9"
     },
     {
       "artifact_id": "live_demo_capture",
@@ -63,10 +69,34 @@
       "sha256": "11fe92cad8d9eb7cfaacf094f5474e71d139957d92a47594ac8daa9a7d9c2d45"
     },
     {
+      "artifact_id": "mobile_workspace_capture",
+      "matches": true,
+      "path": "docs/assets/sprint34-radeon-hybrid-workspace-mobile-390x844.jpg",
+      "sha256": "1942ea2cbe2b0c65d35d7a15c9accf08428038387cce17de4a04f0201fe6c66a"
+    },
+    {
       "artifact_id": "project_specification",
       "matches": true,
       "path": "output/pdf/SignalForge-Project-Specification.pdf",
-      "sha256": "e29f1834faf334469e132382f6708996ef5107bf54ebcb5761dd84b58eb6aa3f"
+      "sha256": "ff118c158c5db35605de4ed3516dc46aff1f110b3e62eba6bc7d4e3acd2e021c"
+    },
+    {
+      "artifact_id": "safe_stop_capture",
+      "matches": true,
+      "path": "docs/assets/sprint34-radeon-hybrid-safe-stop-1280x720.jpg",
+      "sha256": "f8e63c68b82325432c8efe99c4833a1ed61bcc0f08dd71e45b565126385ffcfa"
+    },
+    {
+      "artifact_id": "sprint34_runtime",
+      "matches": true,
+      "path": "evidence/sprint34-radeon-runtime.json",
+      "sha256": "4fc8d3255f03d325406911b603effdc92518b9387a7f8c2ba742b8143acb5e8b"
+    },
+    {
+      "artifact_id": "synchronized_captures",
+      "matches": true,
+      "path": "evidence/dashboard-radeon-synchronized-captures.json",
+      "sha256": "91248b357a47445b8f9a3b6a2384084ab6e205bf202402dacfdb58e9189285ab"
     }
   ],
   "schema_version": "signalforge/public-release-audit/v1",
@@ -74,9 +104,9 @@
   "self_excluded_path": "evidence/release-audit.json",
   "summary": {
     "all_checks_passed": true,
-    "public_files": 627,
-    "text_files_scanned": 617,
-    "total_bytes": 14407216
+    "public_files": 651,
+    "text_files_scanned": 634,
+    "total_bytes": 15144688
   },
   "synthetic_secret_sentinels": [
     {

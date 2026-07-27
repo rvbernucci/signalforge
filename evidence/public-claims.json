@@ -184,11 +184,11 @@
         },
         {
           "path": "internal/orchestrator/runtime.go",
-          "sha256": "63b07ad356e9528a8e5d70b03d9ffad4a191aea540a281bd37c4926838b7646d"
+          "sha256": "5df3c95cf1b40c16427102d976b2063d91c4f099d677b022c0a7bb0c7427ea15"
         },
         {
           "path": "contracts/orchestration-trace.schema.json",
-          "sha256": "acdac5ecd1ee9db531306b7d03ce4e5da46e840edcb74ddd9e45cc31144d8328"
+          "sha256": "8db93c75abd751d9d42b65381077385c4ca1843df0de4abf63d5dd98f9ad9898"
         }
       ],
       "public_files": [
@@ -259,12 +259,12 @@
     },
     {
       "claim_id": "research-workspace",
-      "text": "The local fixture workspace serves the complete eight-section golden case, streams 21 privacy-safe events, and exposes 12 answer-used evidence cards plus 18 successful calculation receipts through the responsive product boundary.",
+      "text": "The local fixture workspace serves the complete eight-section golden case, streams its complete privacy-safe execution lifecycle, and exposes 12 answer-used evidence cards plus 18 successful calculation receipts through the responsive product boundary.",
       "status": "measured",
       "evidence": [
         {
           "path": "evidence/workspace-evaluation.json",
-          "sha256": "5b53dfcf634d2988a785a53a3629b0bf66ed1bd921dfe78019ea0ce91d5aaf9a"
+          "sha256": "4d73074b4bd15af24330f04c805629591399782ae5e87a60ae116ea3b0edc823"
         },
         {
           "path": "fixtures/workspace/golden-case.json",
@@ -272,7 +272,7 @@
         },
         {
           "path": "internal/workspace/server.go",
-          "sha256": "2f371aa7022779c3b95cea291c7959157abeb65f0079900c7c61b0231039ba6c"
+          "sha256": "1a1fccb52a74589233f3e0f71d7b88ba168c60064ab727813d2122c43d911cd7"
         },
         {
           "path": "web/src/App.tsx",
@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "evidence/hardening-matrix.json",
-          "sha256": "7ba95e22b791b5ac604b5d35e023c10f929ab80b3bc00f7ada5ef42d94eb2d91"
+          "sha256": "9a26d1b7a71f5ab000309ccfc44f5f2e93c055d2457fcead133e7898c8448260"
         },
         {
           "path": "configs/hardening/sprint12-matrix-v1.json",
@@ -340,7 +340,7 @@
         },
         {
           "path": "internal/workspace/load_test.go",
-          "sha256": "9c2d45ca922ce6a3b54cafd9e85f898ff4e0aa25663bd9bfc205e9e18fcba423"
+          "sha256": "4eb8be8cfb6281705bd525ca98840e02aec9145a4186c8f9cfd93aa37072ef6f"
         }
       ],
       "public_files": [
@@ -354,15 +354,15 @@
       "evidence": [
         {
           "path": "evidence/judge-package.json",
-          "sha256": "68cdb7ec6cc59b8894a324b32cfef54345cfcd432e6e64d6dff85719cf6c2663"
+          "sha256": "f278596b77abce0d2be52011c6760e196c694261d3827171e010bb401c05f867"
         },
         {
           "path": "output/pdf/SignalForge-Project-Specification.pdf",
-          "sha256": "e29f1834faf334469e132382f6708996ef5107bf54ebcb5761dd84b58eb6aa3f"
+          "sha256": "ff118c158c5db35605de4ed3516dc46aff1f110b3e62eba6bc7d4e3acd2e021c"
         },
         {
           "path": "output/presentation/SignalForge-Judge-Deck.pptx",
-          "sha256": "9a870f197b7d942fd75e7725002027fa27939712f9385ad3a456301db793186d"
+          "sha256": "bec7d742fd5d0c9d1636845e665291b05b412161e997707096f59063222295a9"
         },
         {
           "path": "docs/architecture.svg",
@@ -408,7 +408,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "4269f0de7c1583807e6b4b7b3b4518cdc8e702f5be3de4181cd57a76e4192660"
+          "sha256": "ee05c4fbeb008b33748316cae9ee03f44bba2e364de4ebd2dbb41684edfcf8e1"
         },
         {
           "path": "web/src/components/CaseLibrary.tsx",

@@ -123,22 +123,27 @@ make stack-down
 
 ## Synchronized Radeon Captures
 
-The Sprint 32A working tree was exercised through two accepted journeys on the Radeon host. These
+The Sprint 34 working tree was exercised through two accepted journeys on the Radeon host. These
 captures prove that the expandable Workspace plan and Mission Control project the same canonical
 run; they do not claim to represent the later exact release image.
 
 | Journey | Model path | Calls | Workspace proof | Mission Control proof |
 | --- | --- | ---: | --- | --- |
-| Local only | Local Gemma through ROCm | 12 | Eight phases, 12/12 terminal steps, accepted release | `local-rocm` provider and route |
-| Hybrid | Provided Radeon API with authorized local ROCm fallback and local review/synthesis | 18 | Eight phases, 12/12 terminal steps, accepted release | `radeon-vllm` plus `local-rocm` under one run and trace |
+| Local only | Local Gemma through ROCm | 11 | Eight phases, 12/12 terminal steps, accepted release | `local-rocm` provider and route |
+| Hybrid | Provided Radeon API with authorized local ROCm fallback and local review/synthesis | 17 | Eight phases, 12/12 terminal steps, accepted release | `radeon-vllm` plus `local-rocm` under one run and trace |
 
-![Local Radeon execution plan](assets/live-execution-plan-radeon-local-viewport.jpg)
+![Local Radeon execution plan](assets/sprint34-radeon-local-plan-expanded-1280x720.jpg)
 
-![Local Radeon Mission Control](assets/mission-control-radeon-local-viewport.jpg)
+![Local Radeon Mission Control](assets/sprint34-radeon-local-mission-control-1280x720.jpg)
 
-![Hybrid Radeon execution plan with a provided API specialist](assets/live-execution-plan-radeon-hybrid-viewport.jpg)
+![Hybrid Radeon execution plan with a provided API specialist](assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg)
 
-![Hybrid Radeon Mission Control](assets/mission-control-radeon-hybrid-viewport.jpg)
+![Hybrid Radeon Mission Control](assets/mission-control-radeon-hybrid-sprint34-viewport.jpg)
+
+The responsive workspace was also checked at 390×844 with no horizontal overflow. Separate
+hybrid retries exercised the same visible phases but failed the final synthesis contract; the UI
+reported `Stopped safely` and did not release an answer. These retries are resilience evidence,
+not accepted-journey evidence.
 
 The public manifests contain only timestamps, UUIDs, hashes, phase states, aggregate counts,
 provider/route identifiers, role IDs, and token totals. They retain no questions, prompts, answers,
@@ -149,15 +154,21 @@ route boundary, and privacy declaration with:
 python3 scripts/build_dashboard_radeon_evidence.py \
   --local evidence/dashboard-radeon-local-journey.json \
   --hybrid evidence/dashboard-radeon-hybrid-journey.json \
-  --local-plan docs/assets/live-execution-plan-radeon-local-viewport.jpg \
-  --local-mission docs/assets/mission-control-radeon-local-viewport.jpg \
-  --hybrid-plan docs/assets/live-execution-plan-radeon-hybrid-viewport.jpg \
-  --hybrid-mission docs/assets/mission-control-radeon-hybrid-viewport.jpg \
-  --binary-sha256 c0f741b2ffdf2daac8fb8d0fa0f79acc1f88fb1b6dff43113934122c3c1d7992 \
-  --frontend-sha256 c7cfaaf9802c25154dac2719d94a1059afad888392da6dbde4bd4f3078d7bfa7 \
+  --local-plan docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg \
+  --local-mission docs/assets/sprint34-radeon-local-mission-control-1280x720.jpg \
+  --hybrid-plan docs/assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg \
+  --hybrid-mission docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg \
+  --binary-sha256 0302c4580e1c8195547553bcc0b9b700452a11f00126a7d3fc76a5de1136ba4a \
+  --frontend-sha256 7b362551b93737ea208e1c787dab85f856434869a478526520a789da3081a399 \
   --output evidence/dashboard-radeon-synchronized-captures.json \
   --check
 ```
+
+The companion [`sprint34-radeon-runtime.json`](../evidence/sprint34-radeon-runtime.json) binds the
+same candidate to ROCm 7.2.1, the `gfx1100` Radeon device, the quantized Gemma model hash, startup
+time, complete-journey latency, aggregate utilization/VRAM/temperature/power measurements, and
+three fail-closed recovery checks. It intentionally excludes raw telemetry and all protected
+content.
 
 ## Execution Plan Troubleshooting
 

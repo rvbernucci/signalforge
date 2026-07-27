@@ -18,6 +18,44 @@ const record: IntelligenceRecord = {
   },
   started_at: "2026-07-25T00:00:00Z",
   completed_at: "2026-07-25T00:00:01Z",
+  timeline: [
+    {
+      sequence: 1,
+      step_id: "interpret-request",
+      event_type: "interpretation",
+      status: "completed",
+      at: "2026-07-25T00:00:00Z"
+    },
+    {
+      sequence: 2,
+      step_id: "context-wave-1",
+      event_type: "wave",
+      status: "started",
+      wave: 1,
+      specialist_count: 4,
+      concurrency_limit: 4,
+      at: "2026-07-25T00:00:00.100Z"
+    },
+    {
+      sequence: 3,
+      step_id: "context-wave-1",
+      event_type: "wave",
+      status: "completed",
+      wave: 1,
+      specialist_count: 4,
+      concurrency_limit: 4,
+      succeeded_count: 4,
+      observed_concurrency: 4,
+      at: "2026-07-25T00:00:00.800Z"
+    },
+    {
+      sequence: 4,
+      step_id: "final-synthesis",
+      event_type: "run",
+      status: "completed",
+      at: "2026-07-25T00:00:01Z"
+    }
+  ],
   model_calls: [],
   retrievals: [{
     retrieval_id: "retrieval-accepted",
@@ -64,6 +102,31 @@ describe("IntelligenceDrawer identity boundary", () => {
     expect(await screen.findByText(/80c42f9bdbda/)).toBeInTheDocument();
     expect(screen.getByText("run-accepted")).toBeInTheDocument();
     expect(screen.getByText(/1 answer-used claims/i)).toBeInTheDocument();
+  });
+
+  it("shows a judge-facing trace with the same identity and bounded specialist wave", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => record
+    } as Response)));
+    render(
+      <IntelligenceDrawer
+        runID={record.run_id}
+        traceID={record.trace_id}
+        open
+        protectedCapture={false}
+        onClose={vi.fn()}
+      />
+    );
+    fireEvent.click(await screen.findByRole("tab", { name: "trace" }));
+    const trace = await screen.findByRole("region", { name: "Judge-facing correlated execution trace" });
+    expect(trace).toHaveTextContent("Conversation-to-trace timeline");
+    expect(trace).toHaveTextContent("Context Wave 1");
+    expect(trace).toHaveTextContent("4 specialists");
+    expect(trace).toHaveTextContent("limit 4");
+    expect(trace).toHaveTextContent("concurrency 4");
+    expect(trace).toHaveTextContent(/80c42f9bdbda/);
   });
 
   it("fails closed when Mission Control returns a different trace", async () => {

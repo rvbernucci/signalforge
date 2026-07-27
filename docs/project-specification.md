@@ -13,8 +13,10 @@ decide whether a company deserves further research, belongs on a watchlist, or f
 portfolio thesis. It does not predict stock prices, execute trades, or issue personalized
 investment advice.
 
-SignalForge is built for Track 2 of the AMD AI DevMaster Hackathon. Core inference runs locally on
-an AMD Radeon GPU through ROCm, with no remote model dependency in the accepted golden path.
+SignalForge is built for Track 2 of the AMD AI DevMaster Hackathon. Core review and synthesis run
+locally on an AMD Radeon GPU through ROCm. An optional hybrid path uses the organizer-provided
+Radeon API for parallel specialists while preserving local review, synthesis, deterministic
+authority, and a fail-closed local fallback.
 
 ## User Scenario and Product Value
 
@@ -69,7 +71,7 @@ contrarian risk, final analysis, and memory selection.
 The product demonstrates all five Track 2 capability families:
 
 - Local retrieval: point-in-time regulatory and investor-relations evidence with citations.
-- Tool invocation: a closed, role-authorized registry of 28 deterministic financial operations.
+- Tool invocation: a closed, role-authorized registry of 80 deterministic financial operations.
 - Multi-step planning: typed decomposition, bounded fan-out, review, and one final synthesizer.
 - Multi-turn memory: parent-linked follow-ups and optional local research-case retention.
 - Permission and privacy controls: read-only model authority, explicit user writes, private traces,
@@ -130,6 +132,12 @@ The model revision, tokenizer, artifact hash, quantization, runtime, ROCm versio
 dataset manifests, and run artifacts are hash-pinned. Models and downloaded source data remain
 outside Git. The accepted golden run used no remote inference.
 
+Sprint 34 additionally records one accepted local-only journey and one accepted hybrid journey on
+the allocated Radeon host. The local journey completed 11 model calls in 182.189 seconds. The
+hybrid journey completed 17 model calls in 230.222 seconds across the provided Radeon API and the
+authorized local ROCm route. Both reached all eight governed phases and released only after the
+required contracts passed.
+
 ## Radeon Optimization Evidence
 
 The optimization contract, workload, quality thresholds, and rollback profile were frozen before
@@ -180,10 +188,12 @@ The user can inspect, export, and delete saved cases. Model tools are read-only;
 requires an explicit user action. Prompts, raw model responses, source bodies, chain-of-thought,
 credentials, and unbounded model context are excluded from the public projection and case store.
 
+The live execution plan and Mission Control expose only governed status, safe IDs, aggregate
+counts, route classes, and contract outcomes. Telemetry retains no prompt or answer bodies. Memory
+remains off by default and is activated only by an explicit user choice.
+
 The final release gate rejects direct trading instructions and guaranteed, certain, or risk-free
 investment outcomes. SignalForge supports research judgment; it does not replace it.
-
-<!-- pagebreak -->
 
 ## Reproduction
 
@@ -211,13 +221,15 @@ commands documented in the repository README.
 
 ## Honest Limitations
 
-- The golden product vertical is bounded to Microsoft and NVIDIA.
+- The activated product universe contains 20 US technology companies, while the recorded judge
+  journey and deepest human review remain bounded to Microsoft and NVIDIA.
 - External answer accuracy has not been scored against independent human ground truth.
 - Citation existence and frozen relevance do not prove arbitrary semantic entailment.
 - Pattern quarantine cannot guarantee detection of novel or obfuscated prompt injection.
 - Structurally plausible upstream data errors still require cross-source and human review.
 - Disk encryption, multi-user authentication, and external process supervision are not claimed.
-- The clean local startup gate is not a public container-pull test.
+- Working-tree Radeon evidence is not represented as exact-image evidence until the release
+  manifest binds the public digest.
 - Concurrent workspace reads do not represent unlimited concurrent 26B generation.
 
 ## Evidence Index
@@ -227,9 +239,8 @@ commands documented in the repository README.
 - Golden scorecard: `evidence/golden-journey-scorecard.json`
 - Safe Radeon replay: `evidence/golden-safe-decision-replay.json`
 - Radeon optimization: `evidence/radeon-optimization.json`
+- Sprint 34 Radeon runtime: `evidence/sprint34-radeon-runtime.json`
+- Synchronized Workspace captures: `evidence/dashboard-radeon-synchronized-captures.json`
 - Adversarial matrix: `evidence/hardening-matrix.json`
 - Public claim registry: `evidence/public-claims.json`
 - Full evidence guide: `evidence/README.md`
-
-All quantitative claims in this document are bounded by those public artifacts and their recorded
-hashes.

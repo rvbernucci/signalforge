@@ -198,7 +198,8 @@ It verifies that the production frontend is served with the local security polic
 is immediately available, the SSE stream reaches a workspace-level terminal event, and the result
 contains all eight chapters, 12 answer-used evidence cards, and 18 successful calculation receipts.
 
-The observed 1.137 ms initial case, 7.222 ms first progress event, and 114.362 ms complete replay
+The observed 1.257 ms initial case, 4.438 ms first progress event, and 324.573 ms complete
+40-event replay
 measure the fixture demo path only. They are not model or Radeon latency claims. The complete live
 Radeon v57 duration remains reported separately in the golden replay and scorecard.
 
@@ -240,8 +241,8 @@ python3 scripts/build_dashboard_cpu_evidence.py \
 ## Synchronized Radeon Dashboard Evidence
 
 `dashboard-radeon-local-journey.json` and `dashboard-radeon-hybrid-journey.json` are sanitized
-aggregates from accepted working-tree journeys on the Radeon host. The local journey records 12
-local ROCm calls. The hybrid journey records 18 calls across `radeon-vllm` and `local-rocm`,
+aggregates from accepted working-tree journeys on the Radeon host. The local journey records 11
+local ROCm calls. The hybrid journey records 17 calls across `radeon-vllm` and `local-rocm`,
 including the bounded fallback path. Both plans reached 12 of 12 terminal steps across the eight
 governed phases and released an accepted result.
 
@@ -259,15 +260,21 @@ remains a separate release decision.
 python3 scripts/build_dashboard_radeon_evidence.py \
   --local evidence/dashboard-radeon-local-journey.json \
   --hybrid evidence/dashboard-radeon-hybrid-journey.json \
-  --local-plan docs/assets/live-execution-plan-radeon-local-viewport.jpg \
-  --local-mission docs/assets/mission-control-radeon-local-viewport.jpg \
-  --hybrid-plan docs/assets/live-execution-plan-radeon-hybrid-viewport.jpg \
-  --hybrid-mission docs/assets/mission-control-radeon-hybrid-viewport.jpg \
-  --binary-sha256 c0f741b2ffdf2daac8fb8d0fa0f79acc1f88fb1b6dff43113934122c3c1d7992 \
-  --frontend-sha256 c7cfaaf9802c25154dac2719d94a1059afad888392da6dbde4bd4f3078d7bfa7 \
+  --local-plan docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg \
+  --local-mission docs/assets/sprint34-radeon-local-mission-control-1280x720.jpg \
+  --hybrid-plan docs/assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg \
+  --hybrid-mission docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg \
+  --binary-sha256 0302c4580e1c8195547553bcc0b9b700452a11f00126a7d3fc76a5de1136ba4a \
+  --frontend-sha256 7b362551b93737ea208e1c787dab85f856434869a478526520a789da3081a399 \
   --output evidence/dashboard-radeon-synchronized-captures.json \
   --check
 ```
+
+`sprint34-radeon-runtime.json` adds the hardware and recovery layer for the same candidate. It
+records ROCm 7.2.1 on an AMD Radeon `gfx1100` device, the hash-bound Gemma 4 26B A4B Q4 model,
+267–268 ms workspace startup, complete local and hybrid journey timing, aggregate GPU/VRAM/power
+telemetry, and fail-closed recovery for API loss, local-model loss, and missing financial
+authority. The report retains no prompt, answer, credential, source body, or raw telemetry.
 
 ## Local Memory And Privacy Controls
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/rvbernucci/signalforge/internal/benchmark"
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/engine"
 	"github.com/rvbernucci/signalforge/internal/orchestrator"
 	"github.com/rvbernucci/signalforge/internal/roles"
 )
@@ -1176,20 +1177,25 @@ func toolLifecycleFromReceipt(receipt contracts.CalculationReceipt) orchestrator
 			break
 		}
 	}
+	verification := "metadata_only"
+	if engine.VerifyReceipt(receipt) == nil {
+		verification = "canonical_verified"
+	}
 	return orchestrator.ToolLifecycle{
-		ToolExecutionID:  receipt.RequestID,
-		ReceiptID:        receipt.ReceiptID,
-		ReceiptSHA:       receipt.ReceiptSHA,
-		EngineID:         receipt.EngineID,
-		OperationID:      receipt.OperationID,
-		FormulaVersion:   receipt.FormulaVersion,
-		InputRefIDs:      inputIDs,
-		OutputRefIDs:     outputIDs,
-		InputCount:       len(receipt.NormalizedInputs),
-		OutputCount:      len(receipt.Outputs),
-		InvariantCount:   len(receipt.InvariantResults),
-		InvariantsPassed: invariantsPassed,
-		WarningCount:     len(receipt.Warnings),
+		ToolExecutionID:     receipt.RequestID,
+		ReceiptID:           receipt.ReceiptID,
+		ReceiptSHA:          receipt.ReceiptSHA,
+		ReceiptVerification: verification,
+		EngineID:            receipt.EngineID,
+		OperationID:         receipt.OperationID,
+		FormulaVersion:      receipt.FormulaVersion,
+		InputRefIDs:         inputIDs,
+		OutputRefIDs:        outputIDs,
+		InputCount:          len(receipt.NormalizedInputs),
+		OutputCount:         len(receipt.Outputs),
+		InvariantCount:      len(receipt.InvariantResults),
+		InvariantsPassed:    invariantsPassed,
+		WarningCount:        len(receipt.Warnings),
 	}
 }
 

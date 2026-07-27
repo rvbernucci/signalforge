@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -233,6 +234,9 @@ func NewServer(config ServerConfig) (*Server, error) {
 			server.fixture.RequestID, server.fixture.Question)
 		if auditErr == nil {
 			now := config.Now()
+			if err := observeFixtureLifecycle(context.Background(), recorder, server.fixture, now); err != nil {
+				return nil, fmt.Errorf("initialize fixture audit timeline: %w", err)
+			}
 			_ = recorder.Complete(auditFixtureProjection(now, now, server.fixture))
 		}
 	}
@@ -697,15 +701,43 @@ func (server *Server) replayFixture(record *runRecord, question string, assumpti
 	if plan, err := fixtureResearchPlan(projection); err == nil {
 		runSink{server: server, record: record}.AcceptPlan(plan, server.config.Now())
 	}
+	toolEvents, err := fixtureCalculationEvents(projection.Calculations, server.config.Now())
+	if err != nil {
+		server.fail(record, "fixture_receipt_validation_failed", false)
+		return
+	}
+	timelineSequence := 0
 	for _, fixtureEvent := range projection.Events {
 		if server.config.EventDelay > 0 {
 			time.Sleep(server.config.EventDelay)
 		}
-		server.publish(record, StreamEvent{
+		accepted := server.publish(record, StreamEvent{
 			StepID: fixtureEvent.StepID, Type: fixtureEvent.Type, Status: fixtureEvent.Status,
 			Label: eventLabel(fixtureEvent.Type, fixtureEvent.Status), At: server.config.Now(),
 			Attributes: safeStreamAttributes(fixtureEvent.Attributes),
 		})
+		if accepted && audit != nil {
+			timelineSequence++
+			audit.ObserveLifecycle(journeyContext, orchestrator.Event{
+				Sequence: timelineSequence, RunID: record.view.RunID,
+				StepID: fixtureEvent.StepID, Type: fixtureEvent.Type, Status: fixtureEvent.Status,
+				At: server.config.Now(), Attributes: safeStreamAttributes(fixtureEvent.Attributes),
+			})
+		}
+	}
+	for _, toolEvent := range toolEvents {
+		if server.config.EventDelay > 0 {
+			time.Sleep(server.config.EventDelay)
+		}
+		accepted := server.publish(record, toolEvent)
+		if accepted && audit != nil {
+			timelineSequence++
+			audit.ObserveLifecycle(journeyContext, orchestrator.Event{
+				Sequence: timelineSequence, RunID: record.view.RunID,
+				StepID: toolEvent.StepID, Type: toolEvent.Type, Status: toolEvent.Status,
+				At: server.config.Now(), Attributes: safeStreamAttributes(toolEvent.Attributes),
+			})
+		}
 	}
 	if audit != nil {
 		_ = audit.Complete(auditFixtureProjection(record.view.StartedAt, server.config.Now(), projection))
@@ -731,8 +763,8 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 	config.RunID = record.view.RunID
 	config.RequestID = requestID
 	config.Timeout = server.config.RunTimeout
-	config.EventSink = runSink{server: server, record: record}
 	audit := server.beginAudit(ctx, record.view.RunID, config.RequestID, question)
+	config.EventSink = runSink{server: server, record: record, audit: audit}
 	config.ModelObserver = runModelObserver{
 		audit: audit, server: server, record: record,
 	}
@@ -846,6 +878,35 @@ func auditFixtureProjection(startedAt, completedAt time.Time, projection Project
 	return input
 }
 
+func observeFixtureLifecycle(ctx context.Context, recorder *intelligenceaudit.Recorder, projection Projection, at time.Time) error {
+	sequence := 0
+	for _, event := range projection.Events {
+		sequence++
+		eventAt := event.At
+		if eventAt.IsZero() {
+			eventAt = at.Add(time.Duration(sequence) * time.Nanosecond)
+		}
+		recorder.ObserveLifecycle(ctx, orchestrator.Event{
+			Sequence: sequence, RunID: projection.RunID, StepID: event.StepID,
+			Type: event.Type, Status: event.Status, At: eventAt,
+			Attributes: safeStreamAttributes(event.Attributes),
+		})
+	}
+	toolEvents, err := fixtureCalculationEvents(projection.Calculations, at)
+	if err != nil {
+		return err
+	}
+	for _, event := range toolEvents {
+		sequence++
+		recorder.ObserveLifecycle(ctx, orchestrator.Event{
+			Sequence: sequence, RunID: projection.RunID, StepID: event.StepID,
+			Type: event.Type, Status: event.Status, At: event.At,
+			Attributes: safeStreamAttributes(event.Attributes),
+		})
+	}
+	return nil
+}
+
 func (server *Server) complete(record *runRecord, projection Projection, report *golden.Report) {
 	server.initializeRetention(record)
 	record.terminalOnce.Do(func() {
@@ -924,10 +985,9 @@ func (server *Server) fail(record *runRecord, code string, retryable bool) {
 	})
 }
 
-func (server *Server) publish(record *runRecord, event StreamEvent) {
+func (server *Server) publish(record *runRecord, event StreamEvent) bool {
 	server.mu.Lock()
-	record.nextSequence++
-	event.Sequence = record.nextSequence
+	event.Sequence = record.nextSequence + 1
 	event.RunID = record.view.RunID
 	if event.At.IsZero() {
 		event.At = server.config.Now()
@@ -935,17 +995,20 @@ func (server *Server) publish(record *runRecord, event StreamEvent) {
 	event.Attributes = safeStreamAttributes(event.Attributes)
 	if record.execution != nil {
 		next := cloneExecutionPlan(*record.execution)
-		if executionplan.Apply(&next, executionplan.Event{
+		if err := executionplan.Apply(&next, executionplan.Event{
 			Sequence: event.Sequence, StepID: event.StepID, Type: event.Type,
 			Status: event.Status, At: event.At, Attributes: event.Attributes,
-		}) == nil {
-			record.execution = &next
-			record.view.Execution = cloneExecutionPlanPointer(&next)
-			if record.view.Result != nil {
-				record.view.Result.ExecutionPlan = cloneExecutionPlanPointer(&next)
-			}
+		}); err != nil {
+			server.mu.Unlock()
+			return false
+		}
+		record.execution = &next
+		record.view.Execution = cloneExecutionPlanPointer(&next)
+		if record.view.Result != nil {
+			record.view.Result.ExecutionPlan = cloneExecutionPlanPointer(&next)
 		}
 	}
+	record.nextSequence = event.Sequence
 	record.events = append(record.events, event)
 	if len(record.events) > maximumStoredRunEvents {
 		record.events = append([]StreamEvent(nil), record.events[len(record.events)-maximumStoredRunEvents:]...)
@@ -957,6 +1020,7 @@ func (server *Server) publish(record *runRecord, event StreamEvent) {
 		}
 	}
 	server.mu.Unlock()
+	return true
 }
 
 func (server *Server) record(runID string) (*runRecord, bool) {
@@ -1108,6 +1172,7 @@ func (server *Server) decodeJSON(writer http.ResponseWriter, request *http.Reque
 type runSink struct {
 	server *Server
 	record *runRecord
+	audit  *intelligenceaudit.Recorder
 }
 
 type runModelObserver struct {
@@ -1236,11 +1301,14 @@ func (sink runSink) AcceptPlan(plan contracts.ResearchPlan, at time.Time) {
 }
 
 func (sink runSink) Emit(event orchestrator.Event) {
-	sink.server.publish(sink.record, StreamEvent{
+	accepted := sink.server.publish(sink.record, StreamEvent{
 		StepID: event.StepID, Type: event.Type, Status: event.Status,
 		Label: eventLabel(event.Type, event.Status), At: event.At,
 		Attributes: safeStreamAttributes(event.Attributes),
 	})
+	if accepted && sink.audit != nil {
+		sink.audit.ObserveLifecycle(nil, event)
+	}
 }
 
 func fixtureResearchPlan(projection Projection) (contracts.ResearchPlan, error) {
@@ -1332,6 +1400,20 @@ func hydrateFixtureExecution(projection *Projection) error {
 			return err
 		}
 	}
+	sequence := execution.LastSequence
+	toolEvents, err := fixtureCalculationEvents(projection.Calculations, completedAt)
+	if err != nil {
+		return err
+	}
+	for _, event := range toolEvents {
+		sequence++
+		if err := executionplan.Apply(&execution, executionplan.Event{
+			Sequence: sequence, StepID: event.StepID, Type: event.Type,
+			Status: event.Status, At: event.At, Attributes: safeStreamAttributes(event.Attributes),
+		}); err != nil {
+			return err
+		}
+	}
 	if err := executionplan.MarkCompleted(&execution, completedAt); err != nil {
 		return err
 	}
@@ -1350,6 +1432,85 @@ func fixtureStepObjective(kind string) string {
 	default:
 		return "Execute the governed research step."
 	}
+}
+
+func fixtureCalculationEvents(calculations []CalculationCard, at time.Time) ([]StreamEvent, error) {
+	events := make([]StreamEvent, 0, len(calculations))
+	for _, calculation := range calculations {
+		status := "completed"
+		if calculation.Status != contracts.ReceiptSuccess {
+			status = "failed"
+		} else if err := validateSuccessfulFixtureCalculation(calculation); err != nil {
+			return nil, err
+		}
+		outputRefs := make([]string, 0, len(calculation.Outputs))
+		for _, output := range calculation.Outputs {
+			outputRefs = append(outputRefs, output.OutputID)
+		}
+		invariantsPassed := len(calculation.InvariantResults) > 0
+		for _, invariant := range calculation.InvariantResults {
+			if !invariant.Passed {
+				invariantsPassed = false
+				break
+			}
+		}
+		events = append(events, StreamEvent{
+			StepID: "fixture-calculation", Type: "tool", Status: status,
+			Label: eventLabel("tool", status), At: at,
+			Attributes: map[string]string{
+				"tool_execution_id":    "engine-fixture-" + calculation.ReceiptID,
+				"receipt_id":           calculation.ReceiptID,
+				"operation_id":         calculation.OperationID,
+				"engine_id":            calculation.EngineID,
+				"formula_version":      calculation.FormulaVersion,
+				"output_count":         strconv.Itoa(len(calculation.Outputs)),
+				"output_ref_ids":       strings.Join(outputRefs, "+"),
+				"invariant_count":      strconv.Itoa(len(calculation.InvariantResults)),
+				"invariants_passed":    strconv.FormatBool(invariantsPassed),
+				"warning_count":        strconv.Itoa(len(calculation.Warnings)),
+				"receipt_sha256":       calculation.ReceiptSHA,
+				"receipt_verification": "metadata_only",
+				"code":                 string(calculation.Status),
+			},
+		})
+	}
+	return events, nil
+}
+
+func validateSuccessfulFixtureCalculation(calculation CalculationCard) error {
+	for label, value := range map[string]string{
+		"receipt_id":      calculation.ReceiptID,
+		"operation_id":    calculation.OperationID,
+		"engine_id":       calculation.EngineID,
+		"formula_version": calculation.FormulaVersion,
+	} {
+		if strings.TrimSpace(value) == "" {
+			return fmt.Errorf("successful fixture calculation requires %s", label)
+		}
+	}
+	if len(calculation.ReceiptSHA) != sha256.Size*2 {
+		return fmt.Errorf("fixture receipt %q has an invalid sha256 length", calculation.ReceiptID)
+	}
+	if _, err := hex.DecodeString(calculation.ReceiptSHA); err != nil {
+		return fmt.Errorf("fixture receipt %q has an invalid sha256: %w", calculation.ReceiptID, err)
+	}
+	if len(calculation.Outputs) == 0 {
+		return fmt.Errorf("fixture receipt %q has no outputs", calculation.ReceiptID)
+	}
+	for _, output := range calculation.Outputs {
+		if strings.TrimSpace(output.OutputID) == "" {
+			return fmt.Errorf("fixture receipt %q has an output without identity", calculation.ReceiptID)
+		}
+	}
+	if len(calculation.InvariantResults) == 0 {
+		return fmt.Errorf("fixture receipt %q has no invariant results", calculation.ReceiptID)
+	}
+	for _, invariant := range calculation.InvariantResults {
+		if !invariant.Passed {
+			return fmt.Errorf("fixture receipt %q contains a failed invariant", calculation.ReceiptID)
+		}
+	}
+	return nil
 }
 
 func normalizedScenario(question string, scenario ScenarioControl) (string, []string, error) {
@@ -1472,7 +1633,8 @@ func safeStreamAttributes(attributes map[string]string) map[string]string {
 		"as_of": true, "engine_id": true, "evidence_count": true, "formula_version": true,
 		"input_count": true, "input_ref_ids": true, "invariant_count": true, "invariants_passed": true,
 		"operation_id": true, "output_count": true, "output_ref_ids": true, "receipt_id": true,
-		"receipt_sha256": true, "source_classes": true, "warning_count": true,
+		"receipt_sha256": true, "receipt_verification": true,
+		"source_classes": true, "warning_count": true,
 		"retrieval_id": true, "bundle_id": true, "retrieval_method": true,
 		"candidate_count": true, "selected_candidate_count": true,
 		"rejected_candidate_count": true, "candidate_count_state": true,
@@ -1491,6 +1653,10 @@ func safeStreamAttributes(attributes map[string]string) map[string]string {
 		"mandatory_review_count": true, "claim_count": true,
 		"supported_claim_coverage": true, "evidence_ref_count": true,
 		"receipt_ref_count": true, "limitation_count": true, "section_count": true,
+		"freshness_state": true, "fact_count": true, "calculation_count": true,
+		"inference_count": true, "hypothesis_count": true, "assumption_count": true,
+		"wave": true, "specialist_count": true, "concurrency_limit": true,
+		"succeeded_count": true, "failed_count": true, "observed_concurrency": true,
 	}
 	safe := map[string]string{}
 	for key, value := range attributes {

@@ -184,11 +184,11 @@ func TestLongJourneyRetainsBoundedOperationalState(t *testing.T) {
 	const published = maximumStoredRunEvents * 4
 	for sequence := 1; sequence <= published; sequence++ {
 		server.publish(record, StreamEvent{
-			Type:   "tool",
-			Status: "running",
+			Type:   "plan",
+			Status: "accepted",
 			Label:  "Bounded synthetic lifecycle event",
 			Attributes: map[string]string{
-				"tool_id": fmt.Sprintf("tool-%03d", sequence),
+				"plan_id": fmt.Sprintf("plan-%03d", sequence),
 			},
 		})
 	}

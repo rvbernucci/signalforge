@@ -41,6 +41,21 @@ def validate_dashboards() -> None:
         serialized = json.dumps(payload)
         if "signalforge" not in serialized and "radeon_gpu" not in serialized:
             fail(f"{filename}: no real SignalForge or Radeon query")
+    orchestration = json.loads(
+        (dashboard_dir / "agent-orchestration.json").read_text()
+    )
+    panels = orchestration["panels"]
+    if not any(
+        panel.get("type") == "traces" and "Wave" in panel.get("title", "")
+        for panel in panels
+    ):
+        fail("agent-orchestration.json: correlated wave waterfall is absent")
+    if not any(
+        panel.get("type") == "logs"
+        and "orchestration" in json.dumps(panel.get("targets", []))
+        for panel in panels
+    ):
+        fail("agent-orchestration.json: bounded lifecycle event panel is absent")
 
 
 def validate_alloy_labels() -> None:

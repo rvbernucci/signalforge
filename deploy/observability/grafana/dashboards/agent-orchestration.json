@@ -26,12 +26,21 @@
     },
     {
       "datasource": {"type": "tempo", "uid": "tempo"},
-      "gridPos": {"h": 11, "w": 24, "x": 0, "y": 8},
+      "gridPos": {"h": 11, "w": 16, "x": 0, "y": 8},
       "id": 3,
       "options": {},
       "targets": [{"limit": 50, "query": "{ resource.service.name = \"signalforge\" }", "queryType": "traceql", "refId": "A", "tableType": "traces"}],
-      "title": "Agent, Tool, and Model Waterfall",
+      "title": "Agent, Wave, Tool, and Model Waterfall",
       "type": "traces"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 11, "w": 8, "x": 16, "y": 8},
+      "id": 4,
+      "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true, "showCommonLabels": false, "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true},
+      "targets": [{"expr": "{service_name=\"signalforge\"} | json | event=~\"orchestration\\\\..*\"", "queryType": "range", "refId": "A"}],
+      "title": "Bounded Lifecycle Events",
+      "type": "logs"
     }
   ],
   "refresh": "5s",

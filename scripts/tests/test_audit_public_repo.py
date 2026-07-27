@@ -31,7 +31,80 @@ class PublicReleaseAuditTests(unittest.TestCase):
         self.assertIsNotNone(MODULE.forbidden_path_reason(Path("evidence/run.log")))
         self.assertIsNotNone(MODULE.forbidden_path_reason(Path("scripts/__pycache__/audit.pyc")))
         self.assertIsNotNone(MODULE.forbidden_path_reason(Path(".venv/lib/package.py")))
+        self.assertEqual(
+            MODULE.forbidden_path_reason(Path("experiments/sprint32/holdout/cases.json")),
+            "sealed evaluation material",
+        )
         self.assertIsNone(MODULE.forbidden_path_reason(Path("evidence/public-claims.json")))
+
+    def test_forbidden_file_is_classified_before_payload_read(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sealed = root / "experiments" / "sprint32" / "holdout" / "cases.json"
+            sealed.parent.mkdir(parents=True)
+            sealed.write_text("must-not-be-read", encoding="utf-8")
+
+            original_public_files = MODULE.public_files
+            original_text_payload = MODULE.text_payload
+            original_validate_env = MODULE.validate_env_example
+            original_validate_release = MODULE.validate_release_files
+            original_verify_artifacts = MODULE.verify_judge_artifacts
+            reads: list[Path] = []
+            try:
+                MODULE.public_files = lambda _root, _output: [Path("experiments/sprint32/holdout/cases.json")]
+                MODULE.text_payload = lambda path: reads.append(path) or "unexpected"
+                MODULE.validate_env_example = lambda _root: []
+                MODULE.validate_release_files = lambda _root: []
+                MODULE.verify_judge_artifacts = lambda _root: ([], [])
+                report = MODULE.build(root, root / "audit.json")
+            finally:
+                MODULE.public_files = original_public_files
+                MODULE.text_payload = original_text_payload
+                MODULE.validate_env_example = original_validate_env
+                MODULE.validate_release_files = original_validate_release
+                MODULE.verify_judge_artifacts = original_verify_artifacts
+
+            self.assertEqual(reads, [])
+            findings = report["checks"]["forbidden_paths"]["findings"]
+            self.assertEqual(findings[0]["reason"], "sealed evaluation material")
+
+    def test_allowed_path_symlink_is_rejected_before_payload_read(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            root = parent / "repo"
+            root.mkdir()
+            external = parent / "external.txt"
+            external.write_text("must-not-be-read", encoding="utf-8")
+            alias = root / "fixtures" / "workspace" / "alias.txt"
+            alias.parent.mkdir(parents=True)
+            alias.symlink_to(external)
+
+            original_public_files = MODULE.public_files
+            original_text_payload = MODULE.text_payload
+            original_validate_env = MODULE.validate_env_example
+            original_validate_release = MODULE.validate_release_files
+            original_verify_artifacts = MODULE.verify_judge_artifacts
+            reads: list[Path] = []
+            try:
+                MODULE.public_files = lambda _root, _output: [
+                    Path("fixtures/workspace/alias.txt")
+                ]
+                MODULE.text_payload = lambda path: reads.append(path) or "unexpected"
+                MODULE.validate_env_example = lambda _root: []
+                MODULE.validate_release_files = lambda _root: []
+                MODULE.verify_judge_artifacts = lambda _root: ([], [])
+                report = MODULE.build(root, root / "audit.json")
+            finally:
+                MODULE.public_files = original_public_files
+                MODULE.text_payload = original_text_payload
+                MODULE.validate_env_example = original_validate_env
+                MODULE.validate_release_files = original_validate_release
+                MODULE.verify_judge_artifacts = original_verify_artifacts
+
+            self.assertEqual(reads, [])
+            findings = report["checks"]["forbidden_paths"]["findings"]
+            self.assertEqual(len(findings), 1)
+            self.assertIn("path uses a symlink", findings[0]["reason"])
 
     def test_env_example_rejects_nonempty_credential(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

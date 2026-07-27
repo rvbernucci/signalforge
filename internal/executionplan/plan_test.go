@@ -2,6 +2,7 @@ package executionplan
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -303,11 +304,22 @@ func TestProjectionAddsOnlyValidatedRetrievalAndToolReceipts(t *testing.T) {
 				"input_count": "3", "input_ref_ids": "operating-cash-flow+capex",
 				"output_count": "1", "output_ref_ids": "free-cash-flow", "invariant_count": "2",
 				"invariants_passed": "true", "warning_count": "0",
-				"receipt_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				"inputs":         "never-retain",
+				"receipt_sha256":       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"receipt_verification": "metadata_only",
+				"inputs":               "never-retain",
 			},
 		},
-		{Sequence: 5, StepID: "context-01", Type: "context", Status: "completed", At: now.Add(4 * time.Second), Attributes: map[string]string{"packet_id": "packet-1"}},
+		{
+			Sequence: 5, StepID: "context-01", Type: "context", Status: "completed", At: now.Add(4 * time.Second),
+			Attributes: map[string]string{
+				"packet_id": "packet-1", "finding_count": "3", "counterevidence_count": "1",
+				"missing_evidence_count": "2", "evidence_coverage": "3_of_4",
+				"fact_count": "2", "calculation_count": "1", "inference_count": "1",
+				"hypothesis_count": "0", "assumption_count": "2",
+				"as_of": "2026-07-25", "freshness_state": "bounded_by_as_of",
+				"authority_state": "accepted",
+			},
+		},
 	}
 	for _, event := range events {
 		if err := Apply(&projection, event); err != nil {
@@ -317,6 +329,12 @@ func TestProjectionAddsOnlyValidatedRetrievalAndToolReceipts(t *testing.T) {
 	step := findStep(&projection, "context-01")
 	if step == nil || step.Status != StatusPassed {
 		t.Fatalf("context step = %+v", step)
+	}
+	if !strings.Contains(step.SafeSummary, "2 facts, 1 calculations, 1 inferences, 0 hypotheses, and 2 assumptions") ||
+		!strings.Contains(step.SafeSummary, "management assertions and scenarios are not inferred") ||
+		!strings.Contains(step.SafeSummary, "as-of date 2026-07-25") ||
+		!strings.Contains(step.SafeSummary, "Evidence authority state: Accepted") {
+		t.Fatalf("context epistemic boundary = %q", step.SafeSummary)
 	}
 	var retrieval, tool *ChecklistItem
 	for index := range step.Checklist {
@@ -348,6 +366,65 @@ func TestProjectionAddsOnlyValidatedRetrievalAndToolReceipts(t *testing.T) {
 	payload, _ := json.Marshal(projection)
 	if strings.Contains(string(payload), "never-retain") {
 		t.Fatalf("unsafe event attributes entered projection: %s", payload)
+	}
+}
+
+func TestProjectionDistinguishesEvidenceAbsenceFailureAndRightsExclusion(t *testing.T) {
+	now := time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name       string
+		status     string
+		attributes map[string]string
+		want       string
+	}{
+		{
+			name: "evidence absence", status: "completed",
+			attributes: map[string]string{
+				"retrieval_id": "retrieval-absence", "evidence_count": "0",
+				"missing_evidence_count": "2", "candidate_count_state": "available",
+				"candidate_count": "4", "selected_candidate_count": "0",
+				"rejected_candidate_count": "4",
+			},
+			want: "explicit evidence absence, not a retrieval failure",
+		},
+		{
+			name: "provider failure", status: "failed",
+			attributes: map[string]string{
+				"retrieval_id": "retrieval-failure", "code": "provider_timeout",
+			},
+			want: "retrieval operation failed",
+		},
+		{
+			name: "rights exclusion", status: "failed",
+			attributes: map[string]string{
+				"retrieval_id": "retrieval-rights", "code": "source_rights_excluded",
+			},
+			want: "excluded by the source-rights policy",
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			projection, err := FromPlan(testPlan(now), now)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := Apply(&projection, Event{
+				Sequence: 1, StepID: "context-01", Type: "retrieval",
+				Status: testCase.status, At: now.Add(time.Second), Attributes: testCase.attributes,
+			}); err != nil {
+				t.Fatal(err)
+			}
+			step := findStep(&projection, "context-01")
+			var retrieval *ChecklistItem
+			for index := range step.Checklist {
+				if strings.HasPrefix(step.Checklist[index].CheckID, "retrieval-") {
+					retrieval = &step.Checklist[index]
+				}
+			}
+			if retrieval == nil || !strings.Contains(strings.ToLower(retrieval.SafeDetail), strings.ToLower(testCase.want)) {
+				t.Fatalf("retrieval outcome = %+v, want %q", retrieval, testCase.want)
+			}
+		})
 	}
 }
 
@@ -387,6 +464,70 @@ func TestProjectionPreservesBoundedFallbackRoute(t *testing.T) {
 	if routeCheck == nil || routeCheck.Status != StatusPassed ||
 		!strings.Contains(routeCheck.SafeDetail, "fallback route") {
 		t.Fatalf("fallback route checklist was not closed safely: %+v", routeCheck)
+	}
+}
+
+func TestProjectionCreatesBoundedSyntheticToolStepFromReceiptEvents(t *testing.T) {
+	now := time.Date(2026, 7, 25, 12, 0, 0, 0, time.UTC)
+	projection, err := FromPlan(testPlan(now), now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := []Event{
+		{
+			Sequence: 1, StepID: "fixture-calculation", Type: "tool", Status: "completed",
+			At: now.Add(time.Second), Attributes: map[string]string{
+				"tool_execution_id":    "engine-fixture-receipt-1",
+				"receipt_id":           "receipt-1",
+				"operation_id":         "financial.free_cash_flow",
+				"engine_id":            "financial",
+				"formula_version":      "fcf/v2",
+				"output_count":         "1",
+				"output_ref_ids":       "free-cash-flow",
+				"invariant_count":      "1",
+				"invariants_passed":    "true",
+				"warning_count":        "0",
+				"receipt_sha256":       strings.Repeat("a", 64),
+				"receipt_verification": "metadata_only",
+			},
+		},
+		{
+			Sequence: 2, StepID: "fixture-calculation", Type: "tool", Status: "completed",
+			At: now.Add(2 * time.Second), Attributes: map[string]string{
+				"tool_execution_id":    "engine-fixture-receipt-2",
+				"receipt_id":           "receipt-2",
+				"operation_id":         "valuation.peer_multiple",
+				"engine_id":            "valuation",
+				"formula_version":      "peer/v1",
+				"output_count":         "1",
+				"output_ref_ids":       "peer-multiple",
+				"invariant_count":      "1",
+				"invariants_passed":    "true",
+				"warning_count":        "0",
+				"receipt_sha256":       strings.Repeat("b", 64),
+				"receipt_verification": "metadata_only",
+			},
+		},
+	}
+	for _, event := range events {
+		if err := Apply(&projection, event); err != nil {
+			t.Fatalf("apply event %+v: %v", event, err)
+		}
+	}
+	step := findStep(&projection, "fixture-calculation")
+	if step == nil || step.ParentPhaseID != "tools" || step.Status != StatusPassed ||
+		step.Route != "local_deterministic" || len(step.Checklist) != 2 ||
+		!strings.Contains(step.SafeSummary, "2 of 2") {
+		t.Fatalf("synthetic tool step = %+v", step)
+	}
+	phase := findPhase(projection.Phases, "tools")
+	if phase == nil || phase.Status != StatusPassed ||
+		len(phase.StepIDs) != 1 || phase.StepIDs[0] != step.StepID ||
+		phase.SafeSummary != "2 deterministic calculation records passed contract checks." {
+		t.Fatalf("tools phase = %+v", phase)
+	}
+	if err := Validate(projection); err != nil {
+		t.Fatalf("validate synthetic tool projection: %v", err)
 	}
 }
 
@@ -684,6 +825,8 @@ func BenchmarkProjectionReplay(b *testing.B) {
 				"engine_id": "financial-engine/v1", "formula_version": "fcf/v2",
 				"input_count": "3", "output_count": "1", "invariant_count": "2",
 				"invariants_passed": "true", "warning_count": "0",
+				"receipt_sha256":       strings.Repeat("a", 64),
+				"receipt_verification": "metadata_only",
 			},
 		},
 		{Sequence: 5, StepID: "context-01", Type: "context", Status: "completed", At: now.Add(4 * time.Second), Attributes: map[string]string{"packet_id": "packet-1"}},
@@ -703,6 +846,102 @@ func BenchmarkProjectionReplay(b *testing.B) {
 			}
 		}
 	}
+}
+
+func TestProjectionRejectsUnverifiableCompletedToolReceipts(t *testing.T) {
+	now := time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC)
+	base := map[string]string{
+		"receipt_id":           "receipt-1",
+		"operation_id":         "financial.free_cash_flow",
+		"engine_id":            "financial-engine/v1",
+		"output_count":         "1",
+		"invariant_count":      "1",
+		"invariants_passed":    "true",
+		"receipt_sha256":       strings.Repeat("a", 64),
+		"receipt_verification": "metadata_only",
+	}
+	tests := []struct {
+		name   string
+		mutate func(map[string]string)
+	}{
+		{name: "missing hash", mutate: func(values map[string]string) { delete(values, "receipt_sha256") }},
+		{name: "malformed hash", mutate: func(values map[string]string) { values["receipt_sha256"] = "not-a-hash" }},
+		{name: "failed invariant", mutate: func(values map[string]string) { values["invariants_passed"] = "false" }},
+		{name: "no output", mutate: func(values map[string]string) { values["output_count"] = "0" }},
+		{name: "missing verification scope", mutate: func(values map[string]string) { delete(values, "receipt_verification") }},
+		{name: "invalid verification scope", mutate: func(values map[string]string) { values["receipt_verification"] = "verified" }},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			projection, err := FromPlan(testPlan(now), now)
+			if err != nil {
+				t.Fatal(err)
+			}
+			attributes := map[string]string{}
+			for key, value := range base {
+				attributes[key] = value
+			}
+			testCase.mutate(attributes)
+			err = Apply(&projection, Event{
+				Sequence: 1, StepID: "context-01", Type: "tool", Status: "completed",
+				At: now.Add(time.Second), Attributes: attributes,
+			})
+			if err == nil {
+				t.Fatal("expected unverifiable receipt to be rejected")
+			}
+			if projection.LastSequence != 0 {
+				t.Fatalf("rejected receipt advanced sequence to %d", projection.LastSequence)
+			}
+		})
+	}
+}
+
+func TestProjectionEnforcesChecklistAndReferenceBounds(t *testing.T) {
+	now := time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC)
+	t.Run("checklist", func(t *testing.T) {
+		projection, err := FromPlan(testPlan(now), now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		step := findStep(&projection, "context-01")
+		step.Checklist = make([]ChecklistItem, maximumChecklistItems+1)
+		for index := range step.Checklist {
+			step.Checklist[index] = ChecklistItem{
+				CheckID: fmt.Sprintf("bounded-check-%02d", index),
+				Label:   "Bounded check", Status: StatusPending, Authority: "contract",
+			}
+		}
+		if err := signAndValidate(&projection); err == nil {
+			t.Fatal("expected oversized checklist to be rejected")
+		}
+	})
+	t.Run("step references", func(t *testing.T) {
+		projection, err := FromPlan(testPlan(now), now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		step := findStep(&projection, "context-01")
+		for index := 0; index <= maximumReferenceIDs; index++ {
+			step.ReferenceIDs = append(step.ReferenceIDs, fmt.Sprintf("reference-%02d", index))
+		}
+		if err := signAndValidate(&projection); err == nil {
+			t.Fatal("expected oversized step references to be rejected")
+		}
+	})
+	t.Run("check references", func(t *testing.T) {
+		projection, err := FromPlan(testPlan(now), now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		step := findStep(&projection, "context-01")
+		step.Checklist[0].ReferenceIDs = make([]string, maximumReferenceIDs+1)
+		for index := range step.Checklist[0].ReferenceIDs {
+			step.Checklist[0].ReferenceIDs[index] = fmt.Sprintf("reference-%02d", index)
+		}
+		if err := signAndValidate(&projection); err == nil {
+			t.Fatal("expected oversized checklist references to be rejected")
+		}
+	})
 }
 
 func testPlan(now time.Time) contracts.ResearchPlan {
