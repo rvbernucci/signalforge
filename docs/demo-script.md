@@ -1,122 +1,104 @@
-# SignalForge Demo Cut Sheet
+# SignalForge Championship Demo Cut Sheet
 
-Final duration: 4 minutes 12.9 seconds  
-Target environment: AMD Radeon Cloud, ROCm 7.2.1, local Gemma runtime  
+Final duration: 4 minutes 44.970 seconds  
+Target environment: AMD Radeon Cloud, ROCm 7.2.1, local Gemma 4 26B Q4_0  
 Narration source: `docs/demo-voiceover.txt`  
-Capture evidence: `evidence/runs/sprint13/live-demo-capture.json`
+Primary live evidence: `evidence/sprint36-radeon-demo-journey.json`
+<!-- evidence-claim:sprint36-championship-journey -->
 
 ## Recording Rules
 
-- Show only privacy-safe product, evidence, and runtime surfaces.
-- Never expose tokens, credentials, private traces, prompts, raw model responses, or chain-of-thought.
-- Distinguish captured runtime behavior from static evidence artifacts.
-- Disclose playback acceleration without changing outputs.
-- Keep every quantitative statement bound to the public claim registry or the safe live-run export.
+- Use only privacy-safe current-candidate captures from a real non-sealed journey.
+- Never expose credentials, prompt bodies, response bodies, source bodies, private reasoning, or
+  chain-of-thought.
+- Treat the execution plan and Mission Control as governed metadata, not hidden reasoning.
+- Keep performance claims bounded to the public eight-journey development tournament.
+- Keep the final release identity aligned with the release manifest and public artifact hashes.
 
 ## Final Cut
 
-### 0:00-0:08 - Product Identity
+### 0:00-0:22 - Product Promise
 
-Screen: SignalForge title and local-first positioning.
+Screen: SignalForge identity, investor problem, and responsible-use boundary.
 
-Judge proof: clear product identity, local inference, and deterministic financial truth.
+Judge proof: application value, clear scenario, and explicit non-goals.
 
-### 0:08-0:16 - Investor Decision
+### 0:22-0:42 - Authority Architecture
 
-Screen: product problem, supported decisions, and explicit non-goals.
+Screen: current architecture showing the Go control plane, local Gemma core, optional Radeon API
+specialists, deterministic tools, evidence, lineage, and privacy controls.
 
-Judge proof: application value and bounded scenario.
+Judge proof: local inference and precise authority separation.
 
-### 0:16-0:26 - Architecture And Radeon Runtime
+### 0:42-1:12 - Real Run Starts
 
-Screen: authority architecture with the Radeon `gfx1100`, ROCm 7.2.1, local model, and
-loopback-only endpoint recorded in the hash-bound environment evidence.
+Screen: `sprint36-live-hybrid-start.png`, followed by
+`sprint36-live-hybrid-midrun.png`.
 
-Judge proof: local Radeon inference and the separation between model and software authority.
+Judge proof: a real current-candidate journey with typed planning, two bounded specialist waves,
+four-way concurrency, and visible route state.
 
-### 0:26-2:22 - Live Governed Research Run, Part A
+### 1:12-1:48 - Review, Recovery, And Release
 
-Screen: real Microsoft/NVIDIA run captured on the allocated Radeon environment. The UI shows the
-scenario, opt-in memory control, typed progress, specialist fan-out, review stages, and local
-inference state.
+Screen: `sprint36-live-hybrid-success.png` and the expanded execution timeline.
 
-Editing disclosure: shown at 1.15x playback. The output is unchanged.
+Judge proof: Radeon API specialists, local fallback, two independent critics, repair, synthesis,
+and a governed release.
 
-Judge proof: task decomposition, local inference, bounded orchestration, scenario execution, and
-responsive progress.
+### 1:48-2:22 - Mission Control And Intelligence Lineage
 
-Expand the live execution plan while the run is active. Show planning, parallel specialist waves,
-evidence and deterministic capability checks, independent review, repair or approved-subset state
-when present, and final synthesis. Open one **Proof layer** reference and then **Inspect lineage**
-to demonstrate that the visible checklist and Mission Control share the same run identity. State
-explicitly that this is governed execution metadata, not chain-of-thought.
+Screen: `sprint36-live-hybrid-mission-control.png` and
+`sprint36-live-hybrid-engines.png`.
 
-### 2:22-2:29 - Primary Evidence
+Judge proof: one correlated `run_id` and `trace_id`, 20 model-call attempts across local ROCm and
+Radeon API routes, six context packets, 18 deterministic engine receipts, and privacy-safe
+telemetry.
 
-Screen: expanded Microsoft filing card with primary-source locator, filing section, as-of date,
-and content hash.
+### 2:22-2:52 - Evidence And Deterministic Receipt
 
-Judge proof: answer-used retrieval, citation, temporal scope, and provenance.
+Screen: primary evidence, Proof layer, deterministic receipt list, and the FCFF DCF receipt.
 
-### 2:29-2:37 - Deterministic DCF Receipt
+Judge proof: citations, temporal scope, source authority, formula version, invariants, input
+references, and replay hash.
 
-Screen: expanded FCFF DCF receipt with formula version, verified outputs, receipt hash, source date,
-and invariant result.
+### 2:52-3:12 - Governed Continuity And Privacy
 
-Judge proof: tool invocation, Numerical Silence, deterministic arithmetic, and replayable lineage.
+Screen: current workspace, case-memory control, and safe projection.
 
-### 2:37-3:05 - Live Governed Research Run, Part B
+Judge proof: multi-turn scope preservation, opt-in local memory, and inspect/export/delete
+capabilities without retaining model bodies.
 
-Screen: the real run reaches the complete eight-section research case with supported claims,
-explicit assumptions, limitations, and next actions.
+### 3:12-3:38 - Radeon Optimization
 
-Editing disclosure: continuation of the same 1.15x playback capture.
+Screen: deck optimization slide.
 
-Judge proof: functional completeness and fail-closed publication.
+Judge proof: eight public non-sealed journeys per mode, 8/8 contracts, 2.7777x aggregate local4
+speedup, 64.37% p50 reduction, and the explicit non-universal caveat.
 
-### 3:05-3:40 - Live Governed Follow-Up
+### 3:38-4:02 - Failure Behavior
 
-Screen: real `Thesis breakers` follow-up preserving companies, scenario, and point-in-time scope.
+Screen: successful API-loss recovery evidence followed by
+`sprint36-live-hybrid-complete.png`, which records a separate safe stop.
 
-Editing disclosure: shown at 1.25x playback. The output is unchanged.
+Judge proof: remote loss can recover locally; core local-model loss releases zero answers.
 
-Judge proof: multi-turn continuity, local execution, re-authorized evidence, and explicit limits.
+### 4:02-End - Close
 
-### 3:40-3:47 - Memory And Privacy Controls
+Screen: release-discipline slide and repository URL.
 
-Screen: saved-case library, inspect/export/delete controls, and verified deletion of the follow-up
-case.
-
-Judge proof: explicit permission, opt-in local memory, user control, and safe projection.
-
-### 3:47-4:00 - Quality-Preserving Radeon Optimization
-
-Screen: selected four-worker profile, 29.17% end-to-end improvement, and 44/44 frozen semantic
-checks for both passing profiles.
-
-Judge proof: controlled workload optimization without weakening the frozen quality gate.
-
-### 4:00-4:12.9 - Hardening And Close
-
-Screen: 26 adversarial cases, 11 executable gates, explicit bounded scope, residual-risk statement,
-and public repository URL.
-
-Judge proof: operational discipline, evidentiary honesty, and release readiness.
+Judge proof: product value, AMD Radeon contribution, responsible-use boundary, and public
+reproducibility.
 
 ## Verification Checklist
 
-- [x] Show hash-bound Radeon/ROCm identity and live local-inference state without secrets.
-- [x] Capture one real, accepted local run on the allocated Radeon environment.
-- [x] Show one primary-source citation with provenance metadata.
-- [x] Show one deterministic tool call and receipt.
-- [x] Show one governed multi-turn follow-up.
-- [x] Show explicit inspect, export, and delete memory controls.
-- [x] Show the quality-preserving optimization result.
-- [x] Show the adversarial report and residual limitations.
-- [x] Keep the final edit between three and five minutes.
-- [x] Verify visible claims against `evidence/public-claims.json` and the safe live-run export.
-- [x] Verify video dimensions, codecs, duration, audio levels, and a 12-frame visual contact sheet.
-- [ ] Verify the published video URL from a clean unauthenticated session.
-
-The local video is complete evidence. Sprint 13 remains open until its public URL passes an
-unauthenticated check.
+- [x] Current-candidate local and hybrid Radeon journeys are recorded with safe IDs.
+- [x] One real hybrid journey is correlated across Workspace and Mission Control.
+- [x] One primary-source citation and one deterministic calculation receipt are visible.
+- [x] Local review and synthesis remain distinguishable from optional Radeon API specialists.
+- [x] The bounded optimization population and limitations are visible.
+- [x] API-loss recovery and local-model fail-closed behavior are visible.
+- [x] No credentials, prompts, responses, source bodies, or private reasoning appear.
+- [x] Final cut remains between three and five minutes.
+- [x] Final dimensions, codecs, audio levels, and frame contact sheet pass.
+- [ ] Final artifact hash is recorded in the release inventory.
+- [ ] Published video URL passes a clean unauthenticated check.

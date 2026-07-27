@@ -8,7 +8,7 @@
       "status": "verified",
       "required_evidence": ["golden-journey-recording", "persona-to-workflow-trace"],
       "current_evidence": [
-        "the bounded Microsoft/NVIDIA journey is complete in Radeon v57 and a separate 252.9-second user-facing Radeon recording is hash-bound under evidence/runs/sprint13",
+        "the bounded Microsoft/NVIDIA journey is complete in Radeon v57 and the current 284.970-second user-facing championship video is hash-bound by evidence/judge-package.json",
         "24-case structural routing evaluation is hash-pinned in evidence/architecture-eval.json",
         "the responsive fixture workspace makes the complete eight-section case, scenario controls, evidence, calculations, assumptions, and caveats visible without narration",
         "the six-page project specification, architecture diagram, six-slide judge deck, and reviewed Radeon recording present the scenario and evidence"
@@ -36,7 +36,7 @@
         "all 28 Tier 0 operations execute through a role-authorized Go engine with hash-verifiable receipts",
         "public claims are checked against hash-pinned evidence",
         "local research-case retention is opt-in, hash-verified, inspectable, exportable, deletable, and isolated from analytical completion; model authority remains read-only",
-        "the final recording visibly demonstrates bounded execution, one primary source, one deterministic DCF receipt, a governed follow-up, and inspect/export/delete privacy controls"
+        "the current championship recording visibly demonstrates bounded execution, one primary source, deterministic receipts, governed continuity, correlated observability, and inspect/export/delete privacy controls"
       ]
     },
     {
@@ -49,7 +49,7 @@
         "the interactive workspace connects governed live follow-ups to the visible case and explicitly disables inference in deterministic fixture mode",
         "the measured fixture path served the initial case, streamed 21 safe events, and completed without exposing private orchestration fields",
         "durable local research cases are opt-in and expose inspect, export, and explicit deletion controls without reusing snapshots as numerical authority",
-        "the 252.9-second final recording shows the real governed thesis-review follow-up and opt-in inspect/export/delete memory controls"
+        "the 284.970-second championship recording shows governed continuity and opt-in inspect/export/delete memory controls"
       ]
     },
     {
@@ -64,7 +64,7 @@
         "selected-runtime smoke and 30-sample telemetry trace are hash-pinned",
         "Radeon role evaluation passed 29/33 separately frozen cases, and a three-model-call typed local orchestration path completed in 12.52 seconds",
         "Radeon v57 completed the local golden path in 154.33 seconds with 10 model calls, 44/44 frozen semantic checks, and validated point-in-time price-implied multiples",
-        "the Sprint 13 live capture records loopback-only Gemma inference on gfx1100 and ROCm 7.2.1 with a safe released-case export"
+        "the Sprint 36 local and demo journey records preserve loopback Gemma inference on gfx1100 and ROCm 7.2.1 through privacy-safe projections"
       ]
     },
     {
@@ -88,10 +88,10 @@
       "required_evidence": ["accepted-radeon-api-journey", "authorized-local-fallback-proof"],
       "current_evidence": [
         "the organizer-confirmed Radeon Cloud Model API path is isolated to bounded context specialists while Go retains planning, evidence authority, deterministic tools, contracts, numerical authority, and final rendering",
-        "one complete accepted hybrid journey reached all 12 terminal steps across eight governed phases and recorded 17 model calls across the provided radeon-vllm route and authorized local-rocm route",
+        "the current accepted hybrid championship journey reached governed release across the provided radeon-vllm route and authorized local-rocm route",
         "local Radeon evidence and risk review, final synthesis, deterministic authority, and fail-closed publication remain active in the hybrid path",
         "API loss replayed the complete specialist role locally, while model loss and retrieval loss failed closed",
-        "the hybrid journey, privacy-safe telemetry, synchronized Workspace and Mission Control captures, and failure matrix are hash-bound in evidence/sprint34-radeon-runtime.json and its referenced artifacts",
+        "the current hybrid journey, privacy-safe telemetry, synchronized Workspace and Mission Control captures, and failure behavior are hash-bound in the Sprint 36 evidence set",
         "a separate public non-sealed tournament over eight journeys per mode recorded 8/8 hybrid contract passes, 20 successful Radeon API calls, and one locally recovered remote failure"
       ]
     }

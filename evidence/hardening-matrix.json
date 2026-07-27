@@ -203,7 +203,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "ee05c4fbeb008b33748316cae9ee03f44bba2e364de4ebd2dbb41684edfcf8e1"
+          "sha256": "b5be3805213073a8715c95ed62b5e63cfc88a0fa1ce77785fa8f153aeb0237ce"
         }
       ],
       "status": "passed"

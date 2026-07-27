@@ -964,7 +964,9 @@ func getRun(t *testing.T, baseURL, runID string) RunView {
 
 func waitForRun(t *testing.T, baseURL string, run RunView) RunView {
 	t.Helper()
-	deadline := time.Now().Add(2 * time.Second)
+	// Race instrumentation and concurrent package tests can make the fixture replay exceed two
+	// seconds on constrained CI runners even though the runtime continues to make progress.
+	deadline := time.Now().Add(10 * time.Second)
 	for run.Status == "running" && time.Now().Before(deadline) {
 		time.Sleep(5 * time.Millisecond)
 		run = getRun(t, baseURL, run.RunID)

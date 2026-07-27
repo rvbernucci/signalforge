@@ -130,52 +130,42 @@ The selected inference stack is:
 
 The model revision, tokenizer, artifact hash, quantization, runtime, ROCm version, GPU identity,
 dataset manifests, and run artifacts are hash-pinned. Models and downloaded source data remain
-outside Git. The accepted golden run used no remote inference.
+outside Git. Local-only is the interactive default; the Radeon API specialist path is explicit
+opt-in.
 
-Sprint 34 additionally records one accepted local-only journey and one accepted hybrid journey on
-the allocated Radeon host. The local journey completed 11 model calls in 182.189 seconds. The
-hybrid journey completed 17 model calls in 230.222 seconds across the provided Radeon API and the
-authorized local ROCm route. Both reached all eight governed phases and released only after the
-required contracts passed.
+Sprint 36 records one accepted local-only journey and one accepted hybrid journey on the allocated
+Radeon host. The local journey completed 11 model calls in 132.420 seconds. The hybrid journey
+completed 16 model calls in 220.949 seconds across the provided Radeon API and the authorized local
+ROCm route. Both reached all governed phases and released only after the required contracts passed.
 
 ## Radeon Optimization Evidence
 
 The optimization contract, workload, quality thresholds, and rollback profile were frozen before
-tuning. The first experiment found a reliability defect: explicit four-slot serving without
-unified KV split the configured 32,768-token context into four 8,192-token slot budgets. It failed
-all long-context cases and passed only 70 of 80 observations.
+tuning. The public Sprint 33 tournament compares eight non-sealed development journeys per mode.
+Every compared mode passed 8 of 8 runtime and release contracts.
 
-Unified F16 KV restored full shared request capacity and passed 80 of 80 isolated and concurrent
-contract observations. On the complete product journey, four context workers passed all 44 frozen
-semantic checks in 157.47 seconds. The three-worker control also passed 44 of 44 but required
-222.31 seconds. The accepted path was therefore 29.17% faster end to end without lowering the
-frozen quality threshold.
+Against the recorded two-worker baseline, local four-worker execution achieved 2.7777x aggregate
+speedup and a 64.37% p50 reduction. Hybrid four-worker execution achieved 2.0756x aggregate speedup,
+accepted 20 Radeon API specialist calls, and recovered one failed remote call through the
+authorized local route.
 
-Forced flash attention, a larger micro-batch, Q8 KV, and two-worker product concurrency were
-rejected by full-journey quality or efficiency gates. The rejected results remain visible rather
-than being discarded.
-
-The separately recorded v57 golden decision journey completed locally in 154.33 seconds with ten
-model calls. It dispositioned all 42 supplied claims, released 31 authority-backed claims approved
-by both independent reviewers, retained complete evidence coverage, and passed all 44 checks in the
-pre-run frozen semantic rubric. This is bounded contract conformance, not a claim of perfect factual
-accuracy against external human ground truth.
+The same Gemma 4 26B A4B QAT Q4_0 model class and bounded contracts were used across the comparison.
+These results are workload-specific development evidence, not universal throughput, external
+factual accuracy, or cross-model performance claims.
 
 ## Quality, Security, and Failure Behavior
 
-The frozen adversarial matrix contains 26 cases, including 22 critical and four high-severity
-threats, executed through 11 repository gates. The current report records every gate passing and
-zero current release blockers.
+The frozen adversarial matrix covers temporal leakage, restatements, missing periods, incompatible
+units, receipt tampering, stale or impossible market data, conflicts, citation resolution,
+retrieved prompt injection, unsupported causality, direct investment instructions, guaranteed
+outcomes, invented evidence, malformed model output, timeout, unauthorized tools, cancellation,
+unsupported scope, follow-up drift, memory contamination, trace leakage, clean startup, and
+bounded demo load.
 
-The matrix covers temporal leakage, restatements, missing periods, incompatible units, receipt
-tampering, stale or impossible market data, conflicts, citation resolution, retrieved prompt
-injection, unsupported causality, direct investment instructions, guaranteed outcomes, invented
-evidence, malformed model output, timeout, unauthorized tools, cancellation, unsupported scope,
-follow-up drift, memory contamination, trace leakage, clean startup, and bounded demo load.
-
-Failures are typed and observable. They may trigger one bounded repair, a deterministic fallback,
-a partial result, a clarification request, or a safe abstention. They do not silently create a
-publishable claim.
+Sprint 36 adds exact-candidate fault injection on Radeon. Loss of the Radeon API recovered through
+authorized local ROCm inference and completed a governed release in 129.557 seconds. Loss of the
+core local model failed closed in 0.022 seconds with zero model calls and no released answer.
+Failures are typed and observable; they never silently create a publishable claim.
 
 ## Memory, Privacy, and Responsible Use
 
@@ -228,8 +218,8 @@ commands documented in the repository README.
 - Pattern quarantine cannot guarantee detection of novel or obfuscated prompt injection.
 - Structurally plausible upstream data errors still require cross-source and human review.
 - Disk encryption, multi-user authentication, and external process supervision are not claimed.
-- Working-tree Radeon evidence is not represented as exact-image evidence until the release
-  manifest binds the public digest.
+- The exact forward release identity is authoritative only through the published release manifest,
+  image digest, and artifact hash inventory.
 - Concurrent workspace reads do not represent unlimited concurrent 26B generation.
 
 ## Evidence Index
@@ -238,8 +228,11 @@ commands documented in the repository README.
 - Architecture: `docs/architecture.svg`
 - Golden scorecard: `evidence/golden-journey-scorecard.json`
 - Safe Radeon replay: `evidence/golden-safe-decision-replay.json`
-- Radeon optimization: `evidence/radeon-optimization.json`
-- Sprint 34 Radeon runtime: `evidence/sprint34-radeon-runtime.json`
+- Radeon optimization: `evidence/sprint33-latency-tournament.json`
+- Sprint 36 local journey: `evidence/sprint36-radeon-local-journey.json`
+- Sprint 36 hybrid journey: `evidence/sprint36-radeon-hybrid-journey.json`
+- Sprint 36 resilience: `evidence/sprint36-radeon-resilience.json`
+<!-- evidence-claim:sprint36-championship-journey -->
 - Synchronized Workspace captures: `evidence/dashboard-radeon-synchronized-captures.json`
 - Adversarial matrix: `evidence/hardening-matrix.json`
 - Public claim registry: `evidence/public-claims.json`

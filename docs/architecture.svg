@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
-  <title id="title">SignalForge local-first architecture</title>
-  <desc id="desc">A layered architecture diagram showing the investor workspace, Go control plane, local specialist agents, deterministic authority services, and AMD Radeon ROCm inference runtime.</desc>
+  <title id="title">SignalForge local-first hybrid architecture</title>
+  <desc id="desc">A layered architecture diagram showing the investor workspace, Go control plane, specialist agents, deterministic authority services, local AMD Radeon ROCm inference, and optional organizer-provided Radeon API specialists.</desc>
   <defs>
     <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f7f3e8"/>
@@ -37,7 +37,7 @@
   <path d="M0 740 C320 665 530 820 850 745 C1140 676 1350 720 1600 640 L1600 1000 L0 1000 Z" fill="#d9e6df" opacity="0.55"/>
 
   <text x="72" y="67" class="title">SignalForge architecture</text>
-  <text x="72" y="96" class="subtitle">Local financial research with typed authority, deterministic calculations, and specialist inference on AMD Radeon</text>
+  <text x="72" y="96" class="subtitle">Local financial research with typed authority, deterministic calculations, and bounded hybrid inference on AMD Radeon</text>
 
   <text x="72" y="142" class="layer">01  INVESTOR EXPERIENCE</text>
   <rect x="72" y="160" width="1456" height="112" class="node"/>
@@ -114,15 +114,15 @@
   <path d="M514 754 L514 812" class="flow"/>
   <path d="M1257 754 L1257 812" class="flow"/>
 
-  <text x="72" y="832" class="layer">05  LOCAL INFERENCE RUNTIME</text>
+  <text x="72" y="832" class="layer">05  LOCAL CORE + OPTIONAL RADEON API</text>
   <rect x="72" y="850" width="1456" height="104" rx="18" fill="url(#gpu)" filter="url(#shadow)"/>
   <text x="104" y="890" class="h white">AMD Radeon GPU · ROCm 7.2.1 · gfx1100</text>
-  <text x="104" y="918" class="body white">Gemma 4 26B A4B IT QAT Q4_0 · ROCm llama.cpp · unified F16 KV · 32,768 shared context · four local workers</text>
+  <text x="104" y="918" class="body white">Gemma 4 26B Q4_0 · ROCm llama.cpp · local review and synthesis · 32,768 shared context · four workers</text>
   <rect x="1258" y="872" width="235" height="56" rx="12" fill="#f0b35e"/>
-  <text x="1280" y="899" class="h" font-size="17">No remote inference</text>
-  <text x="1280" y="920" class="mono">loopback-only endpoint</text>
+  <text x="1280" y="899" class="h" font-size="17">Optional Radeon API</text>
+  <text x="1280" y="920" class="mono">bounded specialists only</text>
 
   <circle cx="78" cy="981" r="6" fill="#4e8077"/><text x="93" y="986" class="body small">Model: interpret, critique, synthesize</text>
   <circle cx="389" cy="981" r="6" fill="#bd7a3b"/><text x="404" y="986" class="body small">Software: values, tools, policy, lineage, publication</text>
-  <text x="1188" y="986" class="mono small">signalforge/architecture-v1</text>
+  <text x="1188" y="986" class="mono small">signalforge/architecture-v2</text>
 </svg>

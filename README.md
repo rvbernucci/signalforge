@@ -12,15 +12,16 @@ The fastest review path is the [SignalForge Judge Guide](JUDGES.md). It maps the
 120-point Track 2 rubric to the demo, deck, project specification, runtime evidence, and exact
 championship release.
 
-- [4 minute 12.9 second Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Radeon-Demo.mp4)
-- [Six-slide judge deck](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Judge-Deck.pptx)
-- [Six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Project-Specification.pdf)
+- [4 minute 44.9 second Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4)
+- [Six-slide judge deck](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Judge-Deck.pptx)
+- [Six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf)
 - [Official Track 2 compliance matrix](docs/track2-compliance.md)
-- [Exact `v1.1.0` release attestation](evidence/sprint34-release-attestation.json)
+- [Current Radeon demo journey](evidence/sprint36-radeon-demo-journey.json)
+- [Current artifact hashes](evidence/judge-package.json)
 
-The application release is immutable at
-`ghcr.io/rvbernucci/signalforge@sha256:1354ccbbbd6138119111e23657ad69c1665f4189d75b9adcdecd53084870a4af`.
-Documentation on `main` may improve judge navigation without changing that image or its source.
+The forward championship image is `ghcr.io/rvbernucci/signalforge:v1.1.1`. Its immutable digest and
+source identity are published after the release build completes. Historical `v1.1.0` remains
+byte-identical and available as the rollback.
 
 ## Goal
 
@@ -121,25 +122,24 @@ prove contracts and deterministic authority; they do not claim universal factual
 - [Project specification PDF](output/pdf/SignalForge-Project-Specification.pdf)
 - [Six-slide judge deck](output/presentation/SignalForge-Judge-Deck.pptx)
 - [Architecture diagram](docs/architecture.svg)
-- [4 minute 12.9 second Radeon demo](output/video/SignalForge-Radeon-Demo.mp4)
+- [4 minute 44.9 second Radeon demo](output/video/SignalForge-Radeon-Demo.mp4)
 - [Final demo cut sheet](docs/demo-script.md)
 - [Evidence and reproduction guide](evidence/README.md)
 - [Radeon Mission Control and container guide](docs/radeon-mission-control.md)
-- [Public Sprint 34 judge-artifact release](https://github.com/rvbernucci/signalforge/releases/tag/sprint34-artifacts-v1)
-- [Exact Sprint 34 release attestation](evidence/sprint34-release-attestation.json)
+- [Sprint 36 championship artifact release](https://github.com/rvbernucci/signalforge/releases/tag/sprint36-championship-v1)
+- [Sprint 36 artifact manifest](evidence/judge-package.json)
+- [Historical Sprint 34 release attestation](evidence/sprint34-release-attestation.json)
 <!-- evidence-claim:judge-evidence-drafts -->
 
 ![SignalForge local-first architecture](docs/architecture.svg)
 
 ## Status
 
-Tag `v1.1.0` is the immutable Sprint 34 application release at
-`ghcr.io/rvbernucci/signalforge@sha256:1354ccbbbd6138119111e23657ad69c1665f4189d75b9adcdecd53084870a4af`.
-Its source, public `linux/amd64` image, SBOM, provenance, clean-run verification, judge artifacts,
-and accepted human decisions are bound in
-[`sprint34-release-attestation.json`](evidence/sprint34-release-attestation.json). Tag `v1.0.0`
-remains the independently reproducible baseline. Native Radeon measurements remain bounded to
-their recorded workloads and are not universal model-quality claims.
+Tag `v1.1.1` is the forward championship release. Its public `linux/amd64` image adds the verified
+runtime notice bundle and is bound to the current judge artifacts and Sprint 36 Radeon evidence.
+Tag `v1.1.0` remains the immutable Sprint 34 rollback, and `v1.0.0` remains the independently
+reproducible baseline. Native Radeon measurements remain bounded to their recorded workloads and
+are not universal model-quality claims.
 
 - versioned Go contracts for specialist context, deterministic engine requests and receipts, and evaluation evidence;
 - fail-closed validation for unsupported facts, unproven numerical inputs, and failed invariants;
@@ -397,9 +397,10 @@ journey completed 17 observed calls in 230.222 seconds across the provided Radeo
 authorized local ROCm fallback, while both surfaces displayed the same run and trace identities.
 Four 1280×720 captures and two sanitized journey manifests are hash-bound in
 [`dashboard-radeon-synchronized-captures.json`](evidence/dashboard-radeon-synchronized-captures.json).
-The artifact explicitly records `exact_release_artifact: false`: it closes the synchronized
-native Radeon proof. The separate exact-image gate is closed by the public `v1.1.0` digest,
-clean-run workflow, and release attestation rather than by relabeling this earlier native run.
+The artifact explicitly records `exact_release_artifact: false`: it preserves the historical
+Sprint 34 proof without relabeling it. Current Sprint 36 local and hybrid journeys are separately
+recorded in [`sprint36-radeon-local-journey.json`](evidence/sprint36-radeon-local-journey.json) and
+[`sprint36-radeon-hybrid-journey.json`](evidence/sprint36-radeon-hybrid-journey.json).
 
 ![Accepted local Radeon journey with the expandable execution plan](docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg)
 

@@ -55,10 +55,28 @@ Radeon/ROCm/model identity. It excludes prompts, responses, source excerpts, fre
 messages, and private reasoning. The verifier rejects unknown fields, unsafe identifiers, broken
 claim references, incomplete runtime attestation, and privacy flags that are not explicitly true.
 
-The final release checklist is fail-closed and is complete for `v1.1.0`. The exact source commit,
-public `linux/amd64` image digest, clean-run workflows, native Radeon evidence, judge artifacts,
-human decisions, and SG-05 disposition are bound in
-[`sprint34-release-attestation.json`](sprint34-release-attestation.json).
+The historical `v1.1.0` release remains fail-closed and immutable in
+[`sprint34-release-attestation.json`](sprint34-release-attestation.json). Sprint 36 creates the
+forward `v1.1.1` championship release; its exact source, public `linux/amd64` digest, clean-run
+workflows, Radeon evidence, artifact hashes, and human decisions are frozen only after every
+forward-release gate passes.
+
+## Sprint 36 Championship Evidence
+
+The current public-safe Radeon evidence is split by authority:
+
+- [`sprint36-radeon-local-journey.json`](sprint36-radeon-local-journey.json) records an accepted
+  local-only journey.
+- [`sprint36-radeon-hybrid-journey.json`](sprint36-radeon-hybrid-journey.json) records an accepted
+  journey that used both the organizer-provided Radeon API and local ROCm inference.
+- [`sprint36-radeon-demo-journey.json`](sprint36-radeon-demo-journey.json) binds the current
+  championship video captures to one accepted run and trace identity.
+- [`sprint36-radeon-resilience.json`](sprint36-radeon-resilience.json) records API-loss recovery
+  through the authorized local route and model-loss fail-closed behavior.
+
+These projections exclude prompts, responses, source bodies, credentials, private memory, private
+reasoning, and sealed identifiers. Contract completion is not represented as external factual
+accuracy.
 
 ## Retrieval Evidence
 
@@ -162,22 +180,19 @@ remain explicit in the source matrix.
 ## Judge Package
 
 `judge-package.json` binds the six-page project specification, six-slide supplemental deck,
-architecture diagram, final cut sheet, narration, safe live-run export, capture manifest, and
-4 minute 12.9 second H.264/AAC demo to their current hashes. The PDF was rendered page by page and
-visually inspected. The deck was rendered through an external office renderer, inspected slide by
-slide, and passed the canvas-overflow gate.
+architecture diagram, final cut sheet, narration, current safe Radeon evidence, selected captures,
+and 284.970-second 1080p H.264/AAC demo to their current hashes. The PDF was rendered page by page
+and visually inspected. The deck was rendered through an external office renderer, inspected
+slide by slide, and passed both template-fidelity and canvas-overflow gates. The video passed
+visual, audio, English-language, privacy, and duration review.
 
-`runs/sprint13/live-demo-capture.json` records the real Radeon run, governed follow-up, memory
-control, runtime identity, playback disclosures, video properties, audio measurements, and the
-12-timestamp visual review. The primary run completed locally in 161.51 seconds with ten local
-model calls, six context packets, 38/38 supported claims, eight required sections, and complete
-evidence coverage. Those values are bound to `live-demo-safe-export.json`; they do not replace the
-separately frozen Sprint 11 optimization result.
+The current demo journey completed on Radeon with 52 timeline events, six context packets, 18
+deterministic engine calls, five review events, and both local ROCm and organizer-provided Radeon
+API inference under one run and trace identity. These are product-contract observations, not a
+claim of universal factual accuracy.
 
-The package status is `public_artifacts_verified`. The recording passed technical and visual
-review, and the video, PDF, deck, architecture, cut sheet, narration, capture manifest, safe
-export, release page, and repository were downloaded or opened without authentication. Every
-downloaded artifact matched its registered local SHA-256.
+The package status is `public_artifacts_verified`. Public URL and downloaded-hash readback are
+completed after the immutable `sprint36-championship-v1` artifact release is published.
 
 ## Chaos Evidence
 

@@ -40,7 +40,7 @@
       "evidence": [
         {
           "path": "go.mod",
-          "sha256": "53ac7c1449bbd4c42baa64d16ce355c86d2cc4340927ac3d48dd9723cf010885"
+          "sha256": "b0e0b8ce40ba133448f81fc1ac97b06a9834de10f605b4cac4d913e0a48eb8c2"
         },
         {
           "path": "internal/numeric/types.go",
@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "evidence/hardening-matrix.json",
-          "sha256": "9a26d1b7a71f5ab000309ccfc44f5f2e93c055d2457fcead133e7898c8448260"
+          "sha256": "2d4d8945bc398410040c49c54bd2e9b48f7918a5ff5161570a3958fde40fe844"
         },
         {
           "path": "configs/hardening/sprint12-matrix-v1.json",
@@ -354,23 +354,23 @@
       "evidence": [
         {
           "path": "evidence/judge-package.json",
-          "sha256": "f278596b77abce0d2be52011c6760e196c694261d3827171e010bb401c05f867"
+          "sha256": "30701fdfddbfb89bbcd7ea53252d7db51564c97c26f1ea5913bc722ef9a5a535"
         },
         {
           "path": "output/pdf/SignalForge-Project-Specification.pdf",
-          "sha256": "ff118c158c5db35605de4ed3516dc46aff1f110b3e62eba6bc7d4e3acd2e021c"
+          "sha256": "bec9f88828b766045d62d3ae33e865a38f16b989385c8999b260e0cd3c89c123"
         },
         {
           "path": "output/presentation/SignalForge-Judge-Deck.pptx",
-          "sha256": "bec7d742fd5d0c9d1636845e665291b05b412161e997707096f59063222295a9"
+          "sha256": "046714f749f986f70b6870c3b21e673bf6633c6d3320c8c5e5cafe087affe3d3"
         },
         {
           "path": "docs/architecture.svg",
-          "sha256": "fb640176c7f827a4878c261a069f817e8c789d1758982eb9bc595041c033c968"
+          "sha256": "b32da58531d1854499b5af479e360205db168f24fa8b6deb42e18f3270db66bc"
         },
         {
           "path": "docs/demo-script.md",
-          "sha256": "f300af179f772014b8d8a70b2772674cdf404469f4b041aba434c1b6a4cfccf8"
+          "sha256": "ae1a907c82ba4bff8db7b78a151c117543d7d2d8b37d8bf6200fbf9c80fb21c5"
         },
         {
           "path": "evidence/runs/sprint13/live-demo-capture.json",
@@ -378,7 +378,7 @@
         },
         {
           "path": "output/video/SignalForge-Radeon-Demo.mp4",
-          "sha256": "329e1a40b93b6f6b247205306cca0ea18f1f8c8c6917be82a96175ddeba0f8c9"
+          "sha256": "32a9383b951b844bf4f310c777a3f5d289300b6717f932c80292cd81fbc0d82e"
         }
       ],
       "public_files": [
@@ -408,7 +408,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "ee05c4fbeb008b33748316cae9ee03f44bba2e364de4ebd2dbb41684edfcf8e1"
+          "sha256": "b5be3805213073a8715c95ed62b5e63cfc88a0fa1ce77785fa8f153aeb0237ce"
         },
         {
           "path": "web/src/components/CaseLibrary.tsx",
@@ -435,6 +435,26 @@
       ],
       "public_files": [
         "README.md"
+      ]
+    },
+    {
+      "claim_id": "sprint36-championship-journey",
+      "text": "The privacy-safe Sprint 36 championship demo record represents one accepted hybrid Radeon journey with 52 timeline events, six context packets, 18 deterministic engine calls, five review events, and both local ROCm and organizer-provided Radeon API inference; API loss recovered through the authorized local route, while local-model loss released no answer.",
+      "status": "measured",
+      "evidence": [
+        {
+          "path": "evidence/sprint36-radeon-demo-journey.json",
+          "sha256": "5c80d7d241f68871afbc2bc547ec30d7ab24e9ce46bd84e5d7075d48f88655a4"
+        },
+        {
+          "path": "evidence/sprint36-radeon-resilience.json",
+          "sha256": "d4eef8c93ebede91a92bbe1d30d772a94eac3cd1a716f6898663d5bf28d5aaf6"
+        }
+      ],
+      "public_files": [
+        "JUDGES.md",
+        "docs/demo-script.md",
+        "docs/project-specification.md"
       ]
     }
   ]

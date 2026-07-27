@@ -92,8 +92,8 @@ def cover_page(canvas, doc) -> None:
     cards = [
         ("11", "logical roles"),
         ("80", "deterministic tools"),
-        ("44/44", "golden semantic gates"),
-        ("29.17%", "end-to-end improvement"),
+        ("8/8", "contracts per mode"),
+        ("2.78x", "aggregate speedup"),
     ]
     x = 22 * mm
     y = height - 178 * mm
@@ -237,6 +237,8 @@ def parse_story(source: str, architecture: Path):
             image = Image(str(architecture), width=172 * mm, height=107.5 * mm)
             story.append(image)
             story.append(Paragraph("SignalForge separates model interpretation from deterministic financial authority.", styles["caption"]))
+            continue
+        if line.startswith("<!--") and line.endswith("-->"):
             continue
         if line.startswith("## "):
             flush_paragraph()

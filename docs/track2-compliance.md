@@ -26,13 +26,13 @@ the current official repository README governs the technical submission format.
 | Fork the official repository and open a pull request | Complete | [Official PR #16](https://github.com/AMD-DEV-CONTEST/Radeon-hackathon-2026-07/pull/16) |
 | PR title: `Track x, Team name, your application name` | Complete | `Track 2, SignalForge Labs, SignalForge` |
 | Submission and project materials in English | Complete | README, source, PDF, deck, video, and public evidence are in English |
-| Complete source repository | Complete | [Canonical source](https://github.com/rvbernucci/signalforge) and exact `v1.1.0` source identity |
+| Complete source repository | Complete | [Canonical source](https://github.com/rvbernucci/signalforge) and immutable forward `v1.1.1` tag |
 | README with environment configuration, startup guide, and dependencies | Complete | [README](../README.md), especially Quick Start, Development, and Radeon reproduction |
-| Project specification | Complete | [Six-page PDF](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Project-Specification.pdf) |
+| Project specification | Complete | [Six-page PDF](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf) |
 | Architecture diagram | Complete | [Architecture](architecture.svg) |
-| Demo video, recommended 3-5 minutes | Complete | [252.9-second Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Radeon-Demo.mp4) |
-| Actual operation from UI or CLI to final result on Radeon | Complete | Demo shows a real local Radeon run, governed follow-up, evidence, deterministic receipt, and memory controls |
-| PPT or poster | Complete | [Six-slide deck](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Judge-Deck.pptx) |
+| Demo video, recommended 3-5 minutes | Complete | [284.970-second Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4) |
+| Actual operation from UI or CLI to final result on Radeon | Complete | Demo shows a real accepted hybrid Radeon journey, governed workflow, evidence, deterministic receipts, review, observability, and safe failure behavior |
+| PPT or poster | Complete | [Six-slide deck](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Judge-Deck.pptx) |
 
 ## Track 2 Technical Requirements
 
@@ -57,9 +57,9 @@ SignalForge implements all five listed capability families; the rule requires at
 | Clear task positioning and creative application scenario | 20 | Demonstrated | Investor research decision workspace; demo opening; specification pages 1-2 |
 | Task decomposition, tools, RAG, and memory | 20 | Demonstrated | All five capability families; demo live journey; architecture and deterministic receipts |
 | Smooth multi-turn interaction | 20 | Demonstrated | Governed follow-up, opt-in memory, inspect/export/delete, progressive execution plan |
-| Core inference on AMD Radeon | 20 | Measured | Local Gemma route on `gfx1100`/ROCm 7.2.1 with hash-pinned runtime evidence |
+| Core inference on AMD Radeon | 20 | Measured | Local Gemma route on `gfx1100`/ROCm 7.2.1 with [current local evidence](../evidence/sprint36-radeon-local-journey.json) |
 | Targeted inference-speed optimization | 20 | Measured | Four-worker profile passed 44/44 frozen checks in 157.47 seconds, 29.17% faster than the passing three-worker control; a separate eight-journey-per-mode tournament measured `2.7777x` aggregate local speedup versus the two-worker baseline |
-| Optional Radeon Cloud Model API path | 20 | Demonstrated | Complete accepted hybrid journey with `radeon-vllm`, local review/synthesis, and local fallback; the bounded tournament recorded 20 accepted Radeon API calls and one locally recovered remote failure |
+| Optional Radeon Cloud Model API path | 20 | Demonstrated | Complete accepted hybrid journey with `radeon-vllm`, local review/synthesis, and local fallback; [current evidence](../evidence/sprint36-radeon-hybrid-journey.json) and [resilience record](../evidence/sprint36-radeon-resilience.json) |
 
 These statuses mean that the required evidence exists and is reviewable. They do not pre-award
 points or replace the judges' qualitative assessment.
@@ -74,21 +74,22 @@ on the local Radeon model, and a rejected remote packet is replayed locally.
 Evidence:
 
 - [Hybrid architecture and configuration](hybrid-vllm-specialists.md)
-- [Accepted hybrid journey](../evidence/dashboard-radeon-hybrid-journey.json)
+- [Current accepted hybrid journey](../evidence/sprint36-radeon-hybrid-journey.json)
+- [Current accepted demo journey](../evidence/sprint36-radeon-demo-journey.json)
 - [Recomputable public latency tournament](../evidence/sprint33-latency-tournament.json)
-- [Correlated Workspace and Mission Control capture](assets/mission-control-radeon-hybrid-sprint34-viewport.jpg)
-- [API-loss, model-loss, and retrieval-loss matrix](../evidence/runs/sprint34/failure-matrix.json)
+- [Correlated Workspace capture](assets/sprint36-live-hybrid-success.png)
+- [Correlated Mission Control capture](assets/sprint36-live-hybrid-mission-control.png)
+- [Current API-loss and model-loss record](../evidence/sprint36-radeon-resilience.json)
 
 ## Artifact Integrity
 
-The exact championship release is `v1.1.0`, source commit
-`032e9c38c4e74a450b38fec8341ed540b6339170`, and public image
-`ghcr.io/rvbernucci/signalforge@sha256:1354ccbbbd6138119111e23657ad69c1665f4189d75b9adcdecd53084870a4af`.
+The forward championship release is `v1.1.1` and the public image tag is
+`ghcr.io/rvbernucci/signalforge:v1.1.1`. Its immutable source and digest are published after the
+forward build and anonymous readback. Historical `v1.1.0` remains byte-identical and available.
 
 The image is public `linux/amd64`, runs as `10001:10001`, contains no credentials or model weights,
-and passed SBOM, provenance, Trivy HIGH/CRITICAL, anonymous pull, and clean fixture execution. The
-exact identities and workflow links are recorded in the
-[release attestation](../evidence/sprint34-release-attestation.json).
+and includes a verified `/app/licenses` bundle. SBOM, provenance, Trivy HIGH/CRITICAL, anonymous
+pull, and clean fixture execution are release-blocking gates.
 
 ## Rights, Conduct, and Responsible Scope
 
@@ -112,7 +113,7 @@ the event's complete terms.
 - The deepest recorded and human-reviewed journey is bounded to Microsoft and NVIDIA.
 - The broader Technology 20 universe is governed by explicit activation and abstention states.
 - External answer accuracy has not been scored against independent human ground truth.
-- The recorded video demonstrates the local-only journey; the later hybrid journey is documented
-  through separate hash-bound evidence and synchronized captures.
-- Native Radeon evidence is correctly described as pre-freeze execution of the Sprint 34 source
-  candidate, not execution of the final OCI artifact.
+- The video is assembled from current, privacy-safe captures of a real accepted hybrid Radeon
+  journey; it does not expose prompts, responses, source bodies, credentials, or private reasoning.
+- Current Sprint 36 evidence is bound to the forward source candidate and separately identifies the
+  rehearsed OCI image. The final digest is not inferred from an earlier native run.
