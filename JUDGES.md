@@ -50,12 +50,12 @@ The judges retain final scoring authority. Each row below points to the fastest 
 
 | Criterion | Judge-facing proof |
 |---|---|
-| Task positioning and application value - 20 | Demo `0:00-0:25`; specification pages 1-2; deck slide 2 |
-| Decomposition, tools, RAG, and memory - 20 | Demo `0:25-3:24`; specification pages 3-4; deck slides 3-4 |
-| Smooth multi-turn experience - 20 | Demo `3:24-3:47`; governed follow-up and local memory controls |
-| Core inference on AMD Radeon - 20 | Demo runtime identity; [current local journey](evidence/sprint36-radeon-local-journey.json); [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json) |
-| Targeted ROCm optimization - 20 | Demo `3:47-4:20`; deck slide 5; [optimization evidence](evidence/radeon-optimization.json); [three-mode tournament](evidence/sprint33-latency-tournament.json) |
-| Optional Radeon Cloud Model API bonus - 20 | [Current hybrid journey](evidence/sprint36-radeon-hybrid-journey.json), [current demo journey](evidence/sprint36-radeon-demo-journey.json), and [failure recovery](evidence/sprint36-radeon-resilience.json) |
+| Task positioning and application value - 20 | Demo `0:00-0:22`; specification pages 1-2; deck slide 2 |
+| Decomposition, tools, RAG, and memory - 20 | Demo `0:22-3:12`; specification pages 3-4; deck slides 3-4 |
+| Smooth multi-turn experience - 20 | Demo `2:52-3:12`; governed follow-up and local memory controls |
+| Core inference on AMD Radeon - 20 | Demo `0:22-2:22`; [current local journey](evidence/sprint36-radeon-local-journey.json); [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json) |
+| Targeted ROCm optimization - 20 | Demo `3:12-3:38`; deck slide 5; [optimization evidence](evidence/radeon-optimization.json); [three-mode tournament](evidence/sprint33-latency-tournament.json) |
+| Optional Radeon Cloud Model API bonus - 20 | Demo `1:12-2:22` and `3:38-4:02`; [current hybrid journey](evidence/sprint36-radeon-hybrid-journey.json), [current demo journey](evidence/sprint36-radeon-demo-journey.json), and [failure recovery](evidence/sprint36-radeon-resilience.json) |
 
 The Sprint 33 development tournament used eight public, non-sealed journeys per mode. Local
 four-worker execution passed `8/8` contracts with `2.7777x` aggregate speedup versus the recorded
