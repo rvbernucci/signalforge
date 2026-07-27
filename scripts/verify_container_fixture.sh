@@ -29,6 +29,29 @@ architecture="$(docker image inspect "$image" --format '{{.Architecture}}/{{.Os}
   exit 1
 }
 
+license_label="$(docker image inspect "$image" \
+  --format '{{ index .Config.Labels "org.opencontainers.image.licenses" }}')"
+source_label="$(docker image inspect "$image" \
+  --format '{{ index .Config.Labels "org.opencontainers.image.source" }}')"
+revision_label="$(docker image inspect "$image" \
+  --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+version_label="$(docker image inspect "$image" \
+  --format '{{ index .Config.Labels "org.opencontainers.image.version" }}')"
+
+[[ "$license_label" == "Apache-2.0" ]]
+[[ "$source_label" == "https://github.com/rvbernucci/signalforge" ]]
+expected_revision="${SIGNALFORGE_EXPECTED_SOURCE_COMMIT:-$(git rev-parse --verify HEAD)}"
+[[ "$revision_label" == "$expected_revision" ]] || {
+  echo "Unexpected OCI revision: $revision_label" >&2
+  exit 1
+}
+if [[ -n "${SIGNALFORGE_EXPECTED_VERSION:-}" ]]; then
+  [[ "$version_label" == "$SIGNALFORGE_EXPECTED_VERSION" ]] || {
+    echo "Unexpected OCI version: $version_label" >&2
+    exit 1
+  }
+fi
+
 docker volume create "$volume" >/dev/null
 docker run -d \
   --name "$container" \
@@ -49,6 +72,18 @@ done
 
 health="$(docker exec "$container" cat /tmp/health.json)"
 jq -e '.status == "ready" and .mode == "fixture" and .dependencies.model_runtime == "not_required"' <<<"$health" >/dev/null
+
+docker exec "$container" sh -ec '
+  cd /app/licenses
+  test -r project/LICENSE
+  test -r project/NOTICE
+  test -r project/THIRD_PARTY_NOTICES.md
+  test -r fonts/ibm-plex-mono/OFL-1.1.txt
+  test -r fonts/newsreader/OFL-1.1.txt
+  test -r GO_MODULES.tsv
+  test "$(wc -l < GO_MODULES.tsv)" -ge 30
+  sha256sum -c SHA256SUMS >/dev/null
+'
 
 run_view="$(docker exec "$container" wget -q -O - \
   --header='Content-Type: application/json' \
