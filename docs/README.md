@@ -2,6 +2,10 @@
 
 This directory contains reviewable sources for the SignalForge judge package.
 
+Judges should begin with the concise [`JUDGES.md`](../JUDGES.md) route and use
+[`track2-compliance.md`](track2-compliance.md) to map every official Track 2 requirement to
+evidence.
+
 ## Artifacts
 
 - `architecture.svg`: primary scalable architecture diagram.
@@ -14,6 +18,8 @@ This directory contains reviewable sources for the SignalForge judge package.
   CPU verification, and remaining Radeon evidence gates.
 - `hybrid-vllm-specialists.md`: optional organizer-provided vLLM specialist path, runtime
   configuration, secret handling, fallback, and proof requirements.
+- `track2-compliance.md`: official Track 2 requirement, submission, scoring, rights, and artifact
+  integrity matrix.
 - `../output/pdf/SignalForge-Project-Specification.pdf`: final six-page project documentation.
 - `../output/presentation/SignalForge-Judge-Deck.pptx`: final six-slide supplemental deck.
 - `../output/video/SignalForge-Radeon-Demo.mp4`: final local H.264/AAC demo video.
@@ -45,3 +51,7 @@ and hybrid journey manifests; it does not misrepresent the earlier video as a ne
 The public artifact release and exact `v1.1.0` source/image disposition are recorded in
 [`judge-package.json`](../evidence/judge-package.json) and
 [`sprint34-release-attestation.json`](../evidence/sprint34-release-attestation.json).
+
+`demo-script.md` is the hash-frozen recording cut sheet. Its historical unchecked public-URL line
+predates publication; the superseding anonymous-link and hash decision is the verified
+`judge-package.json` record above.

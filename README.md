@@ -6,6 +6,22 @@ macroeconomic series, and market data into auditable intelligence.
 SignalForge is developed by **SignalForge Labs** for the AMD AI DevMaster Hackathon Track 2, with
 core inference designed to run locally on AMD Radeon GPUs through ROCm.
 
+## Judges: Start Here
+
+The fastest review path is the [SignalForge Judge Guide](JUDGES.md). It maps the complete
+120-point Track 2 rubric to the demo, deck, project specification, runtime evidence, and exact
+championship release.
+
+- [4 minute 12.9 second Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Radeon-Demo.mp4)
+- [Six-slide judge deck](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Judge-Deck.pptx)
+- [Six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint34-artifacts-v1/SignalForge-Project-Specification.pdf)
+- [Official Track 2 compliance matrix](docs/track2-compliance.md)
+- [Exact `v1.1.0` release attestation](evidence/sprint34-release-attestation.json)
+
+The application release is immutable at
+`ghcr.io/rvbernucci/signalforge@sha256:1354ccbbbd6138119111e23657ad69c1665f4189d75b9adcdecd53084870a4af`.
+Documentation on `main` may improve judge navigation without changing that image or its source.
+
 ## Goal
 
 Build a private research desk where specialist agents can:
@@ -523,8 +539,11 @@ The optional hybrid specialist path is disabled by default. When enabled, its pr
 model IDs, timeout, and secret location are runtime inputs; no API credential is embedded in the
 repository or binary. See
 [`docs/hybrid-vllm-specialists.md`](docs/hybrid-vllm-specialists.md) for its trust boundary,
-OpenBao-compatible secret mount, local fallback, and evidence requirements. A successful complete
-journey through the organizer-provided endpoint is still required before claiming the vLLM bonus.
+OpenBao-compatible secret mount, local fallback, and evidence requirements. A complete accepted
+journey through the organizer-provided endpoint is recorded in
+[`evidence/sprint34-radeon-runtime.json`](evidence/sprint34-radeon-runtime.json), with correlated
+Workspace and Mission Control proof in
+[`evidence/dashboard-radeon-synchronized-captures.json`](evidence/dashboard-radeon-synchronized-captures.json).
 
 The diagnostic records hardware and runtime capabilities when available. Missing optional ROCm
 commands are reported as unavailable rather than causing the diagnostic to fail. It never reads or

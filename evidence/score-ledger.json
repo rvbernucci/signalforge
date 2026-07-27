@@ -1,6 +1,6 @@
 {
   "schema_version": "signalforge/score-ledger/v1",
-  "updated_at": "2026-07-22T12:02:48Z",
+  "updated_at": "2026-07-27T14:26:21Z",
   "criteria": [
     {
       "criterion_id": "task-positioning",
@@ -83,8 +83,15 @@
     {
       "criterion_id": "optional-model-optimization",
       "points": 20,
-      "status": "deferred",
-      "required_evidence": ["isolated-optimization-experiment", "base-system-rollback-proof"]
+      "status": "verified",
+      "required_evidence": ["accepted-radeon-api-journey", "authorized-local-fallback-proof"],
+      "current_evidence": [
+        "the organizer-confirmed Radeon Cloud Model API path is isolated to bounded context specialists while Go retains planning, evidence authority, deterministic tools, contracts, numerical authority, and final rendering",
+        "one complete accepted hybrid journey reached all 12 terminal steps across eight governed phases and recorded 17 model calls across the provided radeon-vllm route and authorized local-rocm route",
+        "local Radeon evidence and risk review, final synthesis, deterministic authority, and fail-closed publication remain active in the hybrid path",
+        "API loss replayed the complete specialist role locally, while model loss and retrieval loss failed closed",
+        "the hybrid journey, privacy-safe telemetry, synchronized Workspace and Mission Control captures, and failure matrix are hash-bound in evidence/sprint34-radeon-runtime.json and its referenced artifacts"
+      ]
     }
   ]
 }
