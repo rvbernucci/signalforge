@@ -3,6 +3,13 @@
   "status": "public_artifacts_verified",
   "evidence_date": "2026-07-27",
   "artifact_release": "sprint36-championship-v1",
+  "release": {
+    "version": "v1.1.1",
+    "source_commit": "bc9c64746589e79766b2b18226ebb9d1d87d2585",
+    "image": "ghcr.io/rvbernucci/signalforge:v1.1.1",
+    "image_index_digest": "sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b",
+    "linux_amd64_manifest_digest": "sha256:a8d35b2bb315544cb43319b78dcf16ecec0316aa13f279f3774bba6ee9e496a6"
+  },
   "artifacts": {
     "project_specification": {
       "path": "output/pdf/SignalForge-Project-Specification.pdf",
@@ -73,6 +80,12 @@
       "privacy_review": "passed",
       "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-radeon-resilience.json"
     },
+    "sprint36_exact_release_radeon_journey": {
+      "path": "evidence/sprint36-exact-release-radeon-journey.json",
+      "sha256": "948a6b49ead427144639325320ce34f8fd016b191958b4bf2172512aa74df0aa",
+      "privacy_review": "passed",
+      "public_url": "https://github.com/rvbernucci/signalforge/blob/main/evidence/sprint36-exact-release-radeon-journey.json"
+    },
     "workspace_capture": {
       "path": "docs/assets/sprint36-live-hybrid-success.png",
       "sha256": "e4a45840375895a0454a1d0c5605063ed48985760aab646dd6885489c2f48e26",
@@ -95,8 +108,12 @@
   "claim_authority": "Quantitative claims are bounded to the hash-linked public evidence and remain subject to the stated workload and review limitations.",
   "public_release_page": "https://github.com/rvbernucci/signalforge/releases/tag/sprint36-championship-v1",
   "public_link_verification": {
-    "status": "pending_release_publication",
-    "authentication": "none_required"
+    "status": "passed",
+    "verified_at": "2026-07-27T20:01:51Z",
+    "authentication": "none",
+    "assets_downloaded": 19,
+    "all_hashes_matched": true,
+    "sha256sums_sha256": "946138157d321047b58b39e7402bea3fb1ac450f0b6ba568ce58c2ad1852f2a0"
   },
   "pending": []
 }

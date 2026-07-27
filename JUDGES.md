@@ -14,7 +14,7 @@ in [Track 2 Compliance](docs/track2-compliance.md).
 3. Read the [six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf).
 4. Inspect the [architecture](docs/architecture.svg), [current Radeon journey](evidence/sprint36-radeon-demo-journey.json),
    [bounded latency tournament](evidence/sprint33-latency-tournament.json), and
-   [resilience evidence](evidence/sprint36-radeon-resilience.json).
+   [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json).
 5. Reproduce the credential-free fixture or pull the exact public image identified in the
    championship release section.
 
@@ -53,7 +53,7 @@ The judges retain final scoring authority. Each row below points to the fastest 
 | Task positioning and application value - 20 | Demo `0:00-0:25`; specification pages 1-2; deck slide 2 |
 | Decomposition, tools, RAG, and memory - 20 | Demo `0:25-3:24`; specification pages 3-4; deck slides 3-4 |
 | Smooth multi-turn experience - 20 | Demo `3:24-3:47`; governed follow-up and local memory controls |
-| Core inference on AMD Radeon - 20 | Demo runtime identity; [current local journey](evidence/sprint36-radeon-local-journey.json) |
+| Core inference on AMD Radeon - 20 | Demo runtime identity; [current local journey](evidence/sprint36-radeon-local-journey.json); [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json) |
 | Targeted ROCm optimization - 20 | Demo `3:47-4:20`; deck slide 5; [optimization evidence](evidence/radeon-optimization.json); [three-mode tournament](evidence/sprint33-latency-tournament.json) |
 | Optional Radeon Cloud Model API bonus - 20 | [Current hybrid journey](evidence/sprint36-radeon-hybrid-journey.json), [current demo journey](evidence/sprint36-radeon-demo-journey.json), and [failure recovery](evidence/sprint36-radeon-resilience.json) |
 
@@ -69,6 +69,12 @@ ROCm and Radeon API inference. The public record excludes prompts, responses, so
 credentials, memory, and private reasoning.
 <!-- evidence-claim:sprint36-championship-journey -->
 
+The exact `v1.1.1` image was then pulled anonymously, read back on Radeon Cloud, and used for both
+the fixture and a complete hybrid journey. The exact-image record keeps this verification separate
+from the pre-freeze video rehearsal and documents that two remote failures recovered before answer
+release.
+<!-- evidence-claim:sprint36-exact-release -->
+
 ## Authority Boundary
 
 Language models interpret evidence, propose qualitative claims, challenge support, and synthesize
@@ -80,19 +86,23 @@ enter the final answer only through deterministic, hash-verifiable receipts.
 
 ## Championship Release
 
-The forward championship release is `v1.1.1`. Its exact source commit and public image digest are
-published in the release attestation after the immutable build completes. Historical `v1.1.0`
-remains available and byte-identical as the rollback.
+The forward championship release is `v1.1.1`, frozen at source
+`bc9c64746589e79766b2b18226ebb9d1d87d2585` and public image index
+`sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b`.
+Historical `v1.1.0` remains available and byte-identical as the rollback.
 
 | Item | Required release property |
 |---|---|
 | Version | `v1.1.1` |
+| Source | `bc9c64746589e79766b2b18226ebb9d1d87d2585` |
 | Public image | `ghcr.io/rvbernucci/signalforge:v1.1.1` |
+| Image index | `sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b` |
 | Platform | `linux/amd64` |
 | Runtime user | `10001:10001` |
 | Runtime notices | `/app/licenses` |
 | Artifact release | [`sprint36-championship-v1`](https://github.com/rvbernucci/signalforge/releases/tag/sprint36-championship-v1) |
 | Artifact hashes | [Judge package](evidence/judge-package.json) |
+| Release proof | [Sprint 36 attestation](evidence/sprint36-release-attestation.json) |
 
 The application image contains no model weights, credentials, private corpora, or startup
 downloads. The pinned Gemma artifact is staged separately on the Radeon host under its upstream

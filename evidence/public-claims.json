@@ -349,12 +349,12 @@
     },
     {
       "claim_id": "judge-evidence-drafts",
-      "text": "The public judge package contains a visually reviewed six-page project specification, a six-slide deck that passes the canvas-overflow gate, a scalable architecture diagram, and a reviewed 252.9-second Radeon demo with a real local run, source proof, deterministic receipt, governed follow-up, and memory controls; the public release was verified without authentication and matched the local artifact hashes.",
+      "text": "The public judge package contains a visually reviewed six-page project specification, a six-slide deck that passes the canvas-overflow gate, a scalable architecture diagram, and a reviewed 284.970-second Radeon demo with a real local run, source proof, deterministic receipt, governed follow-up, and memory controls; the public release was verified without authentication and matched the published SHA-256 manifest.",
       "status": "verified",
       "evidence": [
         {
           "path": "evidence/judge-package.json",
-          "sha256": "30701fdfddbfb89bbcd7ea53252d7db51564c97c26f1ea5913bc722ef9a5a535"
+          "sha256": "e78bb9a13534e43452f20f63ebcccf2c0ad2573eff04945fc6da0c1c423e3436"
         },
         {
           "path": "output/pdf/SignalForge-Project-Specification.pdf",
@@ -455,6 +455,26 @@
         "JUDGES.md",
         "docs/demo-script.md",
         "docs/project-specification.md"
+      ]
+    },
+    {
+      "claim_id": "sprint36-exact-release",
+      "text": "The immutable v1.1.1 source and public linux/amd64 image passed repository and container CI, SBOM and SLSA provenance publication, zero-unresolved HIGH/CRITICAL image scanning, anonymous registry readback, an exact-image fixture, and a complete hybrid Radeon journey whose two remote failures recovered before release.",
+      "status": "verified",
+      "evidence": [
+        {
+          "path": "evidence/sprint36-exact-release-radeon-journey.json",
+          "sha256": "948a6b49ead427144639325320ce34f8fd016b191958b4bf2172512aa74df0aa"
+        },
+        {
+          "path": "evidence/sprint36-release-attestation.json",
+          "sha256": "887e29f2e138a7213a05ecfd890b5d27b2e18fd50df2b5ee4c850fdc71a840e8"
+        }
+      ],
+      "public_files": [
+        "README.md",
+        "JUDGES.md",
+        "docs/track2-compliance.md"
       ]
     }
   ]

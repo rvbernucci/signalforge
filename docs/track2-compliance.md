@@ -84,8 +84,14 @@ Evidence:
 ## Artifact Integrity
 
 The forward championship release is `v1.1.1` and the public image tag is
-`ghcr.io/rvbernucci/signalforge:v1.1.1`. Its immutable source and digest are published after the
-forward build and anonymous readback. Historical `v1.1.0` remains byte-identical and available.
+`ghcr.io/rvbernucci/signalforge:v1.1.1`. Its immutable source is
+`bc9c64746589e79766b2b18226ebb9d1d87d2585`, and its image index digest is
+`sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b`.
+Historical `v1.1.0` remains byte-identical and available.
+The [release attestation](../evidence/sprint36-release-attestation.json) binds the source, image,
+SBOM, provenance, vulnerability scan, anonymous pull, exact-image fixture, and exact-image hybrid
+Radeon journey without relabeling the earlier video rehearsal.
+<!-- evidence-claim:sprint36-exact-release -->
 
 The image is public `linux/amd64`, runs as `10001:10001`, contains no credentials or model weights,
 and includes a verified `/app/licenses` bundle. SBOM, provenance, Trivy HIGH/CRITICAL, anonymous
@@ -116,4 +122,6 @@ the event's complete terms.
 - The video is assembled from current, privacy-safe captures of a real accepted hybrid Radeon
   journey; it does not expose prompts, responses, source bodies, credentials, or private reasoning.
 - Current Sprint 36 evidence is bound to the forward source candidate and separately identifies the
-  rehearsed OCI image. The final digest is not inferred from an earlier native run.
+  rehearsed OCI image. The exact `v1.1.1` image has a separate public digest, supply-chain
+  attestation, anonymous pull, clean fixture execution, and Radeon readback; no earlier native run
+  is relabeled as exact-image execution.

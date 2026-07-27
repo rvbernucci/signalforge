@@ -19,9 +19,11 @@ championship release.
 - [Current Radeon demo journey](evidence/sprint36-radeon-demo-journey.json)
 - [Current artifact hashes](evidence/judge-package.json)
 
-The forward championship image is `ghcr.io/rvbernucci/signalforge:v1.1.1`. Its immutable digest and
-source identity are published after the release build completes. Historical `v1.1.0` remains
-byte-identical and available as the rollback.
+The immutable championship source is
+`bc9c64746589e79766b2b18226ebb9d1d87d2585`. Its public image is
+`ghcr.io/rvbernucci/signalforge:v1.1.1`, pinned by index digest
+`sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b`.
+Historical `v1.1.0` remains byte-identical and available as the rollback.
 
 ## Goal
 
@@ -128,6 +130,7 @@ prove contracts and deterministic authority; they do not claim universal factual
 - [Radeon Mission Control and container guide](docs/radeon-mission-control.md)
 - [Sprint 36 championship artifact release](https://github.com/rvbernucci/signalforge/releases/tag/sprint36-championship-v1)
 - [Sprint 36 artifact manifest](evidence/judge-package.json)
+- [Sprint 36 release attestation](evidence/sprint36-release-attestation.json)
 - [Historical Sprint 34 release attestation](evidence/sprint34-release-attestation.json)
 <!-- evidence-claim:judge-evidence-drafts -->
 
@@ -137,9 +140,12 @@ prove contracts and deterministic authority; they do not claim universal factual
 
 Tag `v1.1.1` is the forward championship release. Its public `linux/amd64` image adds the verified
 runtime notice bundle and is bound to the current judge artifacts and Sprint 36 Radeon evidence.
+The exact source, image, SBOM, provenance, Trivy result, anonymous pull, and Radeon readback are
+frozen in the [Sprint 36 release attestation](evidence/sprint36-release-attestation.json).
 Tag `v1.1.0` remains the immutable Sprint 34 rollback, and `v1.0.0` remains the independently
 reproducible baseline. Native Radeon measurements remain bounded to their recorded workloads and
 are not universal model-quality claims.
+<!-- evidence-claim:sprint36-exact-release -->
 
 - versioned Go contracts for specialist context, deterministic engine requests and receipts, and evaluation evidence;
 - fail-closed validation for unsupported facts, unproven numerical inputs, and failed invariants;

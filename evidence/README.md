@@ -56,10 +56,10 @@ messages, and private reasoning. The verifier rejects unknown fields, unsafe ide
 claim references, incomplete runtime attestation, and privacy flags that are not explicitly true.
 
 The historical `v1.1.0` release remains fail-closed and immutable in
-[`sprint34-release-attestation.json`](sprint34-release-attestation.json). Sprint 36 creates the
-forward `v1.1.1` championship release; its exact source, public `linux/amd64` digest, clean-run
-workflows, Radeon evidence, artifact hashes, and human decisions are frozen only after every
-forward-release gate passes.
+[`sprint34-release-attestation.json`](sprint34-release-attestation.json). The exact forward
+`v1.1.1` championship source, public `linux/amd64` digest, clean-run workflows, Radeon evidence,
+artifact hashes, and human decisions are frozen in
+[`sprint36-release-attestation.json`](sprint36-release-attestation.json).
 
 ## Sprint 36 Championship Evidence
 
@@ -73,6 +73,9 @@ The current public-safe Radeon evidence is split by authority:
   championship video captures to one accepted run and trace identity.
 - [`sprint36-radeon-resilience.json`](sprint36-radeon-resilience.json) records API-loss recovery
   through the authorized local route and model-loss fail-closed behavior.
+- [`sprint36-exact-release-radeon-journey.json`](sprint36-exact-release-radeon-journey.json)
+  records a separate complete hybrid journey executed from the anonymously pulled `v1.1.1`
+  binary and application assets.
 
 These projections exclude prompts, responses, source bodies, credentials, private memory, private
 reasoning, and sealed identifiers. Contract completion is not represented as external factual
