@@ -11,10 +11,11 @@ evidence.
 - `architecture.svg`: primary scalable architecture diagram.
 - `architecture.png`: deterministic raster used by the project PDF.
 - `project-specification.md`: human-reviewable six-page championship project specification source.
-- `demo-script.md`: verified 4 minute 44.9 second final cut sheet mapped to Track 2 evidence.
+- `demo-script.md`: verified 4 minute 45 second (284.970-second) final cut sheet mapped to Track 2
+  evidence.
 - `demo-voiceover.txt`: narration source used by the final local video artifact.
 - `financial-intelligence.md`: current financial-intelligence architecture, numerical authority,
-  CPU verification, and remaining Radeon evidence gates.
+  and bounded CPU and Radeon evidence.
 - `hybrid-vllm-specialists.md`: optional organizer-provided vLLM specialist path, runtime
   configuration, secret handling, fallback, and proof requirements.
 - `track2-compliance.md`: official Track 2 requirement, submission, scoring, rights, and artifact

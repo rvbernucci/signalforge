@@ -1,8 +1,8 @@
 # Financial Intelligence Runtime
 
-Status: integrated on `main` and verified on CPU  
-Baseline: `v1.0.0` remains immutable  
-Radeon journey evidence: not yet collected
+Status: integrated on `main`, verified on CPU, and exercised in accepted Radeon journeys  
+Historical baseline: `v1.0.0` remains immutable  
+Championship release: `v1.1.1`
 
 ## Purpose
 
@@ -11,9 +11,8 @@ operations. The extension turns point-in-time reported facts into inspectable ca
 return, quality, capital-allocation, valuation, peer, and association evidence without delegating
 arithmetic or numerical authorship to a language model.
 
-The `v1.0.0` tag is unchanged and remains the reproducible hackathon baseline. The current
-mainline integrates this extension without rewriting the historical Tier 0 identity or its
-evidence.
+The `v1.0.0` tag is unchanged and remains the reproducible historical baseline. The championship
+runtime integrates this extension without rewriting the historical Tier 0 identity or evidence.
 
 ## Runtime Boundary
 
@@ -130,17 +129,31 @@ immutable canonical registry reduced packet construction from approximately 582 
 allocations to 6.3 KB and 59 allocations on the development Mac. These are CPU development results,
 not Radeon claims.
 
-## Remaining Evidence Gates
+## Current Radeon Evidence Boundary
 
-- Use the committed 240-case development and restricted 80-case future holdout for subsequent
-  changes; it cannot retroactively prove changes made before its commitment.
-- Run complete Accounting, Financial Quality, Valuation, Economics, Market Behavior, critic, and
-  final-analysis journeys on the selected local Radeon runtime.
-- Measure factual correctness, abstention, evidence coverage, latency, VRAM, and complete-task
-  success separately.
-- Preserve the implemented product-facing comparison, valuation, capital-allocation, missing-data,
-  and not-applicable replay journeys when exercising the selected model runtime.
-- Record the Radeon evidence decision before cutting a reviewed release newer than `v1.0.0`.
+- The selected local Gemma runtime completed the accepted Sprint 36 local journey, including
+  deterministic financial-engine receipts, independent review, final synthesis, and governed
+  release.
+- The accepted Sprint 36 hybrid journey used bounded Radeon API specialists while local ROCm
+  retained review and final synthesis; rejected or failed remote packets remained subject to local
+  fallback and the same deterministic contracts.
+- The exact `v1.1.1` image was pulled anonymously and read back on Radeon Cloud before an
+  exact-image hybrid journey.
+- The public Sprint 33 tournament measures complete product-journey latency and contract success
+  across frozen worker profiles. It does not claim independent factual accuracy or universal model
+  throughput.
+- The 240-case development set and restricted 80-case future holdout remain bounded evaluation
+  assets; they cannot retroactively validate earlier changes or substitute for independent
+  professional review.
 
-Until those gates pass, this work is a public, verified CPU implementation, not a Radeon
-performance or independent model-quality claim.
+Primary records:
+
+- `evidence/sprint36-radeon-local-journey.json`
+- `evidence/sprint36-radeon-hybrid-journey.json`
+- `evidence/sprint36-exact-release-radeon-journey.json`
+- `evidence/sprint36-radeon-resilience.json`
+- `evidence/sprint33-latency-tournament.json`
+
+The implementation and Radeon execution are demonstrated. External answer accuracy has not been
+scored against independent human ground truth, and every performance claim remains bounded to its
+recorded workload.

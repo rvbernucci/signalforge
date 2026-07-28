@@ -38,11 +38,11 @@ the current official repository README governs the technical submission format.
 
 | Requirement | SignalForge implementation | Primary proof |
 |---|---|---|
-| Run on AMD Radeon Cloud and ROCm | Local Gemma inference on Radeon `gfx1100` and ROCm 7.2.1 | [Runtime record](../evidence/sprint34-radeon-runtime.json) |
-| Core inference local on AMD Radeon | Local interpreter, specialists, critics, and final synthesis through loopback ROCm `llama.cpp` | Demo and [safe replay](../evidence/golden-safe-decision-replay.json) |
+| Run on AMD Radeon Cloud and ROCm | Local Gemma inference on Radeon `gfx1100` and ROCm 7.2.1 | [Current local journey](../evidence/sprint36-radeon-local-journey.json) and [exact-release Radeon journey](../evidence/sprint36-exact-release-radeon-journey.json) |
+| Core inference local on AMD Radeon | Local interpreter, specialists, critics, and final synthesis through loopback ROCm `llama.cpp` | Demo, [current local journey](../evidence/sprint36-radeon-local-journey.json), and [safe replay](../evidence/golden-safe-decision-replay.json) |
 | No complete dependence on a closed-source agent platform | Typed Go orchestration and authority plane; React workspace; local open model runtime | [Architecture](architecture.svg) |
 | Tool invocation and workflow orchestration | Closed role-authorized tool registry, deterministic receipts, bounded state machine | Project specification pages 3-4 |
-| Operational stability and response performance | Typed failure behavior, bounded retries, startup checks, adversarial matrix, telemetry, and soak evidence | [Hardening matrix](../evidence/hardening-matrix.json) and runtime record |
+| Operational stability and response performance | Typed failure behavior, bounded retries, startup checks, adversarial matrix, telemetry, and soak evidence | [Hardening matrix](../evidence/hardening-matrix.json), [resilience record](../evidence/sprint36-radeon-resilience.json), and [exact-release attestation](../evidence/sprint36-release-attestation.json) |
 | Local knowledge retrieval | Point-in-time regulatory and official investor-relations evidence with citations | Project specification page 4 |
 | Multi-step task planning | Typed interpreter, orchestrator, specialist waves, critics, and answer compiler | Demo `0:42-1:48` |
 | Local multi-turn memory | Governed follow-ups and opt-in local case retention | Demo `2:52-3:12` |

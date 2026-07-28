@@ -1,7 +1,7 @@
 # Evidence Control
 
 SignalForge treats evaluation evidence as a versioned build artifact. The score ledger tracks what
-must be demonstrated; measured runs will be stored under hash-addressed directories with an
+must be demonstrated; measured runs are stored under hash-addressed directories with an
 `EvidenceManifest` describing the exact code, environment, model, dataset, and artifacts used.
 
 Planning language is not proof. A criterion becomes `verified` only when the referenced artifact
@@ -194,8 +194,8 @@ deterministic engine calls, five review events, and both local ROCm and organize
 API inference under one run and trace identity. These are product-contract observations, not a
 claim of universal factual accuracy.
 
-The package status is `public_artifacts_verified`. Public URL and downloaded-hash readback are
-completed after the immutable `sprint36-championship-v1` artifact release is published.
+The package status is `public_artifacts_verified`. Public URL and downloaded-hash readback were
+completed after the immutable `sprint36-championship-v1` artifact release was published.
 
 ## Chaos Evidence
 
@@ -292,9 +292,15 @@ rejects incomplete plans, missing phase coverage, mismatched image formats, capt
 1280×720, a local run using a remote provider, a hybrid run without both Radeon API and local ROCm,
 or any declared retention of prompts, responses, source bodies, or credentials.
 
-This evidence closes the synchronized working-tree Radeon gate only. The manifest deliberately
-sets `exact_release_artifact` and `release_claim_permitted` to `false`; exact source/image binding
-remains a separate release decision.
+The verifier establishes identities, dimensions, declared route aggregates, and structural
+coverage; it does not infer the semantic meaning of pixels in a screenshot. In particular, the two
+Sprint 34 Mission Control frames are historical UI-provenance captures, not visual proof of a
+completed local or hybrid route. Current visual route evidence is provided by the Sprint 36
+captures and their separate journey records.
+
+This evidence closes only the structural synchronized working-tree Radeon gate. The manifest
+deliberately sets `exact_release_artifact` and `release_claim_permitted` to `false`; exact
+source/image binding remains a separate release decision.
 
 ```bash
 python3 scripts/build_dashboard_radeon_evidence.py \

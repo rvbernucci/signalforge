@@ -43,14 +43,15 @@ portable through `investor-relations-document-manifest.schema.json`; raw issuer 
 Git while their immutable identities remain testable.
 
 The 20-company pipeline uses the newer `ir-source-registry-v2.schema.json`,
-`ir-document-v2.schema.json`, and `ir-run-manifest-v2.schema.json` contracts for discovery,
-collection, transformation, lineage, rights quarantine, and reproducible run identity.
+`ir-crawl-observation.schema.json`, `ir-document-v2.schema.json`,
+`ir-semantic-projection.schema.json`, and `ir-vector-record.schema.json` contracts for discovery,
+collection, transformation, lineage, rights quarantine, and reproducible artifact identity.
 
 SignalForge agents, engines, and evidence tooling communicate through versioned JSON contracts.
 The canonical Go types and fail-closed validation rules currently live in
 `internal/contracts`.
 
-Version `signalforge/v1` establishes four boundaries:
+Version `signalforge/v1` establishes five boundaries:
 
 - `ContextPacket`: evidence-grounded specialist findings for one research step;
 - `EngineRequest`: an authorized request for a registered deterministic operation;
@@ -58,7 +59,7 @@ Version `signalforge/v1` establishes four boundaries:
 - `ReceiptSupersession`: append-only linkage from a prior receipt to a corrected replacement;
 - `EvidenceManifest`: the code, model, dataset, environment, and artifact identity behind a measured run.
 
-Portable JSON Schemas currently cover:
+Core portable JSON Schemas include:
 
 - `execution-plan.schema.json`;
 - `execution-presentation.schema.json`;
@@ -161,9 +162,8 @@ review, evidence coverage, and a hash-bound frozen semantic rubric while explici
 external answer accuracy has not been scored against an independent ground truth. Passing the
 frozen rubric establishes contract conformance, not universal factual accuracy.
 
-All decimal values are JSON strings. Production Go validation remains
-authoritative; the schemas make the boundary portable to fixtures, CI, and
-independent consumers.
+Authoritative financial decimal values are JSON strings. Production Go validation remains
+authoritative; the schemas make the boundary portable to fixtures, CI, and independent consumers.
 
 The standalone domain augmentation is generated independently with:
 

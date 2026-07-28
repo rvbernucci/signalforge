@@ -121,34 +121,41 @@ make evidence-export  # Public metadata only; protected bodies are excluded
 make stack-down
 ```
 
-## Synchronized Radeon Captures
+## Current Radeon Captures
 
-The Sprint 34 working tree was exercised through two accepted journeys on the Radeon host. These
-captures prove that the expandable Workspace plan and Mission Control project the same canonical
-run; they do not claim to represent the later exact release image.
+Sprint 36 records the current judge-facing hybrid journey under one canonical `run_id` and
+`trace_id`. The Workspace reached 12/12 terminal steps before release, and Mission Control exposes
+the bounded provided-API and local-ROCm routes without retaining protected model bodies.
 
-| Journey | Model path | Calls | Workspace proof | Mission Control proof |
-| --- | --- | ---: | --- | --- |
-| Local only | Local Gemma through ROCm | 11 | Eight phases, 12/12 terminal steps, accepted release | `local-rocm` provider and route |
-| Hybrid | Provided Radeon API with authorized local ROCm fallback and local review/synthesis | 17 | Eight phases, 12/12 terminal steps, accepted release | `radeon-vllm` plus `local-rocm` under one run and trace |
+![Accepted Sprint 36 hybrid execution](assets/sprint36-live-hybrid-success.png)
 
-![Local Radeon execution plan](assets/sprint34-radeon-local-plan-expanded-1280x720.jpg)
+![Correlated Sprint 36 Mission Control](assets/sprint36-live-hybrid-mission-control.png)
 
-![Local Radeon Mission Control](assets/sprint34-radeon-local-mission-control-1280x720.jpg)
+The authoritative privacy-safe records are:
 
-![Hybrid Radeon execution plan with a provided API specialist](assets/sprint34-radeon-hybrid-plan-expanded-1280x720.jpg)
+- `evidence/sprint36-radeon-local-journey.json`
+- `evidence/sprint36-radeon-hybrid-journey.json`
+- `evidence/sprint36-radeon-demo-journey.json`
+- `evidence/sprint36-exact-release-radeon-journey.json`
+- `evidence/sprint36-radeon-resilience.json`
 
-![Hybrid Radeon Mission Control](assets/mission-control-radeon-hybrid-sprint34-viewport.jpg)
+## Historical Sprint 34 Capture Boundary
 
-The responsive workspace was also checked at 390×844 with no horizontal overflow. Separate
-hybrid retries exercised the same visible phases but failed the final synthesis contract; the UI
-reported `Stopped safely` and did not release an answer. These retries are resilience evidence,
-not accepted-journey evidence.
+The Sprint 34 working tree produced accepted local and hybrid journey manifests plus four
+hash-bound UI captures. That bundle explicitly records `exact_release_artifact: false`. Two Mission
+Control frames preserve a loading or deterministic-fixture state rather than enough matching route
+detail to substantiate the journey on their own. The immutable bundle therefore remains useful for
+historical UI provenance and hash reproduction, but it is not used as current route proof.
 
-The public manifests contain only timestamps, UUIDs, hashes, phase states, aggregate counts,
-provider/route identifiers, role IDs, and token totals. They retain no questions, prompts, answers,
-source bodies, credentials, or private reasoning. Validate every identity, capture hash, dimension,
-route boundary, and privacy declaration with:
+The responsive Sprint 34 workspace was checked at 390×844 without horizontal overflow. Separate
+hybrid retries exercised the visible phases but failed the final synthesis contract; the UI reported
+`Stopped safely` and released no answer. Those retries are historical resilience evidence, not
+accepted-journey or exact-release evidence.
+
+The public historical manifests contain only timestamps, UUIDs, hashes, phase states, aggregate
+counts, provider/route identifiers, role IDs, and token totals. They retain no questions, prompts,
+answers, source bodies, credentials, or private reasoning. Reproduce the immutable capture manifest
+with:
 
 ```bash
 python3 scripts/build_dashboard_radeon_evidence.py \
@@ -311,15 +318,17 @@ the public base fixture and overlay. It requires a passed final projection, rout
 `radeon_api_to_local_rocm`, attempt `2/2`, and no retained prompt, response, credential, or
 authorization body. These captures are not substitutes for exact-image Radeon evidence.
 
-## Radeon-Only Gates
+## Radeon Evidence Status
 
-Configuration is complete, but the following claims require a live AMD Radeon workspace and are
-not established by CPU fixture mode:
+CPU fixture mode cannot establish Radeon claims. Those claims are instead bounded to the committed
+Radeon records:
 
-- model hash verification and real ROCm offload;
-- cold and warm model startup;
-- TTFT, tokens per second, VRAM, temperature, power, and queue behavior;
-- exact-image local-only and hybrid journey quality;
-- API-loss fallback and the vLLM bonus path;
-- `rocprofv3` profiling and a two-to-four-hour soak; and
-- synchronized screenshots and trace exports from the exact release image.
+- model identity, real ROCm offload, startup, throughput, VRAM, temperature, and power are recorded
+  in the baseline and optimization evidence;
+- accepted local-only and hybrid product journeys are recorded separately;
+- API-loss recovery and core-local-model fail-closed behavior are fault-injection records;
+- `rocprofv3` profiling and soak results remain bounded to their recorded host, workload, and
+  candidate;
+- the exact `v1.1.1` public image has a separate anonymous-pull, readback, fixture, and hybrid
+  journey attestation; and
+- no historical Sprint 34 capture is relabeled as exact-release execution.
