@@ -9,7 +9,7 @@ in [Track 2 Compliance](docs/track2-compliance.md).
 
 ## Two-Minute Review Path
 
-1. Watch the [4 minute 44.9 second Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4).
+1. Watch the [4 minute 45 second Radeon demo (284.970 seconds)](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4).
 2. Open the [six-slide judge deck](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Judge-Deck.pptx).
 3. Read the [six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf).
 4. Inspect the [architecture](docs/architecture.svg), [current Radeon journey](evidence/sprint36-radeon-demo-journey.json),
@@ -17,6 +17,10 @@ in [Track 2 Compliance](docs/track2-compliance.md).
    [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json).
 5. Reproduce the credential-free fixture or pull the exact public image identified in the
    championship release section.
+
+The frozen release architecture diagram labels the immutable 28-operation Tier 0 core. The current
+runtime adds the 52-operation Financial Intelligence Registry for 80 role-authorized deterministic
+operations in total.
 
 ## Questions To Try
 
@@ -138,6 +142,11 @@ Open `http://127.0.0.1:8080`. The selected Radeon model and runtime reproduction
 - The deepest recorded product journey compares Microsoft and NVIDIA.
 - Twenty US technology companies are represented through governed activation states; unavailable
   or unreviewed directions remain fail-closed.
+- The 80-operation total is the composed deterministic registry, not a claim that the current
+  natural-language planner automatically selects every registered operation.
+- In the frozen frontend, aggregate header/sidebar labels can say `Local inference` or `local calls`
+  during a hybrid journey. The expandable execution plan and Radeon Mission Control are the
+  route-specific authorities and distinguish Radeon API from local ROCm calls.
 - Frozen semantic checks prove bounded contract conformance, not universal factual accuracy.
 - SignalForge does not predict prices, execute trades, provide personalized investment
   recommendations, or replace professional judgment.

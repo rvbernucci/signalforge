@@ -12,7 +12,7 @@ The fastest review path is the [SignalForge Judge Guide](JUDGES.md). It maps the
 120-point Track 2 rubric to the demo, deck, project specification, runtime evidence, and exact
 championship release.
 
-- [4 minute 44.9 second Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4)
+- [4 minute 45 second Radeon demo (284.970 seconds)](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4)
 - [Six-slide judge deck](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Judge-Deck.pptx)
 - [Six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf)
 - [Official Track 2 compliance matrix](docs/track2-compliance.md)
@@ -39,7 +39,7 @@ Build a private research desk where specialist agents can:
 
 The first complete journey compares Microsoft (`CIK 0000789019`) and NVIDIA
 (`CIK 0001045810`) as long-term businesses under higher-for-longer interest rates and slower AI
-infrastructure spending. SignalForge will expose the financial evidence, transmission mechanisms,
+infrastructure spending. SignalForge exposes the financial evidence, transmission mechanisms,
 valuation assumptions, scenarios, and thesis-invalidating observations rather than naming an
 unqualified winner.
 
@@ -124,7 +124,7 @@ prove contracts and deterministic authority; they do not claim universal factual
 - [Project specification PDF](output/pdf/SignalForge-Project-Specification.pdf)
 - [Six-slide judge deck](output/presentation/SignalForge-Judge-Deck.pptx)
 - [Architecture diagram](docs/architecture.svg)
-- [4 minute 44.9 second Radeon demo](output/video/SignalForge-Radeon-Demo.mp4)
+- [4 minute 45 second Radeon demo (284.970 seconds)](output/video/SignalForge-Radeon-Demo.mp4)
 - [Final demo cut sheet](docs/demo-script.md)
 - [Evidence and reproduction guide](evidence/README.md)
 - [Radeon Mission Control and container guide](docs/radeon-mission-control.md)
@@ -135,6 +135,14 @@ prove contracts and deterministic authority; they do not claim universal factual
 <!-- evidence-claim:judge-evidence-drafts -->
 
 ![SignalForge local-first architecture](docs/architecture.svg)
+
+The frozen release diagram labels the immutable 28-operation Tier 0 tool core. The current runtime
+composes that core with the 52-operation Financial Intelligence Registry, yielding the 80
+role-authorized deterministic operations described below. The diagram remains byte-identical to the
+released judge package; this note prevents the historical Tier 0 label from being read as the
+current catalog total. The total describes registered operation coverage, not a claim that every
+natural-language request can automatically select every operation; request planning and company
+activation remain independent fail-closed gates.
 
 ## Status
 
@@ -189,7 +197,8 @@ are not universal model-quality claims.
   `amd-smi`/`rocm-smi` exporter, and four provisioned Grafana Mission Control dashboards;
 - reproducible `linux/amd64` fixture, ROCm llama.cpp, local-only, championship, and observability
   container surfaces with file-mounted secrets and no startup model download;
-- a deterministic Context Compiler that preserves conflicts and enforces an explicit token budget;
+- a deterministic Context Compiler that preserves conflicts, applies an explicit finding-statement
+  budget, and emits governed evidence context;
   <!-- evidence-claim:context-compiler -->
 - a bounded Microsoft/NVIDIA investor-relations source map with authority, temporal, rights, and
   supersession gates, plus a seven-document hash-addressed golden manifest;
@@ -410,25 +419,27 @@ For live runs, the Workspace plan and Radeon Mission Control share one canonical
 deterministic `trace_id`. The browser verifies both identifiers before displaying lineage and
 fails closed on a stale or cross-run observability record without affecting the answer path.
 
-Two accepted working-tree journeys on the Radeon host now prove this correlation end to end. The
-local-only journey completed 11 model calls through local ROCm in 182.189 seconds. The hybrid
-journey completed 17 observed calls in 230.222 seconds across the provided Radeon API and the
-authorized local ROCm fallback, while both surfaces displayed the same run and trace identities.
-Four 1280×720 captures and two sanitized journey manifests are hash-bound in
-[`dashboard-radeon-synchronized-captures.json`](evidence/dashboard-radeon-synchronized-captures.json).
-The artifact explicitly records `exact_release_artifact: false`: it preserves the historical
-Sprint 34 proof without relabeling it. Current Sprint 36 local and hybrid journeys are separately
-recorded in [`sprint36-radeon-local-journey.json`](evidence/sprint36-radeon-local-journey.json) and
-[`sprint36-radeon-hybrid-journey.json`](evidence/sprint36-radeon-hybrid-journey.json).
+Two accepted Sprint 34 working-tree journey manifests recorded 11 local model calls and 17 hybrid
+calls. Their companion capture manifest is retained as historical UI provenance and explicitly
+records `exact_release_artifact: false`; its Mission Control frames do not expose enough matching
+route state to serve as current judge-facing route proof. Current proof is provided instead by the
+Sprint 36 local and hybrid records in
+[`sprint36-radeon-local-journey.json`](evidence/sprint36-radeon-local-journey.json) and
+[`sprint36-radeon-hybrid-journey.json`](evidence/sprint36-radeon-hybrid-journey.json), together with
+the correlated current captures below.
 
-![Accepted local Radeon journey with the expandable execution plan](docs/assets/sprint34-radeon-local-plan-expanded-1280x720.jpg)
+The current judge-facing captures below supersede the Sprint 34 screenshots as visual route proof.
+They show one accepted Sprint 36 hybrid journey under a shared `run_id` and `trace_id`.
 
-_Accepted local-only working-tree journey. Every phase remains independently expandable._
+![Accepted Sprint 36 hybrid Radeon journey](docs/assets/sprint36-live-hybrid-success.png)
 
-![Accepted hybrid Radeon journey correlated in Mission Control](docs/assets/mission-control-radeon-hybrid-sprint34-viewport.jpg)
+_Accepted Sprint 36 hybrid journey. Every governed phase reached a terminal state before release._
 
-_Accepted hybrid working-tree journey. Mission Control shows provided Radeon API calls and local
-ROCm execution under one run and trace identity._
+![Accepted Sprint 36 hybrid journey correlated in Mission Control](docs/assets/sprint36-live-hybrid-mission-control.png)
+
+_Mission Control shows provided Radeon API calls and local ROCm execution under the same run and
+trace identity. Historical Sprint 34 captures remain reproducibility artifacts, not current
+judge-facing route proof._
 
 The same workspace was verified at a 390×844 responsive breakpoint without horizontal overflow.
 Two additional hybrid retries reached every required phase but failed the final synthesis contract
@@ -495,8 +506,9 @@ The Go server has two modes:
 The measured fixture evaluation loaded the initial case in 1.257 ms, surfaced the first safe
 progress event in 4.438 ms, and completed its 40-event replay in 324.573 ms on the dated
 development run. These
-are reproducible demo-path measurements, not Radeon inference latency. The accepted full Radeon
-journey remains the separately reported 154.33-second v57 run.
+are reproducible demo-path measurements, not Radeon inference latency. The frozen v57 golden local
+journey completed in 154.33 seconds; current Sprint 36 local, hybrid, demo, resilience, and
+exact-release measurements are reported separately in the evidence directory.
 <!-- evidence-claim:research-workspace -->
 
 ### Private Local Case Memory
@@ -564,7 +576,7 @@ ssh -L 8080:127.0.0.1:8080 user@radeon-host
 
 | Surface | Requirement | Reproducibility authority |
 | --- | --- | --- |
-| Go control plane | Go 1.23 or newer | `go.mod` and `go.sum` |
+| Go control plane | Go 1.25 or newer | `go.mod` and `go.sum` |
 | Web workspace | Node.js 22 and npm | exact `web/package.json` versions plus `web/package-lock.json`; use `npm ci` |
 | Verification scripts | Python 3.10 or newer, Git, and `jq` | `requirements-verify.txt` |
 | SEC analytical export | Python plus DuckDB | `requirements-analytics.txt` |
@@ -588,9 +600,10 @@ repository or binary. See
 [`docs/hybrid-vllm-specialists.md`](docs/hybrid-vllm-specialists.md) for its trust boundary,
 OpenBao-compatible secret mount, local fallback, and evidence requirements. A complete accepted
 journey through the organizer-provided endpoint is recorded in
-[`evidence/sprint34-radeon-runtime.json`](evidence/sprint34-radeon-runtime.json), with correlated
-Workspace and Mission Control proof in
-[`evidence/dashboard-radeon-synchronized-captures.json`](evidence/dashboard-radeon-synchronized-captures.json).
+[`evidence/sprint36-radeon-hybrid-journey.json`](evidence/sprint36-radeon-hybrid-journey.json),
+with correlated Workspace and Mission Control proof in
+[`evidence/sprint36-radeon-demo-journey.json`](evidence/sprint36-radeon-demo-journey.json).
+The older Sprint 34 runtime and synchronized-capture records remain explicitly historical.
 
 The diagnostic records hardware and runtime capabilities when available. Missing optional ROCm
 commands are reported as unavailable rather than causing the diagnostic to fail. It never reads or
@@ -699,7 +712,7 @@ corrections create append-only supersession records instead of mutating prior ca
 
 The extended registry covers cash generation, returns, financial quality, capital allocation,
 valuation, peer comparison, and lagged association. Its architecture, numerical boundary, and
-remaining Radeon evidence gates are documented in
+bounded CPU and Radeon evidence are documented in
 [`docs/financial-intelligence.md`](docs/financial-intelligence.md).
 
 A dated `darwin/arm64` development-machine benchmark measured p95 latency of 42.71 microseconds

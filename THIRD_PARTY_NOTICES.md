@@ -49,9 +49,10 @@ The production module identities are pinned by `go.mod` and `go.sum`.
 | --- | --- | --- |
 | `github.com/cockroachdb/apd/v3` | `v3.2.3` | Apache License 2.0 |
 | `go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp` | `v0.68.0` | Apache License 2.0 |
-| `go.opentelemetry.io/otel` | `v1.43.0` | Apache License 2.0 |
-| `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | `v1.43.0` | Apache License 2.0 |
-| `go.opentelemetry.io/otel/sdk` | `v1.43.0` | Apache License 2.0 |
+| `go.opentelemetry.io/otel` | `v1.44.0` | Apache License 2.0 |
+| `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | `v1.44.0` | Apache License 2.0 |
+| `go.opentelemetry.io/otel/sdk` | `v1.44.0` | Apache License 2.0 |
+| `go.opentelemetry.io/otel/trace` | `v1.44.0` | Apache License 2.0 |
 | `modernc.org/sqlite` | `v1.38.2` | BSD 3-Clause License |
 
 Go resolves additional indirect modules recorded in `go.mod` and `go.sum`. No Go dependency source
@@ -64,7 +65,10 @@ They are pinned by the corresponding requirements files and are not vendored.
 
 | Component | Version | License declaration |
 | --- | --- | --- |
+| `cryptography` | `46.0.3` | Apache License 2.0 or BSD 3-Clause License |
 | `duckdb` | `1.5.4` | MIT License |
+| `jsonschema` | `4.25.1` | MIT License |
+| `pypdf` | `6.1.1` | BSD 3-Clause License |
 | `sentence-transformers` | `5.1.2` | Apache License 2.0 |
 | `qdrant-client` | `1.15.1` | Apache License 2.0 |
 | `reportlab` | `4.4.9` | BSD License |
