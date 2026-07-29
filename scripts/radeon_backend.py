@@ -121,6 +121,9 @@ def read_generated_backend(path: Path) -> str | None:
 
 
 def default_persist_root() -> Path:
+    configured = os.environ.get("SIGNALFORGE_PERSIST_ROOT", "").strip()
+    if configured:
+        return Path(configured).expanduser()
     if Path("/workspace").is_dir():
         return Path("/workspace/signalforge-runtime")
     return ROOT / ".signalforge" / "radeon"

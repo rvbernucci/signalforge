@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -144,6 +145,17 @@ class RadeonOperatorTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 RESET.safe_root(alias)
+
+    def test_reset_default_root_honors_environment(self) -> None:
+        with mock.patch.dict(
+            "os.environ",
+            {"SIGNALFORGE_PERSIST_ROOT": "/tmp/signalforge-reset-root"},
+            clear=False,
+        ):
+            self.assertEqual(
+                RESET.default_persist_root(),
+                Path("/tmp/signalforge-reset-root"),
+            )
 
     def test_compose_has_zero_touch_profiles_and_no_local_build_requirement(self) -> None:
         compose = (ROOT / "compose.yaml").read_text(encoding="utf-8")

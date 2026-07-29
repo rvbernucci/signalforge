@@ -192,11 +192,7 @@ def main() -> int:
     parser.add_argument("--poll-seconds", type=float, default=3)
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
-    persist_root = args.persist_root or (
-        Path("/workspace/signalforge-runtime")
-        if Path("/workspace").is_dir()
-        else ROOT / ".signalforge" / "radeon"
-    )
+    persist_root = args.persist_root or radeon_backend.default_persist_root()
     appliance = json.loads(
         (ROOT / "deploy/radeon/appliance-manifest.json").read_text(encoding="utf-8")
     )

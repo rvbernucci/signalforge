@@ -13,6 +13,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def default_persist_root() -> Path:
+    configured = os.environ.get("SIGNALFORGE_PERSIST_ROOT", "").strip()
+    if configured:
+        return Path(configured).expanduser()
+    if Path("/workspace").is_dir():
+        return Path("/workspace/signalforge-runtime")
+    return ROOT / ".signalforge" / "radeon"
+
+
 def safe_root(path: Path) -> Path:
     expanded = path.expanduser()
     if expanded.is_symlink():
@@ -57,12 +66,7 @@ def main() -> int:
     parser.add_argument("--confirm", default=os.environ.get("CONFIRM", ""))
     args = parser.parse_args()
     try:
-        default_root = (
-            Path("/workspace/signalforge-runtime")
-            if Path("/workspace").is_dir()
-            else ROOT / ".signalforge" / "radeon"
-        )
-        root = safe_root(args.persist_root or default_root)
+        root = safe_root(args.persist_root or default_persist_root())
         expected = "clean-signalforge-state" if args.mode == "clean" else "delete-signalforge-runtime"
         if args.confirm != expected:
             print(f"Refusing {args.mode}; set CONFIRM={expected} explicitly.", file=sys.stderr)

@@ -4,6 +4,7 @@ import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -33,6 +34,17 @@ def facts(*, compose: bool, native: bool) -> dict:
 
 
 class RadeonBackendTests(unittest.TestCase):
+    def test_default_persist_root_honors_environment(self) -> None:
+        with mock.patch.dict(
+            "os.environ",
+            {"SIGNALFORGE_PERSIST_ROOT": "/tmp/signalforge-backend-root"},
+            clear=False,
+        ):
+            self.assertEqual(
+                MODULE.default_persist_root(),
+                Path("/tmp/signalforge-backend-root"),
+            )
+
     def test_auto_prefers_compose_when_it_is_healthy(self) -> None:
         self.assertEqual(MODULE.resolve_backend("auto", facts(compose=True, native=True)), "compose")
 
