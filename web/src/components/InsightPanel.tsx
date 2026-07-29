@@ -44,6 +44,7 @@ export function InsightPanel({ projection, activeSection, onSection, onProof }: 
 export function CaseNotes({ projection }: { projection: Projection }) {
   return (
     <section className="case-notes" aria-label="Research assumptions and limits">
+      <ClaimAuthorityGuide />
       <NoteBlock title="Explicit assumptions" items={projection.assumptions ?? []} tone="assumption" />
       <NoteBlock title="Known limitations" items={projection.limitations ?? []} tone="limitation" />
       <NoteBlock title="Next diligence actions" items={projection.next_actions ?? []} tone="action" />
@@ -54,6 +55,27 @@ export function CaseNotes({ projection }: { projection: Projection }) {
         </details>
       )}
     </section>
+  );
+}
+
+function ClaimAuthorityGuide() {
+  const authorities = [
+    ["Reported fact", "Bound to a dated evidence card from a filing, official market source, or governed dataset."],
+    ["Management assertion", "Issuer guidance, plans, explanations, and risk statements remain attributed claims, not realized outcomes."],
+    ["Deterministic calculation", "Computed by a versioned Go engine and released only with a successful receipt and invariants."],
+    ["Model interpretation", "A challenged synthesis of authorized evidence; it remains interpretation rather than source fact."],
+    ["Scenario assumption", "An explicit user or research premise listed below, never presented as an observed future path."],
+    ["Unresolved hypothesis", "A question or causal possibility retained in limitations, caveats, or next diligence rather than asserted as fact."]
+  ];
+  return (
+    <details className="claim-authority-guide">
+      <summary><span>Claim authority key</span><strong>Six boundaries kept distinct</strong></summary>
+      <div>
+        {authorities.map(([label, meaning]) => (
+          <article key={label}><strong>{label}</strong><p>{meaning}</p></article>
+        ))}
+      </div>
+    </details>
   );
 }
 

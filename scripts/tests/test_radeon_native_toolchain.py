@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,10 +54,12 @@ class RadeonNativeToolchainTests(unittest.TestCase):
                 info.mode = 0o755
                 bundle.addfile(info, io.BytesIO(payload))
             destination = root / "extract"
-            MODULE.safe_extract_go(archive, destination)
+            with mock.patch.object(MODULE.os, "fsync") as fsync:
+                MODULE.safe_extract_go(archive, destination)
             binary = destination / "go/bin/go"
             self.assertTrue(binary.is_file())
             self.assertEqual(binary.stat().st_mode & 0o777, 0o755)
+            fsync.assert_not_called()
 
     def test_safe_go_extraction_rejects_path_traversal(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

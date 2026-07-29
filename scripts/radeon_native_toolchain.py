@@ -96,7 +96,8 @@ def safe_extract_go(archive: Path, destination: Path) -> None:
                 with source, target.open("wb") as output:
                     shutil.copyfileobj(source, output, 1024 * 1024)
                     output.flush()
-                    os.fsync(output.fileno())
+                    # The verified archive is disposable and promoted atomically after validation.
+                    # Per-member fsync makes extraction pathological on Radeon persistent NFS.
                 os.chmod(target, member.mode & 0o777)
     except Exception:
         remove_directory(destination)

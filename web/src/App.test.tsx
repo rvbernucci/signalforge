@@ -222,6 +222,17 @@ describe("SignalForge workspace", () => {
     expect(await screen.findByText("Ask a harder question.")).toBeInTheDocument();
     expect(screen.getByText("Research answer ready")).toBeInTheDocument();
     expect(screen.getByText("Numerical authority preserved")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Claim authority key"));
+    for (const authority of [
+      "Reported fact",
+      "Management assertion",
+      "Deterministic calculation",
+      "Model interpretation",
+      "Scenario assumption",
+      "Unresolved hypothesis"
+    ]) {
+      expect(screen.getByText(authority)).toBeVisible();
+    }
     expect(screen.getByText(/AI research can be inaccurate/)).toBeInTheDocument();
     expect(screen.queryByText("Live research execution")).not.toBeInTheDocument();
     expect(screen.queryByText("Supported context claims")).not.toBeInTheDocument();
