@@ -47,7 +47,11 @@ def atomic_write(path: Path, payload: str, mode: int) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def run_safe(command: list[str], timeout: float = 5) -> dict[str, Any]:
+def run_safe(
+    command: list[str],
+    timeout: float = 5,
+    output_limit: int = 8192,
+) -> dict[str, Any]:
     try:
         result = subprocess.run(
             command,
@@ -63,7 +67,7 @@ def run_safe(command: list[str], timeout: float = 5) -> dict[str, Any]:
     return {
         "available": True,
         "returncode": result.returncode,
-        "output": output[:8192],
+        "output": output[: max(1, output_limit)],
         "error": None,
     }
 
@@ -117,7 +121,8 @@ def rocm_version() -> str | None:
 
 
 def gpu_facts() -> dict[str, Any]:
-    result = run_safe(["rocminfo"], timeout=10)
+    # Multi-agent hosts can place the GPU block after several verbose CPU blocks.
+    result = run_safe(["rocminfo"], timeout=10, output_limit=128 * 1024)
     output = result["output"] if result["available"] and result["returncode"] == 0 else ""
     architectures = sorted({match.lower() for match in GFX_PATTERN.findall(output)})
     marketing_names = sorted(

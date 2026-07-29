@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -137,6 +138,18 @@ class RadeonPreflightTests(unittest.TestCase):
                 check_network=True,
             )
         self.assertFalse([item for item in checks if item["status"] == "failed"])
+
+    def test_gpu_probe_can_read_architecture_after_verbose_cpu_agents(self) -> None:
+        command = [
+            sys.executable,
+            "-c",
+            "print('x' * 9000 + ' Name: gfx1100')",
+        ]
+        default = MODULE.run_safe(command, output_limit=8192)
+        gpu_probe = MODULE.run_safe(command, output_limit=128 * 1024)
+
+        self.assertNotIn("gfx1100", default["output"])
+        self.assertIn("gfx1100", gpu_probe["output"])
 
     def test_championship_requires_nonempty_radeon_api_key(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
