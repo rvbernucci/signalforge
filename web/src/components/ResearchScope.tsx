@@ -30,7 +30,7 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
     selectedEvaluation?.receipts.map((receipt) => receipt.operands[0]?.canonical_metric_id).filter(Boolean) ?? []
   );
   const hasContextOnlyMetrics = selectedEvaluation?.receipts.some(
-    (receipt) => receipt.disposition === "not_comparable"
+    (receipt) => receipt.disposition === "context_only"
   ) ?? false;
   const visible = catalog.companies.filter((company) => {
     if (!deferredQuery) return true;
@@ -144,17 +144,26 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
               <strong>{selectedLane.decision_question}</strong>
               <p>
                 {selectedEvaluation?.releasable_metric_ids.length ?? 0} metric receipts are releasable;{" "}
+                {selectedEvaluation?.context_only_metric_ids?.length ?? 0} are context only;{" "}
                 {selectedEvaluation?.withheld_metric_ids.length ?? selectedLane.allowed_metric_ids.length} are withheld.
               </p>
               {selectedEvaluation && (
                 <div className="comparison-metrics" role="region" aria-label="Metric-level comparison authority">
                   {selectedEvaluation.receipts.map((receipt) => (
-                    <article className={receipt.disposition === "not_comparable" ? "is-context-only" : ""} key={receipt.receipt_sha256}>
-                      <span>{receipt.disposition === "not_comparable"
-                        ? contextualMetricLabel(receipt.operands[0]?.canonical_metric_id ?? "unknown metric")
+                    <article
+                      className={receipt.disposition === "context_only"
+                        ? "is-context-only"
+                        : receipt.disposition === "not_comparable"
+                          ? "is-withheld"
+                          : ""}
+                      key={receipt.receipt_sha256}
+                    >
+                      <span>{receipt.disposition === "context_only"
+                        ? receipt.operands.find((operand) => operand.output_class === "context_only")?.product_label ??
+                          contextualMetricLabel(receipt.operands[0]?.canonical_metric_id ?? "unknown metric")
                         : labelOperation(receipt.operands[0]?.canonical_metric_id ?? "unknown metric")}</span>
-                      <strong>{receipt.disposition === "not_comparable" ? "Context only*" : labelReason(receipt.disposition)}</strong>
-                      {receipt.disposition === "not_comparable" && (
+                      <strong>{receipt.disposition === "context_only" ? "Context only*" : labelReason(receipt.disposition)}</strong>
+                      {receipt.disposition === "context_only" && (
                         <div className="context-operands">
                           {receipt.operands.map((operand) => (
                             <span key={`${receipt.receipt_sha256}-${operand.company_id}`}>
@@ -211,6 +220,7 @@ function CompanyAuthority({
 }) {
   const evidenceRecency = latestValue(company.results.map((result) => result.source_as_of));
   const latestPeriod = latestValue(company.results.flatMap((result) => result.periods));
+  const contextualResults = company.contextual_results ?? [];
   return (
     <div className="company-authority">
       <div className="company-authority-heading">
@@ -224,7 +234,7 @@ function CompanyAuthority({
         <div><dt>Latest governed period</dt><dd>{latestPeriod ?? "Unavailable"}</dd></div>
         <div><dt>Price observation date</dt><dd>Unavailable · not activated</dd></div>
         <div><dt>Scenario assumptions</dt><dd>{labelScenario(scenario)}</dd></div>
-        <div><dt>Authority</dt><dd>{company.results.length} receipts · {company.abstentions.length} abstentions</dd></div>
+        <div><dt>Authority</dt><dd>{company.results.length} receipts · {contextualResults.length} contextual · {company.abstentions.length} abstentions</dd></div>
       </dl>
       <div className="company-authority-boundary">
         <span className="eyebrow">Current boundary</span>
@@ -240,6 +250,21 @@ function CompanyAuthority({
           </article>
         ))}
       </div>
+      {contextualResults.length > 0 && (
+        <div className="authority-contextual" role="region" aria-label="Context-only financial evidence">
+          <span className="eyebrow">Context only · never ranked</span>
+          {contextualResults.map((result) => (
+            <article className="is-context-only" key={result.receipt_id}>
+              <span>{result.accounting_authority.product_label}</span>
+              <strong>{renderOutput(result)}*</strong>
+              <small>
+                {result.periods.at(-1)} · {labelReason(result.accounting_authority.accounting_perimeter_signature)}
+              </small>
+            </article>
+          ))}
+          <p>* Deterministic company-reported proxies with explicit accounting perimeters. They cannot produce a winner, score, rank, or relative conclusion.</p>
+        </div>
+      )}
       {company.abstentions.length > 0 && (
         <div className="authority-abstentions" role="region" aria-label="Explicit missing evidence">
           <span className="eyebrow">Explicitly withheld</span>

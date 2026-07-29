@@ -57,6 +57,7 @@ export type ProductCatalog = {
 };
 
 export type FinancialResult = {
+  receipt_id: string;
   operation_id: string;
   formula_version: string;
   periods: string[];
@@ -68,6 +69,28 @@ export type FinancialResult = {
   }>;
   evidence_refs: string[];
   receipt_sha256: string;
+  accounting_authority: ReceiptAccountingAuthority;
+};
+
+export type AccountingInputAuthority = {
+  input_id: string;
+  canonical_input: string;
+  mapping_key: string;
+  taxonomy_concept: string;
+  accounting_perimeter: string;
+  disposition: string;
+  product_label: string;
+  pair_ranking_eligible: boolean;
+};
+
+export type ReceiptAccountingAuthority = {
+  receipt_id: string;
+  operation_id: string;
+  output_class: "authoritative" | "context_only";
+  product_label: string;
+  accounting_perimeter_signature: string;
+  inputs: AccountingInputAuthority[];
+  pair_ranking_eligible: boolean;
 };
 
 export type FinancialCompany = {
@@ -76,11 +99,12 @@ export type FinancialCompany = {
   display_name: string;
   report_sha256: string;
   results: FinancialResult[];
+  contextual_results?: FinancialResult[];
   abstentions: Array<{ operation_id: string; code: string; message: string }>;
 };
 
 export type FinancialSummary = {
-  schema_version: "signalforge/technology20-public-financial-summary/v1";
+  schema_version: "signalforge/technology20-public-financial-summary/v2";
   universe_id: string;
   as_of: string;
   companies: FinancialCompany[];
@@ -91,7 +115,7 @@ export type PeerEvaluation = {
   lane_id: string;
   company_ids: string[];
   receipts: Array<{
-    disposition: "comparable" | "comparable_with_caveat" | "not_comparable";
+    disposition: "comparable" | "comparable_with_caveat" | "context_only" | "not_comparable";
     operands: Array<{
       company_id: string;
       security_id?: string;
@@ -101,6 +125,10 @@ export type PeerEvaluation = {
       unit?: string;
       currency?: string;
       accounting_perimeter?: string;
+      accounting_inputs?: AccountingInputAuthority[];
+      output_class?: "authoritative" | "context_only";
+      product_label?: string;
+      pair_ranking_eligible?: boolean;
     }>;
     required_caveat_ids?: string[];
     reason_codes?: string[];
@@ -108,6 +136,7 @@ export type PeerEvaluation = {
   }>;
   abstentions: Array<{ metric_ids: string[]; code: string; message: string }>;
   releasable_metric_ids: string[];
+  context_only_metric_ids?: string[];
   withheld_metric_ids: string[];
   promoted: boolean;
   reason_codes: string[];

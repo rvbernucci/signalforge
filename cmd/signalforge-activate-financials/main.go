@@ -17,7 +17,7 @@ import (
 	"github.com/rvbernucci/signalforge/internal/productscope"
 )
 
-const manifestSchemaV1 = "signalforge/technology20-financial-activation-manifest/v1"
+const manifestSchemaV2 = "signalforge/technology20-financial-activation-manifest/v2"
 
 type manifest struct {
 	SchemaVersion             string            `json:"schema_version"`
@@ -29,10 +29,13 @@ type manifest struct {
 	ProductCatalogSHA256      string            `json:"product_catalog_sha256"`
 	AccountingRegistryVersion string            `json:"accounting_registry_version"`
 	AccountingRegistrySHA256  string            `json:"accounting_registry_sha256"`
+	AccountingDecisionSHA256  string            `json:"accounting_decision_sha256"`
 	Companies                 int               `json:"companies"`
 	SuccessfulReceipts        int               `json:"successful_receipts"`
+	ContextualReceipts        int               `json:"contextual_receipts"`
 	TypedAbstentions          int               `json:"typed_abstentions"`
 	ReceiptsByOperation       map[string]int    `json:"receipts_by_operation"`
+	ContextualByOperation     map[string]int    `json:"contextual_receipts_by_operation"`
 	AbstentionsByOperation    map[string]int    `json:"abstentions_by_operation"`
 	Reports                   []reportReference `json:"reports"`
 	ClaimBoundary             string            `json:"claim_boundary"`
@@ -40,12 +43,13 @@ type manifest struct {
 }
 
 type reportReference struct {
-	CompanyID   string `json:"company_id"`
-	Path        string `json:"path"`
-	ReportSHA   string `json:"report_sha256"`
-	FileSHA256  string `json:"file_sha256"`
-	Receipts    int    `json:"receipts"`
-	Abstentions int    `json:"abstentions"`
+	CompanyID          string `json:"company_id"`
+	Path               string `json:"path"`
+	ReportSHA          string `json:"report_sha256"`
+	FileSHA256         string `json:"file_sha256"`
+	Receipts           int    `json:"receipts"`
+	ContextualReceipts int    `json:"contextual_receipts"`
+	Abstentions        int    `json:"abstentions"`
 }
 
 func main() {
@@ -79,6 +83,10 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
+	decision, err := productscope.DefaultAccountingProfessionalDecision()
+	if err != nil {
+		exit(err)
+	}
 	metrics, metricsSHA, err := readMetrics(*metricsPath)
 	if err != nil {
 		exit(err)
@@ -91,14 +99,17 @@ func main() {
 		exit(err)
 	}
 	result := manifest{
-		SchemaVersion: manifestSchemaV1, UniverseID: productscope.UniverseID, AsOf: asOf.UTC(),
+		SchemaVersion: manifestSchemaV2, UniverseID: productscope.UniverseID, AsOf: asOf.UTC(),
 		CodeCommit: *codeCommit, SourceMetricsSHA256: metricsSHA,
 		SourceFactsSHA256:         factsSHA,
 		ProductCatalogSHA256:      hashBytes(catalogPayload),
 		AccountingRegistryVersion: registry.RegistryVersion,
 		AccountingRegistrySHA256:  registry.RegistrySHA256,
-		ReceiptsByOperation:       map[string]int{}, AbstentionsByOperation: map[string]int{},
-		ClaimBoundary: "A successful receipt proves only the named deterministic formula over aligned, fresh, consolidated periodic-filing inputs authorized by the hash-bound accounting registry. Capex means the exact US-GAAP PaymentsToAcquirePropertyPlantAndEquipment perimeter. Issuer-specific aliases require an explicit registry entry; context-only proxies never enter comparable rankings. OCF minus exact PP&E capex is labeled simple FCF and is never promoted to FCFF or total economic reinvestment.",
+		AccountingDecisionSHA256:  decision.DecisionSHA256,
+		ReceiptsByOperation:       map[string]int{},
+		ContextualByOperation:     map[string]int{},
+		AbstentionsByOperation:    map[string]int{},
+		ClaimBoundary:             "A successful receipt proves only the named deterministic formula over aligned, fresh inputs authorized by the hash-bound accounting registry and professional decision. Every formula preserves per-input concept, perimeter, label, and ranking authority. OCF minus an authorized cash-purchase input is labeled simple FCF, never issuer-reported FCF, net capex, FCFF, or total economic reinvestment. Context-only outputs never enter a winner, score, rank, or relative conclusion.",
 	}
 	reports := map[string]productscope.CompanyFinancialActivation{}
 	for _, company := range catalog.Companies {
@@ -120,12 +131,18 @@ func main() {
 		}
 		result.Reports = append(result.Reports, reportReference{
 			CompanyID: company.CompanyID, Path: name, ReportSHA: report.ReportSHA256,
-			FileSHA256: hashBytes(payload), Receipts: len(report.Receipts), Abstentions: len(report.Abstentions),
+			FileSHA256: hashBytes(payload), Receipts: len(report.Receipts),
+			ContextualReceipts: len(report.ContextualReceipts),
+			Abstentions:        len(report.Abstentions),
 		})
 		result.SuccessfulReceipts += len(report.Receipts)
+		result.ContextualReceipts += len(report.ContextualReceipts)
 		result.TypedAbstentions += len(report.Abstentions)
 		for _, receipt := range report.Receipts {
 			result.ReceiptsByOperation[receipt.OperationID]++
+		}
+		for _, receipt := range report.ContextualReceipts {
+			result.ContextualByOperation[receipt.OperationID]++
 		}
 		for _, abstention := range report.Abstentions {
 			result.AbstentionsByOperation[abstention.MetricIDs[0]]++
@@ -154,8 +171,8 @@ func main() {
 			exit(writeErr)
 		}
 	}
-	fmt.Printf("financial activation: %d companies, %d receipts, %d abstentions\n",
-		result.Companies, result.SuccessfulReceipts, result.TypedAbstentions)
+	fmt.Printf("financial activation: %d companies, %d authoritative receipts, %d context-only receipts, %d abstentions\n",
+		result.Companies, result.SuccessfulReceipts, result.ContextualReceipts, result.TypedAbstentions)
 }
 
 func referencedFactIDs(metrics map[string][]data.NormalizedMetric) map[string]bool {

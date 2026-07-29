@@ -17,6 +17,24 @@ Sprint 32 adds fail-closed product-scope contracts:
 - `peer-journey-suite.schema.json` freezes metric-level comparison behavior, including useful
   refusal and the prohibition on pair-level ranking.
 
+Sprint 38 adds registry-bound accounting authority to the same boundary:
+
+- `accounting-professional-decision.schema.json` makes the named, exact-scope reviewer decision
+  portable while the Go validator binds it to the complete non-canonical registry and recomputes
+  its content hash.
+- `metric-comparability-request.schema.json` and
+  `metric-comparability-receipt.schema.json` are now v2 contracts. Every operand carries the exact
+  per-input mapping key, taxonomy concept, accounting perimeter, product label, output class, and
+  explicit pair-ranking eligibility. `context_only` is a distinct non-ranking disposition rather
+  than an alias for `not_comparable`.
+- `technology20-financial-summary.schema.json` exposes authoritative and contextual company
+  results in separate arrays, each bound to deterministic receipt and accounting-authority
+  identities.
+- `technology20-peer-evaluation.schema.json` preserves the four metric outcomes visible to the
+  product: releasable, caveated, context-only, and withheld.
+- `technology20-pair-population.schema.json` makes the mechanically complete 190-pair evaluation
+  envelope portable without promoting pair topology into peer or narrative authority.
+
 The executable validators and content-hash helpers live in `internal/contracts/activation.go`,
 `internal/productscope`, and `internal/comparability`. Models and UI components consume these
 records but cannot promote their state or alter hash-bound authority references.

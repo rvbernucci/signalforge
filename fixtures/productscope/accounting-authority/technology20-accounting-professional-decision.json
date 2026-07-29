@@ -1,0 +1,31 @@
+{
+  "schema_version": "signalforge/accounting-professional-decision/v1",
+  "universe_id": "us-technology-20-v2",
+  "registry_version": "technology20-accounting-authority/2026-07-29-r2",
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4",
+  "reviewer_name": "Rafael Bernucci",
+  "reviewer_qualification": "Project owner and Accounting graduate from the University of Sao Paulo; not acting as an independent auditor.",
+  "disposition": "conditionally_accepted",
+  "approved_mapping_keys": [
+    "sec-cik:0000051143|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+    "sec-cik:0000796343|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+    "sec-cik:0000804328|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_cash_capital_expenditures",
+    "sec-cik:0000804328|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+    "sec-cik:0001018724|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_and_equipment_cash_purchases",
+    "sec-cik:0001045810|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_equipment_and_intangible_assets",
+    "sec-cik:0001045810|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+    "sec-cik:0001596532|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_equipment_and_intangible_assets",
+    "sec-cik:0001652044|revenue|us-gaap|Revenues|consolidated_periodic_filing"
+  ],
+  "conditions": [
+    "canonical_mapping_precedes_reviewed_alias_for_the_same_issuer_period_and_value",
+    "context_only_outputs_never_enter_winner_score_rank_or_relative_conclusion",
+    "exact_issuer_mapping_period_unit_dimension_currency_sign_and_active_filing_chain_required",
+    "product_labels_and_accounting_perimeters_must_remain_visible",
+    "runtime_activation_requires_complete_deterministic_and_pair_level_tests"
+  ],
+  "rejected_scope": "Every use beyond the exact issuer-specific mappings, authorized operations, product labels, accounting perimeters, invalidation conditions, and context-only restrictions.",
+  "decided_at": "2026-07-29T14:00:31Z",
+  "record_locator": "docs/accounting-authority/technology20-accounting-professional-review.md",
+  "decision_sha256": "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c"
+}

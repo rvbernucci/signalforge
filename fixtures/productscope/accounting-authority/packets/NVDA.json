@@ -1,8 +1,8 @@
 {
   "schema_version": "signalforge/technology20-accounting-authority-packet/v1",
   "universe_id": "us-technology-20-v2",
-  "registry_version": "technology20-accounting-authority/2026-07-29",
-  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "registry_version": "technology20-accounting-authority/2026-07-29-r2",
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4",
   "company_id": "sec-cik:0001045810",
   "display_name": "NVIDIA",
   "primary_ticker": "NVDA",
@@ -623,9 +623,9 @@
               "period_unit_currency_or_sign_gate_fails"
             ],
             "product_label": "revenue",
-            "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001045810.json",
-            "source_locator": "SEC Company Facts and active periodic filing chain",
-            "bounded_source_language": "Revenues",
+            "source_citation": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+            "source_locator": "Consolidated Statements of Income, Revenue",
+            "bounded_source_language": "Revenue",
             "comparable_ranking_eligible": false
           },
           "observed_records": 276,
@@ -1062,8 +1062,8 @@
       "observed_records": 276,
       "professional_review_needed": true,
       "required_action": "Obtain and record a named professional disposition before final release.",
-      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001045810.json",
-      "source_locator": "SEC Company Facts and active periodic filing chain"
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+      "source_locator": "Consolidated Statements of Income, Revenue"
     },
     {
       "exception_id": "accounting-exception-749e0772702533f3910f0c2e",
@@ -1086,5 +1086,5 @@
     "filings_sha256": "316fb1741d6a4845c3734b70f07e0bc4f00f00ccf500739b9e1d57bd4443888b"
   },
   "claim_boundary": "This metadata-only packet authorizes deterministic source selection. It contains no calculation values and cannot authorize model arithmetic or an unreviewed equivalence.",
-  "packet_sha256": "704491549731a69c48fbe21255525d7f84d5a3dd8e161f54e921b9dea9cad111"
+  "packet_sha256": "426808459e4a5602b801f2a173f223061475c0a6efd9ccb4ac29dc78f93c1df4"
 }

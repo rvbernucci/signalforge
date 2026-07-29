@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "request_id", "run_id", "lane_id", "as_of", "reviewer_policy_version", "operands", "request_sha256"],
   "properties": {
-    "schema_version": {"const": "signalforge/metric-comparability-request/v1"},
+    "schema_version": {"const": "signalforge/metric-comparability-request/v2"},
     "request_id": {"type": "string", "minLength": 1},
     "run_id": {"type": "string", "minLength": 1},
     "lane_id": {"type": "string", "minLength": 1},
@@ -20,7 +20,7 @@
     "operand": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["company_id", "source_observation_ids", "source_hashes", "available_at", "retrieved_at", "canonical_metric_id", "metric_version", "taxonomy_concept", "value", "unit", "scale", "sign_policy", "dimensional_identity", "period_type", "fiscal_end", "filing_date", "accounting_perimeter", "definition_id", "restatement_state", "supersession_state"],
+      "required": ["company_id", "source_observation_ids", "source_hashes", "available_at", "retrieved_at", "canonical_metric_id", "metric_version", "taxonomy_concept", "value", "unit", "scale", "sign_policy", "dimensional_identity", "period_type", "fiscal_end", "filing_date", "accounting_perimeter", "accounting_inputs", "output_class", "product_label", "pair_ranking_eligible", "definition_id", "restatement_state", "supersession_state"],
       "properties": {
         "company_id": {"type": "string", "minLength": 1},
         "security_id": {"type": "string"},
@@ -47,9 +47,32 @@
         "filing_date": {"type": "string", "format": "date-time"},
         "market_observation_date": {"type": "string", "format": "date-time"},
         "accounting_perimeter": {"type": "string", "minLength": 1},
+        "accounting_inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/accounting_input"}
+        },
+        "output_class": {"enum": ["authoritative", "context_only"]},
+        "product_label": {"type": "string", "minLength": 1},
+        "pair_ranking_eligible": {"type": "boolean"},
         "definition_id": {"type": "string", "minLength": 1},
         "restatement_state": {"type": "string", "minLength": 1},
         "supersession_state": {"type": "string", "minLength": 1}
+      }
+    },
+    "accounting_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_id", "canonical_input", "mapping_key", "taxonomy_concept", "accounting_perimeter", "disposition", "product_label", "pair_ranking_eligible"],
+      "properties": {
+        "input_id": {"type": "string", "minLength": 1},
+        "canonical_input": {"type": "string", "minLength": 1},
+        "mapping_key": {"type": "string", "minLength": 1},
+        "taxonomy_concept": {"type": "string", "minLength": 1},
+        "accounting_perimeter": {"type": "string", "minLength": 1},
+        "disposition": {"enum": ["canonical", "reviewed_alias", "context_only"]},
+        "product_label": {"type": "string", "minLength": 1},
+        "pair_ranking_eligible": {"type": "boolean"}
       }
     }
   }

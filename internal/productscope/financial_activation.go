@@ -17,33 +17,71 @@ import (
 	"github.com/rvbernucci/signalforge/internal/roles"
 )
 
-const CompanyFinancialActivationSchemaV1 = "signalforge/technology20-financial-activation/v1"
+const CompanyFinancialActivationSchemaV2 = "signalforge/technology20-financial-activation/v2"
 const FinancialMetricFreshnessPolicy = "period-end-age-760d/v1"
 const FinancialConsolidationPolicy = "dimensionless-consolidated-facts-only/v1"
-const CapexPerimeterPolicy = "us-gaap-payments-to-acquire-ppe-only/v1"
+const CapexPerimeterPolicy = "registry-bound-per-input-accounting-perimeter/v2"
 const ReviewedRevenueAliasPolicy = "company-specific-us-gaap-revenues/v1"
 const ProductiveAssetsContextPerimeter = "company_reported_property_equipment_and_intangible_assets"
 
+const (
+	AccountingOutputAuthoritative = "authoritative"
+	AccountingOutputContextOnly   = "context_only"
+)
+
+type ReceiptInputAccountingAuthority struct {
+	InputID                  string                `json:"input_id"`
+	CanonicalInput           string                `json:"canonical_input"`
+	MetricID                 string                `json:"metric_id"`
+	SourceFactIDs            []string              `json:"source_fact_ids"`
+	MappingKey               string                `json:"mapping_key"`
+	TaxonomyConcept          string                `json:"taxonomy_concept"`
+	AccountingPerimeter      string                `json:"accounting_perimeter"`
+	Disposition              AccountingDisposition `json:"disposition"`
+	ProductLabel             string                `json:"product_label"`
+	NumericallyAuthoritative bool                  `json:"numerically_authoritative"`
+	ContextOnly              bool                  `json:"context_only"`
+	PairRankingEligible      bool                  `json:"pair_ranking_eligible"`
+}
+
+type ReceiptAccountingAuthority struct {
+	ReceiptID                    string                            `json:"receipt_id"`
+	OperationID                  string                            `json:"operation_id"`
+	OutputClass                  string                            `json:"output_class"`
+	ProductLabel                 string                            `json:"product_label"`
+	AccountingPerimeterSignature string                            `json:"accounting_perimeter_signature"`
+	Inputs                       []ReceiptInputAccountingAuthority `json:"inputs"`
+	PairRankingEligible          bool                              `json:"pair_ranking_eligible"`
+}
+
 type CompanyFinancialActivation struct {
-	SchemaVersion             string                         `json:"schema_version"`
-	UniverseID                string                         `json:"universe_id"`
-	CompanyID                 string                         `json:"company_id"`
-	AsOf                      time.Time                      `json:"as_of"`
-	CodeCommit                string                         `json:"code_commit"`
-	AccountingRegistryVersion string                         `json:"accounting_registry_version"`
-	AccountingRegistrySHA256  string                         `json:"accounting_registry_sha256"`
-	FreshnessPolicy           string                         `json:"freshness_policy"`
-	ConsolidationPolicy       string                         `json:"consolidation_policy"`
-	CapexPerimeterPolicy      string                         `json:"capex_perimeter_policy"`
-	Receipts                  []contracts.CalculationReceipt `json:"receipts"`
-	Abstentions               []contracts.TypedAbstention    `json:"abstentions"`
-	Excluded                  map[string]int                 `json:"excluded_records"`
-	SourceConcepts            map[string][]string            `json:"source_concepts"`
-	SourceForms               map[string][]string            `json:"source_forms"`
-	ContextualReceipts        []contracts.CalculationReceipt `json:"contextual_receipts,omitempty"`
-	ContextualConcepts        map[string][]string            `json:"contextual_source_concepts,omitempty"`
-	ContextualPerimeters      map[string]string              `json:"contextual_accounting_perimeters,omitempty"`
-	ReportSHA256              string                         `json:"report_sha256"`
+	SchemaVersion             string                                `json:"schema_version"`
+	UniverseID                string                                `json:"universe_id"`
+	CompanyID                 string                                `json:"company_id"`
+	AsOf                      time.Time                             `json:"as_of"`
+	CodeCommit                string                                `json:"code_commit"`
+	AccountingRegistryVersion string                                `json:"accounting_registry_version"`
+	AccountingRegistrySHA256  string                                `json:"accounting_registry_sha256"`
+	AccountingDecisionSHA256  string                                `json:"accounting_decision_sha256"`
+	FreshnessPolicy           string                                `json:"freshness_policy"`
+	ConsolidationPolicy       string                                `json:"consolidation_policy"`
+	CapexPerimeterPolicy      string                                `json:"capex_perimeter_policy"`
+	Receipts                  []contracts.CalculationReceipt        `json:"receipts"`
+	Abstentions               []contracts.TypedAbstention           `json:"abstentions"`
+	Excluded                  map[string]int                        `json:"excluded_records"`
+	SourceConcepts            map[string][]string                   `json:"source_concepts"`
+	SourceForms               map[string][]string                   `json:"source_forms"`
+	ContextualReceipts        []contracts.CalculationReceipt        `json:"contextual_receipts,omitempty"`
+	ContextualConcepts        map[string][]string                   `json:"contextual_source_concepts,omitempty"`
+	ContextualPerimeters      map[string]string                     `json:"contextual_accounting_perimeters,omitempty"`
+	ReceiptAuthorities        map[string]ReceiptAccountingAuthority `json:"receipt_accounting_authorities"`
+	ReportSHA256              string                                `json:"report_sha256"`
+}
+
+type authorizedMetric struct {
+	Metric  data.NormalizedMetric
+	Fact    data.ReportedFact
+	Mapping AccountingMappingAuthority
 }
 
 type operationSpec struct {
@@ -117,18 +155,20 @@ func BuildCompanyFinancialActivation(
 		return CompanyFinancialActivation{}, errors.New("company is outside the Technology 20 authority")
 	}
 	report := CompanyFinancialActivation{
-		SchemaVersion: CompanyFinancialActivationSchemaV1, UniverseID: UniverseID,
+		SchemaVersion: CompanyFinancialActivationSchemaV2, UniverseID: UniverseID,
 		CompanyID: companyID, AsOf: asOf.UTC(), CodeCommit: codeCommit,
 		AccountingRegistryVersion: runtimeAccountingAuthorityRegistry.RegistryVersion,
 		AccountingRegistrySHA256:  runtimeAccountingAuthorityRegistry.RegistrySHA256,
+		AccountingDecisionSHA256:  runtimeAccountingProfessionalDecision.DecisionSHA256,
 		FreshnessPolicy:           FinancialMetricFreshnessPolicy,
 		ConsolidationPolicy:       FinancialConsolidationPolicy,
 		CapexPerimeterPolicy:      CapexPerimeterPolicy, Excluded: map[string]int{},
 		SourceConcepts: map[string][]string{}, SourceForms: map[string][]string{},
 		ContextualConcepts: map[string][]string{}, ContextualPerimeters: map[string]string{},
+		ReceiptAuthorities: map[string]ReceiptAccountingAuthority{},
 	}
-	eligible := make([]data.NormalizedMetric, 0, len(metrics))
-	contextualEligible := make([]data.NormalizedMetric, 0, len(metrics))
+	eligible := make([]authorizedMetric, 0, len(metrics))
+	contextualEligible := make([]authorizedMetric, 0, len(metrics))
 	for _, metric := range metrics {
 		if metric.CompanyID != companyID {
 			continue
@@ -145,7 +185,7 @@ func BuildCompanyFinancialActivation(
 			report.Excluded["stale_metric_period"]++
 			continue
 		}
-		fact, authorized := periodicFactAuthority(metric, facts)
+		fact, mapping, authorized := periodicFactAuthorityWithMapping(metric, facts)
 		if !authorized {
 			report.Excluded["periodic_fact_authority_missing"]++
 			continue
@@ -154,20 +194,25 @@ func BuildCompanyFinancialActivation(
 			report.Excluded["unit_or_currency_mismatch"]++
 			continue
 		}
-		if !financialSemanticAuthority(metric, fact) {
-			if contextOnlyFinancialAuthority(metric, fact) {
+		if !effectiveAccountingMappingNumericallyAuthoritative(
+			mapping,
+			runtimeAccountingAuthorityRegistry,
+			runtimeAccountingProfessionalDecision,
+		) {
+			if effectiveAccountingMappingContextDisplayAuthorized(
+				mapping,
+				runtimeAccountingAuthorityRegistry,
+				runtimeAccountingProfessionalDecision,
+			) {
 				report.ContextualConcepts[metric.CanonicalMetric] = appendUniqueSorted(
 					report.ContextualConcepts[metric.CanonicalMetric], fact.Concept,
 				)
-				contextualEligible = append(contextualEligible, metric)
+				contextualEligible = append(contextualEligible, authorizedMetric{
+					Metric: metric, Fact: fact, Mapping: mapping,
+				})
 				continue
 			}
 			report.Excluded["unreviewed_semantic_mapping"]++
-			continue
-		}
-		if metric.CanonicalMetric == "capital_expenditure" &&
-			fact.Concept != "PaymentsToAcquirePropertyPlantAndEquipment" {
-			report.Excluded["capex_perimeter_not_approved"]++
 			continue
 		}
 		report.SourceConcepts[metric.CanonicalMetric] = appendUniqueSorted(
@@ -176,8 +221,11 @@ func BuildCompanyFinancialActivation(
 		report.SourceForms[metric.CanonicalMetric] = appendUniqueSorted(
 			report.SourceForms[metric.CanonicalMetric], fact.FormType,
 		)
-		eligible = append(eligible, metric)
-		contextualEligible = append(contextualEligible, metric)
+		item := authorizedMetric{Metric: metric, Fact: fact, Mapping: mapping}
+		eligible = append(eligible, item)
+		if metric.CanonicalMetric != "capital_expenditure" {
+			contextualEligible = append(contextualEligible, item)
+		}
 	}
 	executor, err := engine.NewWithClock(codeCommit, func() time.Time { return asOf.UTC() })
 	if err != nil {
@@ -204,6 +252,11 @@ func BuildCompanyFinancialActivation(
 			continue
 		}
 		report.Receipts = append(report.Receipts, *result.Receipt)
+		authority, authorityErr := receiptAccountingAuthority(*result.Receipt, spec, inputs, false)
+		if authorityErr != nil {
+			return CompanyFinancialActivation{}, authorityErr
+		}
+		report.ReceiptAuthorities[result.Receipt.ReceiptID] = authority
 	}
 	if len(report.ContextualConcepts["capital_expenditure"]) > 0 {
 		for _, spec := range companyOperationSpecs {
@@ -224,7 +277,12 @@ func BuildCompanyFinancialActivation(
 				continue
 			}
 			report.ContextualReceipts = append(report.ContextualReceipts, *result.Receipt)
-			report.ContextualPerimeters[spec.OperationID] = ProductiveAssetsContextPerimeter
+			authority, authorityErr := receiptAccountingAuthority(*result.Receipt, spec, inputs, true)
+			if authorityErr != nil {
+				return CompanyFinancialActivation{}, authorityErr
+			}
+			report.ReceiptAuthorities[result.Receipt.ReceiptID] = authority
+			report.ContextualPerimeters[spec.OperationID] = contextOnlyPerimeter(authority)
 		}
 	}
 	for _, operationID := range unavailableCompanyOperations {
@@ -250,13 +308,20 @@ func BuildCompanyFinancialActivation(
 }
 
 func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error {
-	if report.SchemaVersion != CompanyFinancialActivationSchemaV1 || report.UniverseID != UniverseID ||
+	if report.SchemaVersion != CompanyFinancialActivationSchemaV2 || report.UniverseID != UniverseID ||
 		report.CompanyID == "" || report.AsOf.IsZero() || report.CodeCommit == "" || report.ReportSHA256 == "" {
 		return errors.New("company financial activation envelope is invalid")
 	}
 	if report.AccountingRegistryVersion != runtimeAccountingAuthorityRegistry.RegistryVersion ||
 		report.AccountingRegistrySHA256 != runtimeAccountingAuthorityRegistry.RegistrySHA256 {
 		return errors.New("company financial activation accounting registry is missing or mismatched")
+	}
+	if report.AccountingDecisionSHA256 != runtimeAccountingProfessionalDecision.DecisionSHA256 ||
+		ValidateAccountingProfessionalDecision(
+			runtimeAccountingProfessionalDecision,
+			runtimeAccountingAuthorityRegistry,
+		) != nil {
+		return errors.New("company financial activation accounting decision is missing or mismatched")
 	}
 	if report.FreshnessPolicy != FinancialMetricFreshnessPolicy {
 		return errors.New("company financial activation freshness policy is invalid")
@@ -266,25 +331,37 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 		return errors.New("company financial activation perimeter policy is invalid")
 	}
 	for metricID, concepts := range report.SourceConcepts {
-		if metricID == "capital_expenditure" {
-			for _, concept := range concepts {
-				if concept != "PaymentsToAcquirePropertyPlantAndEquipment" {
-					return errors.New("company financial activation contains an unauthorized capex concept")
-				}
-			}
-		}
-		if metricID == "revenue" {
-			for _, concept := range concepts {
-				if concept != "RevenueFromContractWithCustomerExcludingAssessedTax" &&
-					!reviewedFinancialConceptAlias(report.CompanyID, metricID, concept) {
-					return errors.New("company financial activation contains an unauthorized revenue concept")
-				}
+		for _, concept := range concepts {
+			mapping := ResolveAccountingMapping(
+				runtimeAccountingAuthorityRegistry,
+				report.CompanyID,
+				metricID,
+				"us-gaap",
+				concept,
+			)
+			if !effectiveAccountingMappingNumericallyAuthoritative(
+				mapping,
+				runtimeAccountingAuthorityRegistry,
+				runtimeAccountingProfessionalDecision,
+			) {
+				return errors.New("company financial activation contains an unauthorized numerical concept")
 			}
 		}
 	}
 	for metricID, concepts := range report.ContextualConcepts {
 		for _, concept := range concepts {
-			if !reviewedContextOnlyConcept(report.CompanyID, metricID, concept) {
+			mapping := ResolveAccountingMapping(
+				runtimeAccountingAuthorityRegistry,
+				report.CompanyID,
+				metricID,
+				"us-gaap",
+				concept,
+			)
+			if !effectiveAccountingMappingContextDisplayAuthorized(
+				mapping,
+				runtimeAccountingAuthorityRegistry,
+				runtimeAccountingProfessionalDecision,
+			) {
 				return errors.New("company financial activation contains an unauthorized context-only concept")
 			}
 		}
@@ -299,6 +376,7 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 		}
 	}
 	operations := map[string]bool{}
+	authorityCoverage := map[string]bool{}
 	for _, receipt := range report.Receipts {
 		if err := contracts.ValidateCalculationReceipt(receipt); err != nil {
 			return err
@@ -308,6 +386,14 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 			return errors.New("company financial activation contains duplicate or cross-company receipt")
 		}
 		operations[receipt.OperationID] = true
+		authority, exists := report.ReceiptAuthorities[receipt.ReceiptID]
+		if !exists {
+			return errors.New("company financial activation receipt lacks per-input accounting authority")
+		}
+		if err := validateReceiptAccountingAuthority(receipt, authority, false); err != nil {
+			return err
+		}
+		authorityCoverage[receipt.ReceiptID] = true
 	}
 	for _, abstention := range report.Abstentions {
 		if len(abstention.MetricIDs) != 1 || len(abstention.CompanyIDs) != 1 ||
@@ -327,18 +413,28 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 		}
 		if contextualOperations[receipt.OperationID] || len(receipt.Scope.CompanyIDs) != 1 ||
 			receipt.Scope.CompanyIDs[0] != report.CompanyID ||
-			report.ContextualPerimeters[receipt.OperationID] != ProductiveAssetsContextPerimeter ||
 			!operations[receipt.OperationID] {
 			return errors.New("company financial activation contains invalid contextual authority")
 		}
+		authority, exists := report.ReceiptAuthorities[receipt.ReceiptID]
+		if !exists {
+			return errors.New("company financial activation contextual receipt lacks per-input accounting authority")
+		}
+		if err := validateReceiptAccountingAuthority(receipt, authority, true); err != nil {
+			return err
+		}
+		if report.ContextualPerimeters[receipt.OperationID] != contextOnlyPerimeter(authority) ||
+			report.ContextualPerimeters[receipt.OperationID] == "" {
+			return errors.New("company financial activation contains invalid contextual authority")
+		}
 		contextualOperations[receipt.OperationID] = true
+		authorityCoverage[receipt.ReceiptID] = true
 	}
 	if len(report.ContextualPerimeters) != len(contextualOperations) {
 		return errors.New("company financial activation contextual perimeter coverage is invalid")
 	}
-	if len(contextualOperations) > 0 &&
-		!reviewedContextOnlyConcept(report.CompanyID, "capital_expenditure", "PaymentsToAcquireProductiveAssets") {
-		return errors.New("company financial activation contextual receipts lack reviewed source authority")
+	if len(report.ReceiptAuthorities) != len(authorityCoverage) {
+		return errors.New("company financial activation contains orphan receipt authority")
 	}
 	if len(operations) != len(companyOperationSpecs)+len(unavailableCompanyOperations) {
 		return errors.New("company financial activation has incomplete operation coverage")
@@ -353,7 +449,7 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 	return nil
 }
 
-func selectOperationInputs(metrics []data.NormalizedMetric, spec operationSpec) (map[string]data.NormalizedMetric, string) {
+func selectOperationInputs(metrics []authorizedMetric, spec operationSpec) (map[string]authorizedMetric, string) {
 	if spec.OperationID == "financial.revenue_growth" {
 		return selectGrowthInputs(metrics)
 	}
@@ -365,22 +461,23 @@ func selectOperationInputs(metrics []data.NormalizedMetric, spec operationSpec) 
 		start time.Time
 		end   time.Time
 	}
-	sets := map[period]map[string]data.NormalizedMetric{}
-	for _, metric := range metrics {
+	sets := map[period]map[string]authorizedMetric{}
+	for _, item := range metrics {
+		metric := item.Metric
 		if !required[metric.CanonicalMetric] || metric.PeriodType != spec.PeriodType ||
 			(spec.Annual && !annualDuration(metric.PeriodStart, metric.PeriodEnd)) {
 			continue
 		}
 		key := period{start: metric.PeriodStart, end: metric.PeriodEnd}
 		if sets[key] == nil {
-			sets[key] = map[string]data.NormalizedMetric{}
+			sets[key] = map[string]authorizedMetric{}
 		}
 		prior, exists := sets[key][metric.CanonicalMetric]
-		if !exists || prior.SourceAvailableAt.Before(metric.SourceAvailableAt) {
-			sets[key][metric.CanonicalMetric] = metric
+		if !exists || betterAuthorizedMetric(item, prior) {
+			sets[key][metric.CanonicalMetric] = item
 		}
 	}
-	var selected map[string]data.NormalizedMetric
+	var selected map[string]authorizedMetric
 	var selectedEnd time.Time
 	for key, values := range sets {
 		if len(values) != len(required) || (!selectedEnd.IsZero() && !key.end.After(selectedEnd)) {
@@ -391,41 +488,77 @@ func selectOperationInputs(metrics []data.NormalizedMetric, spec operationSpec) 
 	if len(selected) != len(required) {
 		return nil, "aligned_standardized_inputs_unavailable"
 	}
-	result := map[string]data.NormalizedMetric{}
+	result := map[string]authorizedMetric{}
 	for inputID, canonical := range spec.Inputs {
 		result[inputID] = selected[canonical]
 	}
 	return result, ""
 }
 
-func selectGrowthInputs(metrics []data.NormalizedMetric) (map[string]data.NormalizedMetric, string) {
-	byPeriod := map[string]data.NormalizedMetric{}
-	for _, metric := range metrics {
+func betterAuthorizedMetric(candidate, prior authorizedMetric) bool {
+	candidateRank := accountingMappingSelectionRank(candidate.Mapping)
+	priorRank := accountingMappingSelectionRank(prior.Mapping)
+	if candidateRank != priorRank {
+		return candidateRank > priorRank
+	}
+	if !candidate.Metric.SourceAvailableAt.Equal(prior.Metric.SourceAvailableAt) {
+		return candidate.Metric.SourceAvailableAt.After(prior.Metric.SourceAvailableAt)
+	}
+	return candidate.Fact.FactID > prior.Fact.FactID
+}
+
+func accountingMappingSelectionRank(mapping AccountingMappingAuthority) int {
+	switch {
+	case mapping.Disposition == AccountingCanonical:
+		return 3
+	case effectiveAccountingMappingNumericallyAuthoritative(
+		mapping,
+		runtimeAccountingAuthorityRegistry,
+		runtimeAccountingProfessionalDecision,
+	):
+		return 2
+	case effectiveAccountingMappingContextDisplayAuthorized(
+		mapping,
+		runtimeAccountingAuthorityRegistry,
+		runtimeAccountingProfessionalDecision,
+	):
+		return 1
+	default:
+		return 0
+	}
+}
+
+func selectGrowthInputs(metrics []authorizedMetric) (map[string]authorizedMetric, string) {
+	byPeriod := map[string]authorizedMetric{}
+	for _, item := range metrics {
+		metric := item.Metric
 		if metric.CanonicalMetric != "revenue" || metric.PeriodType != "duration" ||
 			!annualDuration(metric.PeriodStart, metric.PeriodEnd) {
 			continue
 		}
 		key := periodLabel(metric)
 		prior, exists := byPeriod[key]
-		if !exists || prior.SourceAvailableAt.Before(metric.SourceAvailableAt) {
-			byPeriod[key] = metric
+		if !exists || betterAuthorizedMetric(item, prior) {
+			byPeriod[key] = item
 		}
 	}
-	values := make([]data.NormalizedMetric, 0, len(byPeriod))
+	values := make([]authorizedMetric, 0, len(byPeriod))
 	for _, metric := range byPeriod {
 		values = append(values, metric)
 	}
-	sort.Slice(values, func(i, j int) bool { return values[i].PeriodEnd.After(values[j].PeriodEnd) })
+	sort.Slice(values, func(i, j int) bool {
+		return values[i].Metric.PeriodEnd.After(values[j].Metric.PeriodEnd)
+	})
 	if len(values) < 2 {
 		return nil, "two_annual_standardized_revenue_periods_unavailable"
 	}
-	return map[string]data.NormalizedMetric{"revenue_current": values[0], "revenue_prior": values[1]}, ""
+	return map[string]authorizedMetric{"revenue_current": values[0], "revenue_prior": values[1]}, ""
 }
 
 func operationRequest(
 	runID, companyID string,
 	spec operationSpec,
-	selected map[string]data.NormalizedMetric,
+	selected map[string]authorizedMetric,
 ) (contracts.EngineRequest, error) {
 	operation, exists := capability.RuntimeRegistry().Get(spec.OperationID)
 	if !exists {
@@ -440,7 +573,7 @@ func operationRequest(
 	periods := make([]string, 0, len(inputIDs))
 	sourceAsOf := time.Time{}
 	for _, inputID := range inputIDs {
-		metric := selected[inputID]
+		metric := selected[inputID].Metric
 		period := periodLabel(metric)
 		available := metric.SourceAvailableAt
 		inputs = append(inputs, contracts.EngineInput{
@@ -449,7 +582,7 @@ func operationRequest(
 				Value: metric.Value, Unit: "currency", Currency: metric.Currency,
 				Period: period, AsOf: &available,
 			},
-			Status: "normalized", EvidenceRefs: append([]string(nil), metric.SourceFactIDs...),
+			Status: "normalized", EvidenceRefs: []string{selected[inputID].Fact.FactID},
 		})
 		periods = append(periods, period)
 		if sourceAsOf.IsZero() || available.After(sourceAsOf) {
@@ -503,7 +636,16 @@ func technologyCompany(companyID string) bool {
 }
 
 func periodicFactAuthority(metric data.NormalizedMetric, facts map[string]data.ReportedFact) (data.ReportedFact, bool) {
+	fact, _, found := periodicFactAuthorityWithMapping(metric, facts)
+	return fact, found
+}
+
+func periodicFactAuthorityWithMapping(
+	metric data.NormalizedMetric,
+	facts map[string]data.ReportedFact,
+) (data.ReportedFact, AccountingMappingAuthority, bool) {
 	var selected data.ReportedFact
+	var selectedMapping AccountingMappingAuthority
 	found := false
 	for _, factID := range metric.SourceFactIDs {
 		fact, exists := facts[factID]
@@ -517,22 +659,33 @@ func periodicFactAuthority(metric data.NormalizedMetric, facts map[string]data.R
 		default:
 			continue
 		}
-		if metric.PeriodType == "instant" && fact.InstantDate != nil &&
-			fact.InstantDate.Equal(metric.PeriodEnd) {
-			if !found || fact.AvailableAt.After(selected.AvailableAt) ||
-				(fact.AvailableAt.Equal(selected.AvailableAt) && fact.FactID > selected.FactID) {
-				selected, found = fact, true
-			}
-		}
+		periodMatches := metric.PeriodType == "instant" && fact.InstantDate != nil &&
+			fact.InstantDate.Equal(metric.PeriodEnd)
 		if metric.PeriodType == "duration" && fact.StartDate != nil && fact.EndDate != nil &&
 			fact.StartDate.Equal(metric.PeriodStart) && fact.EndDate.Equal(metric.PeriodEnd) {
-			if !found || fact.AvailableAt.After(selected.AvailableAt) ||
-				(fact.AvailableAt.Equal(selected.AvailableAt) && fact.FactID > selected.FactID) {
-				selected, found = fact, true
-			}
+			periodMatches = true
+		}
+		if !periodMatches {
+			continue
+		}
+		namespace := fact.Taxonomy
+		if namespace == "" {
+			namespace = "us-gaap"
+		}
+		mapping := ResolveAccountingMapping(
+			runtimeAccountingAuthorityRegistry,
+			metric.CompanyID,
+			metric.CanonicalMetric,
+			namespace,
+			fact.Concept,
+		)
+		candidate := authorizedMetric{Metric: metric, Fact: fact, Mapping: mapping}
+		prior := authorizedMetric{Metric: metric, Fact: selected, Mapping: selectedMapping}
+		if !found || betterAuthorizedMetric(candidate, prior) {
+			selected, selectedMapping, found = fact, mapping, true
 		}
 	}
-	return selected, found
+	return selected, selectedMapping, found
 }
 
 func financialSemanticAuthority(metric data.NormalizedMetric, fact data.ReportedFact) bool {
@@ -543,14 +696,22 @@ func financialSemanticAuthority(metric data.NormalizedMetric, fact data.Reported
 		fact.Taxonomy,
 		fact.Concept,
 	)
-	return accountingMappingNumericallyAuthoritative(mapping)
+	return effectiveAccountingMappingNumericallyAuthoritative(
+		mapping,
+		runtimeAccountingAuthorityRegistry,
+		runtimeAccountingProfessionalDecision,
+	)
 }
 
 func reviewedFinancialConceptAlias(companyID, canonicalMetric, concept string) bool {
 	mapping := ResolveAccountingMapping(
 		runtimeAccountingAuthorityRegistry, companyID, canonicalMetric, "us-gaap", concept,
 	)
-	return accountingMappingNumericallyAuthoritative(mapping) &&
+	return effectiveAccountingMappingNumericallyAuthoritative(
+		mapping,
+		runtimeAccountingAuthorityRegistry,
+		runtimeAccountingProfessionalDecision,
+	) &&
 		mapping.Disposition == AccountingReviewedAlias
 }
 
@@ -562,14 +723,244 @@ func contextOnlyFinancialAuthority(metric data.NormalizedMetric, fact data.Repor
 		fact.Taxonomy,
 		fact.Concept,
 	)
-	return accountingMappingContextDisplayAuthorized(mapping)
+	return effectiveAccountingMappingContextDisplayAuthorized(
+		mapping,
+		runtimeAccountingAuthorityRegistry,
+		runtimeAccountingProfessionalDecision,
+	)
 }
 
 func reviewedContextOnlyConcept(companyID, canonicalMetric, concept string) bool {
 	mapping := ResolveAccountingMapping(
 		runtimeAccountingAuthorityRegistry, companyID, canonicalMetric, "us-gaap", concept,
 	)
-	return accountingMappingContextDisplayAuthorized(mapping)
+	return effectiveAccountingMappingContextDisplayAuthorized(
+		mapping,
+		runtimeAccountingAuthorityRegistry,
+		runtimeAccountingProfessionalDecision,
+	)
+}
+
+func receiptAccountingAuthority(
+	receipt contracts.CalculationReceipt,
+	spec operationSpec,
+	selected map[string]authorizedMetric,
+	contextOnly bool,
+) (ReceiptAccountingAuthority, error) {
+	inputIDs := make([]string, 0, len(selected))
+	for inputID := range selected {
+		inputIDs = append(inputIDs, inputID)
+	}
+	sort.Strings(inputIDs)
+	authority := ReceiptAccountingAuthority{
+		ReceiptID: receipt.ReceiptID, OperationID: receipt.OperationID,
+		OutputClass:         AccountingOutputAuthoritative,
+		ProductLabel:        operationProductLabel(receipt.OperationID, selected, contextOnly),
+		PairRankingEligible: !contextOnly,
+	}
+	if contextOnly {
+		authority.OutputClass = AccountingOutputContextOnly
+		authority.PairRankingEligible = false
+	}
+	signatureParts := make([]string, 0, len(inputIDs))
+	for _, inputID := range inputIDs {
+		item := selected[inputID]
+		numerical := effectiveAccountingMappingNumericallyAuthoritative(
+			item.Mapping,
+			runtimeAccountingAuthorityRegistry,
+			runtimeAccountingProfessionalDecision,
+		)
+		context := effectiveAccountingMappingContextDisplayAuthorized(
+			item.Mapping,
+			runtimeAccountingAuthorityRegistry,
+			runtimeAccountingProfessionalDecision,
+		)
+		if !numerical && !context {
+			return ReceiptAccountingAuthority{}, fmt.Errorf(
+				"receipt %s contains unauthorized input %s",
+				receipt.ReceiptID,
+				inputID,
+			)
+		}
+		inputAuthority := ReceiptInputAccountingAuthority{
+			InputID: inputID, CanonicalInput: item.Metric.CanonicalMetric,
+			MetricID: item.Metric.MetricID, SourceFactIDs: []string{item.Fact.FactID},
+			MappingKey: item.Mapping.MappingKey, TaxonomyConcept: item.Fact.Concept,
+			AccountingPerimeter: item.Mapping.AccountingPerimeter,
+			Disposition:         item.Mapping.Disposition, ProductLabel: item.Mapping.ProductLabel,
+			NumericallyAuthoritative: numerical, ContextOnly: context,
+			PairRankingEligible: numerical && item.Mapping.ComparableRankingEligible,
+		}
+		if !inputAuthority.PairRankingEligible {
+			authority.PairRankingEligible = false
+		}
+		authority.Inputs = append(authority.Inputs, inputAuthority)
+		signatureParts = append(signatureParts, inputID+"="+item.Mapping.AccountingPerimeter)
+	}
+	authority.AccountingPerimeterSignature = strings.Join(signatureParts, ";")
+	return authority, nil
+}
+
+func operationProductLabel(
+	operationID string,
+	selected map[string]authorizedMetric,
+	contextOnly bool,
+) string {
+	if contextOnly {
+		if operationID == "financial.capex_intensity" {
+			return "reported reinvestment intensity"
+		}
+		if operationID == "financial.free_cash_flow" {
+			return "residual cash proxy"
+		}
+	}
+	if operationID == "financial.free_cash_flow" {
+		for _, item := range selected {
+			if item.Metric.CanonicalMetric == "capital_expenditure" &&
+				item.Mapping.Disposition == AccountingReviewedAlias {
+				return "simple FCF using " + item.Mapping.ProductLabel
+			}
+		}
+		return "simple FCF"
+	}
+	if operationID == "financial.capex_intensity" {
+		for _, item := range selected {
+			if item.Metric.CanonicalMetric == "capital_expenditure" &&
+				item.Mapping.Disposition == AccountingReviewedAlias {
+				return item.Mapping.ProductLabel + " intensity"
+			}
+		}
+	}
+	return operationID
+}
+
+func contextOnlyPerimeter(authority ReceiptAccountingAuthority) string {
+	for _, input := range authority.Inputs {
+		if input.ContextOnly {
+			return input.AccountingPerimeter
+		}
+	}
+	return ""
+}
+
+func validateReceiptAccountingAuthority(
+	receipt contracts.CalculationReceipt,
+	authority ReceiptAccountingAuthority,
+	contextOnly bool,
+) error {
+	if authority.ReceiptID != receipt.ReceiptID ||
+		authority.OperationID != receipt.OperationID ||
+		authority.ProductLabel == "" ||
+		authority.AccountingPerimeterSignature == "" ||
+		len(authority.Inputs) != len(receipt.NormalizedInputs) {
+		return errors.New("receipt accounting authority envelope is invalid")
+	}
+	if contextOnly {
+		if authority.OutputClass != AccountingOutputContextOnly ||
+			authority.PairRankingEligible {
+			return errors.New("context-only receipt authority cannot enter pair ranking")
+		}
+	} else if authority.OutputClass != AccountingOutputAuthoritative {
+		return errors.New("numerical receipt authority has an invalid output class")
+	}
+	receiptInputs := map[string]contracts.EngineInput{}
+	for _, input := range receipt.NormalizedInputs {
+		if input.InputID == "" || receiptInputs[input.InputID].InputID != "" {
+			return errors.New("receipt contains duplicate or empty input IDs")
+		}
+		receiptInputs[input.InputID] = input
+	}
+	signatureParts := make([]string, 0, len(authority.Inputs))
+	seen := map[string]bool{}
+	hasContext := false
+	expectedPairEligibility := !contextOnly
+	for _, input := range authority.Inputs {
+		if input.InputID == "" || seen[input.InputID] ||
+			input.CanonicalInput == "" || input.MetricID == "" ||
+			len(input.SourceFactIDs) != 1 || input.MappingKey == "" ||
+			input.TaxonomyConcept == "" || input.AccountingPerimeter == "" ||
+			input.ProductLabel == "" {
+			return errors.New("receipt contains incomplete per-input accounting authority")
+		}
+		seen[input.InputID] = true
+		receiptInput, exists := receiptInputs[input.InputID]
+		if !exists || !sameStringSet(receiptInput.EvidenceRefs, input.SourceFactIDs) {
+			return errors.New("receipt accounting authority does not match receipt evidence")
+		}
+		mapping := ResolveAccountingMapping(
+			runtimeAccountingAuthorityRegistry,
+			receipt.Scope.CompanyIDs[0],
+			input.CanonicalInput,
+			"us-gaap",
+			input.TaxonomyConcept,
+		)
+		if mapping.MappingKey != input.MappingKey ||
+			mapping.AccountingPerimeter != input.AccountingPerimeter ||
+			mapping.Disposition != input.Disposition ||
+			mapping.ProductLabel != input.ProductLabel ||
+			!stringSliceContains(mapping.AuthorizedOperations, receipt.OperationID) {
+			return errors.New("receipt accounting authority does not match the approved registry mapping")
+		}
+		numerical := effectiveAccountingMappingNumericallyAuthoritative(
+			mapping,
+			runtimeAccountingAuthorityRegistry,
+			runtimeAccountingProfessionalDecision,
+		)
+		context := effectiveAccountingMappingContextDisplayAuthorized(
+			mapping,
+			runtimeAccountingAuthorityRegistry,
+			runtimeAccountingProfessionalDecision,
+		)
+		pairEligible := numerical && mapping.ComparableRankingEligible
+		if input.NumericallyAuthoritative != numerical ||
+			input.ContextOnly != context ||
+			input.PairRankingEligible != pairEligible ||
+			(!numerical && !context) {
+			return errors.New("receipt accounting authority has invalid effective permissions")
+		}
+		if context {
+			hasContext = true
+		}
+		if !pairEligible {
+			expectedPairEligibility = false
+		}
+		signatureParts = append(
+			signatureParts,
+			input.InputID+"="+input.AccountingPerimeter,
+		)
+	}
+	sort.Strings(signatureParts)
+	if authority.AccountingPerimeterSignature != strings.Join(signatureParts, ";") ||
+		authority.PairRankingEligible != expectedPairEligibility ||
+		contextOnly != hasContext {
+		return errors.New("receipt accounting authority perimeter or release class is invalid")
+	}
+	return nil
+}
+
+func stringSliceContains(values []string, value string) bool {
+	for _, candidate := range values {
+		if candidate == value {
+			return true
+		}
+	}
+	return false
+}
+
+func sameStringSet(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	leftCopy := append([]string(nil), left...)
+	rightCopy := append([]string(nil), right...)
+	sort.Strings(leftCopy)
+	sort.Strings(rightCopy)
+	for index := range leftCopy {
+		if leftCopy[index] != rightCopy[index] {
+			return false
+		}
+	}
+	return true
 }
 
 func uniqueStrings(values []string) []string {

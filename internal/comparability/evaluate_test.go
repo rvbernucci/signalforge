@@ -106,6 +106,34 @@ func TestContextOnlyAccountingPerimeterNeverEntersComparableRanking(t *testing.T
 	}
 }
 
+func TestV2ContextOnlyAuthorityIsVisibleButNeverReleasable(t *testing.T) {
+	now := time.Date(2026, 7, 24, 12, 0, 0, 0, time.UTC)
+	item := v2Request(t, now)
+	item.Operands[1].OutputClass = "context_only"
+	item.Operands[1].PairRankingEligible = false
+	item.Operands[1].AccountingInputs[0].PairRankingEligible = false
+	item, _ = contracts.PopulateMetricComparabilityRequestHash(item)
+	receipt, err := Evaluate(item, now.Add(time.Minute), DefaultPolicy())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if receipt.Disposition != contracts.ComparisonContextOnly ||
+		IsReleasable(receipt.Disposition) ||
+		!strings.Contains(ExplainRefusal(receipt), "context_only_accounting_authority") {
+		t.Fatalf("context-only authority escaped its release boundary: %+v", receipt)
+	}
+}
+
+func TestV2RequestRejectsAccountingAuthoritySignatureMutation(t *testing.T) {
+	now := time.Date(2026, 7, 24, 12, 0, 0, 0, time.UTC)
+	item := v2Request(t, now)
+	item.Operands[0].AccountingInputs[0].AccountingPerimeter = "unreviewed"
+	item, _ = contracts.PopulateMetricComparabilityRequestHash(item)
+	if _, err := Evaluate(item, now.Add(time.Minute), DefaultPolicy()); err == nil {
+		t.Fatal("mutated per-input accounting perimeter passed validation")
+	}
+}
+
 func request(t *testing.T, now time.Time) contracts.MetricComparabilityRequest {
 	t.Helper()
 	start := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
@@ -133,6 +161,34 @@ func request(t *testing.T, now time.Time) contracts.MetricComparabilityRequest {
 			operand("sec-cik:0001652044", "nasdaq:GOOGL"),
 		},
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return result
+}
+
+func v2Request(t *testing.T, now time.Time) contracts.MetricComparabilityRequest {
+	t.Helper()
+	item := request(t, now)
+	item.SchemaVersion = contracts.ComparabilityRequestSchemaV2
+	for index := range item.Operands {
+		operand := &item.Operands[index]
+		operand.AccountingPerimeter = "revenue=consolidated_periodic_filing"
+		operand.AccountingInputs = []contracts.AccountingInputComparisonAuthority{
+			{
+				InputID: "revenue", CanonicalInput: "revenue",
+				MappingKey:          operand.CompanyID + "|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+				TaxonomyConcept:     "RevenueFromContractWithCustomerExcludingAssessedTax",
+				AccountingPerimeter: "consolidated_periodic_filing",
+				Disposition:         "canonical", ProductLabel: "revenue",
+				PairRankingEligible: true,
+			},
+		}
+		operand.OutputClass = "authoritative"
+		operand.ProductLabel = "revenue"
+		operand.PairRankingEligible = true
+	}
+	result, err := contracts.PopulateMetricComparabilityRequestHash(item)
 	if err != nil {
 		t.Fatal(err)
 	}

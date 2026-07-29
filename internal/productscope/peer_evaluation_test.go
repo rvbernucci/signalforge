@@ -47,11 +47,11 @@ func TestReviewedOperationMappingIDIsBoundedToAuthorizedRevenueConcepts(t *testi
 		},
 		{
 			name: "reviewed Alphabet alias", companyID: "sec-cik:0001652044",
-			concept: "Revenues",
+			concept: "Revenues", want: reviewedID,
 		},
 		{
 			name: "reviewed NVIDIA alias", companyID: "sec-cik:0001045810",
-			concept: "Revenues",
+			concept: "Revenues", want: reviewedID,
 		},
 		{
 			name: "unreviewed issuer alias", companyID: "sec-cik:0000789019",
@@ -115,8 +115,8 @@ func TestContextOnlyCapexCannotInheritRevenueEquivalence(t *testing.T) {
 	amdConcepts := operationConcepts(amd, receipt, false)
 	nvidiaMapping := reviewedOperationMappingID(nvidia, receipt, nvidiaConcepts)
 	amdMapping := reviewedOperationMappingID(amd, receipt, amdConcepts)
-	if nvidiaMapping != "" || amdMapping == "" {
-		t.Fatalf("pending NVIDIA mapping must remain withheld: NVIDIA=%q AMD=%q", nvidiaMapping, amdMapping)
+	if nvidiaMapping == "" || amdMapping == "" || nvidiaMapping == amdMapping {
+		t.Fatalf("context capex incorrectly inherited canonical equivalence: NVIDIA=%q AMD=%q", nvidiaMapping, amdMapping)
 	}
 }
 

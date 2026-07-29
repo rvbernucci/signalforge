@@ -1,8 +1,8 @@
 {
   "schema_version": "signalforge/technology20-accounting-authority-packet/v1",
   "universe_id": "us-technology-20-v2",
-  "registry_version": "technology20-accounting-authority/2026-07-29",
-  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "registry_version": "technology20-accounting-authority/2026-07-29-r2",
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4",
   "company_id": "sec-cik:0001018724",
   "display_name": "Amazon",
   "primary_ticker": "AMZN",
@@ -13,7 +13,7 @@
       "canonical_input": "capital_expenditure",
       "expected_period_type": "duration",
       "sign_policy": "cash_outflow_positive_magnitude",
-      "disposition": "rejected",
+      "disposition": "reviewed_alias",
       "authorized_operations": [
         "financial.capex_intensity",
         "financial.free_cash_flow"
@@ -21,25 +21,34 @@
       "concepts": [
         {
           "mapping": {
-            "mapping_key": "sec-cik:0001018724|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|unreviewed",
+            "mapping_key": "sec-cik:0001018724|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_and_equipment_cash_purchases",
             "company_id": "sec-cik:0001018724",
             "canonical_input": "capital_expenditure",
             "taxonomy_namespace": "us-gaap",
             "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
-            "accounting_perimeter": "unreviewed",
-            "disposition": "rejected",
-            "reason_code": "unreviewed_issuer_specific_concept",
-            "reviewer_basis": "No exact issuer-specific entry exists in the versioned authority registry.",
-            "professional_review_status": "not_submitted_for_review",
-            "authorized_operations": null,
+            "accounting_perimeter": "company_reported_property_and_equipment_cash_purchases",
+            "disposition": "reviewed_alias",
+            "reason_code": "issuer_reported_property_equipment_cash_purchases",
+            "reviewer_basis": "Amazon presents the tagged amount as purchases of property and equipment in its consolidated cash-flow statement.",
+            "professional_review_status": "pending_named_professional_disposition",
+            "authorized_operations": [
+              "financial.capex_intensity",
+              "financial.free_cash_flow"
+            ],
             "effective_form_families": [
               "10-K",
               "10-Q"
             ],
             "invalidation_conditions": [
-              "explicit_registry_entry_required"
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "issuer_changes_line_item_scope",
+              "period_unit_currency_or_sign_gate_fails"
             ],
-            "product_label": "capital_expenditure",
+            "product_label": "cash purchases of property and equipment",
+            "source_citation": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+            "source_locator": "Consolidated Statements of Cash Flows, Purchases of property and equipment",
+            "bounded_source_language": "Purchases of property and equipment",
             "comparable_ranking_eligible": false
           },
           "observed_records": 146,
@@ -166,9 +175,9 @@
         }
       ],
       "active_source_count": 2,
-      "professional_review_needed": false,
+      "professional_review_needed": true,
       "reason_codes": [
-        "unreviewed_issuer_specific_concept"
+        "issuer_reported_property_equipment_cash_purchases"
       ]
     },
     {
@@ -944,17 +953,17 @@
       "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
     },
     {
-      "exception_id": "accounting-exception-5b7350c8cbace2bcbca173d2",
+      "exception_id": "accounting-exception-230f146a0dddca2b0e0dfffc",
       "company_id": "sec-cik:0001018724",
       "canonical_input": "capital_expenditure",
       "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_reported_property_equipment_cash_purchases",
       "observed_records": 146,
       "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0001018724.json",
-      "source_locator": "companyfacts:us-gaap/PaymentsToAcquireProductiveAssets/USD/143"
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, Purchases of property and equipment"
     }
   ],
   "source_hashes": {
@@ -964,5 +973,5 @@
     "filings_sha256": "316fb1741d6a4845c3734b70f07e0bc4f00f00ccf500739b9e1d57bd4443888b"
   },
   "claim_boundary": "This metadata-only packet authorizes deterministic source selection. It contains no calculation values and cannot authorize model arithmetic or an unreviewed equivalence.",
-  "packet_sha256": "cbce3049a6201e3923f88cd4ca6246ca0bc99b0184f470d6192e9f4d193c81e0"
+  "packet_sha256": "82e9328d8b5bb756c8de7c706814bf2f303fe44dc79240e87e0c2503ea2918ef"
 }

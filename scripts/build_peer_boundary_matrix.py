@@ -39,6 +39,25 @@ def operand_boundary(operand: dict[str, Any]) -> dict[str, Any]:
             else "not_comparable"
         ),
         "accounting_perimeter": operand["accounting_perimeter"],
+        "accounting_inputs": sorted(
+            [
+                {
+                    "input_id": authority["input_id"],
+                    "canonical_input": authority["canonical_input"],
+                    "mapping_key": authority["mapping_key"],
+                    "taxonomy_concept": authority["taxonomy_concept"],
+                    "accounting_perimeter": authority["accounting_perimeter"],
+                    "disposition": authority["disposition"],
+                    "product_label": authority["product_label"],
+                    "pair_ranking_eligible": authority["pair_ranking_eligible"],
+                }
+                for authority in operand["accounting_inputs"]
+            ],
+            key=lambda item: item["input_id"],
+        ),
+        "output_class": operand["output_class"],
+        "product_label": operand["product_label"],
+        "pair_ranking_eligible": operand["pair_ranking_eligible"],
         "period_type": operand["period_type"],
         "fiscal_start": operand["fiscal_start"],
         "fiscal_end": operand["fiscal_end"],

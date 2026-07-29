@@ -1,8 +1,8 @@
 {
   "schema_version": "signalforge/technology20-accounting-authority-packet/v1",
   "universe_id": "us-technology-20-v2",
-  "registry_version": "technology20-accounting-authority/2026-07-29",
-  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "registry_version": "technology20-accounting-authority/2026-07-29-r2",
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4",
   "company_id": "sec-cik:0000051143",
   "display_name": "IBM",
   "primary_ticker": "IBM",
@@ -385,7 +385,7 @@
       "canonical_input": "revenue",
       "expected_period_type": "duration",
       "sign_policy": "company_reported_sign",
-      "disposition": "rejected",
+      "disposition": "reviewed_alias",
       "authorized_operations": [
         "financial.capex_intensity",
         "financial.operating_margin",
@@ -394,25 +394,35 @@
       "concepts": [
         {
           "mapping": {
-            "mapping_key": "sec-cik:0000051143|revenue|us-gaap|Revenues|unreviewed",
+            "mapping_key": "sec-cik:0000051143|revenue|us-gaap|Revenues|consolidated_periodic_filing",
             "company_id": "sec-cik:0000051143",
             "canonical_input": "revenue",
             "taxonomy_namespace": "us-gaap",
             "taxonomy_concept": "Revenues",
-            "accounting_perimeter": "unreviewed",
-            "disposition": "rejected",
-            "reason_code": "unreviewed_issuer_specific_concept",
-            "reviewer_basis": "No exact issuer-specific entry exists in the versioned authority registry.",
-            "professional_review_status": "not_submitted_for_review",
-            "authorized_operations": null,
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "reviewed_alias",
+            "reason_code": "issuer_specific_revenue_alias",
+            "reviewer_basis": "IBM reports consolidated revenue under the US-GAAP Revenues concept in the active filing chain.",
+            "professional_review_status": "pending_named_professional_disposition",
+            "authorized_operations": [
+              "financial.capex_intensity",
+              "financial.operating_margin",
+              "financial.revenue_growth"
+            ],
             "effective_form_families": [
               "10-K",
               "10-Q"
             ],
             "invalidation_conditions": [
-              "explicit_registry_entry_required"
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "issuer_changes_revenue_scope",
+              "period_unit_currency_or_sign_gate_fails"
             ],
             "product_label": "revenue",
+            "source_citation": "https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/ibm-20251231_d2.htm",
+            "source_locator": "2025 Annual Report, Consolidated Income Statement, Total revenue",
+            "bounded_source_language": "Total revenue",
             "comparable_ranking_eligible": false
           },
           "observed_records": 231,
@@ -491,9 +501,9 @@
         }
       ],
       "active_source_count": 2,
-      "professional_review_needed": false,
+      "professional_review_needed": true,
       "reason_codes": [
-        "unreviewed_issuer_specific_concept"
+        "issuer_specific_revenue_alias"
       ]
     },
     {
@@ -844,17 +854,17 @@
   ],
   "exceptions": [
     {
-      "exception_id": "accounting-exception-0c8ca8c95a50991bebe8c9f3",
+      "exception_id": "accounting-exception-3696cb1e85fd4c400529b1bd",
       "company_id": "sec-cik:0000051143",
       "canonical_input": "revenue",
       "taxonomy_concept": "Revenues",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
       "observed_records": 231,
       "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0000051143.json",
-      "source_locator": "companyfacts:us-gaap/Revenues/USD/227"
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/ibm-20251231_d2.htm",
+      "source_locator": "2025 Annual Report, Consolidated Income Statement, Total revenue"
     },
     {
       "exception_id": "accounting-exception-7238a0e1c3e7aace1a21622e",
@@ -874,5 +884,5 @@
     "filings_sha256": "316fb1741d6a4845c3734b70f07e0bc4f00f00ccf500739b9e1d57bd4443888b"
   },
   "claim_boundary": "This metadata-only packet authorizes deterministic source selection. It contains no calculation values and cannot authorize model arithmetic or an unreviewed equivalence.",
-  "packet_sha256": "10e13b093641806444f3e99fe89dc799b3d8b4f8f705d6e72e1eb698b6cb1b87"
+  "packet_sha256": "df4be7b857c8579290637403242725bcbe1622a1f589f865885b7db6d4a1fe65"
 }

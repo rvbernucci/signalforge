@@ -1,7 +1,7 @@
 {
   "schema_version": "signalforge/technology20-accounting-perimeter-registry/v1",
   "universe_id": "us-technology-20-v2",
-  "registry_version": "technology20-accounting-authority/2026-07-29",
+  "registry_version": "technology20-accounting-authority/2026-07-29-r2",
   "default_disposition": "rejected",
   "entries": [
     {
@@ -839,6 +839,38 @@
       ],
       "product_label": "revenue",
       "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Revenues",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "reviewer_basis": "IBM reports consolidated revenue under the US-GAAP Revenues concept in the active filing chain.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_revenue_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/ibm-20251231_d2.htm",
+      "source_locator": "2025 Annual Report, Consolidated Income Statement, Total revenue",
+      "bounded_source_language": "Total revenue",
+      "comparable_ranking_eligible": false
     },
     {
       "mapping_key": "sec-cik:0000051143|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
@@ -1991,6 +2023,38 @@
       "comparable_ranking_eligible": true
     },
     {
+      "mapping_key": "sec-cik:0000796343|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Revenues",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "reviewer_basis": "Adobe reports consolidated revenue under the US-GAAP Revenues concept in the active filing chain.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_revenue_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000003/adbe-20251128.htm",
+      "source_locator": "Consolidated Statements of Income, Total revenue",
+      "bounded_source_language": "Total revenue",
+      "comparable_ranking_eligible": false
+    },
+    {
       "mapping_key": "sec-cik:0000796343|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
       "company_id": "sec-cik:0000796343",
       "canonical_input": "stockholders_equity",
@@ -2073,6 +2137,37 @@
       ],
       "product_label": "total_liabilities",
       "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_cash_capital_expenditures",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "accounting_perimeter": "company_reported_cash_capital_expenditures",
+      "disposition": "context_only",
+      "reason_code": "company_reported_capex_scope_not_proven_equivalent_to_ppe",
+      "reviewer_basis": "Qualcomm presents the tagged amount as capital expenditures, but the filing does not establish an exact PP\u0026E-only perimeter.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_line_item_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "company-reported cash capital expenditures",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, Capital expenditures",
+      "bounded_source_language": "Capital expenditures",
+      "comparable_ranking_eligible": false
     },
     {
       "mapping_key": "sec-cik:0000804328|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
@@ -2219,6 +2314,38 @@
       ],
       "product_label": "revenue",
       "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Revenues",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "reviewer_basis": "Qualcomm reports consolidated revenue under the US-GAAP Revenues concept in the active filing chain.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_revenue_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+      "source_locator": "Consolidated Statements of Operations, Total revenues",
+      "bounded_source_language": "Total revenues",
+      "comparable_ranking_eligible": false
     },
     {
       "mapping_key": "sec-cik:0000804328|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
@@ -2533,6 +2660,37 @@
       ],
       "product_label": "total_liabilities",
       "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_and_equipment_cash_purchases",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "accounting_perimeter": "company_reported_property_and_equipment_cash_purchases",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_reported_property_equipment_cash_purchases",
+      "reviewer_basis": "Amazon presents the tagged amount as purchases of property and equipment in its consolidated cash-flow statement.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_line_item_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "cash purchases of property and equipment",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, Purchases of property and equipment",
+      "bounded_source_language": "Purchases of property and equipment",
+      "comparable_ranking_eligible": false
     },
     {
       "mapping_key": "sec-cik:0001018724|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
@@ -2968,9 +3126,9 @@
         "period_unit_currency_or_sign_gate_fails"
       ],
       "product_label": "revenue",
-      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001045810.json",
-      "source_locator": "SEC Company Facts and active periodic filing chain",
-      "bounded_source_language": "Revenues",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+      "source_locator": "Consolidated Statements of Income, Revenue",
+      "bounded_source_language": "Revenue",
       "comparable_ranking_eligible": false
     },
     {
@@ -3978,6 +4136,37 @@
       "comparable_ranking_eligible": true
     },
     {
+      "mapping_key": "sec-cik:0001596532|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_equipment_and_intangible_assets",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "accounting_perimeter": "company_reported_property_equipment_and_intangible_assets",
+      "disposition": "context_only",
+      "reason_code": "productive_assets_scope_is_broader_than_ppe_capex",
+      "reviewer_basis": "Issuer-specific SEC filing language identifies a broader productive-assets perimeter.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_line_item_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "reported reinvestment intensity / residual cash proxy",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1596532/000159653226000013/anet-20251231.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, investing activities",
+      "bounded_source_language": "Purchases of property, equipment and intangible assets",
+      "comparable_ranking_eligible": false
+    },
+    {
       "mapping_key": "sec-cik:0001596532|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
       "company_id": "sec-cik:0001596532",
       "canonical_input": "capital_expenditure",
@@ -4380,8 +4569,8 @@
         "period_unit_currency_or_sign_gate_fails"
       ],
       "product_label": "revenue",
-      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
-      "source_locator": "SEC Company Facts and active periodic filing chain",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+      "source_locator": "Consolidated Statements of Income, Revenues",
       "bounded_source_language": "Revenues",
       "comparable_ranking_eligible": false
     },
@@ -4700,5 +4889,5 @@
       "comparable_ranking_eligible": true
     }
   ],
-  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996"
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4"
 }

@@ -12,8 +12,10 @@ import (
 
 const (
 	AccountingAuthorityRegistrySchemaV1 = "signalforge/technology20-accounting-perimeter-registry/v1"
-	AccountingAuthorityRegistryVersion  = "technology20-accounting-authority/2026-07-29"
+	AccountingAuthorityRegistryVersion  = "technology20-accounting-authority/2026-07-29-r2"
 	ConsolidatedPeriodicPerimeter       = "consolidated_periodic_filing"
+	PropertyEquipmentCashPerimeter      = "company_reported_property_and_equipment_cash_purchases"
+	ReportedCashCapexPerimeter          = "company_reported_cash_capital_expenditures"
 	AccountingReviewNotRequired         = "not_required_for_exact_canonical_mapping"
 	AccountingReviewPending             = "pending_named_professional_disposition"
 	AccountingReviewAccepted            = "accepted_named_professional_disposition"
@@ -150,29 +152,8 @@ func DefaultAccountingAuthorityRegistry() (AccountingAuthorityRegistry, error) {
 			})
 		}
 	}
-	registry.Entries = append(registry.Entries,
-		revenueAliasAuthority("sec-cik:0001045810", "NVIDIA"),
-		revenueAliasAuthority("sec-cik:0001652044", "Alphabet"),
-		AccountingMappingAuthority{
-			CompanyID: "sec-cik:0001045810", CanonicalInput: "capital_expenditure",
-			TaxonomyNamespace: "us-gaap", TaxonomyConcept: "PaymentsToAcquireProductiveAssets",
-			AccountingPerimeter: ProductiveAssetsContextPerimeter, Disposition: AccountingContextOnly,
-			ReasonCode:               "productive_assets_scope_is_broader_than_ppe_capex",
-			ReviewerBasis:            "Issuer-specific SEC filing language identifies a broader productive-assets perimeter.",
-			ProfessionalReviewStatus: AccountingReviewPending,
-			AuthorizedOperations:     []string{"financial.capex_intensity", "financial.free_cash_flow"},
-			EffectiveFormFamilies:    []string{"10-K", "10-Q"},
-			InvalidationConditions: []string{
-				"issuer_changes_line_item_scope", "filing_chain_is_not_active",
-				"dimensions_are_present", "period_unit_currency_or_sign_gate_fails",
-			},
-			ProductLabel:              "reported reinvestment intensity / residual cash proxy",
-			SourceCitation:            "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
-			SourceLocator:             "Consolidated Statements of Cash Flows, investing activities",
-			BoundedSourceLanguage:     "Purchases related to property and equipment and intangible assets",
-			ComparableRankingEligible: false,
-		},
-	)
+	specificMappings := issuerSpecificAccountingMappings()
+	registry.Entries = append(registry.Entries, specificMappings...)
 	for index := range registry.Entries {
 		entry := &registry.Entries[index]
 		entry.MappingKey = accountingMappingKey(
@@ -211,9 +192,11 @@ func ValidateAccountingAuthorityRegistry(registry AccountingAuthorityRegistry) e
 		registry.RegistrySHA256 == "" {
 		return errors.New("accounting authority registry envelope is invalid")
 	}
-	if len(registry.Entries) != len(Companies())*len(canonicalAccountingInputs)+3 {
+	expectedEntries := len(Companies())*len(canonicalAccountingInputs) +
+		len(issuerSpecificAccountingMappings())
+	if len(registry.Entries) != expectedEntries {
 		return fmt.Errorf("accounting authority registry has %d entries, want %d",
-			len(registry.Entries), len(Companies())*len(canonicalAccountingInputs)+3)
+			len(registry.Entries), expectedEntries)
 	}
 	seen := map[string]bool{}
 	canonicalCoverage := map[string]bool{}
@@ -312,7 +295,84 @@ func accountingInputDefinition(canonicalInput string) (canonicalAccountingInput,
 	return canonicalAccountingInput{}, false
 }
 
-func revenueAliasAuthority(companyID, issuer string) AccountingMappingAuthority {
+func issuerSpecificAccountingMappings() []AccountingMappingAuthority {
+	return []AccountingMappingAuthority{
+		revenueAliasAuthority(
+			"sec-cik:0000051143", "IBM",
+			"https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/ibm-20251231_d2.htm",
+			"2025 Annual Report, Consolidated Income Statement, Total revenue",
+			"Total revenue",
+		),
+		revenueAliasAuthority(
+			"sec-cik:0000796343", "Adobe",
+			"https://www.sec.gov/Archives/edgar/data/796343/000079634326000003/adbe-20251128.htm",
+			"Consolidated Statements of Income, Total revenue",
+			"Total revenue",
+		),
+		revenueAliasAuthority(
+			"sec-cik:0000804328", "Qualcomm",
+			"https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+			"Consolidated Statements of Operations, Total revenues",
+			"Total revenues",
+		),
+		revenueAliasAuthority(
+			"sec-cik:0001045810", "NVIDIA",
+			"https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+			"Consolidated Statements of Income, Revenue",
+			"Revenue",
+		),
+		revenueAliasAuthority(
+			"sec-cik:0001652044", "Alphabet",
+			"https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+			"Consolidated Statements of Income, Revenues",
+			"Revenues",
+		),
+		capitalExpenditureContextAuthority(
+			"sec-cik:0000804328",
+			ReportedCashCapexPerimeter,
+			"company-reported cash capital expenditures",
+			"company_reported_capex_scope_not_proven_equivalent_to_ppe",
+			"Qualcomm presents the tagged amount as capital expenditures, but the filing does not establish an exact PP&E-only perimeter.",
+			"https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+			"Consolidated Statements of Cash Flows, Capital expenditures",
+			"Capital expenditures",
+		),
+		capitalExpenditureAliasAuthority(
+			"sec-cik:0001018724",
+			PropertyEquipmentCashPerimeter,
+			"cash purchases of property and equipment",
+			"issuer_reported_property_equipment_cash_purchases",
+			"Amazon presents the tagged amount as purchases of property and equipment in its consolidated cash-flow statement.",
+			"https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+			"Consolidated Statements of Cash Flows, Purchases of property and equipment",
+			"Purchases of property and equipment",
+		),
+		capitalExpenditureContextAuthority(
+			"sec-cik:0001045810",
+			ProductiveAssetsContextPerimeter,
+			"reported reinvestment intensity / residual cash proxy",
+			"productive_assets_scope_is_broader_than_ppe_capex",
+			"Issuer-specific SEC filing language identifies a broader productive-assets perimeter.",
+			"https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+			"Consolidated Statements of Cash Flows, investing activities",
+			"Purchases related to property and equipment and intangible assets",
+		),
+		capitalExpenditureContextAuthority(
+			"sec-cik:0001596532",
+			ProductiveAssetsContextPerimeter,
+			"reported reinvestment intensity / residual cash proxy",
+			"productive_assets_scope_is_broader_than_ppe_capex",
+			"Issuer-specific SEC filing language identifies a broader productive-assets perimeter.",
+			"https://www.sec.gov/Archives/edgar/data/1596532/000159653226000013/anet-20251231.htm",
+			"Consolidated Statements of Cash Flows, investing activities",
+			"Purchases of property, equipment and intangible assets",
+		),
+	}
+}
+
+func revenueAliasAuthority(
+	companyID, issuer, sourceCitation, sourceLocator, boundedSourceLanguage string,
+) AccountingMappingAuthority {
 	return AccountingMappingAuthority{
 		CompanyID: companyID, CanonicalInput: "revenue", TaxonomyNamespace: "us-gaap",
 		TaxonomyConcept: "Revenues", AccountingPerimeter: ConsolidatedPeriodicPerimeter,
@@ -327,10 +387,55 @@ func revenueAliasAuthority(companyID, issuer string) AccountingMappingAuthority 
 			"issuer_changes_revenue_scope", "filing_chain_is_not_active",
 			"dimensions_are_present", "period_unit_currency_or_sign_gate_fails",
 		},
-		ProductLabel: "revenue", SourceCitation: "https://data.sec.gov/api/xbrl/companyfacts/CIK" +
-			strings.TrimPrefix(companyID, "sec-cik:") + ".json",
-		SourceLocator:         "SEC Company Facts and active periodic filing chain",
-		BoundedSourceLanguage: "Revenues", ComparableRankingEligible: false,
+		ProductLabel:              "revenue",
+		SourceCitation:            sourceCitation,
+		SourceLocator:             sourceLocator,
+		BoundedSourceLanguage:     boundedSourceLanguage,
+		ComparableRankingEligible: false,
+	}
+}
+
+func capitalExpenditureAliasAuthority(
+	companyID, perimeter, productLabel, reasonCode, reviewerBasis,
+	sourceCitation, sourceLocator, boundedSourceLanguage string,
+) AccountingMappingAuthority {
+	return AccountingMappingAuthority{
+		CompanyID: companyID, CanonicalInput: "capital_expenditure",
+		TaxonomyNamespace: "us-gaap", TaxonomyConcept: "PaymentsToAcquireProductiveAssets",
+		AccountingPerimeter: perimeter, Disposition: AccountingReviewedAlias,
+		ReasonCode: reasonCode, ReviewerBasis: reviewerBasis,
+		ProfessionalReviewStatus: AccountingReviewPending,
+		AuthorizedOperations:     []string{"financial.capex_intensity", "financial.free_cash_flow"},
+		EffectiveFormFamilies:    []string{"10-K", "10-Q"},
+		InvalidationConditions: []string{
+			"issuer_changes_line_item_scope", "filing_chain_is_not_active",
+			"dimensions_are_present", "period_unit_currency_or_sign_gate_fails",
+		},
+		ProductLabel: productLabel, SourceCitation: sourceCitation,
+		SourceLocator: sourceLocator, BoundedSourceLanguage: boundedSourceLanguage,
+		ComparableRankingEligible: false,
+	}
+}
+
+func capitalExpenditureContextAuthority(
+	companyID, perimeter, productLabel, reasonCode, reviewerBasis,
+	sourceCitation, sourceLocator, boundedSourceLanguage string,
+) AccountingMappingAuthority {
+	return AccountingMappingAuthority{
+		CompanyID: companyID, CanonicalInput: "capital_expenditure",
+		TaxonomyNamespace: "us-gaap", TaxonomyConcept: "PaymentsToAcquireProductiveAssets",
+		AccountingPerimeter: perimeter, Disposition: AccountingContextOnly,
+		ReasonCode: reasonCode, ReviewerBasis: reviewerBasis,
+		ProfessionalReviewStatus: AccountingReviewPending,
+		AuthorizedOperations:     []string{"financial.capex_intensity", "financial.free_cash_flow"},
+		EffectiveFormFamilies:    []string{"10-K", "10-Q"},
+		InvalidationConditions: []string{
+			"issuer_changes_line_item_scope", "filing_chain_is_not_active",
+			"dimensions_are_present", "period_unit_currency_or_sign_gate_fails",
+		},
+		ProductLabel:   productLabel,
+		SourceCitation: sourceCitation, SourceLocator: sourceLocator,
+		BoundedSourceLanguage: boundedSourceLanguage, ComparableRankingEligible: false,
 	}
 }
 

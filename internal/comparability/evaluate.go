@@ -50,6 +50,7 @@ func Evaluate(request contracts.MetricComparabilityRequest, generatedAt time.Tim
 		return contracts.MetricComparabilityReceipt{}, errors.New("receipt generation time cannot precede request as_of")
 	}
 	left, right := request.Operands[0], request.Operands[1]
+	v2Authority := request.SchemaVersion == contracts.ComparabilityRequestSchemaV2
 	invariants := []contracts.ComparabilityInvariant{
 		check("distinct_issuers", left.CompanyID != right.CompanyID, "comparison operands must belong to distinct issuers"),
 		check("same_metric", left.CanonicalMetricID == right.CanonicalMetricID, "canonical metric IDs differ"),
@@ -65,8 +66,13 @@ func Evaluate(request contracts.MetricComparabilityRequest, generatedAt time.Tim
 		check("same_accounting_perimeter", left.AccountingPerimeter == right.AccountingPerimeter, "accounting perimeters differ"),
 		check("reviewed_accounting_perimeter", reviewedAccountingPerimeter(left.AccountingPerimeter) &&
 			reviewedAccountingPerimeter(right.AccountingPerimeter), "accounting perimeter was not independently constrained"),
-		check("ranking_eligible_accounting_perimeter", rankingEligibleAccountingPerimeter(left.AccountingPerimeter) &&
-			rankingEligibleAccountingPerimeter(right.AccountingPerimeter), "context-only accounting perimeter cannot enter a comparable ranking"),
+		check(
+			"ranking_eligible_accounting_perimeter",
+			(!v2Authority && rankingEligibleAccountingPerimeter(left.AccountingPerimeter) &&
+				rankingEligibleAccountingPerimeter(right.AccountingPerimeter)) ||
+				(v2Authority && left.PairRankingEligible && right.PairRankingEligible),
+			"context-only or standalone-only accounting authority cannot enter a comparable ranking",
+		),
 		check("same_restatement_state", left.RestatementState == right.RestatementState, "restatement states differ"),
 		check("active_restatement_chain", activeRestatementState(left.RestatementState) &&
 			activeRestatementState(right.RestatementState), "amendment or restatement chain is not active"),
@@ -108,8 +114,17 @@ func Evaluate(request contracts.MetricComparabilityRequest, generatedAt time.Tim
 	}
 
 	reasons := failedInvariantIDs(invariants)
+	contextOnly := v2Authority &&
+		(left.OutputClass == "context_only" ||
+			right.OutputClass == "context_only" ||
+			!left.PairRankingEligible ||
+			!right.PairRankingEligible)
 	disposition := contracts.ComparisonComparable
-	if len(reasons) > 0 {
+	if contextOnly {
+		disposition = contracts.ComparisonContextOnly
+		reasons = append(reasons, "context_only_accounting_authority")
+		caveats = append(caveats, "non_ranking_context_only")
+	} else if len(reasons) > 0 {
 		disposition = contracts.ComparisonNotComparable
 		caveats = nil
 	} else if len(caveats) > 0 {
@@ -125,6 +140,9 @@ func Evaluate(request contracts.MetricComparabilityRequest, generatedAt time.Tim
 		Disposition: disposition, Invariants: invariants, RequiredCaveatIDs: caveats,
 		ReasonCodes: reasons, ReviewerPolicyVersion: policy.Version,
 		RequestSHA256: request.RequestSHA256, GeneratedAt: generatedAt,
+	}
+	if v2Authority {
+		receipt.SchemaVersion = contracts.ComparabilityReceiptSchemaV2
 	}
 	return contracts.PopulateMetricComparabilityReceiptHash(receipt)
 }
@@ -159,12 +177,36 @@ func activeRestatementState(value string) bool {
 }
 
 func reviewedAccountingPerimeter(value string) bool {
-	return value == "consolidated" || value == "consolidated_periodic_filing" ||
-		value == "company_reported_property_equipment_and_intangible_assets"
+	parts := strings.Split(value, ";")
+	for _, part := range parts {
+		perimeter := part
+		if split := strings.SplitN(part, "=", 2); len(split) == 2 {
+			perimeter = split[1]
+		}
+		switch perimeter {
+		case "consolidated", "consolidated_periodic_filing",
+			"company_reported_property_and_equipment_cash_purchases",
+			"company_reported_cash_capital_expenditures",
+			"company_reported_property_equipment_and_intangible_assets":
+		default:
+			return false
+		}
+	}
+	return len(parts) > 0
 }
 
 func rankingEligibleAccountingPerimeter(value string) bool {
-	return value == "consolidated" || value == "consolidated_periodic_filing"
+	parts := strings.Split(value, ";")
+	for _, part := range parts {
+		perimeter := part
+		if split := strings.SplitN(part, "=", 2); len(split) == 2 {
+			perimeter = split[1]
+		}
+		if perimeter != "consolidated" && perimeter != "consolidated_periodic_filing" {
+			return false
+		}
+	}
+	return len(parts) > 0
 }
 
 func annualDuration(operand contracts.MetricComparisonOperand) bool {
@@ -188,7 +230,8 @@ func IsReleasable(disposition contracts.ComparisonDisposition) bool {
 }
 
 func ExplainRefusal(receipt contracts.MetricComparabilityReceipt) string {
-	if receipt.Disposition != contracts.ComparisonNotComparable {
+	if receipt.Disposition != contracts.ComparisonNotComparable &&
+		receipt.Disposition != contracts.ComparisonContextOnly {
 		return ""
 	}
 	return "Comparison withheld because: " + strings.Join(receipt.ReasonCodes, ", ") + "."

@@ -1,8 +1,8 @@
 {
   "schema_version": "signalforge/technology20-accounting-authority-packet/v1",
   "universe_id": "us-technology-20-v2",
-  "registry_version": "technology20-accounting-authority/2026-07-29",
-  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "registry_version": "technology20-accounting-authority/2026-07-29-r2",
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4",
   "company_id": "sec-cik:0000804328",
   "display_name": "Qualcomm",
   "primary_ticker": "QCOM",
@@ -13,7 +13,7 @@
       "canonical_input": "capital_expenditure",
       "expected_period_type": "duration",
       "sign_policy": "cash_outflow_positive_magnitude",
-      "disposition": "rejected",
+      "disposition": "context_only",
       "authorized_operations": [
         "financial.capex_intensity",
         "financial.free_cash_flow"
@@ -21,25 +21,34 @@
       "concepts": [
         {
           "mapping": {
-            "mapping_key": "sec-cik:0000804328|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|unreviewed",
+            "mapping_key": "sec-cik:0000804328|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_cash_capital_expenditures",
             "company_id": "sec-cik:0000804328",
             "canonical_input": "capital_expenditure",
             "taxonomy_namespace": "us-gaap",
             "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
-            "accounting_perimeter": "unreviewed",
-            "disposition": "rejected",
-            "reason_code": "unreviewed_issuer_specific_concept",
-            "reviewer_basis": "No exact issuer-specific entry exists in the versioned authority registry.",
-            "professional_review_status": "not_submitted_for_review",
-            "authorized_operations": null,
+            "accounting_perimeter": "company_reported_cash_capital_expenditures",
+            "disposition": "context_only",
+            "reason_code": "company_reported_capex_scope_not_proven_equivalent_to_ppe",
+            "reviewer_basis": "Qualcomm presents the tagged amount as capital expenditures, but the filing does not establish an exact PP\u0026E-only perimeter.",
+            "professional_review_status": "pending_named_professional_disposition",
+            "authorized_operations": [
+              "financial.capex_intensity",
+              "financial.free_cash_flow"
+            ],
             "effective_form_families": [
               "10-K",
               "10-Q"
             ],
             "invalidation_conditions": [
-              "explicit_registry_entry_required"
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "issuer_changes_line_item_scope",
+              "period_unit_currency_or_sign_gate_fails"
             ],
-            "product_label": "capital_expenditure",
+            "product_label": "company-reported cash capital expenditures",
+            "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+            "source_locator": "Consolidated Statements of Cash Flows, Capital expenditures",
+            "bounded_source_language": "Capital expenditures",
             "comparable_ranking_eligible": false
           },
           "observed_records": 156,
@@ -118,9 +127,9 @@
         }
       ],
       "active_source_count": 2,
-      "professional_review_needed": false,
+      "professional_review_needed": true,
       "reason_codes": [
-        "unreviewed_issuer_specific_concept"
+        "company_reported_capex_scope_not_proven_equivalent_to_ppe"
       ]
     },
     {
@@ -484,7 +493,7 @@
       "canonical_input": "revenue",
       "expected_period_type": "duration",
       "sign_policy": "company_reported_sign",
-      "disposition": "rejected",
+      "disposition": "reviewed_alias",
       "authorized_operations": [
         "financial.capex_intensity",
         "financial.operating_margin",
@@ -493,25 +502,35 @@
       "concepts": [
         {
           "mapping": {
-            "mapping_key": "sec-cik:0000804328|revenue|us-gaap|Revenues|unreviewed",
+            "mapping_key": "sec-cik:0000804328|revenue|us-gaap|Revenues|consolidated_periodic_filing",
             "company_id": "sec-cik:0000804328",
             "canonical_input": "revenue",
             "taxonomy_namespace": "us-gaap",
             "taxonomy_concept": "Revenues",
-            "accounting_perimeter": "unreviewed",
-            "disposition": "rejected",
-            "reason_code": "unreviewed_issuer_specific_concept",
-            "reviewer_basis": "No exact issuer-specific entry exists in the versioned authority registry.",
-            "professional_review_status": "not_submitted_for_review",
-            "authorized_operations": null,
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "reviewed_alias",
+            "reason_code": "issuer_specific_revenue_alias",
+            "reviewer_basis": "Qualcomm reports consolidated revenue under the US-GAAP Revenues concept in the active filing chain.",
+            "professional_review_status": "pending_named_professional_disposition",
+            "authorized_operations": [
+              "financial.capex_intensity",
+              "financial.operating_margin",
+              "financial.revenue_growth"
+            ],
             "effective_form_families": [
               "10-K",
               "10-Q"
             ],
             "invalidation_conditions": [
-              "explicit_registry_entry_required"
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "issuer_changes_revenue_scope",
+              "period_unit_currency_or_sign_gate_fails"
             ],
             "product_label": "revenue",
+            "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+            "source_locator": "Consolidated Statements of Operations, Total revenues",
+            "bounded_source_language": "Total revenues",
             "comparable_ranking_eligible": false
           },
           "observed_records": 319,
@@ -590,9 +609,9 @@
         }
       ],
       "active_source_count": 2,
-      "professional_review_needed": false,
+      "professional_review_needed": true,
       "reason_codes": [
-        "unreviewed_issuer_specific_concept"
+        "issuer_specific_revenue_alias"
       ]
     },
     {
@@ -903,30 +922,30 @@
       "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
     },
     {
-      "exception_id": "accounting-exception-39f217dadb731fe8b09ca10f",
-      "company_id": "sec-cik:0000804328",
-      "canonical_input": "capital_expenditure",
-      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
-      "observed_records": 156,
-      "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0000804328.json",
-      "source_locator": "companyfacts:us-gaap/PaymentsToAcquireProductiveAssets/USD/153"
-    },
-    {
-      "exception_id": "accounting-exception-ee4c129bc3133c8fc5cd6c58",
+      "exception_id": "accounting-exception-62c060330b5bf8b26f4b8a63",
       "company_id": "sec-cik:0000804328",
       "canonical_input": "revenue",
       "taxonomy_concept": "Revenues",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
       "observed_records": 319,
       "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0000804328.json",
-      "source_locator": "companyfacts:us-gaap/Revenues/USD/315"
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+      "source_locator": "Consolidated Statements of Operations, Total revenues"
+    },
+    {
+      "exception_id": "accounting-exception-f72a4cf5bcc36dece350632f",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "disposition": "context_only",
+      "reason_code": "company_reported_capex_scope_not_proven_equivalent_to_ppe",
+      "observed_records": 156,
+      "professional_review_needed": true,
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, Capital expenditures"
     }
   ],
   "source_hashes": {
@@ -936,5 +955,5 @@
     "filings_sha256": "316fb1741d6a4845c3734b70f07e0bc4f00f00ccf500739b9e1d57bd4443888b"
   },
   "claim_boundary": "This metadata-only packet authorizes deterministic source selection. It contains no calculation values and cannot authorize model arithmetic or an unreviewed equivalence.",
-  "packet_sha256": "79bee88497fe8b785d47e4ca72ac8894355b86b44bc9f2ba19f31711b7b0e11a"
+  "packet_sha256": "b9eb696ef762c07bb95babc438b0b4345baf91a920db1e39523d22bd639e21d5"
 }

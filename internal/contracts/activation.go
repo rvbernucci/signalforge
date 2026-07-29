@@ -16,7 +16,9 @@ const (
 	CompanyResearchProfileV1     = "signalforge/company-research-profile/v1"
 	PeerLaneSchemaV1             = "signalforge/peer-lane/v1"
 	ComparabilityRequestSchemaV1 = "signalforge/metric-comparability-request/v1"
+	ComparabilityRequestSchemaV2 = "signalforge/metric-comparability-request/v2"
 	ComparabilityReceiptSchemaV1 = "signalforge/metric-comparability-receipt/v1"
+	ComparabilityReceiptSchemaV2 = "signalforge/metric-comparability-receipt/v2"
 	ComparisonBundleSchemaV1     = "signalforge/comparison-bundle/v1"
 	TypedAbstentionSchemaV1      = "signalforge/typed-abstention/v1"
 )
@@ -128,38 +130,54 @@ type ComparisonDisposition string
 const (
 	ComparisonComparable           ComparisonDisposition = "comparable"
 	ComparisonComparableWithCaveat ComparisonDisposition = "comparable_with_caveat"
+	ComparisonContextOnly          ComparisonDisposition = "context_only"
 	ComparisonNotComparable        ComparisonDisposition = "not_comparable"
 )
 
+type AccountingInputComparisonAuthority struct {
+	InputID             string `json:"input_id"`
+	CanonicalInput      string `json:"canonical_input"`
+	MappingKey          string `json:"mapping_key"`
+	TaxonomyConcept     string `json:"taxonomy_concept"`
+	AccountingPerimeter string `json:"accounting_perimeter"`
+	Disposition         string `json:"disposition"`
+	ProductLabel        string `json:"product_label"`
+	PairRankingEligible bool   `json:"pair_ranking_eligible"`
+}
+
 type MetricComparisonOperand struct {
-	CompanyID             string     `json:"company_id"`
-	SecurityID            string     `json:"security_id,omitempty"`
-	SourceObservationIDs  []string   `json:"source_observation_ids"`
-	FilingAccessions      []string   `json:"filing_accessions,omitempty"`
-	SourceHashes          []string   `json:"source_hashes"`
-	AvailableAt           time.Time  `json:"available_at"`
-	RetrievedAt           time.Time  `json:"retrieved_at"`
-	CanonicalMetricID     string     `json:"canonical_metric_id"`
-	MetricVersion         string     `json:"metric_version"`
-	TaxonomyConcept       string     `json:"taxonomy_concept"`
-	ExtensionMappingID    string     `json:"extension_mapping_id,omitempty"`
-	Value                 string     `json:"value"`
-	Numerator             string     `json:"numerator,omitempty"`
-	Denominator           string     `json:"denominator,omitempty"`
-	Unit                  string     `json:"unit"`
-	Currency              string     `json:"currency,omitempty"`
-	Scale                 int32      `json:"scale"`
-	SignPolicy            string     `json:"sign_policy"`
-	DimensionalIdentity   string     `json:"dimensional_identity"`
-	PeriodType            string     `json:"period_type"`
-	FiscalStart           *time.Time `json:"fiscal_start,omitempty"`
-	FiscalEnd             time.Time  `json:"fiscal_end"`
-	FilingDate            time.Time  `json:"filing_date"`
-	MarketObservationDate *time.Time `json:"market_observation_date,omitempty"`
-	AccountingPerimeter   string     `json:"accounting_perimeter"`
-	DefinitionID          string     `json:"definition_id"`
-	RestatementState      string     `json:"restatement_state"`
-	SupersessionState     string     `json:"supersession_state"`
+	CompanyID             string                               `json:"company_id"`
+	SecurityID            string                               `json:"security_id,omitempty"`
+	SourceObservationIDs  []string                             `json:"source_observation_ids"`
+	FilingAccessions      []string                             `json:"filing_accessions,omitempty"`
+	SourceHashes          []string                             `json:"source_hashes"`
+	AvailableAt           time.Time                            `json:"available_at"`
+	RetrievedAt           time.Time                            `json:"retrieved_at"`
+	CanonicalMetricID     string                               `json:"canonical_metric_id"`
+	MetricVersion         string                               `json:"metric_version"`
+	TaxonomyConcept       string                               `json:"taxonomy_concept"`
+	ExtensionMappingID    string                               `json:"extension_mapping_id,omitempty"`
+	Value                 string                               `json:"value"`
+	Numerator             string                               `json:"numerator,omitempty"`
+	Denominator           string                               `json:"denominator,omitempty"`
+	Unit                  string                               `json:"unit"`
+	Currency              string                               `json:"currency,omitempty"`
+	Scale                 int32                                `json:"scale"`
+	SignPolicy            string                               `json:"sign_policy"`
+	DimensionalIdentity   string                               `json:"dimensional_identity"`
+	PeriodType            string                               `json:"period_type"`
+	FiscalStart           *time.Time                           `json:"fiscal_start,omitempty"`
+	FiscalEnd             time.Time                            `json:"fiscal_end"`
+	FilingDate            time.Time                            `json:"filing_date"`
+	MarketObservationDate *time.Time                           `json:"market_observation_date,omitempty"`
+	AccountingPerimeter   string                               `json:"accounting_perimeter"`
+	AccountingInputs      []AccountingInputComparisonAuthority `json:"accounting_inputs,omitempty"`
+	OutputClass           string                               `json:"output_class,omitempty"`
+	ProductLabel          string                               `json:"product_label,omitempty"`
+	PairRankingEligible   bool                                 `json:"pair_ranking_eligible"`
+	DefinitionID          string                               `json:"definition_id"`
+	RestatementState      string                               `json:"restatement_state"`
+	SupersessionState     string                               `json:"supersession_state"`
 }
 
 type MetricComparabilityRequest struct {
@@ -343,25 +361,37 @@ func ValidatePeerLane(lane PeerLane) error {
 }
 
 func ValidateMetricComparabilityRequest(request MetricComparabilityRequest) error {
-	if request.SchemaVersion != ComparabilityRequestSchemaV1 || request.RequestID == "" ||
+	if (request.SchemaVersion != ComparabilityRequestSchemaV1 &&
+		request.SchemaVersion != ComparabilityRequestSchemaV2) ||
+		request.RequestID == "" ||
 		request.RunID == "" || request.LaneID == "" || request.AsOf.IsZero() ||
 		request.ReviewerPolicyVersion == "" || len(request.Operands) != 2 {
 		return errors.New("metric comparability request is incomplete")
 	}
-	if err := validateComparisonOperands(request.Operands, request.AsOf); err != nil {
+	if err := validateComparisonOperands(
+		request.Operands,
+		request.AsOf,
+		request.SchemaVersion == ComparabilityRequestSchemaV2,
+	); err != nil {
 		return err
 	}
 	return verifyStructHash(request, request.RequestSHA256, func(value *MetricComparabilityRequest) { value.RequestSHA256 = "" })
 }
 
 func ValidateMetricComparabilityReceipt(receipt MetricComparabilityReceipt) error {
-	if receipt.SchemaVersion != ComparabilityReceiptSchemaV1 || receipt.ReceiptID == "" ||
+	if (receipt.SchemaVersion != ComparabilityReceiptSchemaV1 &&
+		receipt.SchemaVersion != ComparabilityReceiptSchemaV2) ||
+		receipt.ReceiptID == "" ||
 		receipt.RequestID == "" || receipt.RunID == "" || receipt.LaneID == "" ||
 		receipt.AsOf.IsZero() || receipt.GeneratedAt.IsZero() || receipt.GeneratedAt.Before(receipt.AsOf) ||
 		receipt.ReviewerPolicyVersion == "" || len(receipt.Invariants) == 0 || !validHash(receipt.RequestSHA256) {
 		return errors.New("metric comparability receipt is incomplete")
 	}
-	if err := validateComparisonOperands(receipt.Operands, receipt.AsOf); err != nil {
+	if err := validateComparisonOperands(
+		receipt.Operands,
+		receipt.AsOf,
+		receipt.SchemaVersion == ComparabilityReceiptSchemaV2,
+	); err != nil {
 		return err
 	}
 	failed := 0
@@ -381,6 +411,12 @@ func ValidateMetricComparabilityReceipt(receipt MetricComparabilityReceipt) erro
 	case ComparisonComparableWithCaveat:
 		if len(receipt.RequiredCaveatIDs) == 0 {
 			return errors.New("qualified comparability requires visible caveats")
+		}
+	case ComparisonContextOnly:
+		if receipt.SchemaVersion != ComparabilityReceiptSchemaV2 ||
+			len(receipt.RequiredCaveatIDs) == 0 ||
+			len(receipt.ReasonCodes) == 0 {
+			return errors.New("context-only receipt requires v2 authority, visible caveats, and reasons")
 		}
 	case ComparisonNotComparable:
 		if failed == 0 || len(receipt.ReasonCodes) == 0 {
@@ -409,7 +445,8 @@ func ValidateComparisonBundle(bundle ComparisonBundle) error {
 		if receipt.RequestID != bundle.RequestID || receipt.RunID != bundle.RunID || receipt.LaneID != bundle.PeerLane.LaneID {
 			return errors.New("comparison bundle contains cross-request receipt contamination")
 		}
-		if receipt.Disposition != ComparisonNotComparable {
+		if receipt.Disposition == ComparisonComparable ||
+			receipt.Disposition == ComparisonComparableWithCaveat {
 			releasable[receipt.Operands[0].CanonicalMetricID] = true
 		}
 	}
@@ -477,7 +514,11 @@ func PopulateComparisonBundleHash(bundle ComparisonBundle) (ComparisonBundle, er
 	return bundle, err
 }
 
-func validateComparisonOperands(operands []MetricComparisonOperand, asOf time.Time) error {
+func validateComparisonOperands(
+	operands []MetricComparisonOperand,
+	asOf time.Time,
+	requireAccountingAuthority bool,
+) error {
 	companies := map[string]bool{}
 	metricID := ""
 	for index, operand := range operands {
@@ -506,6 +547,46 @@ func validateComparisonOperands(operands []MetricComparisonOperand, asOf time.Ti
 		}
 		if operand.PeriodType == "instant" && operand.FiscalStart != nil {
 			return fmt.Errorf("operands[%d] instant metric cannot have fiscal_start", index)
+		}
+		if requireAccountingAuthority {
+			if operand.OutputClass == "" || operand.ProductLabel == "" ||
+				len(operand.AccountingInputs) == 0 {
+				return fmt.Errorf("operands[%d] lacks per-input accounting authority", index)
+			}
+			signature := make([]string, 0, len(operand.AccountingInputs))
+			inputs := map[string]bool{}
+			expectedRanking := operand.OutputClass == "authoritative"
+			for authorityIndex, authority := range operand.AccountingInputs {
+				if authority.InputID == "" || inputs[authority.InputID] ||
+					authority.CanonicalInput == "" || authority.MappingKey == "" ||
+					authority.TaxonomyConcept == "" ||
+					authority.AccountingPerimeter == "" ||
+					authority.Disposition == "" ||
+					authority.ProductLabel == "" {
+					return fmt.Errorf(
+						"operands[%d].accounting_inputs[%d] is incomplete or duplicated",
+						index,
+						authorityIndex,
+					)
+				}
+				inputs[authority.InputID] = true
+				if !authority.PairRankingEligible {
+					expectedRanking = false
+				}
+				signature = append(
+					signature,
+					authority.InputID+"="+authority.AccountingPerimeter,
+				)
+			}
+			sort.Strings(signature)
+			if strings.Join(signature, ";") != operand.AccountingPerimeter ||
+				operand.PairRankingEligible != expectedRanking {
+				return fmt.Errorf("operands[%d] accounting authority signature is invalid", index)
+			}
+			if operand.OutputClass != "authoritative" &&
+				operand.OutputClass != "context_only" {
+				return fmt.Errorf("operands[%d] has unsupported output class", index)
+			}
 		}
 	}
 	if len(operands) == 2 && operands[0].SecurityID != "" && operands[0].SecurityID == operands[1].SecurityID {

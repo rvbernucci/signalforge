@@ -2,7 +2,7 @@
   "schema_version": "signalforge/technology20-accounting-exceptions/v1",
   "universe_id": "us-technology-20-v2",
   "as_of": "2026-07-24T10:32:53.677641Z",
-  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4",
   "exceptions": [
     {
       "exception_id": "accounting-exception-00a0bd5079053ecc0b1ec67b",
@@ -15,19 +15,6 @@
       "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
     },
     {
-      "exception_id": "accounting-exception-0c8ca8c95a50991bebe8c9f3",
-      "company_id": "sec-cik:0000051143",
-      "canonical_input": "revenue",
-      "taxonomy_concept": "Revenues",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
-      "observed_records": 231,
-      "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0000051143.json",
-      "source_locator": "companyfacts:us-gaap/Revenues/USD/227"
-    },
-    {
       "exception_id": "accounting-exception-1d1d22d5e5281e60015423f1",
       "company_id": "sec-cik:0000050863",
       "canonical_input": "total_liabilities",
@@ -36,6 +23,19 @@
       "observed_records": 0,
       "professional_review_needed": false,
       "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
+    },
+    {
+      "exception_id": "accounting-exception-230f146a0dddca2b0e0dfffc",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_reported_property_equipment_cash_purchases",
+      "observed_records": 146,
+      "professional_review_needed": true,
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, Purchases of property and equipment"
     },
     {
       "exception_id": "accounting-exception-2396457ff46b149c26d00a2f",
@@ -58,6 +58,19 @@
       "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
     },
     {
+      "exception_id": "accounting-exception-3696cb1e85fd4c400529b1bd",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "revenue",
+      "taxonomy_concept": "Revenues",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "observed_records": 231,
+      "professional_review_needed": true,
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/ibm-20251231_d2.htm",
+      "source_locator": "2025 Annual Report, Consolidated Income Statement, Total revenue"
+    },
+    {
       "exception_id": "accounting-exception-3781cb03505fcfddada4db2c",
       "company_id": "sec-cik:0001045810",
       "canonical_input": "revenue",
@@ -67,21 +80,8 @@
       "observed_records": 276,
       "professional_review_needed": true,
       "required_action": "Obtain and record a named professional disposition before final release.",
-      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001045810.json",
-      "source_locator": "SEC Company Facts and active periodic filing chain"
-    },
-    {
-      "exception_id": "accounting-exception-39f217dadb731fe8b09ca10f",
-      "company_id": "sec-cik:0000804328",
-      "canonical_input": "capital_expenditure",
-      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
-      "observed_records": 156,
-      "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0000804328.json",
-      "source_locator": "companyfacts:us-gaap/PaymentsToAcquireProductiveAssets/USD/153"
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+      "source_locator": "Consolidated Statements of Income, Revenue"
     },
     {
       "exception_id": "accounting-exception-3e9ebd68a3376c3bfbb3497f",
@@ -94,17 +94,17 @@
       "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
     },
     {
-      "exception_id": "accounting-exception-5b7350c8cbace2bcbca173d2",
-      "company_id": "sec-cik:0001018724",
-      "canonical_input": "capital_expenditure",
-      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
-      "observed_records": 146,
+      "exception_id": "accounting-exception-62c060330b5bf8b26f4b8a63",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "revenue",
+      "taxonomy_concept": "Revenues",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "observed_records": 319,
       "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0001018724.json",
-      "source_locator": "companyfacts:us-gaap/PaymentsToAcquireProductiveAssets/USD/143"
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+      "source_locator": "Consolidated Statements of Operations, Total revenues"
     },
     {
       "exception_id": "accounting-exception-653d1098307f6f984d4dd44b",
@@ -116,8 +116,8 @@
       "observed_records": 77,
       "professional_review_needed": true,
       "required_action": "Obtain and record a named professional disposition before final release.",
-      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
-      "source_locator": "SEC Company Facts and active periodic filing chain"
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+      "source_locator": "Consolidated Statements of Income, Revenues"
     },
     {
       "exception_id": "accounting-exception-700cafa22cba1135b1f1401b",
@@ -153,32 +153,6 @@
       "source_locator": "Consolidated Statements of Cash Flows, investing activities"
     },
     {
-      "exception_id": "accounting-exception-82c2b3d78c7185422b6c860f",
-      "company_id": "sec-cik:0000796343",
-      "canonical_input": "revenue",
-      "taxonomy_concept": "Revenues",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
-      "observed_records": 313,
-      "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0000796343.json",
-      "source_locator": "companyfacts:us-gaap/Revenues/USD/309"
-    },
-    {
-      "exception_id": "accounting-exception-af6cb8d9580d13e1f451df30",
-      "company_id": "sec-cik:0001596532",
-      "canonical_input": "capital_expenditure",
-      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
-      "observed_records": 18,
-      "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0001596532.json",
-      "source_locator": "companyfacts:us-gaap/PaymentsToAcquireProductiveAssets/USD/17"
-    },
-    {
       "exception_id": "accounting-exception-b3f82327a92223179b4fba73",
       "company_id": "sec-cik:0001341439",
       "canonical_input": "revenue",
@@ -192,6 +166,19 @@
       "source_locator": "companyfacts:us-gaap/Revenues/USD/140"
     },
     {
+      "exception_id": "accounting-exception-b548f7279b54f10ed28a2895",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "revenue",
+      "taxonomy_concept": "Revenues",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "observed_records": 313,
+      "professional_review_needed": true,
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000003/adbe-20251128.htm",
+      "source_locator": "Consolidated Statements of Income, Total revenue"
+    },
+    {
       "exception_id": "accounting-exception-c14855f31accd86d88e514f3",
       "company_id": "sec-cik:0000002488",
       "canonical_input": "total_liabilities",
@@ -202,18 +189,31 @@
       "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
     },
     {
-      "exception_id": "accounting-exception-ee4c129bc3133c8fc5cd6c58",
-      "company_id": "sec-cik:0000804328",
-      "canonical_input": "revenue",
-      "taxonomy_concept": "Revenues",
-      "disposition": "rejected",
-      "reason_code": "unreviewed_issuer_specific_concept",
-      "observed_records": 319,
+      "exception_id": "accounting-exception-d88bb34653f7c1156fa307fb",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "disposition": "context_only",
+      "reason_code": "productive_assets_scope_is_broader_than_ppe_capex",
+      "observed_records": 18,
       "professional_review_needed": true,
-      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
-      "source_citation": "https://data.sec.gov/submissions/CIK0000804328.json",
-      "source_locator": "companyfacts:us-gaap/Revenues/USD/315"
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1596532/000159653226000013/anet-20251231.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, investing activities"
+    },
+    {
+      "exception_id": "accounting-exception-f72a4cf5bcc36dece350632f",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "disposition": "context_only",
+      "reason_code": "company_reported_capex_scope_not_proven_equivalent_to_ppe",
+      "observed_records": 156,
+      "professional_review_needed": true,
+      "required_action": "Obtain and record a named professional disposition before final release.",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, Capital expenditures"
     }
   ],
-  "report_sha256": "0716e2df63757e3f114ffb76caf08743e1f5c60d3c8263b6d6f6c3a628a7b1a3"
+  "report_sha256": "ba10079ebdd4c0ad8543807f8d2704d27d4f037a009e3e5e0e81f7bead71c59a"
 }

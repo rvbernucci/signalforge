@@ -1,8 +1,8 @@
 {
   "schema_version": "signalforge/technology20-accounting-authority-packet/v1",
   "universe_id": "us-technology-20-v2",
-  "registry_version": "technology20-accounting-authority/2026-07-29",
-  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "registry_version": "technology20-accounting-authority/2026-07-29-r2",
+  "registry_sha256": "1c40b44538eee8c64e066bbf224aae51ff45a05094c1c36a867d58b779973dd4",
   "company_id": "sec-cik:0001652044",
   "display_name": "Alphabet",
   "primary_ticker": "GOOGL",
@@ -603,8 +603,8 @@
               "period_unit_currency_or_sign_gate_fails"
             ],
             "product_label": "revenue",
-            "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
-            "source_locator": "SEC Company Facts and active periodic filing chain",
+            "source_citation": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+            "source_locator": "Consolidated Statements of Income, Revenues",
             "bounded_source_language": "Revenues",
             "comparable_ranking_eligible": false
           },
@@ -1045,8 +1045,8 @@
       "observed_records": 77,
       "professional_review_needed": true,
       "required_action": "Obtain and record a named professional disposition before final release.",
-      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
-      "source_locator": "SEC Company Facts and active periodic filing chain"
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+      "source_locator": "Consolidated Statements of Income, Revenues"
     }
   ],
   "source_hashes": {
@@ -1056,5 +1056,5 @@
     "filings_sha256": "316fb1741d6a4845c3734b70f07e0bc4f00f00ccf500739b9e1d57bd4443888b"
   },
   "claim_boundary": "This metadata-only packet authorizes deterministic source selection. It contains no calculation values and cannot authorize model arithmetic or an unreviewed equivalence.",
-  "packet_sha256": "e7183693688da7e12069f18e48d41d131df96171d29f83be0b8c142278cf873d"
+  "packet_sha256": "04f27ffaf0c274a58837e6d62fbfe33a7378f8f2e06f8f663e885ea443997dc9"
 }

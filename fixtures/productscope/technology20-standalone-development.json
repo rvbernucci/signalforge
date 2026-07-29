@@ -16,14 +16,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
-        "financial.cash_conversion"
-      ],
-      "expected_abstentions": [
+        "financial.cash_conversion",
         "financial.operating_margin",
         "financial.revenue_growth"
       ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "4cdc5a4b3fe60e063bdb96a4ef5bdcd9c8adadffc7ec87f7c7d9e4d07768024c"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "9b8aa06744799605024ac62cacc644d4598cacbe9e2bb00168b2c35900e8aa8e"
     },
     {
       "journey_id": "ADBE-cash-quality",
@@ -35,14 +34,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
+        "financial.capex_intensity",
         "financial.free_cash_flow",
         "financial.quality_of_earnings"
       ],
-      "expected_abstentions": [
-        "financial.capex_intensity"
-      ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "4cdc5a4b3fe60e063bdb96a4ef5bdcd9c8adadffc7ec87f7c7d9e4d07768024c"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "9b8aa06744799605024ac62cacc644d4598cacbe9e2bb00168b2c35900e8aa8e"
     },
     {
       "journey_id": "ADBE-accounting-integrity",
@@ -58,7 +56,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "4cdc5a4b3fe60e063bdb96a4ef5bdcd9c8adadffc7ec87f7c7d9e4d07768024c"
+      "financial_report_sha256": "9b8aa06744799605024ac62cacc644d4598cacbe9e2bb00168b2c35900e8aa8e"
     },
     {
       "journey_id": "ADBE-risk-monitoring",
@@ -76,7 +74,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "4cdc5a4b3fe60e063bdb96a4ef5bdcd9c8adadffc7ec87f7c7d9e4d07768024c"
+      "financial_report_sha256": "9b8aa06744799605024ac62cacc644d4598cacbe9e2bb00168b2c35900e8aa8e"
     },
     {
       "journey_id": "AMD-fundamentals",
@@ -95,7 +93,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "c685b7b507bdb6d92e3b5fe07ee82939ea0be99827c8d24f9b8bd02803bec650"
+      "financial_report_sha256": "f2505f1865888f14cf83fa95c2f0647cabcf2d0f61933be9049d090e0e4ab9af"
     },
     {
       "journey_id": "AMD-cash-quality",
@@ -113,7 +111,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "c685b7b507bdb6d92e3b5fe07ee82939ea0be99827c8d24f9b8bd02803bec650"
+      "financial_report_sha256": "f2505f1865888f14cf83fa95c2f0647cabcf2d0f61933be9049d090e0e4ab9af"
     },
     {
       "journey_id": "AMD-accounting-integrity",
@@ -129,7 +127,7 @@
         "accounting.balance_sheet_identity"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "c685b7b507bdb6d92e3b5fe07ee82939ea0be99827c8d24f9b8bd02803bec650"
+      "financial_report_sha256": "f2505f1865888f14cf83fa95c2f0647cabcf2d0f61933be9049d090e0e4ab9af"
     },
     {
       "journey_id": "AMD-risk-monitoring",
@@ -147,7 +145,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "c685b7b507bdb6d92e3b5fe07ee82939ea0be99827c8d24f9b8bd02803bec650"
+      "financial_report_sha256": "f2505f1865888f14cf83fa95c2f0647cabcf2d0f61933be9049d090e0e4ab9af"
     },
     {
       "journey_id": "GOOGL-fundamentals",
@@ -160,14 +158,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
-        "financial.cash_conversion"
-      ],
-      "expected_abstentions": [
+        "financial.cash_conversion",
         "financial.operating_margin",
         "financial.revenue_growth"
       ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "954697bee913c951fd59036fbfb6f9bb1b4fa9248d90fd32726583b0af7f5115"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "c1b512ad95742350cfec8f95bf708eeb529cc4fe9af592e34ce8d649f9ea3738"
     },
     {
       "journey_id": "GOOGL-cash-quality",
@@ -179,14 +176,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
+        "financial.capex_intensity",
         "financial.free_cash_flow",
         "financial.quality_of_earnings"
       ],
-      "expected_abstentions": [
-        "financial.capex_intensity"
-      ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "954697bee913c951fd59036fbfb6f9bb1b4fa9248d90fd32726583b0af7f5115"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "c1b512ad95742350cfec8f95bf708eeb529cc4fe9af592e34ce8d649f9ea3738"
     },
     {
       "journey_id": "GOOGL-accounting-integrity",
@@ -202,7 +198,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "954697bee913c951fd59036fbfb6f9bb1b4fa9248d90fd32726583b0af7f5115"
+      "financial_report_sha256": "c1b512ad95742350cfec8f95bf708eeb529cc4fe9af592e34ce8d649f9ea3738"
     },
     {
       "journey_id": "GOOGL-risk-monitoring",
@@ -220,7 +216,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "954697bee913c951fd59036fbfb6f9bb1b4fa9248d90fd32726583b0af7f5115"
+      "financial_report_sha256": "c1b512ad95742350cfec8f95bf708eeb529cc4fe9af592e34ce8d649f9ea3738"
     },
     {
       "journey_id": "AMZN-fundamentals",
@@ -239,7 +235,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "3d773a0d5caa0f93168f94b772f26d4e2666304243a578b9d04eb9c3444fa1bf"
+      "financial_report_sha256": "86b0ceda8e6226d627748d05c1163394e302147afc2f780aff0491e89b9773ea"
     },
     {
       "journey_id": "AMZN-cash-quality",
@@ -251,14 +247,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow",
         "financial.quality_of_earnings"
       ],
-      "expected_abstentions": [
-        "financial.capex_intensity",
-        "financial.free_cash_flow"
-      ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "3d773a0d5caa0f93168f94b772f26d4e2666304243a578b9d04eb9c3444fa1bf"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "86b0ceda8e6226d627748d05c1163394e302147afc2f780aff0491e89b9773ea"
     },
     {
       "journey_id": "AMZN-accounting-integrity",
@@ -274,7 +269,7 @@
         "accounting.balance_sheet_identity"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "3d773a0d5caa0f93168f94b772f26d4e2666304243a578b9d04eb9c3444fa1bf"
+      "financial_report_sha256": "86b0ceda8e6226d627748d05c1163394e302147afc2f780aff0491e89b9773ea"
     },
     {
       "journey_id": "AMZN-risk-monitoring",
@@ -292,7 +287,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "3d773a0d5caa0f93168f94b772f26d4e2666304243a578b9d04eb9c3444fa1bf"
+      "financial_report_sha256": "86b0ceda8e6226d627748d05c1163394e302147afc2f780aff0491e89b9773ea"
     },
     {
       "journey_id": "AAPL-fundamentals",
@@ -311,7 +306,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "99870dc951ab15eafb48e0de49810444e74ce0dcc6d304d1ff8e10dda620bdeb"
+      "financial_report_sha256": "2fb527b9500cb5000e8b455e72a1f83afb6c93020ab97461c5cdb81662c1ac54"
     },
     {
       "journey_id": "AAPL-cash-quality",
@@ -329,7 +324,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "99870dc951ab15eafb48e0de49810444e74ce0dcc6d304d1ff8e10dda620bdeb"
+      "financial_report_sha256": "2fb527b9500cb5000e8b455e72a1f83afb6c93020ab97461c5cdb81662c1ac54"
     },
     {
       "journey_id": "AAPL-accounting-integrity",
@@ -345,7 +340,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "99870dc951ab15eafb48e0de49810444e74ce0dcc6d304d1ff8e10dda620bdeb"
+      "financial_report_sha256": "2fb527b9500cb5000e8b455e72a1f83afb6c93020ab97461c5cdb81662c1ac54"
     },
     {
       "journey_id": "AAPL-risk-monitoring",
@@ -363,7 +358,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "99870dc951ab15eafb48e0de49810444e74ce0dcc6d304d1ff8e10dda620bdeb"
+      "financial_report_sha256": "2fb527b9500cb5000e8b455e72a1f83afb6c93020ab97461c5cdb81662c1ac54"
     },
     {
       "journey_id": "AMAT-fundamentals",
@@ -382,7 +377,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "62931cec91892597124b7075cbd6aec7e508c83ae13333356626685a4efeecf2"
+      "financial_report_sha256": "45f8c5fb28f2646dcc9336c99d4c51d911d25f6b08f6b115678287321aca79d6"
     },
     {
       "journey_id": "AMAT-cash-quality",
@@ -400,7 +395,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "62931cec91892597124b7075cbd6aec7e508c83ae13333356626685a4efeecf2"
+      "financial_report_sha256": "45f8c5fb28f2646dcc9336c99d4c51d911d25f6b08f6b115678287321aca79d6"
     },
     {
       "journey_id": "AMAT-accounting-integrity",
@@ -416,7 +411,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "62931cec91892597124b7075cbd6aec7e508c83ae13333356626685a4efeecf2"
+      "financial_report_sha256": "45f8c5fb28f2646dcc9336c99d4c51d911d25f6b08f6b115678287321aca79d6"
     },
     {
       "journey_id": "AMAT-risk-monitoring",
@@ -434,7 +429,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "62931cec91892597124b7075cbd6aec7e508c83ae13333356626685a4efeecf2"
+      "financial_report_sha256": "45f8c5fb28f2646dcc9336c99d4c51d911d25f6b08f6b115678287321aca79d6"
     },
     {
       "journey_id": "ANET-fundamentals",
@@ -454,7 +449,7 @@
         "financial.cash_conversion"
       ],
       "expected_disposition": "mixed",
-      "financial_report_sha256": "f90f286fcdea36c6333e202968a9422580f0ec8b4a748a14eeb07edc30300a29"
+      "financial_report_sha256": "3f42e9ad5c42af039e7d3d4dca09378477f2671776fd40ae5d563bb8e9773c0f"
     },
     {
       "journey_id": "ANET-cash-quality",
@@ -472,7 +467,7 @@
         "financial.quality_of_earnings"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "f90f286fcdea36c6333e202968a9422580f0ec8b4a748a14eeb07edc30300a29"
+      "financial_report_sha256": "3f42e9ad5c42af039e7d3d4dca09378477f2671776fd40ae5d563bb8e9773c0f"
     },
     {
       "journey_id": "ANET-accounting-integrity",
@@ -488,7 +483,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "f90f286fcdea36c6333e202968a9422580f0ec8b4a748a14eeb07edc30300a29"
+      "financial_report_sha256": "3f42e9ad5c42af039e7d3d4dca09378477f2671776fd40ae5d563bb8e9773c0f"
     },
     {
       "journey_id": "ANET-risk-monitoring",
@@ -506,7 +501,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "f90f286fcdea36c6333e202968a9422580f0ec8b4a748a14eeb07edc30300a29"
+      "financial_report_sha256": "3f42e9ad5c42af039e7d3d4dca09378477f2671776fd40ae5d563bb8e9773c0f"
     },
     {
       "journey_id": "AVGO-fundamentals",
@@ -525,7 +520,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "b6111ed98dca4e9df024f5b230b0cc196e7aaa3cdac5bc8edf06d56e2a6e3e42"
+      "financial_report_sha256": "da8dc78b4efff931688873c1453b649f6b63d9ffc660a8e7471055995ba32544"
     },
     {
       "journey_id": "AVGO-cash-quality",
@@ -543,7 +538,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "b6111ed98dca4e9df024f5b230b0cc196e7aaa3cdac5bc8edf06d56e2a6e3e42"
+      "financial_report_sha256": "da8dc78b4efff931688873c1453b649f6b63d9ffc660a8e7471055995ba32544"
     },
     {
       "journey_id": "AVGO-accounting-integrity",
@@ -559,7 +554,7 @@
         "accounting.balance_sheet_identity"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "b6111ed98dca4e9df024f5b230b0cc196e7aaa3cdac5bc8edf06d56e2a6e3e42"
+      "financial_report_sha256": "da8dc78b4efff931688873c1453b649f6b63d9ffc660a8e7471055995ba32544"
     },
     {
       "journey_id": "AVGO-risk-monitoring",
@@ -577,7 +572,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "b6111ed98dca4e9df024f5b230b0cc196e7aaa3cdac5bc8edf06d56e2a6e3e42"
+      "financial_report_sha256": "da8dc78b4efff931688873c1453b649f6b63d9ffc660a8e7471055995ba32544"
     },
     {
       "journey_id": "CSCO-fundamentals",
@@ -596,7 +591,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "3283d8265dc20ea14aadf228a6d2c36c7a8f2e8e5d3bc46e066376ec08dd74bd"
+      "financial_report_sha256": "861f89db3665a880ee2c67342168a3c2cd09cceea5ad304f0fd86d1b5b2c335a"
     },
     {
       "journey_id": "CSCO-cash-quality",
@@ -614,7 +609,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "3283d8265dc20ea14aadf228a6d2c36c7a8f2e8e5d3bc46e066376ec08dd74bd"
+      "financial_report_sha256": "861f89db3665a880ee2c67342168a3c2cd09cceea5ad304f0fd86d1b5b2c335a"
     },
     {
       "journey_id": "CSCO-accounting-integrity",
@@ -630,7 +625,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "3283d8265dc20ea14aadf228a6d2c36c7a8f2e8e5d3bc46e066376ec08dd74bd"
+      "financial_report_sha256": "861f89db3665a880ee2c67342168a3c2cd09cceea5ad304f0fd86d1b5b2c335a"
     },
     {
       "journey_id": "CSCO-risk-monitoring",
@@ -648,7 +643,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "3283d8265dc20ea14aadf228a6d2c36c7a8f2e8e5d3bc46e066376ec08dd74bd"
+      "financial_report_sha256": "861f89db3665a880ee2c67342168a3c2cd09cceea5ad304f0fd86d1b5b2c335a"
     },
     {
       "journey_id": "IBM-fundamentals",
@@ -661,14 +656,14 @@
         "financial_quality"
       ],
       "expected_receipts": [
-        "financial.cash_conversion"
-      ],
-      "expected_abstentions": [
-        "financial.operating_margin",
+        "financial.cash_conversion",
         "financial.revenue_growth"
       ],
+      "expected_abstentions": [
+        "financial.operating_margin"
+      ],
       "expected_disposition": "mixed",
-      "financial_report_sha256": "fcd2330fb9d9e08260a56f71f63ff0fa963f829c0f8d0a8e894f9e7338f37eb0"
+      "financial_report_sha256": "2515a4c3a390fef77d8b59b4567dc114fd11f662d77fb77e27fc02d3bc4ca27e"
     },
     {
       "journey_id": "IBM-cash-quality",
@@ -680,14 +675,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
+        "financial.capex_intensity",
         "financial.free_cash_flow",
         "financial.quality_of_earnings"
       ],
-      "expected_abstentions": [
-        "financial.capex_intensity"
-      ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "fcd2330fb9d9e08260a56f71f63ff0fa963f829c0f8d0a8e894f9e7338f37eb0"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "2515a4c3a390fef77d8b59b4567dc114fd11f662d77fb77e27fc02d3bc4ca27e"
     },
     {
       "journey_id": "IBM-accounting-integrity",
@@ -703,7 +697,7 @@
         "accounting.balance_sheet_identity"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "fcd2330fb9d9e08260a56f71f63ff0fa963f829c0f8d0a8e894f9e7338f37eb0"
+      "financial_report_sha256": "2515a4c3a390fef77d8b59b4567dc114fd11f662d77fb77e27fc02d3bc4ca27e"
     },
     {
       "journey_id": "IBM-risk-monitoring",
@@ -721,7 +715,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "fcd2330fb9d9e08260a56f71f63ff0fa963f829c0f8d0a8e894f9e7338f37eb0"
+      "financial_report_sha256": "2515a4c3a390fef77d8b59b4567dc114fd11f662d77fb77e27fc02d3bc4ca27e"
     },
     {
       "journey_id": "INTC-fundamentals",
@@ -740,7 +734,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "8f045bed25b8136dbc31d0be5512e2fd69bbc2f43b328253eeb13379708ea677"
+      "financial_report_sha256": "40a1b004c1e584da8f867a3426281e595a9a7ae406c8a4edf88d641e425fe514"
     },
     {
       "journey_id": "INTC-cash-quality",
@@ -758,7 +752,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "8f045bed25b8136dbc31d0be5512e2fd69bbc2f43b328253eeb13379708ea677"
+      "financial_report_sha256": "40a1b004c1e584da8f867a3426281e595a9a7ae406c8a4edf88d641e425fe514"
     },
     {
       "journey_id": "INTC-accounting-integrity",
@@ -774,7 +768,7 @@
         "accounting.balance_sheet_identity"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "8f045bed25b8136dbc31d0be5512e2fd69bbc2f43b328253eeb13379708ea677"
+      "financial_report_sha256": "40a1b004c1e584da8f867a3426281e595a9a7ae406c8a4edf88d641e425fe514"
     },
     {
       "journey_id": "INTC-risk-monitoring",
@@ -792,7 +786,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "8f045bed25b8136dbc31d0be5512e2fd69bbc2f43b328253eeb13379708ea677"
+      "financial_report_sha256": "40a1b004c1e584da8f867a3426281e595a9a7ae406c8a4edf88d641e425fe514"
     },
     {
       "journey_id": "META-fundamentals",
@@ -811,7 +805,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "dae62ecbcdba75fb166118c222ca0030c7459b1a7bd39aa8e307411b0d2ada65"
+      "financial_report_sha256": "c6870268f5784aa288c156abbfbd57d14ae2a677b5fba6d673df4974e0bc77f7"
     },
     {
       "journey_id": "META-cash-quality",
@@ -829,7 +823,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "dae62ecbcdba75fb166118c222ca0030c7459b1a7bd39aa8e307411b0d2ada65"
+      "financial_report_sha256": "c6870268f5784aa288c156abbfbd57d14ae2a677b5fba6d673df4974e0bc77f7"
     },
     {
       "journey_id": "META-accounting-integrity",
@@ -845,7 +839,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "dae62ecbcdba75fb166118c222ca0030c7459b1a7bd39aa8e307411b0d2ada65"
+      "financial_report_sha256": "c6870268f5784aa288c156abbfbd57d14ae2a677b5fba6d673df4974e0bc77f7"
     },
     {
       "journey_id": "META-risk-monitoring",
@@ -863,7 +857,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "dae62ecbcdba75fb166118c222ca0030c7459b1a7bd39aa8e307411b0d2ada65"
+      "financial_report_sha256": "c6870268f5784aa288c156abbfbd57d14ae2a677b5fba6d673df4974e0bc77f7"
     },
     {
       "journey_id": "MU-fundamentals",
@@ -882,7 +876,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "3805b7ce158d518969399a3b7c105eb10fd738ef3bb355ee37bddccde1bf5e76"
+      "financial_report_sha256": "2a59d068834bf4c6510bdfe2dd291c8fcc40a2bb042bb9e4e137b755c4556a21"
     },
     {
       "journey_id": "MU-cash-quality",
@@ -900,7 +894,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "3805b7ce158d518969399a3b7c105eb10fd738ef3bb355ee37bddccde1bf5e76"
+      "financial_report_sha256": "2a59d068834bf4c6510bdfe2dd291c8fcc40a2bb042bb9e4e137b755c4556a21"
     },
     {
       "journey_id": "MU-accounting-integrity",
@@ -916,7 +910,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "3805b7ce158d518969399a3b7c105eb10fd738ef3bb355ee37bddccde1bf5e76"
+      "financial_report_sha256": "2a59d068834bf4c6510bdfe2dd291c8fcc40a2bb042bb9e4e137b755c4556a21"
     },
     {
       "journey_id": "MU-risk-monitoring",
@@ -934,7 +928,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "3805b7ce158d518969399a3b7c105eb10fd738ef3bb355ee37bddccde1bf5e76"
+      "financial_report_sha256": "2a59d068834bf4c6510bdfe2dd291c8fcc40a2bb042bb9e4e137b755c4556a21"
     },
     {
       "journey_id": "MSFT-fundamentals",
@@ -953,7 +947,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "c309c76739e5d534eb8733df16097557c1379ff618d68fa1987bf357957bdec4"
+      "financial_report_sha256": "c4206e86eaea0d6ca96e902165e198dccb193561d35f9fa8f619df4c0627a13f"
     },
     {
       "journey_id": "MSFT-cash-quality",
@@ -971,7 +965,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "c309c76739e5d534eb8733df16097557c1379ff618d68fa1987bf357957bdec4"
+      "financial_report_sha256": "c4206e86eaea0d6ca96e902165e198dccb193561d35f9fa8f619df4c0627a13f"
     },
     {
       "journey_id": "MSFT-accounting-integrity",
@@ -987,7 +981,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "c309c76739e5d534eb8733df16097557c1379ff618d68fa1987bf357957bdec4"
+      "financial_report_sha256": "c4206e86eaea0d6ca96e902165e198dccb193561d35f9fa8f619df4c0627a13f"
     },
     {
       "journey_id": "MSFT-risk-monitoring",
@@ -1005,7 +999,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "c309c76739e5d534eb8733df16097557c1379ff618d68fa1987bf357957bdec4"
+      "financial_report_sha256": "c4206e86eaea0d6ca96e902165e198dccb193561d35f9fa8f619df4c0627a13f"
     },
     {
       "journey_id": "NVDA-fundamentals",
@@ -1018,14 +1012,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
-        "financial.cash_conversion"
-      ],
-      "expected_abstentions": [
+        "financial.cash_conversion",
         "financial.operating_margin",
         "financial.revenue_growth"
       ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "a50d3b87bec7e3d720483e1e46edece67fafd5bd5e080f1f146c91c5f9ce2e70"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "ef59259e534d425241fb96221fced44bee60f1500130e7d631da75cfdb92d663"
     },
     {
       "journey_id": "NVDA-cash-quality",
@@ -1044,7 +1037,7 @@
         "financial.free_cash_flow"
       ],
       "expected_disposition": "mixed",
-      "financial_report_sha256": "a50d3b87bec7e3d720483e1e46edece67fafd5bd5e080f1f146c91c5f9ce2e70"
+      "financial_report_sha256": "ef59259e534d425241fb96221fced44bee60f1500130e7d631da75cfdb92d663"
     },
     {
       "journey_id": "NVDA-accounting-integrity",
@@ -1060,7 +1053,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "a50d3b87bec7e3d720483e1e46edece67fafd5bd5e080f1f146c91c5f9ce2e70"
+      "financial_report_sha256": "ef59259e534d425241fb96221fced44bee60f1500130e7d631da75cfdb92d663"
     },
     {
       "journey_id": "NVDA-risk-monitoring",
@@ -1078,7 +1071,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "a50d3b87bec7e3d720483e1e46edece67fafd5bd5e080f1f146c91c5f9ce2e70"
+      "financial_report_sha256": "ef59259e534d425241fb96221fced44bee60f1500130e7d631da75cfdb92d663"
     },
     {
       "journey_id": "ORCL-fundamentals",
@@ -1097,7 +1090,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "d349f5ca40eef1ee7539349957c56799a1f987d7683d107673d1a8e2f1886761"
+      "financial_report_sha256": "17e74e499cec7458314b961766ad5149a6fdec75e31ddc1f452f0cd9d27848f4"
     },
     {
       "journey_id": "ORCL-cash-quality",
@@ -1115,7 +1108,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "d349f5ca40eef1ee7539349957c56799a1f987d7683d107673d1a8e2f1886761"
+      "financial_report_sha256": "17e74e499cec7458314b961766ad5149a6fdec75e31ddc1f452f0cd9d27848f4"
     },
     {
       "journey_id": "ORCL-accounting-integrity",
@@ -1131,7 +1124,7 @@
         "accounting.balance_sheet_identity"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "d349f5ca40eef1ee7539349957c56799a1f987d7683d107673d1a8e2f1886761"
+      "financial_report_sha256": "17e74e499cec7458314b961766ad5149a6fdec75e31ddc1f452f0cd9d27848f4"
     },
     {
       "journey_id": "ORCL-risk-monitoring",
@@ -1149,7 +1142,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "d349f5ca40eef1ee7539349957c56799a1f987d7683d107673d1a8e2f1886761"
+      "financial_report_sha256": "17e74e499cec7458314b961766ad5149a6fdec75e31ddc1f452f0cd9d27848f4"
     },
     {
       "journey_id": "QCOM-fundamentals",
@@ -1162,14 +1155,13 @@
         "financial_quality"
       ],
       "expected_receipts": [
-        "financial.cash_conversion"
-      ],
-      "expected_abstentions": [
+        "financial.cash_conversion",
         "financial.operating_margin",
         "financial.revenue_growth"
       ],
-      "expected_disposition": "mixed",
-      "financial_report_sha256": "8fe3deb0adca59ce4635978930c3b602ddb4e0feb49096e7b101961cc3c5a01c"
+      "expected_abstentions": [],
+      "expected_disposition": "deterministic_supported",
+      "financial_report_sha256": "6fd0c7e3e376af50de9637a83d549880d1ca252f0ceb0deee5bd2a4e7020f2ac"
     },
     {
       "journey_id": "QCOM-cash-quality",
@@ -1188,7 +1180,7 @@
         "financial.free_cash_flow"
       ],
       "expected_disposition": "mixed",
-      "financial_report_sha256": "8fe3deb0adca59ce4635978930c3b602ddb4e0feb49096e7b101961cc3c5a01c"
+      "financial_report_sha256": "6fd0c7e3e376af50de9637a83d549880d1ca252f0ceb0deee5bd2a4e7020f2ac"
     },
     {
       "journey_id": "QCOM-accounting-integrity",
@@ -1204,7 +1196,7 @@
         "accounting.balance_sheet_identity"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "8fe3deb0adca59ce4635978930c3b602ddb4e0feb49096e7b101961cc3c5a01c"
+      "financial_report_sha256": "6fd0c7e3e376af50de9637a83d549880d1ca252f0ceb0deee5bd2a4e7020f2ac"
     },
     {
       "journey_id": "QCOM-risk-monitoring",
@@ -1222,7 +1214,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "8fe3deb0adca59ce4635978930c3b602ddb4e0feb49096e7b101961cc3c5a01c"
+      "financial_report_sha256": "6fd0c7e3e376af50de9637a83d549880d1ca252f0ceb0deee5bd2a4e7020f2ac"
     },
     {
       "journey_id": "CRM-fundamentals",
@@ -1241,7 +1233,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "d49ce75550fb0fb489f0a318f117031d417f25d3558de38a752cf81fca9c3706"
+      "financial_report_sha256": "00cc0afec4528423f5d453506bc6e1ba8bd69ca990949ce49c27d5a1b274c130"
     },
     {
       "journey_id": "CRM-cash-quality",
@@ -1259,7 +1251,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "d49ce75550fb0fb489f0a318f117031d417f25d3558de38a752cf81fca9c3706"
+      "financial_report_sha256": "00cc0afec4528423f5d453506bc6e1ba8bd69ca990949ce49c27d5a1b274c130"
     },
     {
       "journey_id": "CRM-accounting-integrity",
@@ -1275,7 +1267,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "d49ce75550fb0fb489f0a318f117031d417f25d3558de38a752cf81fca9c3706"
+      "financial_report_sha256": "00cc0afec4528423f5d453506bc6e1ba8bd69ca990949ce49c27d5a1b274c130"
     },
     {
       "journey_id": "CRM-risk-monitoring",
@@ -1293,7 +1285,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "d49ce75550fb0fb489f0a318f117031d417f25d3558de38a752cf81fca9c3706"
+      "financial_report_sha256": "00cc0afec4528423f5d453506bc6e1ba8bd69ca990949ce49c27d5a1b274c130"
     },
     {
       "journey_id": "NOW-fundamentals",
@@ -1312,7 +1304,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "513ace20c3aabb3a03504b8fda26dd328a9923310af0f17de5655a2e2d3f54cd"
+      "financial_report_sha256": "a10f147e5da6e603a5a10172810888ae285075fbaabfb423fa0344648c10af52"
     },
     {
       "journey_id": "NOW-cash-quality",
@@ -1330,7 +1322,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "513ace20c3aabb3a03504b8fda26dd328a9923310af0f17de5655a2e2d3f54cd"
+      "financial_report_sha256": "a10f147e5da6e603a5a10172810888ae285075fbaabfb423fa0344648c10af52"
     },
     {
       "journey_id": "NOW-accounting-integrity",
@@ -1346,7 +1338,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "513ace20c3aabb3a03504b8fda26dd328a9923310af0f17de5655a2e2d3f54cd"
+      "financial_report_sha256": "a10f147e5da6e603a5a10172810888ae285075fbaabfb423fa0344648c10af52"
     },
     {
       "journey_id": "NOW-risk-monitoring",
@@ -1364,7 +1356,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "513ace20c3aabb3a03504b8fda26dd328a9923310af0f17de5655a2e2d3f54cd"
+      "financial_report_sha256": "a10f147e5da6e603a5a10172810888ae285075fbaabfb423fa0344648c10af52"
     },
     {
       "journey_id": "TXN-fundamentals",
@@ -1383,7 +1375,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "e0371de78ab68506f5548e28f3bee809f4daeed8781d7724ee5d13cf1c1c25cd"
+      "financial_report_sha256": "e1fca0fd1e586ce1c883c7bd92ef11e7224376450770cfbf604e6cbda3ed0820"
     },
     {
       "journey_id": "TXN-cash-quality",
@@ -1401,7 +1393,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "e0371de78ab68506f5548e28f3bee809f4daeed8781d7724ee5d13cf1c1c25cd"
+      "financial_report_sha256": "e1fca0fd1e586ce1c883c7bd92ef11e7224376450770cfbf604e6cbda3ed0820"
     },
     {
       "journey_id": "TXN-accounting-integrity",
@@ -1417,7 +1409,7 @@
       ],
       "expected_abstentions": [],
       "expected_disposition": "deterministic_supported",
-      "financial_report_sha256": "e0371de78ab68506f5548e28f3bee809f4daeed8781d7724ee5d13cf1c1c25cd"
+      "financial_report_sha256": "e1fca0fd1e586ce1c883c7bd92ef11e7224376450770cfbf604e6cbda3ed0820"
     },
     {
       "journey_id": "TXN-risk-monitoring",
@@ -1435,7 +1427,7 @@
         "narrative.investor_relations"
       ],
       "expected_disposition": "typed_abstention",
-      "financial_report_sha256": "e0371de78ab68506f5548e28f3bee809f4daeed8781d7724ee5d13cf1c1c25cd"
+      "financial_report_sha256": "e1fca0fd1e586ce1c883c7bd92ef11e7224376450770cfbf604e6cbda3ed0820"
     }
   ],
   "claim_boundary": "Expected receipts and abstentions test routing and evidence behavior. They are not answer text, investment advice, or proof that a company is research_ready."

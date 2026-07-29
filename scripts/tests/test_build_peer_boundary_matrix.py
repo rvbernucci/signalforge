@@ -48,6 +48,10 @@ class PeerBoundaryMatrixTests(unittest.TestCase):
             "dimensional_identity",
             "segment_scope",
             "accounting_perimeter",
+            "accounting_inputs",
+            "output_class",
+            "product_label",
+            "pair_ranking_eligible",
             "period_type",
             "fiscal_start",
             "fiscal_end",
@@ -67,6 +71,11 @@ class PeerBoundaryMatrixTests(unittest.TestCase):
             self.assertEqual(operand["security_class_state"], "not_activated")
             self.assertEqual(operand["market_observation_state"], "not_activated")
             self.assertIsNone(operand["market_observation_date"])
+            self.assertTrue(operand["accounting_inputs"])
+            for authority in operand["accounting_inputs"]:
+                self.assertIn("mapping_key", authority)
+                self.assertIn("accounting_perimeter", authority)
+                self.assertIn("pair_ranking_eligible", authority)
 
     def test_output_is_deterministic(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -15,7 +15,7 @@
       "question": "Compare cash generation for Cisco Systems and Arista Networks without treating simple FCF as FCFF.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -38,7 +38,7 @@
       "question": "Challenge a relative-quality thesis for Cisco Systems and Arista Networks without ranking incomparable measures.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -61,7 +61,7 @@
       "question": "Summarize the decision-useful comparison boundary for Cisco Systems and Arista Networks.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -84,7 +84,7 @@
       "question": "Compare reported revenue growth for Cisco Systems and Arista Networks only if the definitions and source concepts pass review.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -107,7 +107,7 @@
       "question": "Compare Cisco Systems and Arista Networks using only metrics with valid comparability receipts.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -130,7 +130,7 @@
       "question": "Show what cannot yet be compared between Cisco Systems and Arista Networks and why.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -153,7 +153,7 @@
       "question": "Explain which annual periods can and cannot be compared for Cisco Systems and Arista Networks.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -176,7 +176,7 @@
       "question": "Compare operating profitability for Cisco Systems and Arista Networks and display every fiscal-calendar caveat beside the metric.",
       "expected_metric_dispositions": {
         "financial.cash_conversion": "unavailable",
-        "financial.free_cash_flow": "unavailable",
+        "financial.free_cash_flow": "context_only",
         "financial.operating_margin": "comparable_with_caveat",
         "financial.revenue_growth": "comparable_with_caveat"
       },
@@ -198,11 +198,11 @@
       "question_id": "cash-generation",
       "question": "Compare cash generation for Microsoft and Alphabet without treating simple FCF as FCFF.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -222,11 +222,11 @@
       "question_id": "counterevidence",
       "question": "Challenge a relative-quality thesis for Microsoft and Alphabet without ranking incomparable measures.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -246,11 +246,11 @@
       "question_id": "decision-boundary",
       "question": "Summarize the decision-useful comparison boundary for Microsoft and Alphabet.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -270,11 +270,11 @@
       "question_id": "growth",
       "question": "Compare reported revenue growth for Microsoft and Alphabet only if the definitions and source concepts pass review.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -294,11 +294,11 @@
       "question_id": "metric-boundary",
       "question": "Compare Microsoft and Alphabet using only metrics with valid comparability receipts.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -318,11 +318,11 @@
       "question_id": "missing-data",
       "question": "Show what cannot yet be compared between Microsoft and Alphabet and why.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -342,11 +342,11 @@
       "question_id": "periods",
       "question": "Explain which annual periods can and cannot be compared for Microsoft and Alphabet.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -366,11 +366,11 @@
       "question_id": "profitability",
       "question": "Compare operating profitability for Microsoft and Alphabet and display every fiscal-calendar caveat beside the metric.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
+        "financial.capex_intensity": "context_only",
         "financial.cash_conversion": "comparable_with_caveat",
         "financial.free_cash_flow": "comparable_with_caveat",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -390,10 +390,10 @@
       "question_id": "cash-generation",
       "question": "Compare cash generation for NVIDIA and Advanced Micro Devices without treating simple FCF as FCFF.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -413,10 +413,10 @@
       "question_id": "counterevidence",
       "question": "Challenge a relative-quality thesis for NVIDIA and Advanced Micro Devices without ranking incomparable measures.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -436,10 +436,10 @@
       "question_id": "decision-boundary",
       "question": "Summarize the decision-useful comparison boundary for NVIDIA and Advanced Micro Devices.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -459,10 +459,10 @@
       "question_id": "growth",
       "question": "Compare reported revenue growth for NVIDIA and Advanced Micro Devices only if the definitions and source concepts pass review.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -482,10 +482,10 @@
       "question_id": "metric-boundary",
       "question": "Compare NVIDIA and Advanced Micro Devices using only metrics with valid comparability receipts.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -505,10 +505,10 @@
       "question_id": "missing-data",
       "question": "Show what cannot yet be compared between NVIDIA and Advanced Micro Devices and why.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -528,10 +528,10 @@
       "question_id": "periods",
       "question": "Explain which annual periods can and cannot be compared for NVIDIA and Advanced Micro Devices.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [
@@ -551,10 +551,10 @@
       "question_id": "profitability",
       "question": "Compare operating profitability for NVIDIA and Advanced Micro Devices and display every fiscal-calendar caveat beside the metric.",
       "expected_metric_dispositions": {
-        "financial.capex_intensity": "unavailable",
-        "financial.free_cash_flow": "unavailable",
-        "financial.operating_margin": "unavailable",
-        "financial.revenue_growth": "unavailable"
+        "financial.capex_intensity": "context_only",
+        "financial.free_cash_flow": "context_only",
+        "financial.operating_margin": "context_only",
+        "financial.revenue_growth": "context_only"
       },
       "expected_promoted": false,
       "required_behaviors": [

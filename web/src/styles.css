@@ -159,6 +159,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
 .authority-results article > span { overflow: hidden; color: #a9b4ab; font-size: .46rem; text-overflow: ellipsis; text-transform: capitalize; white-space: nowrap; }
 .authority-results article > strong { color: #f3ead1; font-size: .7rem; font-weight: 600; }
 .authority-results article > small { overflow: hidden; color: #748078; font-size: .39rem; text-overflow: ellipsis; white-space: nowrap; }
+.authority-contextual { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding-top: 4px; }
+.authority-contextual > .eyebrow, .authority-contextual > p { grid-column: 1 / -1; }
+.authority-contextual article { display: grid; gap: 3px; padding: 8px; border: 1px solid #76653f; background: linear-gradient(145deg, #241f18, #1b211c); }
+.authority-contextual article > span { color: #b7aa88; font-size: .48rem; text-transform: capitalize; }
+.authority-contextual article > strong { color: #e1c77f; font-size: .66rem; }
+.authority-contextual article > small, .authority-contextual > p { color: #91866c; font-size: .41rem; line-height: 1.45; }
 .authority-abstentions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .authority-abstentions > .eyebrow { grid-column: 1 / -1; }
 .authority-abstentions article { display: grid; gap: 2px; padding: 7px; border: 1px solid #514936; background: #211e17; }
@@ -683,7 +689,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
   .company-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .peer-lanes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .company-authority { grid-template-columns: 1fr; }
-  .company-authority-facts, .authority-abstentions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .company-authority-facts, .authority-abstentions, .authority-contextual { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .authority-results { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .company-authority > p { grid-column: 1; }
   .scenario-controls { grid-template-columns: 1fr 1fr; }
@@ -716,7 +722,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
   .company-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 265px; }
   .peer-lanes { grid-template-columns: 1fr; }
   .comparison-metrics { grid-template-columns: 1fr; }
-  .company-authority-facts, .authority-abstentions { grid-template-columns: 1fr; }
+  .company-authority-facts, .authority-abstentions, .authority-contextual { grid-template-columns: 1fr; }
   .authority-results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .query-lab { padding: 22px 18px 18px; }
   .query-heading { align-items: center; }

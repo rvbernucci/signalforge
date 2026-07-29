@@ -23,14 +23,16 @@ type PeerEvaluationSuite struct {
 }
 
 type PeerEvaluationResult struct {
-	LaneID      string                                 `json:"lane_id"`
-	CompanyIDs  []string                               `json:"company_ids"`
-	Receipts    []contracts.MetricComparabilityReceipt `json:"receipts"`
-	Abstentions []contracts.TypedAbstention            `json:"abstentions"`
-	Releasable  []string                               `json:"releasable_metric_ids"`
-	Withheld    []string                               `json:"withheld_metric_ids"`
-	Promoted    bool                                   `json:"promoted"`
-	ReasonCodes []string                               `json:"reason_codes"`
+	LaneID         string                                 `json:"lane_id"`
+	CompanyIDs     []string                               `json:"company_ids"`
+	Receipts       []contracts.MetricComparabilityReceipt `json:"receipts"`
+	Abstentions    []contracts.TypedAbstention            `json:"abstentions"`
+	Releasable     []string                               `json:"releasable_metric_ids"`
+	ContextOnly    []string                               `json:"context_only_metric_ids,omitempty"`
+	Withheld       []string                               `json:"withheld_metric_ids"`
+	Promoted       bool                                   `json:"promoted"`
+	ReasonCodes    []string                               `json:"reason_codes"`
+	EnvelopeSHA256 string                                 `json:"envelope_sha256,omitempty"`
 }
 
 func BuildPeerEvaluationSuite(
@@ -72,7 +74,7 @@ func BuildPeerEvaluationSuite(
 		result := PeerEvaluationResult{
 			LaneID: lane.LaneID, CompanyIDs: append([]string(nil), lane.CompanyIDs...),
 			Receipts: []contracts.MetricComparabilityReceipt{}, Abstentions: []contracts.TypedAbstention{},
-			Releasable: []string{}, Withheld: []string{},
+			Releasable: []string{}, ContextOnly: []string{}, Withheld: []string{},
 			ReasonCodes: []string{"peer_journeys_and_professional_review_pending"},
 		}
 		leftReport, leftOK := reports[lane.CompanyIDs[0]]
@@ -99,14 +101,32 @@ func BuildPeerEvaluationSuite(
 				result.Withheld = append(result.Withheld, metricID)
 				continue
 			}
+			leftOperand, err := financialOperand(
+				companyByID[lane.CompanyIDs[0]],
+				leftReport,
+				left,
+				leftContext,
+			)
+			if err != nil {
+				return PeerEvaluationSuite{}, err
+			}
+			rightOperand, err := financialOperand(
+				companyByID[lane.CompanyIDs[1]],
+				rightReport,
+				right,
+				rightContext,
+			)
+			if err != nil {
+				return PeerEvaluationSuite{}, err
+			}
 			request, err := contracts.PopulateMetricComparabilityRequestHash(contracts.MetricComparabilityRequest{
-				SchemaVersion: contracts.ComparabilityRequestSchemaV1,
+				SchemaVersion: contracts.ComparabilityRequestSchemaV2,
 				RequestID:     "comparison-" + lane.LaneID + "-" + sanitizeMetricID(metricID),
 				RunID:         "peer-evaluation-" + lane.LaneID, LaneID: lane.LaneID,
 				AsOf: catalog.AsOf, ReviewerPolicyVersion: comparability.AnnualPolicyVersionV1,
 				Operands: []contracts.MetricComparisonOperand{
-					financialOperand(companyByID[lane.CompanyIDs[0]], leftReport, left, leftContext),
-					financialOperand(companyByID[lane.CompanyIDs[1]], rightReport, right, rightContext),
+					leftOperand,
+					rightOperand,
 				},
 			})
 			if err != nil {
@@ -119,11 +139,14 @@ func BuildPeerEvaluationSuite(
 			result.Receipts = append(result.Receipts, receipt)
 			if comparability.IsReleasable(receipt.Disposition) {
 				result.Releasable = append(result.Releasable, metricID)
+			} else if receipt.Disposition == contracts.ComparisonContextOnly {
+				result.ContextOnly = append(result.ContextOnly, metricID)
 			} else {
 				result.Withheld = append(result.Withheld, metricID)
 			}
 		}
 		sort.Strings(result.Releasable)
+		sort.Strings(result.ContextOnly)
 		sort.Strings(result.Withheld)
 		suite.Lanes = append(suite.Lanes, result)
 	}
@@ -136,16 +159,32 @@ func financialOperand(
 	report CompanyFinancialActivation,
 	receipt contracts.CalculationReceipt,
 	contextOnly bool,
-) contracts.MetricComparisonOperand {
+) (contracts.MetricComparisonOperand, error) {
+	authority, exists := report.ReceiptAuthorities[receipt.ReceiptID]
+	if !exists {
+		return contracts.MetricComparisonOperand{}, errors.New(
+			"financial operand lacks per-input accounting authority",
+		)
+	}
 	currentPeriod := receipt.Scope.Periods[len(receipt.Scope.Periods)-1]
 	start, end := parseReceiptPeriod(currentPeriod)
+	var fiscalStart *time.Time
+	if !start.Equal(end) {
+		fiscalStart = &start
+	}
 	output := receipt.Outputs[0].Quantity
 	concepts := operationConcepts(report, receipt, contextOnly)
-	accountingPerimeter := "consolidated_periodic_filing"
-	if contextOnly {
-		accountingPerimeter = report.ContextualPerimeters[receipt.OperationID]
+	accountingInputs := make([]contracts.AccountingInputComparisonAuthority, 0, len(authority.Inputs))
+	for _, input := range authority.Inputs {
+		accountingInputs = append(accountingInputs, contracts.AccountingInputComparisonAuthority{
+			InputID: input.InputID, CanonicalInput: input.CanonicalInput,
+			MappingKey: input.MappingKey, TaxonomyConcept: input.TaxonomyConcept,
+			AccountingPerimeter: input.AccountingPerimeter,
+			Disposition:         string(input.Disposition), ProductLabel: input.ProductLabel,
+			PairRankingEligible: input.PairRankingEligible,
+		})
 	}
-	return contracts.MetricComparisonOperand{
+	operand := contracts.MetricComparisonOperand{
 		CompanyID: company.CompanyID, SecurityID: "ticker:" + company.PrimaryTicker,
 		SourceObservationIDs: append([]string(nil), receipt.EvidenceRefs...),
 		SourceHashes:         sourceHashes(receipt.EvidenceRefs),
@@ -155,11 +194,109 @@ func financialOperand(
 		ExtensionMappingID: reviewedOperationMappingID(report, receipt, concepts),
 		Value:              output.Value, Unit: output.Unit, Currency: output.Currency, Scale: output.Scale,
 		SignPolicy: "formula_defined", DimensionalIdentity: "consolidated",
-		PeriodType: periodType(start, end), FiscalStart: &start, FiscalEnd: end,
-		FilingDate: receipt.SourceAsOf, AccountingPerimeter: accountingPerimeter,
-		DefinitionID:     receipt.OperationID + "/" + receipt.FormulaVersion,
-		RestatementState: "active_amendment_chain", SupersessionState: "active",
+		PeriodType: periodType(start, end), FiscalStart: fiscalStart, FiscalEnd: end,
+		FilingDate:          receipt.SourceAsOf,
+		AccountingPerimeter: authority.AccountingPerimeterSignature,
+		AccountingInputs:    accountingInputs, OutputClass: authority.OutputClass,
+		ProductLabel:        authority.ProductLabel,
+		PairRankingEligible: authority.PairRankingEligible,
+		DefinitionID:        receipt.OperationID + "/" + receipt.FormulaVersion,
+		RestatementState:    "active_amendment_chain", SupersessionState: "active",
 	}
+	if err := validateRegisteredComparisonAuthority(operand); err != nil {
+		return contracts.MetricComparisonOperand{}, err
+	}
+	return operand, nil
+}
+
+func validateRegisteredComparisonAuthority(
+	operand contracts.MetricComparisonOperand,
+) error {
+	registryByKey := map[string]AccountingMappingAuthority{}
+	for _, mapping := range runtimeAccountingAuthorityRegistry.Entries {
+		registryByKey[mapping.MappingKey] = mapping
+	}
+	expectedOutputClass := AccountingOutputAuthoritative
+	expectedRanking := true
+	mappings := make([]AccountingMappingAuthority, 0, len(operand.AccountingInputs))
+	for _, authority := range operand.AccountingInputs {
+		mapping, exists := registryByKey[authority.MappingKey]
+		if !exists ||
+			mapping.CompanyID != operand.CompanyID ||
+			mapping.CanonicalInput != authority.CanonicalInput ||
+			mapping.TaxonomyConcept != authority.TaxonomyConcept ||
+			mapping.AccountingPerimeter != authority.AccountingPerimeter ||
+			string(mapping.Disposition) != authority.Disposition ||
+			mapping.ProductLabel != authority.ProductLabel ||
+			!stringSliceContains(mapping.AuthorizedOperations, operand.CanonicalMetricID) {
+			return errors.New("comparison operand does not match the approved accounting registry")
+		}
+		numerical := effectiveAccountingMappingNumericallyAuthoritative(
+			mapping,
+			runtimeAccountingAuthorityRegistry,
+			runtimeAccountingProfessionalDecision,
+		)
+		context := effectiveAccountingMappingContextDisplayAuthorized(
+			mapping,
+			runtimeAccountingAuthorityRegistry,
+			runtimeAccountingProfessionalDecision,
+		)
+		expectedInputRanking := numerical && mapping.ComparableRankingEligible
+		if authority.PairRankingEligible != expectedInputRanking ||
+			(!numerical && !context) {
+			return errors.New("comparison operand has invalid effective accounting permissions")
+		}
+		if context {
+			expectedOutputClass = AccountingOutputContextOnly
+		}
+		if !expectedInputRanking {
+			expectedRanking = false
+		}
+		mappings = append(mappings, mapping)
+	}
+	if operand.OutputClass != expectedOutputClass ||
+		operand.PairRankingEligible != expectedRanking ||
+		operand.ProductLabel != comparisonProductLabel(
+			operand.CanonicalMetricID,
+			mappings,
+			expectedOutputClass == AccountingOutputContextOnly,
+		) {
+		return errors.New("comparison operand release class or product label is invalid")
+	}
+	return nil
+}
+
+func comparisonProductLabel(
+	operationID string,
+	mappings []AccountingMappingAuthority,
+	contextOnly bool,
+) string {
+	if contextOnly {
+		if operationID == "financial.capex_intensity" {
+			return "reported reinvestment intensity"
+		}
+		if operationID == "financial.free_cash_flow" {
+			return "residual cash proxy"
+		}
+	}
+	if operationID == "financial.free_cash_flow" {
+		for _, mapping := range mappings {
+			if mapping.CanonicalInput == "capital_expenditure" &&
+				mapping.Disposition == AccountingReviewedAlias {
+				return "simple FCF using " + mapping.ProductLabel
+			}
+		}
+		return "simple FCF"
+	}
+	if operationID == "financial.capex_intensity" {
+		for _, mapping := range mappings {
+			if mapping.CanonicalInput == "capital_expenditure" &&
+				mapping.Disposition == AccountingReviewedAlias {
+				return mapping.ProductLabel + " intensity"
+			}
+		}
+	}
+	return operationID
 }
 
 func reviewedOperationMappingID(
@@ -287,7 +424,28 @@ func ValidatePeerEvaluationSuite(suite PeerEvaluationSuite) error {
 			if err := contracts.ValidateMetricComparabilityReceipt(receipt); err != nil {
 				return err
 			}
+			for _, operand := range receipt.Operands {
+				if err := validateRegisteredComparisonAuthority(operand); err != nil {
+					return err
+				}
+			}
+		}
+		if !disjointPeerMetricClasses(lane.Releasable, lane.ContextOnly, lane.Withheld) {
+			return errors.New("peer evaluation metric classes overlap")
 		}
 	}
 	return nil
+}
+
+func disjointPeerMetricClasses(classes ...[]string) bool {
+	seen := map[string]bool{}
+	for _, values := range classes {
+		for _, value := range values {
+			if seen[value] {
+				return false
+			}
+			seen[value] = true
+		}
+	}
+	return true
 }

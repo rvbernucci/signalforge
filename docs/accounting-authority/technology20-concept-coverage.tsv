@@ -33,7 +33,7 @@ sec-cik:0000051143	IBM	capital_expenditure	us-gaap	PaymentsToAcquirePropertyPlan
 sec-cik:0000051143	IBM	net_income	us-gaap	NetIncomeLoss	canonical	consolidated_periodic_filing	123	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000051143	IBM	operating_cash_flow	us-gaap	NetCashProvidedByUsedInOperatingActivities	canonical	consolidated_periodic_filing	105	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000051143	IBM	operating_income			unavailable	unavailable	0	0		authorized_annual_source_unavailable	not_submitted_for_review
-sec-cik:0000051143	IBM	revenue	us-gaap	Revenues	rejected	unreviewed	231	2	10-K,10-Q,8-K	unreviewed_issuer_specific_concept	not_submitted_for_review
+sec-cik:0000051143	IBM	revenue	us-gaap	Revenues	reviewed_alias	consolidated_periodic_filing	231	2	10-K,10-Q,8-K	issuer_specific_revenue_alias	pending_named_professional_disposition
 sec-cik:0000051143	IBM	stockholders_equity	us-gaap	StockholdersEquity	canonical	consolidated_periodic_filing	140	2	10-K,10-Q,8-K	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000051143	IBM	total_assets	us-gaap	Assets	canonical	consolidated_periodic_filing	154	2	10-K,10-Q,8-K	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000051143	IBM	total_liabilities	us-gaap	Liabilities	canonical	consolidated_periodic_filing	140	2	10-K,10-Q,8-K	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
@@ -82,15 +82,15 @@ sec-cik:0000796343	ADBE	capital_expenditure	us-gaap	PaymentsToAcquirePropertyPla
 sec-cik:0000796343	ADBE	net_income	us-gaap	NetIncomeLoss	canonical	consolidated_periodic_filing	313	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000796343	ADBE	operating_cash_flow	us-gaap	NetCashProvidedByUsedInOperatingActivities	canonical	consolidated_periodic_filing	155	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000796343	ADBE	operating_income	us-gaap	OperatingIncomeLoss	canonical	consolidated_periodic_filing	225	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
-sec-cik:0000796343	ADBE	revenue	us-gaap	Revenues	rejected	unreviewed	313	2	10-K,10-Q	unreviewed_issuer_specific_concept	not_submitted_for_review
+sec-cik:0000796343	ADBE	revenue	us-gaap	Revenues	reviewed_alias	consolidated_periodic_filing	313	2	10-K,10-Q	issuer_specific_revenue_alias	pending_named_professional_disposition
 sec-cik:0000796343	ADBE	stockholders_equity	us-gaap	StockholdersEquity	canonical	consolidated_periodic_filing	248	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000796343	ADBE	total_assets	us-gaap	Assets	canonical	consolidated_periodic_filing	138	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000796343	ADBE	total_liabilities	us-gaap	Liabilities	canonical	consolidated_periodic_filing	138	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
-sec-cik:0000804328	QCOM	capital_expenditure	us-gaap	PaymentsToAcquireProductiveAssets	rejected	unreviewed	156	2	10-K,10-K/A,10-Q	unreviewed_issuer_specific_concept	not_submitted_for_review
+sec-cik:0000804328	QCOM	capital_expenditure	us-gaap	PaymentsToAcquireProductiveAssets	context_only	company_reported_cash_capital_expenditures	156	2	10-K,10-K/A,10-Q	company_reported_capex_scope_not_proven_equivalent_to_ppe	pending_named_professional_disposition
 sec-cik:0000804328	QCOM	net_income	us-gaap	NetIncomeLoss	canonical	consolidated_periodic_filing	281	2	10-K,10-K/A,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000804328	QCOM	operating_cash_flow	us-gaap	NetCashProvidedByUsedInOperatingActivities	canonical	consolidated_periodic_filing	139	2	10-K,10-K/A,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000804328	QCOM	operating_income	us-gaap	OperatingIncomeLoss	canonical	consolidated_periodic_filing	319	2	10-K,10-K/A,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
-sec-cik:0000804328	QCOM	revenue	us-gaap	Revenues	rejected	unreviewed	319	2	10-K,10-K/A,10-Q	unreviewed_issuer_specific_concept	not_submitted_for_review
+sec-cik:0000804328	QCOM	revenue	us-gaap	Revenues	reviewed_alias	consolidated_periodic_filing	319	2	10-K,10-K/A,10-Q	issuer_specific_revenue_alias	pending_named_professional_disposition
 sec-cik:0000804328	QCOM	stockholders_equity	us-gaap	StockholdersEquity	canonical	consolidated_periodic_filing	83	0	10-K,10-K/A,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000804328	QCOM	total_assets	us-gaap	Assets	canonical	consolidated_periodic_filing	150	2	10-K,10-K/A,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000804328	QCOM	total_liabilities	us-gaap	Liabilities	canonical	consolidated_periodic_filing	139	2	10-K,10-K/A,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
@@ -104,7 +104,7 @@ sec-cik:0000858877	CSCO	revenue	us-gaap	SalesRevenueNet	rejected	unreviewed	150	
 sec-cik:0000858877	CSCO	stockholders_equity	us-gaap	StockholdersEquity	canonical	consolidated_periodic_filing	212	2	10-K,10-Q,8-K	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000858877	CSCO	total_assets	us-gaap	Assets	canonical	consolidated_periodic_filing	140	2	10-K,10-Q,8-K	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0000858877	CSCO	total_liabilities	us-gaap	Liabilities	canonical	consolidated_periodic_filing	136	2	10-K,10-Q,8-K	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
-sec-cik:0001018724	AMZN	capital_expenditure	us-gaap	PaymentsToAcquireProductiveAssets	rejected	unreviewed	146	2	10-K,10-Q	unreviewed_issuer_specific_concept	not_submitted_for_review
+sec-cik:0001018724	AMZN	capital_expenditure	us-gaap	PaymentsToAcquireProductiveAssets	reviewed_alias	company_reported_property_and_equipment_cash_purchases	146	2	10-K,10-Q	issuer_reported_property_equipment_cash_purchases	pending_named_professional_disposition
 sec-cik:0001018724	AMZN	capital_expenditure	us-gaap	PaymentsToAcquirePropertyPlantAndEquipment	canonical	consolidated_periodic_filing	152	0	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0001018724	AMZN	net_income	us-gaap	NetIncomeLoss	canonical	consolidated_periodic_filing	416	2	10-K,10-Q,DEF 14A	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0001018724	AMZN	operating_cash_flow	us-gaap	NetCashProvidedByUsedInOperatingActivities	canonical	consolidated_periodic_filing	323	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
@@ -163,7 +163,7 @@ sec-cik:0001373715	NOW	revenue	us-gaap	SalesRevenueNet	rejected	unreviewed	86	0	
 sec-cik:0001373715	NOW	stockholders_equity	us-gaap	StockholdersEquity	canonical	consolidated_periodic_filing	220	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0001373715	NOW	total_assets	us-gaap	Assets	canonical	consolidated_periodic_filing	114	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0001373715	NOW	total_liabilities	us-gaap	Liabilities	canonical	consolidated_periodic_filing	114	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
-sec-cik:0001596532	ANET	capital_expenditure	us-gaap	PaymentsToAcquireProductiveAssets	rejected	unreviewed	18	2	10-K	unreviewed_issuer_specific_concept	not_submitted_for_review
+sec-cik:0001596532	ANET	capital_expenditure	us-gaap	PaymentsToAcquireProductiveAssets	context_only	company_reported_property_equipment_and_intangible_assets	18	2	10-K	productive_assets_scope_is_broader_than_ppe_capex	pending_named_professional_disposition
 sec-cik:0001596532	ANET	capital_expenditure	us-gaap	PaymentsToAcquirePropertyPlantAndEquipment	canonical	consolidated_periodic_filing	93	0	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0001596532	ANET	net_income	us-gaap	NetIncomeLoss	canonical	consolidated_periodic_filing	212	0	10-K,10-Q,DEF 14A	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping
 sec-cik:0001596532	ANET	operating_cash_flow	us-gaap	NetCashProvidedByUsedInOperatingActivities	canonical	consolidated_periodic_filing	111	2	10-K,10-Q	canonical_us_gaap_concept	not_required_for_exact_canonical_mapping

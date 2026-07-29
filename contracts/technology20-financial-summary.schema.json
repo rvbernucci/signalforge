@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://signalforge.dev/contracts/technology20-financial-summary.schema.json",
+  "title": "SignalForge Technology 20 Financial Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "universe_id", "as_of", "companies", "claim_boundary"],
+  "properties": {
+    "schema_version": {"const": "signalforge/technology20-public-financial-summary/v2"},
+    "universe_id": {"type": "string", "minLength": 1},
+    "as_of": {"type": "string", "format": "date-time"},
+    "companies": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {"$ref": "#/$defs/company"}
+    },
+    "claim_boundary": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "string", "minLength": 1},
+        "unit": {"type": "string", "minLength": 1},
+        "currency": {"type": "string"},
+        "scale": {"type": "integer"}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["output_id", "quantity", "status"],
+      "properties": {
+        "output_id": {"type": "string", "minLength": 1},
+        "quantity": {"$ref": "#/$defs/quantity"},
+        "status": {"type": "string", "minLength": 1}
+      }
+    },
+    "input_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_id", "canonical_input", "metric_id", "source_fact_ids", "mapping_key", "taxonomy_concept", "accounting_perimeter", "disposition", "product_label", "numerically_authoritative", "context_only", "pair_ranking_eligible"],
+      "properties": {
+        "input_id": {"type": "string", "minLength": 1},
+        "canonical_input": {"type": "string", "minLength": 1},
+        "metric_id": {"type": "string", "minLength": 1},
+        "source_fact_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "mapping_key": {"type": "string", "minLength": 1},
+        "taxonomy_concept": {"type": "string", "minLength": 1},
+        "accounting_perimeter": {"type": "string", "minLength": 1},
+        "disposition": {"enum": ["canonical", "reviewed_alias", "context_only"]},
+        "product_label": {"type": "string", "minLength": 1},
+        "numerically_authoritative": {"type": "boolean"},
+        "context_only": {"type": "boolean"},
+        "pair_ranking_eligible": {"type": "boolean"}
+      }
+    },
+    "receipt_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receipt_id", "operation_id", "output_class", "product_label", "accounting_perimeter_signature", "inputs", "pair_ranking_eligible"],
+      "properties": {
+        "receipt_id": {"type": "string", "minLength": 1},
+        "operation_id": {"type": "string", "minLength": 1},
+        "output_class": {"enum": ["authoritative", "context_only"]},
+        "product_label": {"type": "string", "minLength": 1},
+        "accounting_perimeter_signature": {"type": "string", "minLength": 1},
+        "inputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/input_authority"}},
+        "pair_ranking_eligible": {"type": "boolean"}
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receipt_id", "operation_id", "formula_version", "periods", "source_as_of", "outputs", "evidence_refs", "receipt_sha256", "accounting_authority"],
+      "properties": {
+        "receipt_id": {"type": "string", "minLength": 1},
+        "operation_id": {"type": "string", "minLength": 1},
+        "formula_version": {"type": "string", "minLength": 1},
+        "periods": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "source_as_of": {"type": "string", "format": "date-time"},
+        "outputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/output"}},
+        "evidence_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "receipt_sha256": {"$ref": "#/$defs/sha256"},
+        "accounting_authority": {"$ref": "#/$defs/receipt_authority"}
+      }
+    },
+    "abstention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "code", "message"],
+      "properties": {
+        "operation_id": {"type": "string", "minLength": 1},
+        "code": {"type": "string", "minLength": 1},
+        "message": {"type": "string", "minLength": 1}
+      }
+    },
+    "company": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["company_id", "primary_ticker", "display_name", "report_sha256", "results", "abstentions"],
+      "properties": {
+        "company_id": {"type": "string", "minLength": 1},
+        "primary_ticker": {"type": "string", "minLength": 1},
+        "display_name": {"type": "string", "minLength": 1},
+        "report_sha256": {"$ref": "#/$defs/sha256"},
+        "results": {"type": "array", "items": {"$ref": "#/$defs/result"}},
+        "contextual_results": {"type": "array", "items": {"$ref": "#/$defs/result"}},
+        "abstentions": {"type": "array", "items": {"$ref": "#/$defs/abstention"}}
+      }
+    }
+  }
+}

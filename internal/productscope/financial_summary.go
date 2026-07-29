@@ -8,7 +8,7 @@ import (
 	"github.com/rvbernucci/signalforge/internal/contracts"
 )
 
-const PublicFinancialSummarySchemaV1 = "signalforge/technology20-public-financial-summary/v1"
+const PublicFinancialSummarySchemaV2 = "signalforge/technology20-public-financial-summary/v2"
 
 type PublicFinancialSummary struct {
 	SchemaVersion string                    `json:"schema_version"`
@@ -19,22 +19,25 @@ type PublicFinancialSummary struct {
 }
 
 type PublicCompanyFinancials struct {
-	CompanyID     string                      `json:"company_id"`
-	PrimaryTicker string                      `json:"primary_ticker"`
-	DisplayName   string                      `json:"display_name"`
-	ReportSHA256  string                      `json:"report_sha256"`
-	Results       []PublicFinancialResult     `json:"results"`
-	Abstentions   []PublicFinancialAbstention `json:"abstentions"`
+	CompanyID         string                      `json:"company_id"`
+	PrimaryTicker     string                      `json:"primary_ticker"`
+	DisplayName       string                      `json:"display_name"`
+	ReportSHA256      string                      `json:"report_sha256"`
+	Results           []PublicFinancialResult     `json:"results"`
+	ContextualResults []PublicFinancialResult     `json:"contextual_results,omitempty"`
+	Abstentions       []PublicFinancialAbstention `json:"abstentions"`
 }
 
 type PublicFinancialResult struct {
-	OperationID    string                    `json:"operation_id"`
-	FormulaVersion string                    `json:"formula_version"`
-	Periods        []string                  `json:"periods"`
-	SourceAsOf     time.Time                 `json:"source_as_of"`
-	Outputs        []contracts.ReceiptOutput `json:"outputs"`
-	EvidenceRefs   []string                  `json:"evidence_refs"`
-	ReceiptSHA256  string                    `json:"receipt_sha256"`
+	ReceiptID           string                     `json:"receipt_id"`
+	OperationID         string                     `json:"operation_id"`
+	FormulaVersion      string                     `json:"formula_version"`
+	Periods             []string                   `json:"periods"`
+	SourceAsOf          time.Time                  `json:"source_as_of"`
+	Outputs             []contracts.ReceiptOutput  `json:"outputs"`
+	EvidenceRefs        []string                   `json:"evidence_refs"`
+	ReceiptSHA256       string                     `json:"receipt_sha256"`
+	AccountingAuthority ReceiptAccountingAuthority `json:"accounting_authority"`
 }
 
 type PublicFinancialAbstention struct {
@@ -51,10 +54,10 @@ func BuildPublicFinancialSummary(
 		return PublicFinancialSummary{}, err
 	}
 	summary := PublicFinancialSummary{
-		SchemaVersion: PublicFinancialSummarySchemaV1,
+		SchemaVersion: PublicFinancialSummarySchemaV2,
 		UniverseID:    UniverseID,
 		AsOf:          catalog.AsOf,
-		ClaimBoundary: "These values are deterministic, point-in-time research outputs, not investment advice. Simple FCF means operating cash flow minus the approved capex concept; it is not FCFF. Missing authority produces a visible abstention.",
+		ClaimBoundary: "These values are deterministic, point-in-time research outputs, not investment advice. Every result carries hash-bound per-input concept, perimeter, label, and ranking authority. Simple FCF is never FCFF or issuer-reported FCF. Context-only proxies remain visibly labeled and cannot enter a winner, score, rank, or relative conclusion. Missing authority produces a visible abstention.",
 	}
 	for _, company := range catalog.Companies {
 		report, ok := reports[company.CompanyID]
@@ -70,11 +73,24 @@ func BuildPublicFinancialSummary(
 		}
 		for _, receipt := range report.Receipts {
 			item.Results = append(item.Results, PublicFinancialResult{
+				ReceiptID:   receipt.ReceiptID,
 				OperationID: receipt.OperationID, FormulaVersion: receipt.FormulaVersion,
 				Periods: append([]string(nil), receipt.Scope.Periods...), SourceAsOf: receipt.SourceAsOf,
-				Outputs:       append([]contracts.ReceiptOutput(nil), receipt.Outputs...),
-				EvidenceRefs:  append([]string(nil), receipt.EvidenceRefs...),
-				ReceiptSHA256: receipt.ReceiptSHA,
+				Outputs:             append([]contracts.ReceiptOutput(nil), receipt.Outputs...),
+				EvidenceRefs:        append([]string(nil), receipt.EvidenceRefs...),
+				ReceiptSHA256:       receipt.ReceiptSHA,
+				AccountingAuthority: report.ReceiptAuthorities[receipt.ReceiptID],
+			})
+		}
+		for _, receipt := range report.ContextualReceipts {
+			item.ContextualResults = append(item.ContextualResults, PublicFinancialResult{
+				ReceiptID:   receipt.ReceiptID,
+				OperationID: receipt.OperationID, FormulaVersion: receipt.FormulaVersion,
+				Periods: append([]string(nil), receipt.Scope.Periods...), SourceAsOf: receipt.SourceAsOf,
+				Outputs:             append([]contracts.ReceiptOutput(nil), receipt.Outputs...),
+				EvidenceRefs:        append([]string(nil), receipt.EvidenceRefs...),
+				ReceiptSHA256:       receipt.ReceiptSHA,
+				AccountingAuthority: report.ReceiptAuthorities[receipt.ReceiptID],
 			})
 		}
 		for _, abstention := range report.Abstentions {
@@ -85,6 +101,9 @@ func BuildPublicFinancialSummary(
 		sort.Slice(item.Results, func(i, j int) bool {
 			return item.Results[i].OperationID < item.Results[j].OperationID
 		})
+		sort.Slice(item.ContextualResults, func(i, j int) bool {
+			return item.ContextualResults[i].OperationID < item.ContextualResults[j].OperationID
+		})
 		sort.Slice(item.Abstentions, func(i, j int) bool {
 			return item.Abstentions[i].OperationID < item.Abstentions[j].OperationID
 		})
@@ -94,7 +113,7 @@ func BuildPublicFinancialSummary(
 }
 
 func ValidatePublicFinancialSummary(summary PublicFinancialSummary) error {
-	if summary.SchemaVersion != PublicFinancialSummarySchemaV1 ||
+	if summary.SchemaVersion != PublicFinancialSummarySchemaV2 ||
 		summary.UniverseID != UniverseID || summary.AsOf.IsZero() ||
 		len(summary.Companies) != len(Companies()) || summary.ClaimBoundary == "" {
 		return errors.New("public financial summary envelope is invalid")
@@ -109,9 +128,13 @@ func ValidatePublicFinancialSummary(summary PublicFinancialSummary) error {
 		}
 		seen[company.CompanyID] = true
 		for _, result := range company.Results {
-			if result.OperationID == "" || result.FormulaVersion == "" || result.SourceAsOf.IsZero() ||
-				len(result.Outputs) == 0 || len(result.EvidenceRefs) == 0 || result.ReceiptSHA256 == "" {
-				return errors.New("public financial result is invalid")
+			if err := validatePublicFinancialResult(result, false); err != nil {
+				return err
+			}
+		}
+		for _, result := range company.ContextualResults {
+			if err := validatePublicFinancialResult(result, true); err != nil {
+				return err
 			}
 		}
 		for _, abstention := range company.Abstentions {
@@ -119,6 +142,26 @@ func ValidatePublicFinancialSummary(summary PublicFinancialSummary) error {
 				return errors.New("public financial abstention is invalid")
 			}
 		}
+	}
+	return nil
+}
+
+func validatePublicFinancialResult(result PublicFinancialResult, contextOnly bool) error {
+	if result.ReceiptID == "" || result.OperationID == "" ||
+		result.FormulaVersion == "" || result.SourceAsOf.IsZero() ||
+		len(result.Outputs) == 0 || len(result.EvidenceRefs) == 0 ||
+		result.ReceiptSHA256 == "" ||
+		result.AccountingAuthority.ReceiptID != result.ReceiptID ||
+		result.AccountingAuthority.OperationID != result.OperationID {
+		return errors.New("public financial result is invalid")
+	}
+	if contextOnly {
+		if result.AccountingAuthority.OutputClass != AccountingOutputContextOnly ||
+			result.AccountingAuthority.PairRankingEligible {
+			return errors.New("public context-only financial result escaped its release boundary")
+		}
+	} else if result.AccountingAuthority.OutputClass != AccountingOutputAuthoritative {
+		return errors.New("public authoritative financial result has an invalid output class")
 	}
 	return nil
 }

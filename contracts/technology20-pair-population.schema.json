@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://signalforge.dev/contracts/technology20-pair-population.schema.json",
+  "title": "SignalForge Technology 20 Pair Population",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "universe_id", "as_of", "generated_at", "policy_version", "company_reports", "pairs", "claim_boundary", "population_sha256"],
+  "properties": {
+    "schema_version": {"const": "signalforge/technology20-pair-population/v1"},
+    "universe_id": {"type": "string", "minLength": 1},
+    "as_of": {"type": "string", "format": "date-time"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "policy_version": {"type": "string", "minLength": 1},
+    "company_reports": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["company_id", "report_sha256"],
+        "properties": {
+          "company_id": {"type": "string", "minLength": 1},
+          "report_sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    },
+    "pairs": {
+      "type": "array",
+      "minItems": 190,
+      "maxItems": 190,
+      "items": {"$ref": "technology20-peer-evaluation.schema.json#/$defs/evaluation"}
+    },
+    "claim_boundary": {"type": "string", "minLength": 1},
+    "population_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

@@ -20,13 +20,191 @@
           ]
         },
         {
-          "abstention_id": "abstention-cisco-arista-financial-free-cash-flow",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "detail": "accounting perimeters differ",
+              "invariant_id": "same_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "detail": "taxonomy concepts differ without one reviewed mapping",
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": false
+            }
+          ],
           "metric_id": "financial.free_cash_flow",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0000858877|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0000858877|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000858877",
+              "currency": "USD",
+              "definition_id": "financial.free_cash_flow/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2025-09-03T20:52:59Z",
+              "fiscal_end": "2025-07-26T00:00:00Z",
+              "fiscal_start": "2024-07-28T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "simple FCF",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:CSCO",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities+PaymentsToAcquirePropertyPlantAndEquipment",
+              "unit": "currency"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "company_reported_property_equipment_and_intangible_assets",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "context_only",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0001596532|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_equipment_and_intangible_assets",
+                  "pair_ranking_eligible": false,
+                  "product_label": "reported reinvestment intensity / residual cash proxy",
+                  "taxonomy_concept": "PaymentsToAcquireProductiveAssets"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0001596532|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=company_reported_property_equipment_and_intangible_assets;operating_cash_flow=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001596532",
+              "currency": "USD",
+              "definition_id": "financial.free_cash_flow/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-14T00:12:46Z",
+              "fiscal_end": "2025-12-31T00:00:00Z",
+              "fiscal_start": "2025-01-01T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "context_only",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "residual cash proxy",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:ANET",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities+PaymentsToAcquireProductiveAssets",
+              "unit": "currency"
+            }
+          ],
+          "receipt_id": "comparability-b349d02edec02b9da0931424",
+          "receipt_sha256": "cdfb0531a8ded44f0945246ff876b2160323e2f84f10fbf7f2aca93026f2166e",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only"
           ]
         },
         {
@@ -82,6 +260,10 @@
             },
             {
               "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
               "passed": true
             },
             {
@@ -108,7 +290,29 @@
           "metric_id": "financial.operating_margin",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0000858877|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0000858877|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0000858877",
               "currency": "not_applicable",
               "definition_id": "financial.operating_margin/1.0.0",
@@ -118,7 +322,10 @@
               "fiscal_start": "2024-07-28T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.operating_margin",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:CSCO",
@@ -128,7 +335,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0001596532|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001596532|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0001596532",
               "currency": "not_applicable",
               "definition_id": "financial.operating_margin/1.0.0",
@@ -138,7 +367,10 @@
               "fiscal_start": "2025-01-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.operating_margin",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:ANET",
@@ -148,8 +380,8 @@
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-34b911e7c940b98297be4408",
-          "receipt_sha256": "96c3cebb7ccfa8936c63ce7166ebf42dc3cbb499b5284418a9a5e0828f12265f",
+          "receipt_id": "comparability-8cbb267b71406860a07aacab",
+          "receipt_sha256": "37b0a050ed04c62707805724798cab9c7b1079acaa29c20c8d16f48d99143f32",
           "required_caveat_ids": [
             "different_filing_dates",
             "different_fiscal_periods"
@@ -208,6 +440,10 @@
             },
             {
               "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
               "passed": true
             },
             {
@@ -234,7 +470,29 @@
           "metric_id": "financial.revenue_growth",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0000858877|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0000858877|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
               "company_id": "sec-cik:0000858877",
               "currency": "not_applicable",
               "definition_id": "financial.revenue_growth/1.0.0",
@@ -244,7 +502,10 @@
               "fiscal_start": "2024-07-28T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.revenue_growth",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:CSCO",
@@ -254,7 +515,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0001596532|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0001596532|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
               "company_id": "sec-cik:0001596532",
               "currency": "not_applicable",
               "definition_id": "financial.revenue_growth/1.0.0",
@@ -264,7 +547,10 @@
               "fiscal_start": "2025-01-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.revenue_growth",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:ANET",
@@ -274,8 +560,8 @@
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-8a100bbef71d9791728beeae",
-          "receipt_sha256": "a9a1ac00b06dba3ffff3af80cd453b8f00696cb65f6b4e49ab2013759ab083e6",
+          "receipt_id": "comparability-5cd03472b6d35e4906032c3c",
+          "receipt_sha256": "a8dd2d24ae0dcb7508f09f77dbef29df4d357d3824964ea466f293298ed8f531",
           "required_caveat_ids": [
             "different_filing_dates",
             "different_fiscal_periods"
@@ -292,13 +578,190 @@
       "lane_id": "microsoft-alphabet",
       "metrics": [
         {
-          "abstention_id": "abstention-microsoft-alphabet-financial-capex-intensity",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "detail": "taxonomy concepts differ without one reviewed mapping",
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": false
+            }
+          ],
           "metric_id": "financial.capex_intensity",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0000789019|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000789019",
+              "currency": "not_applicable",
+              "definition_id": "financial.capex_intensity/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2025-07-30T20:11:40Z",
+              "fiscal_end": "2025-06-30T00:00:00Z",
+              "fiscal_start": "2024-07-01T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "financial.capex_intensity",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:MSFT",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment+RevenueFromContractWithCustomerExcludingAssessedTax",
+              "unit": "ratio"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0001652044|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "reviewed_alias",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001652044|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+                  "pair_ranking_eligible": false,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "Revenues"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001652044",
+              "currency": "not_applicable",
+              "definition_id": "financial.capex_intensity/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-05T02:56:03Z",
+              "fiscal_end": "2025-12-31T00:00:00Z",
+              "fiscal_start": "2025-01-01T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "financial.capex_intensity",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:GOOGL",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment+RevenueFromContractWithCustomerExcludingAssessedTax+Revenues",
+              "unit": "ratio"
+            }
+          ],
+          "receipt_id": "comparability-0f394b4a07def0d6c1283a99",
+          "receipt_sha256": "c4e559202dd9ddbe2e780da2adbb3ec09eb85c335a424ef244e60616233809b6",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only"
           ]
         },
         {
@@ -354,6 +817,10 @@
             },
             {
               "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
               "passed": true
             },
             {
@@ -380,7 +847,29 @@
           "metric_id": "financial.cash_conversion",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "net_income",
+                  "disposition": "canonical",
+                  "input_id": "net_income",
+                  "mapping_key": "sec-cik:0000789019|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "net_income",
+                  "taxonomy_concept": "NetIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0000789019|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "net_income=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0000789019",
               "currency": "not_applicable",
               "definition_id": "financial.cash_conversion/1.0.0",
@@ -390,7 +879,10 @@
               "fiscal_start": "2024-07-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.cash_conversion",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:MSFT",
@@ -400,7 +892,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "net_income",
+                  "disposition": "canonical",
+                  "input_id": "net_income",
+                  "mapping_key": "sec-cik:0001652044|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "net_income",
+                  "taxonomy_concept": "NetIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0001652044|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "net_income=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0001652044",
               "currency": "not_applicable",
               "definition_id": "financial.cash_conversion/1.0.0",
@@ -410,7 +924,10 @@
               "fiscal_start": "2025-01-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.cash_conversion",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:GOOGL",
@@ -420,8 +937,8 @@
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-97cd16a635c05cbd5ba6b61b",
-          "receipt_sha256": "8a37fd971514a27187d26d583e016cfadba2d47e1f2677ff3fef75e74a915869",
+          "receipt_id": "comparability-0f5b363263002e7f3f567169",
+          "receipt_sha256": "5df6dfa9ae8e9bd577aaafae431a597fc21afab620f34f385c692ec86516aa9a",
           "required_caveat_ids": [
             "different_filing_dates",
             "different_fiscal_periods"
@@ -483,6 +1000,10 @@
               "passed": true
             },
             {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": true
+            },
+            {
               "invariant_id": "same_restatement_state",
               "passed": true
             },
@@ -506,7 +1027,29 @@
           "metric_id": "financial.free_cash_flow",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0000789019|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0000789019|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0000789019",
               "currency": "USD",
               "definition_id": "financial.free_cash_flow/1.0.0",
@@ -516,7 +1059,10 @@
               "fiscal_start": "2024-07-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "simple FCF",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:MSFT",
@@ -526,7 +1072,29 @@
               "unit": "currency"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0001652044|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0001652044|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0001652044",
               "currency": "USD",
               "definition_id": "financial.free_cash_flow/1.0.0",
@@ -536,7 +1104,10 @@
               "fiscal_start": "2025-01-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "simple FCF",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:GOOGL",
@@ -546,31 +1117,385 @@
               "unit": "currency"
             }
           ],
-          "receipt_id": "comparability-0f5cf50555cf46c0eea9d250",
-          "receipt_sha256": "ce9de7277817ece48a2780a8ea2197238231e65f54aaca4264823c655dc56263",
+          "receipt_id": "comparability-a56c19febfecdf12b8ab70d3",
+          "receipt_sha256": "dddc155257c0836679fcdc820314fe8473c856f88ecf0d854626374dd1166a2d",
           "required_caveat_ids": [
             "different_filing_dates",
             "different_fiscal_periods"
           ]
         },
         {
-          "abstention_id": "abstention-microsoft-alphabet-financial-operating-margin",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "detail": "taxonomy concepts differ without one reviewed mapping",
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": false
+            }
+          ],
           "metric_id": "financial.operating_margin",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0000789019|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000789019",
+              "currency": "not_applicable",
+              "definition_id": "financial.operating_margin/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2025-07-30T20:11:40Z",
+              "fiscal_end": "2025-06-30T00:00:00Z",
+              "fiscal_start": "2024-07-01T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "financial.operating_margin",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:MSFT",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "OperatingIncomeLoss+RevenueFromContractWithCustomerExcludingAssessedTax",
+              "unit": "ratio"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0001652044|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "reviewed_alias",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001652044|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+                  "pair_ranking_eligible": false,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "Revenues"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001652044",
+              "currency": "not_applicable",
+              "definition_id": "financial.operating_margin/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-05T02:56:03Z",
+              "fiscal_end": "2025-12-31T00:00:00Z",
+              "fiscal_start": "2025-01-01T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "financial.operating_margin",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:GOOGL",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "OperatingIncomeLoss+RevenueFromContractWithCustomerExcludingAssessedTax+Revenues",
+              "unit": "ratio"
+            }
+          ],
+          "receipt_id": "comparability-9845469e95ff61d53b9dae2a",
+          "receipt_sha256": "25725f511b2dcc3ffcc3de3a30df8961aa69813a4d5483810f1ad501d9f49951",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only"
           ]
         },
         {
-          "abstention_id": "abstention-microsoft-alphabet-financial-revenue-growth",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "detail": "taxonomy concepts differ without one reviewed mapping",
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": false
+            }
+          ],
           "metric_id": "financial.revenue_growth",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000789019",
+              "currency": "not_applicable",
+              "definition_id": "financial.revenue_growth/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2025-07-30T20:11:40Z",
+              "fiscal_end": "2025-06-30T00:00:00Z",
+              "fiscal_start": "2024-07-01T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "financial.revenue_growth",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:MSFT",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+              "unit": "ratio"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "reviewed_alias",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0001652044|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+                  "pair_ranking_eligible": false,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "Revenues"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0001652044|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001652044",
+              "currency": "not_applicable",
+              "definition_id": "financial.revenue_growth/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-05T02:56:03Z",
+              "fiscal_end": "2025-12-31T00:00:00Z",
+              "fiscal_start": "2025-01-01T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "financial.revenue_growth",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:GOOGL",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax+Revenues",
+              "unit": "ratio"
+            }
+          ],
+          "receipt_id": "comparability-7db7f41793e8b73549bae47e",
+          "receipt_sha256": "36ff8ecc98d95c88b72f7eb2ef62ac5156f16f9b40f6862b7ecf982a9b655a95",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only"
           ]
         }
       ],
@@ -584,43 +1509,753 @@
       "lane_id": "nvidia-amd",
       "metrics": [
         {
-          "abstention_id": "abstention-nvidia-amd-financial-capex-intensity",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "detail": "accounting perimeters differ",
+              "invariant_id": "same_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "detail": "taxonomy concepts differ without one reviewed mapping",
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": false
+            }
+          ],
           "metric_id": "financial.capex_intensity",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0000002488|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0000002488|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000002488",
+              "currency": "not_applicable",
+              "definition_id": "financial.capex_intensity/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-03T23:14:52Z",
+              "fiscal_end": "2025-12-27T00:00:00Z",
+              "fiscal_start": "2024-12-29T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "financial.capex_intensity",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:AMD",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment+RevenueFromContractWithCustomerExcludingAssessedTax",
+              "unit": "ratio"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "company_reported_property_equipment_and_intangible_assets",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "context_only",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0001045810|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_equipment_and_intangible_assets",
+                  "pair_ranking_eligible": false,
+                  "product_label": "reported reinvestment intensity / residual cash proxy",
+                  "taxonomy_concept": "PaymentsToAcquireProductiveAssets"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "reviewed_alias",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001045810|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+                  "pair_ranking_eligible": false,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "Revenues"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=company_reported_property_equipment_and_intangible_assets;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001045810",
+              "currency": "not_applicable",
+              "definition_id": "financial.capex_intensity/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-25T21:42:19Z",
+              "fiscal_end": "2026-01-25T00:00:00Z",
+              "fiscal_start": "2025-01-27T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "context_only",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "reported reinvestment intensity",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:NVDA",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "PaymentsToAcquireProductiveAssets+Revenues",
+              "unit": "ratio"
+            }
+          ],
+          "receipt_id": "comparability-8bc1a1fd4b8a922c4cd49fc9",
+          "receipt_sha256": "a45fe794f07629bccff248ed41ce89ad0394a102332dd124645921f75580db22",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only"
           ]
         },
         {
-          "abstention_id": "abstention-nvidia-amd-financial-free-cash-flow",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "detail": "accounting perimeters differ",
+              "invariant_id": "same_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "detail": "taxonomy concepts differ without one reviewed mapping",
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": false
+            }
+          ],
           "metric_id": "financial.free_cash_flow",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0000002488|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0000002488|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000002488",
+              "currency": "USD",
+              "definition_id": "financial.free_cash_flow/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-03T23:14:52Z",
+              "fiscal_end": "2025-12-27T00:00:00Z",
+              "fiscal_start": "2024-12-29T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "simple FCF",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:AMD",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities+PaymentsToAcquirePropertyPlantAndEquipment",
+              "unit": "currency"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "company_reported_property_equipment_and_intangible_assets",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "context_only",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0001045810|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_equipment_and_intangible_assets",
+                  "pair_ranking_eligible": false,
+                  "product_label": "reported reinvestment intensity / residual cash proxy",
+                  "taxonomy_concept": "PaymentsToAcquireProductiveAssets"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0001045810|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=company_reported_property_equipment_and_intangible_assets;operating_cash_flow=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001045810",
+              "currency": "USD",
+              "definition_id": "financial.free_cash_flow/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-25T21:42:19Z",
+              "fiscal_end": "2026-01-25T00:00:00Z",
+              "fiscal_start": "2025-01-27T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "context_only",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "residual cash proxy",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:NVDA",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities+PaymentsToAcquireProductiveAssets",
+              "unit": "currency"
+            }
+          ],
+          "receipt_id": "comparability-9aa2c5311b1d1cf74f4b0d09",
+          "receipt_sha256": "dd3b48f9d55ecf49f16d739e0aef5f6af40a3e0ba1a2cced16a97418944905b2",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only"
           ]
         },
         {
-          "abstention_id": "abstention-nvidia-amd-financial-operating-margin",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": true
+            }
+          ],
           "metric_id": "financial.operating_margin",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0000002488|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0000002488|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000002488",
+              "currency": "not_applicable",
+              "definition_id": "financial.operating_margin/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-03T23:14:52Z",
+              "fiscal_end": "2025-12-27T00:00:00Z",
+              "fiscal_start": "2024-12-29T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "financial.operating_margin",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:AMD",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "OperatingIncomeLoss+RevenueFromContractWithCustomerExcludingAssessedTax",
+              "unit": "ratio"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0001045810|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "reviewed_alias",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001045810|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+                  "pair_ranking_eligible": false,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "Revenues"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001045810",
+              "currency": "not_applicable",
+              "definition_id": "financial.operating_margin/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-25T21:42:19Z",
+              "fiscal_end": "2026-01-25T00:00:00Z",
+              "fiscal_start": "2025-01-27T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "financial.operating_margin",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:NVDA",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "OperatingIncomeLoss+Revenues",
+              "unit": "ratio"
+            }
+          ],
+          "receipt_id": "comparability-4618547a278a2c36e7fb9cc0",
+          "receipt_sha256": "c1f5a02cfc24387a93ecc2d86caa9539939cd7e896dcbf190c52366a85460457",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only",
+            "reviewed_taxonomy_mapping_applied"
           ]
         },
         {
-          "abstention_id": "abstention-nvidia-amd-financial-revenue-growth",
-          "disposition": "unavailable",
-          "invariants": [],
+          "disposition": "context_only",
+          "invariants": [
+            {
+              "invariant_id": "distinct_issuers",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_metric_version",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_unit",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_currency",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_scale",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_sign_policy",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "consolidated_dimensions",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_period_type",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_definition",
+              "passed": true
+            },
+            {
+              "invariant_id": "same_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "detail": "context-only or standalone-only accounting authority cannot enter a comparable ranking",
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": false
+            },
+            {
+              "invariant_id": "same_restatement_state",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_restatement_chain",
+              "passed": true
+            },
+            {
+              "invariant_id": "active_supersession",
+              "passed": true
+            },
+            {
+              "invariant_id": "annual_duration_periods",
+              "passed": true
+            },
+            {
+              "invariant_id": "bounded_fiscal_end_delta",
+              "passed": true
+            },
+            {
+              "invariant_id": "reviewed_taxonomy_mapping",
+              "passed": true
+            }
+          ],
           "metric_id": "financial.revenue_growth",
-          "operands": [],
+          "operands": [
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0000002488|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0000002488|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
+              "company_id": "sec-cik:0000002488",
+              "currency": "not_applicable",
+              "definition_id": "financial.revenue_growth/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-03T23:14:52Z",
+              "fiscal_end": "2025-12-27T00:00:00Z",
+              "fiscal_start": "2024-12-29T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
+              "period_type": "duration",
+              "product_label": "financial.revenue_growth",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:AMD",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+              "unit": "ratio"
+            },
+            {
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "reviewed_alias",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0001045810|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+                  "pair_ranking_eligible": false,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "Revenues"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "reviewed_alias",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0001045810|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+                  "pair_ranking_eligible": false,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "Revenues"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
+              "company_id": "sec-cik:0001045810",
+              "currency": "not_applicable",
+              "definition_id": "financial.revenue_growth/1.0.0",
+              "dimensional_identity": "consolidated",
+              "filing_date": "2026-02-25T21:42:19Z",
+              "fiscal_end": "2026-01-25T00:00:00Z",
+              "fiscal_start": "2025-01-27T00:00:00Z",
+              "market_observation_date": null,
+              "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": false,
+              "period_type": "duration",
+              "product_label": "financial.revenue_growth",
+              "scale": 0,
+              "security_class_state": "not_activated",
+              "security_id": "ticker:NVDA",
+              "segment_scope": "consolidated",
+              "sign_policy": "formula_defined",
+              "taxonomy_concept": "Revenues",
+              "unit": "ratio"
+            }
+          ],
+          "receipt_id": "comparability-db960635fba48890eb966d38",
+          "receipt_sha256": "f695947d37f1b1bd16bef9c4b9cb1337a8b1bae242a05f5b0fdd7b71c11b606e",
           "required_caveat_ids": [
-            "comparison_operand_unavailable"
+            "different_filing_dates",
+            "different_fiscal_periods",
+            "non_ranking_context_only",
+            "reviewed_taxonomy_mapping_applied"
           ]
         }
       ],
@@ -689,6 +2324,10 @@
               "passed": true
             },
             {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": true
+            },
+            {
               "invariant_id": "same_restatement_state",
               "passed": true
             },
@@ -708,17 +2347,34 @@
               "detail": "fiscal period ends are too far apart",
               "invariant_id": "bounded_fiscal_end_delta",
               "passed": false
-            },
-            {
-              "detail": "taxonomy concepts differ without one reviewed mapping",
-              "invariant_id": "reviewed_taxonomy_mapping",
-              "passed": false
             }
           ],
           "metric_id": "financial.capex_intensity",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0000789019|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0000789019",
               "currency": "not_applicable",
               "definition_id": "financial.capex_intensity/1.0.0",
@@ -728,7 +2384,10 @@
               "fiscal_start": "2024-07-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.capex_intensity",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:MSFT",
@@ -738,7 +2397,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0001341439|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001341439|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0001341439",
               "currency": "not_applicable",
               "definition_id": "financial.capex_intensity/1.0.0",
@@ -748,18 +2429,21 @@
               "fiscal_start": "2025-06-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.capex_intensity",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:ORCL",
               "segment_scope": "consolidated",
               "sign_policy": "formula_defined",
-              "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment+RevenueFromContractWithCustomerExcludingAssessedTax+Revenues",
+              "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment+RevenueFromContractWithCustomerExcludingAssessedTax",
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-e5f4ffe25e433a58c71699f9",
-          "receipt_sha256": "eac4536d69df9d5ed97dfb6a0ceaadeec3fef859f3713db3b500fd2489010b54",
+          "receipt_id": "comparability-10d985bb73d85a59326bfc23",
+          "receipt_sha256": "7ce901f49db8b56f0b2f66f74abdca1fe55cf91ea2c315bcdc2456b0629145af",
           "required_caveat_ids": []
         },
         {
@@ -815,6 +2499,10 @@
             },
             {
               "invariant_id": "reviewed_accounting_perimeter",
+              "passed": true
+            },
+            {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
               "passed": true
             },
             {
@@ -842,7 +2530,29 @@
           "metric_id": "financial.free_cash_flow",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0000789019|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0000789019|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0000789019",
               "currency": "USD",
               "definition_id": "financial.free_cash_flow/1.0.0",
@@ -852,7 +2562,10 @@
               "fiscal_start": "2024-07-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "simple FCF",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:MSFT",
@@ -862,7 +2575,29 @@
               "unit": "currency"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "capital_expenditure",
+                  "disposition": "canonical",
+                  "input_id": "capital_expenditure",
+                  "mapping_key": "sec-cik:0001341439|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "capital_expenditure",
+                  "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0001341439|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "capital_expenditure=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0001341439",
               "currency": "USD",
               "definition_id": "financial.free_cash_flow/1.0.0",
@@ -872,7 +2607,10 @@
               "fiscal_start": "2025-06-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "simple FCF",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:ORCL",
@@ -882,8 +2620,8 @@
               "unit": "currency"
             }
           ],
-          "receipt_id": "comparability-16836c9d90e3e9b1f6c524dc",
-          "receipt_sha256": "3942ad57c9615084e3b02389d1505d7d0f27d2bb02010b9de0819a73b2f9914c",
+          "receipt_id": "comparability-c9d77b0e878b1356807e3103",
+          "receipt_sha256": "f7cd970d2646b85cea266a31b9332e9d7cfce68b8a7d355ece5752d131ab4ec4",
           "required_caveat_ids": []
         },
         {
@@ -942,6 +2680,10 @@
               "passed": true
             },
             {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": true
+            },
+            {
               "invariant_id": "same_restatement_state",
               "passed": true
             },
@@ -961,17 +2703,34 @@
               "detail": "fiscal period ends are too far apart",
               "invariant_id": "bounded_fiscal_end_delta",
               "passed": false
-            },
-            {
-              "detail": "taxonomy concepts differ without one reviewed mapping",
-              "invariant_id": "reviewed_taxonomy_mapping",
-              "passed": false
             }
           ],
           "metric_id": "financial.operating_margin",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0000789019|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0000789019",
               "currency": "not_applicable",
               "definition_id": "financial.operating_margin/1.0.0",
@@ -981,7 +2740,10 @@
               "fiscal_start": "2024-07-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.operating_margin",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:MSFT",
@@ -991,7 +2753,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0001341439|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001341439|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0001341439",
               "currency": "not_applicable",
               "definition_id": "financial.operating_margin/1.0.0",
@@ -1001,18 +2785,21 @@
               "fiscal_start": "2025-06-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.operating_margin",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:ORCL",
               "segment_scope": "consolidated",
               "sign_policy": "formula_defined",
-              "taxonomy_concept": "OperatingIncomeLoss+RevenueFromContractWithCustomerExcludingAssessedTax+Revenues",
+              "taxonomy_concept": "OperatingIncomeLoss+RevenueFromContractWithCustomerExcludingAssessedTax",
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-ad451b186152febd94908881",
-          "receipt_sha256": "099c186f3c8d815b9a3270685be38b33dc3ab89f32c24bba9d1ee2ec3d4e9f84",
+          "receipt_id": "comparability-d58ec298bb2944824988144c",
+          "receipt_sha256": "8b135eae59cb8ecf0a557ad55be1956d7d2842d5a68c6315311d0f6e9afdc64c",
           "required_caveat_ids": []
         },
         {
@@ -1071,6 +2858,10 @@
               "passed": true
             },
             {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": true
+            },
+            {
               "invariant_id": "same_restatement_state",
               "passed": true
             },
@@ -1090,17 +2881,34 @@
               "detail": "fiscal period ends are too far apart",
               "invariant_id": "bounded_fiscal_end_delta",
               "passed": false
-            },
-            {
-              "detail": "taxonomy concepts differ without one reviewed mapping",
-              "invariant_id": "reviewed_taxonomy_mapping",
-              "passed": false
             }
           ],
           "metric_id": "financial.revenue_growth",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
               "company_id": "sec-cik:0000789019",
               "currency": "not_applicable",
               "definition_id": "financial.revenue_growth/1.0.0",
@@ -1110,7 +2918,10 @@
               "fiscal_start": "2024-07-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.revenue_growth",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:MSFT",
@@ -1120,7 +2931,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0001341439|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0001341439|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
               "company_id": "sec-cik:0001341439",
               "currency": "not_applicable",
               "definition_id": "financial.revenue_growth/1.0.0",
@@ -1130,18 +2963,21 @@
               "fiscal_start": "2025-06-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.revenue_growth",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:ORCL",
               "segment_scope": "consolidated",
               "sign_policy": "formula_defined",
-              "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax+Revenues",
+              "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-c18839340c2a61eb301ef04d",
-          "receipt_sha256": "3e71dc4a61dd7460e3120e7fd6fc85933b6e9b269d989556c4f48705f98d62c3",
+          "receipt_id": "comparability-902abe6793c611b49b719a34",
+          "receipt_sha256": "52799fd4d80cddb6f63fce30ba2abe10dc0d07ec285bce92f0e3f783c52d2613",
           "required_caveat_ids": []
         }
       ],
@@ -1210,6 +3046,10 @@
               "passed": true
             },
             {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": true
+            },
+            {
               "invariant_id": "same_restatement_state",
               "passed": true
             },
@@ -1233,7 +3073,29 @@
           "metric_id": "financial.cash_conversion",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "net_income",
+                  "disposition": "canonical",
+                  "input_id": "net_income",
+                  "mapping_key": "sec-cik:0001108524|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "net_income",
+                  "taxonomy_concept": "NetIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0001108524|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "net_income=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0001108524",
               "currency": "not_applicable",
               "definition_id": "financial.cash_conversion/1.0.0",
@@ -1243,7 +3105,10 @@
               "fiscal_start": "2025-02-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.cash_conversion",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:CRM",
@@ -1253,7 +3118,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "net_income",
+                  "disposition": "canonical",
+                  "input_id": "net_income",
+                  "mapping_key": "sec-cik:0001373715|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "net_income",
+                  "taxonomy_concept": "NetIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_cash_flow",
+                  "disposition": "canonical",
+                  "input_id": "operating_cash_flow",
+                  "mapping_key": "sec-cik:0001373715|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_cash_flow",
+                  "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities"
+                }
+              ],
+              "accounting_perimeter": "net_income=consolidated_periodic_filing;operating_cash_flow=consolidated_periodic_filing",
               "company_id": "sec-cik:0001373715",
               "currency": "not_applicable",
               "definition_id": "financial.cash_conversion/1.0.0",
@@ -1263,7 +3150,10 @@
               "fiscal_start": "2025-01-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.cash_conversion",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:NOW",
@@ -1273,8 +3163,8 @@
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-b9519159e2ee1976f41ab325",
-          "receipt_sha256": "c9d8f0139f3d9151fb6cfaf32a903f15d359e9e66754002d6fa8eb018a0c8f1e",
+          "receipt_id": "comparability-249a2d619b670ba68ed7f135",
+          "receipt_sha256": "864d7fd181c48a7bf4a4762af7570e619a18319d50b9891770aed715c3eea5bc",
           "required_caveat_ids": [
             "different_filing_dates",
             "different_fiscal_periods"
@@ -1346,6 +3236,10 @@
               "passed": true
             },
             {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": true
+            },
+            {
               "invariant_id": "same_restatement_state",
               "passed": true
             },
@@ -1369,7 +3263,29 @@
           "metric_id": "financial.operating_margin",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0001108524|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001108524|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0001108524",
               "currency": "not_applicable",
               "definition_id": "financial.operating_margin/1.0.0",
@@ -1379,7 +3295,10 @@
               "fiscal_start": "2025-02-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.operating_margin",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:CRM",
@@ -1389,7 +3308,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "operating_income",
+                  "disposition": "canonical",
+                  "input_id": "operating_income",
+                  "mapping_key": "sec-cik:0001373715|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "operating_income",
+                  "taxonomy_concept": "OperatingIncomeLoss"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue",
+                  "mapping_key": "sec-cik:0001373715|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "operating_income=consolidated_periodic_filing;revenue=consolidated_periodic_filing",
               "company_id": "sec-cik:0001373715",
               "currency": "not_applicable",
               "definition_id": "financial.operating_margin/1.0.0",
@@ -1399,7 +3340,10 @@
               "fiscal_start": "2025-01-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.operating_margin",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:NOW",
@@ -1409,8 +3353,8 @@
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-4f33f6cf46740182ae14e2a9",
-          "receipt_sha256": "3d6d4e3b686644e429ea7994f65a630c1f621fd0744c399cd2649b7ed81728a3",
+          "receipt_id": "comparability-61be4a38855e161a8ac121f8",
+          "receipt_sha256": "e1afb63fb0f3122fd0c1d754d6161de24d5c90f953049776377c76551fade3b4",
           "required_caveat_ids": [
             "different_filing_dates",
             "different_fiscal_periods"
@@ -1472,6 +3416,10 @@
               "passed": true
             },
             {
+              "invariant_id": "ranking_eligible_accounting_perimeter",
+              "passed": true
+            },
+            {
               "invariant_id": "same_restatement_state",
               "passed": true
             },
@@ -1495,7 +3443,29 @@
           "metric_id": "financial.revenue_growth",
           "operands": [
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0001108524|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0001108524|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
               "company_id": "sec-cik:0001108524",
               "currency": "not_applicable",
               "definition_id": "financial.revenue_growth/1.0.0",
@@ -1505,7 +3475,10 @@
               "fiscal_start": "2025-02-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.revenue_growth",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:CRM",
@@ -1515,7 +3488,29 @@
               "unit": "ratio"
             },
             {
-              "accounting_perimeter": "consolidated_periodic_filing",
+              "accounting_inputs": [
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_current",
+                  "mapping_key": "sec-cik:0001373715|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                },
+                {
+                  "accounting_perimeter": "consolidated_periodic_filing",
+                  "canonical_input": "revenue",
+                  "disposition": "canonical",
+                  "input_id": "revenue_prior",
+                  "mapping_key": "sec-cik:0001373715|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+                  "pair_ranking_eligible": true,
+                  "product_label": "revenue",
+                  "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax"
+                }
+              ],
+              "accounting_perimeter": "revenue_current=consolidated_periodic_filing;revenue_prior=consolidated_periodic_filing",
               "company_id": "sec-cik:0001373715",
               "currency": "not_applicable",
               "definition_id": "financial.revenue_growth/1.0.0",
@@ -1525,7 +3520,10 @@
               "fiscal_start": "2025-01-01T00:00:00Z",
               "market_observation_date": null,
               "market_observation_state": "not_activated",
+              "output_class": "authoritative",
+              "pair_ranking_eligible": true,
               "period_type": "duration",
+              "product_label": "financial.revenue_growth",
               "scale": 0,
               "security_class_state": "not_activated",
               "security_id": "ticker:NOW",
@@ -1535,8 +3533,8 @@
               "unit": "ratio"
             }
           ],
-          "receipt_id": "comparability-fbfe13e649dcc4f8a40eb1d9",
-          "receipt_sha256": "ff38773e787e4c2dfd15d90316dbbe1a06fc28dfbf5f93029ab611a7f6c49a9f",
+          "receipt_id": "comparability-9d5ad94eb43dba2e327a3f1b",
+          "receipt_sha256": "b2f3a72552d59710a6eb2a949d6a9cdf273712c6c91f26271a6454bb01bbe42f",
           "required_caveat_ids": [
             "different_filing_dates",
             "different_fiscal_periods"
@@ -1548,6 +3546,6 @@
   ],
   "policy_version": "metric-comparability-annual-duration/v1",
   "schema_version": "signalforge/technology20-peer-boundary-matrix/v1",
-  "source_sha256": "bb420ed09ffd3eafa936e7d899fa820e46100b65c766a1a00542be25bff79beb",
+  "source_sha256": "9fbf78de6d627ee128ba0ba2c13529d4b3dd10b838b13a23f3fdf5854434d8c5",
   "universe_id": "us-technology-20-v2"
 }

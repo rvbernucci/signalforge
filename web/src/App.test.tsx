@@ -18,6 +18,16 @@ const financials: FinancialSummary = {
     display_name: "Microsoft"
   } : company)
 };
+const contextualSample = financialFixture.companies.find(
+  (company) => (company.contextual_results?.length ?? 0) > 0
+)!.contextual_results![0];
+const financialsWithStandaloneContext: FinancialSummary = {
+  ...financials,
+  companies: financials.companies.map((company, index) => index === 0 ? {
+    ...company,
+    contextual_results: [contextualSample]
+  } : company)
+};
 const peerFixture = peerData as unknown as PeerEvaluationSuite;
 const peers: PeerEvaluationSuite = {
   ...peerFixture,
@@ -31,10 +41,10 @@ const peersWithContext: PeerEvaluationSuite = {
   ...peers,
   lanes: peers.lanes.map((lane, index) => index === 0 ? {
     ...lane,
+    context_only_metric_ids: ["financial.free_cash_flow"],
     receipts: [
-      ...lane.receipts,
       {
-        disposition: "not_comparable",
+        disposition: "context_only",
         operands: [
           {
             company_id: "company-0",
@@ -44,7 +54,10 @@ const peersWithContext: PeerEvaluationSuite = {
             value: "74100000000",
             unit: "currency",
             currency: "USD",
-            accounting_perimeter: "consolidated_periodic_filing"
+            accounting_perimeter: "consolidated_periodic_filing",
+            output_class: "authoritative",
+            product_label: "simple FCF",
+            pair_ranking_eligible: true
           },
           {
             company_id: "company-1",
@@ -54,7 +67,10 @@ const peersWithContext: PeerEvaluationSuite = {
             value: "96676000000",
             unit: "currency",
             currency: "USD",
-            accounting_perimeter: "company_reported_property_equipment_and_intangible_assets"
+            accounting_perimeter: "company_reported_property_equipment_and_intangible_assets",
+            output_class: "context_only",
+            product_label: "residual cash proxy",
+            pair_ranking_eligible: false
           }
         ],
         reason_codes: ["reviewed_taxonomy_mapping", "same_accounting_perimeter"],
@@ -302,6 +318,27 @@ describe("SignalForge workspace", () => {
     expect(screen.getByText(/not directly comparable metrics/i)).toBeInTheDocument();
     expect(screen.getByText(/no ranking or relative conclusion is released/i)).toBeInTheDocument();
     expect(screen.getAllByText("Withheld")).toHaveLength(1);
+  });
+
+  it("keeps standalone contextual receipts visibly separate from authoritative results", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const value = url.endsWith("/api/v1/config") ? config
+        : url.endsWith("/api/v1/catalog") ? catalog
+        : url.endsWith("/api/v1/financials") ? financialsWithStandaloneContext
+        : url.endsWith("/api/v1/peer-evaluations") ? peers
+        : url.endsWith("/intelligence") ? intelligence
+        : fixture;
+      return { ok: true, status: 200, json: async () => value } as Response;
+    }));
+
+    render(<App />);
+    await screen.findByText("Ask a harder question.");
+    fireEvent.click(screen.getByRole("listitem", { name: "Inspect bounded evidence for Microsoft" }));
+
+    expect(await screen.findByRole("region", { name: "Context-only financial evidence" })).toBeInTheDocument();
+    expect(screen.getByText("Context only · never ranked")).toBeInTheDocument();
+    expect(screen.getByText(/cannot produce a winner, score, rank, or relative conclusion/i)).toBeInTheDocument();
   });
 
   it("shows governed company scope, recency, receipts, and missing evidence", async () => {
