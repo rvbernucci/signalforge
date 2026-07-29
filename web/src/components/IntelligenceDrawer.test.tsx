@@ -182,4 +182,39 @@ describe("IntelligenceDrawer identity boundary", () => {
     expect(await screen.findByText("Financial Quality V1")).toBeInTheDocument();
     expect(screen.queryByText("Lineage unavailable")).not.toBeInTheDocument();
   });
+
+  it("keeps protected bodies outside the product UI even when operator capture exists", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ...record,
+        capture: {
+          enabled: true,
+          available: true,
+          status: "available",
+          stored_bytes: 4096,
+          maximum_bytes: 8192
+        }
+      })
+    } as Response));
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <IntelligenceDrawer
+        runID={record.run_id}
+        traceID={record.trace_id}
+        open
+        protectedCapture
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "privacy" }));
+    expect(screen.getByText("Operator diagnostics configured outside this UI")).toBeInTheDocument();
+    expect(screen.getByText("Stored body bytes shown").parentElement).toHaveTextContent("0");
+    expect(screen.queryByText(/operator token/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/unlock/i)).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(`/api/v1/runs/${record.run_id}/intelligence`);
+  });
 });

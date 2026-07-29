@@ -92,7 +92,16 @@ export type PeerEvaluation = {
   company_ids: string[];
   receipts: Array<{
     disposition: "comparable" | "comparable_with_caveat" | "not_comparable";
-    operands: Array<{ canonical_metric_id: string }>;
+    operands: Array<{
+      company_id: string;
+      security_id?: string;
+      canonical_metric_id: string;
+      taxonomy_concept?: string;
+      value?: string;
+      unit?: string;
+      currency?: string;
+      accounting_perimeter?: string;
+    }>;
     required_caveat_ids?: string[];
     reason_codes?: string[];
     receipt_sha256: string;
@@ -462,24 +471,4 @@ export type IntelligenceRecord = {
   engine_calls: EngineCallAudit[];
   reviews: ReviewAudit[];
   release?: ReleaseAudit;
-};
-
-export type ProtectedModelCall = {
-  model_call_id: string;
-  prompt_instance_id: string;
-  messages: Array<{ role: string; content: string }>;
-  response_format?: Record<string, unknown>;
-  parameters: { model: string; max_tokens: number; temperature: number; stream: boolean };
-  raw_output?: string;
-};
-
-export type ProtectedIntelligenceRecord = {
-  schema_version: string;
-  run_id: string;
-  request_id: string;
-  question: string;
-  created_at: string;
-  expires_at: string;
-  model_calls: ProtectedModelCall[];
-  receipts: Array<{ receipt_id: string; payload: unknown }>;
 };

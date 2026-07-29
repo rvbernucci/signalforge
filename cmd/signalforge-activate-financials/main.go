@@ -20,21 +20,23 @@ import (
 const manifestSchemaV1 = "signalforge/technology20-financial-activation-manifest/v1"
 
 type manifest struct {
-	SchemaVersion          string            `json:"schema_version"`
-	UniverseID             string            `json:"universe_id"`
-	AsOf                   time.Time         `json:"as_of"`
-	CodeCommit             string            `json:"code_commit"`
-	SourceMetricsSHA256    string            `json:"source_metrics_sha256"`
-	SourceFactsSHA256      string            `json:"source_facts_sha256"`
-	ProductCatalogSHA256   string            `json:"product_catalog_sha256"`
-	Companies              int               `json:"companies"`
-	SuccessfulReceipts     int               `json:"successful_receipts"`
-	TypedAbstentions       int               `json:"typed_abstentions"`
-	ReceiptsByOperation    map[string]int    `json:"receipts_by_operation"`
-	AbstentionsByOperation map[string]int    `json:"abstentions_by_operation"`
-	Reports                []reportReference `json:"reports"`
-	ClaimBoundary          string            `json:"claim_boundary"`
-	ManifestSHA256         string            `json:"manifest_sha256"`
+	SchemaVersion             string            `json:"schema_version"`
+	UniverseID                string            `json:"universe_id"`
+	AsOf                      time.Time         `json:"as_of"`
+	CodeCommit                string            `json:"code_commit"`
+	SourceMetricsSHA256       string            `json:"source_metrics_sha256"`
+	SourceFactsSHA256         string            `json:"source_facts_sha256"`
+	ProductCatalogSHA256      string            `json:"product_catalog_sha256"`
+	AccountingRegistryVersion string            `json:"accounting_registry_version"`
+	AccountingRegistrySHA256  string            `json:"accounting_registry_sha256"`
+	Companies                 int               `json:"companies"`
+	SuccessfulReceipts        int               `json:"successful_receipts"`
+	TypedAbstentions          int               `json:"typed_abstentions"`
+	ReceiptsByOperation       map[string]int    `json:"receipts_by_operation"`
+	AbstentionsByOperation    map[string]int    `json:"abstentions_by_operation"`
+	Reports                   []reportReference `json:"reports"`
+	ClaimBoundary             string            `json:"claim_boundary"`
+	ManifestSHA256            string            `json:"manifest_sha256"`
 }
 
 type reportReference struct {
@@ -73,6 +75,10 @@ func main() {
 	if err := productscope.ValidatePublicCatalog(catalog); err != nil {
 		exit(err)
 	}
+	registry, err := productscope.DefaultAccountingAuthorityRegistry()
+	if err != nil {
+		exit(err)
+	}
 	metrics, metricsSHA, err := readMetrics(*metricsPath)
 	if err != nil {
 		exit(err)
@@ -87,10 +93,12 @@ func main() {
 	result := manifest{
 		SchemaVersion: manifestSchemaV1, UniverseID: productscope.UniverseID, AsOf: asOf.UTC(),
 		CodeCommit: *codeCommit, SourceMetricsSHA256: metricsSHA,
-		SourceFactsSHA256:    factsSHA,
-		ProductCatalogSHA256: hashBytes(catalogPayload),
-		ReceiptsByOperation:  map[string]int{}, AbstentionsByOperation: map[string]int{},
-		ClaimBoundary: "A successful receipt proves only the named deterministic formula over aligned, fresh, consolidated, standardized periodic-filing inputs. Capex means the exact US-GAAP PaymentsToAcquirePropertyPlantAndEquipment perimeter. OCF minus that capex is labeled simple FCF and is never promoted to FCFF or total economic reinvestment. Missing inputs, semantic aliases, market observations, or professional review produce abstentions.",
+		SourceFactsSHA256:         factsSHA,
+		ProductCatalogSHA256:      hashBytes(catalogPayload),
+		AccountingRegistryVersion: registry.RegistryVersion,
+		AccountingRegistrySHA256:  registry.RegistrySHA256,
+		ReceiptsByOperation:       map[string]int{}, AbstentionsByOperation: map[string]int{},
+		ClaimBoundary: "A successful receipt proves only the named deterministic formula over aligned, fresh, consolidated periodic-filing inputs authorized by the hash-bound accounting registry. Capex means the exact US-GAAP PaymentsToAcquirePropertyPlantAndEquipment perimeter. Issuer-specific aliases require an explicit registry entry; context-only proxies never enter comparable rankings. OCF minus exact PP&E capex is labeled simple FCF and is never promoted to FCFF or total economic reinvestment.",
 	}
 	reports := map[string]productscope.CompanyFinancialActivation{}
 	for _, company := range catalog.Companies {

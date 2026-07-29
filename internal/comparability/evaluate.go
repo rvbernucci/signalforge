@@ -65,6 +65,8 @@ func Evaluate(request contracts.MetricComparabilityRequest, generatedAt time.Tim
 		check("same_accounting_perimeter", left.AccountingPerimeter == right.AccountingPerimeter, "accounting perimeters differ"),
 		check("reviewed_accounting_perimeter", reviewedAccountingPerimeter(left.AccountingPerimeter) &&
 			reviewedAccountingPerimeter(right.AccountingPerimeter), "accounting perimeter was not independently constrained"),
+		check("ranking_eligible_accounting_perimeter", rankingEligibleAccountingPerimeter(left.AccountingPerimeter) &&
+			rankingEligibleAccountingPerimeter(right.AccountingPerimeter), "context-only accounting perimeter cannot enter a comparable ranking"),
 		check("same_restatement_state", left.RestatementState == right.RestatementState, "restatement states differ"),
 		check("active_restatement_chain", activeRestatementState(left.RestatementState) &&
 			activeRestatementState(right.RestatementState), "amendment or restatement chain is not active"),
@@ -157,6 +159,11 @@ func activeRestatementState(value string) bool {
 }
 
 func reviewedAccountingPerimeter(value string) bool {
+	return value == "consolidated" || value == "consolidated_periodic_filing" ||
+		value == "company_reported_property_equipment_and_intangible_assets"
+}
+
+func rankingEligibleAccountingPerimeter(value string) bool {
 	return value == "consolidated" || value == "consolidated_periodic_filing"
 }
 

@@ -27,6 +27,42 @@ const peers: PeerEvaluationSuite = {
     company_ids: ["company-0", "company-1"]
   } : lane)
 };
+const peersWithContext: PeerEvaluationSuite = {
+  ...peers,
+  lanes: peers.lanes.map((lane, index) => index === 0 ? {
+    ...lane,
+    receipts: [
+      ...lane.receipts,
+      {
+        disposition: "not_comparable",
+        operands: [
+          {
+            company_id: "company-0",
+            security_id: "ticker:MSFT",
+            canonical_metric_id: "financial.free_cash_flow",
+            taxonomy_concept: "PaymentsToAcquirePropertyPlantAndEquipment",
+            value: "74100000000",
+            unit: "currency",
+            currency: "USD",
+            accounting_perimeter: "consolidated_periodic_filing"
+          },
+          {
+            company_id: "company-1",
+            security_id: "ticker:T1",
+            canonical_metric_id: "financial.free_cash_flow",
+            taxonomy_concept: "PaymentsToAcquireProductiveAssets",
+            value: "96676000000",
+            unit: "currency",
+            currency: "USD",
+            accounting_perimeter: "company_reported_property_equipment_and_intangible_assets"
+          }
+        ],
+        reason_codes: ["reviewed_taxonomy_mapping", "same_accounting_perimeter"],
+        receipt_sha256: "c".repeat(64)
+      }
+    ]
+  } : lane)
+};
 const config: WorkspaceConfig = {
   mode: "fixture",
   local_only: true,
@@ -129,6 +165,7 @@ const intelligence: IntelligenceRecord = {
 
 describe("SignalForge workspace", () => {
   beforeEach(() => {
+    window.history.replaceState({}, "", "/");
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       const value = url.endsWith("/api/v1/config") ? config
@@ -145,11 +182,14 @@ describe("SignalForge workspace", () => {
   it("renders the safe local case and its proof boundary", async () => {
     render(<App />);
     expect(await screen.findByText("Ask a harder question.")).toBeInTheDocument();
-    expect(screen.getAllByText("Local inference").length).toBeGreaterThan(0);
+    expect(screen.getByText("Research answer ready")).toBeInTheDocument();
     expect(screen.getByText("Numerical authority preserved")).toBeInTheDocument();
     expect(screen.getByText(/AI research can be inaccurate/)).toBeInTheDocument();
+    expect(screen.queryByText("Live research execution")).not.toBeInTheDocument();
+    expect(screen.queryByText("Supported context claims")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Open proof layer"));
+    fireEvent.click(screen.getByRole("button", { name: "How SignalForge reached this answer" }));
+    fireEvent.click(screen.getByRole("button", { name: /Inspect source evidence/i }));
     expect(await screen.findByText("Inspect the work.")).toBeInTheDocument();
     expect(screen.getAllByText(/Evidence/).length).toBeGreaterThan(0);
   });
@@ -181,17 +221,20 @@ describe("SignalForge workspace", () => {
 
   it("moves focus into the proof dialog and returns it on Escape", async () => {
     render(<App />);
-    const trigger = await screen.findByRole("button", { name: /Open proof layer/i });
+    fireEvent.click(await screen.findByRole("button", { name: "How SignalForge reached this answer" }));
+    const trigger = screen.getByRole("button", { name: /Inspect source evidence/i });
     trigger.focus();
     fireEvent.click(trigger);
     expect(screen.getByRole("button", { name: "Close proof drawer" })).toHaveFocus();
     fireEvent.keyDown(window, { key: "Escape" });
     await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.getByRole("dialog", { name: "How SignalForge reached this answer" })).toBeVisible();
   });
 
   it("shows an honest empty state when proof filtering has no matches", async () => {
     render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: /Open proof layer/i }));
+    fireEvent.click(await screen.findByRole("button", { name: "How SignalForge reached this answer" }));
+    fireEvent.click(screen.getByRole("button", { name: /Inspect source evidence/i }));
     fireEvent.change(screen.getByPlaceholderText("Filter this proof set"), { target: { value: "not-a-real-proof-id" } });
     expect(await screen.findByText("No proof items match this filter.")).toBeInTheDocument();
   });
@@ -205,16 +248,19 @@ describe("SignalForge workspace", () => {
 
   it("opens the privacy-safe intelligence lineage without exposing model bodies", async () => {
     render(<App />);
-    expect(await screen.findByText("Supported context claims")).toBeInTheDocument();
-    fireEvent.click(await screen.findByRole("button", { name: /Inspect orchestration/i }));
+    await screen.findByText("Research answer ready");
+    fireEvent.click(screen.getByRole("button", { name: "How SignalForge reached this answer" }));
+    fireEvent.click(screen.getByRole("button", { name: /Open Mission Control/i }));
     expect(await screen.findByText("Intelligence lineage.")).toBeInTheDocument();
     expect(screen.getByText(/0 answer-used claims/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "evidence" }));
     expect(await screen.findByText("Accounting Context V1")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "engines" }));
     expect(await screen.findByText("Valuation Dcf")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: "prompts" }));
-    expect(await screen.findByText("Protected capture is off")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "privacy" }));
+    expect(await screen.findByText("Operational proof without model bodies")).toBeInTheDocument();
+    expect(screen.getByText("Stored body bytes shown").parentElement).toHaveTextContent("0");
+    expect(screen.queryByLabelText("Protected audit token")).not.toBeInTheDocument();
   });
 
   it("explains why a selected peer lane remains guarded", async () => {
@@ -231,6 +277,33 @@ describe("SignalForge workspace", () => {
     expect(screen.getAllByText("Withheld").length).toBeGreaterThan(0);
   });
 
+  it("shows deterministic context without ranking accounting perimeters that differ", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const value = url.endsWith("/api/v1/config") ? config
+        : url.endsWith("/api/v1/catalog") ? catalog
+        : url.endsWith("/api/v1/financials") ? financials
+        : url.endsWith("/api/v1/peer-evaluations") ? peersWithContext
+        : url.endsWith("/intelligence") ? intelligence
+        : fixture;
+      return { ok: true, status: 200, json: async () => value } as Response;
+    }));
+
+    render(<App />);
+    await screen.findByText("Ask a harder question.");
+    fireEvent.click(screen.getByRole("button", { name: "Compare companies" }));
+    fireEvent.click(screen.getByRole("listitem", { name: "Inspect bounded evidence for Microsoft" }));
+    fireEvent.click(screen.getByRole("listitem", { name: "Inspect bounded evidence for Company 1" }));
+
+    expect(await screen.findByText("residual cash proxy")).toBeInTheDocument();
+    expect(screen.getByText("Context only*")).toBeInTheDocument();
+    expect(screen.getByText("$74.1B")).toBeInTheDocument();
+    expect(screen.getByText("$96.7B")).toBeInTheDocument();
+    expect(screen.getByText(/not directly comparable metrics/i)).toBeInTheDocument();
+    expect(screen.getByText(/no ranking or relative conclusion is released/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Withheld")).toHaveLength(1);
+  });
+
   it("shows governed company scope, recency, receipts, and missing evidence", async () => {
     render(<App />);
     await screen.findByText("Ask a harder question.");
@@ -244,6 +317,30 @@ describe("SignalForge workspace", () => {
     expect(screen.getByText("Higher for longer · AI spending slower")).toBeInTheDocument();
     expect(screen.getByText(/receipts · .* abstentions/)).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Explicit missing evidence" })).toBeInTheDocument();
+  });
+
+  it("keeps an unusually long company name usable in the governed selector", async () => {
+    const longName = "International Semiconductor Infrastructure and Advanced Computing Systems Corporation";
+    const longCatalog: ProductCatalog = {
+      ...catalog,
+      companies: catalog.companies.map((company, index) =>
+        index === 0 ? { ...company, display_name: longName } : company
+      )
+    };
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const value = url.endsWith("/api/v1/config") ? config
+        : url.endsWith("/api/v1/catalog") ? longCatalog
+        : url.endsWith("/api/v1/financials") ? financials
+        : url.endsWith("/api/v1/peer-evaluations") ? peers
+        : fixture;
+      return { ok: true, status: 200, json: async () => value } as Response;
+    }));
+
+    render(<App />);
+    fireEvent.click(await screen.findByText("Configure"));
+    expect(screen.getByText(longName)).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: `Inspect bounded evidence for ${longName}` })).toBeEnabled();
   });
 
   it("keeps the previous case visible when the local model is unavailable", async () => {
@@ -281,7 +378,61 @@ describe("SignalForge workspace", () => {
       return { ok: true, status: 200, json: async () => value } as Response;
     }));
     render(<App />);
-    expect(await screen.findByRole("button", { name: /Inspect orchestration/i })).toBeDisabled();
+    fireEvent.click(await screen.findByRole("button", { name: "How SignalForge reached this answer" }));
+    expect(screen.queryByRole("button", { name: /Open Mission Control/i })).not.toBeInTheDocument();
     expect(screen.getByText(displayCaseTitle(fixture.title))).toBeInTheDocument();
+  });
+
+  it("keeps operational telemetry out of the default research canvas", async () => {
+    render(<App />);
+    const answer = await screen.findByRole("heading", { name: "Comparison" });
+    const canvas = answer.closest(".research-canvas")!;
+    expect(canvas).not.toHaveTextContent(fixture.run_id);
+    expect(canvas).not.toHaveTextContent("Trace");
+    expect(canvas).not.toHaveTextContent("Model calls");
+    expect(canvas).not.toHaveTextContent("Observed tokens");
+    expect(canvas).not.toHaveTextContent(fixture.execution.runtime_label);
+    expect(screen.getByRole("button", { name: "How SignalForge reached this answer" })).toBeVisible();
+  });
+
+  it("opens one audit workspace, updates the stable URL, and returns focus on Escape", async () => {
+    render(<App />);
+    const trigger = await screen.findByRole("button", { name: "How SignalForge reached this answer" });
+    trigger.focus();
+    fireEvent.click(trigger);
+
+    expect(screen.getByRole("button", { name: "Close audit workspace" })).toHaveFocus();
+    expect(screen.getByRole("dialog", { name: "How SignalForge reached this answer" })).toBeVisible();
+    expect(window.location.search).toBe("?view=audit");
+    expect(screen.getByRole("region", { name: "Exact accepted-run identity" })).toHaveTextContent(fixture.run_id);
+    expect(screen.getByText("Recorded governed journey")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(window.location.search).toBe("");
+  });
+
+  it("supports a credential-free judge deep link without changing the data path", async () => {
+    window.history.replaceState({}, "", "/?view=audit&audience=judge");
+    render(<App />);
+
+    expect(await screen.findByRole("region", { name: "Track 2 judge orientation" })).toBeVisible();
+    expect(screen.getByText("Track 2 capabilities in the product")).toBeInTheDocument();
+    expect(screen.getByText("Tool invocation")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Exact accepted-run identity" })).toHaveTextContent(fixture.run_id);
+    expect(fetch).toHaveBeenCalledTimes(5);
+    fireEvent.click(screen.getByRole("button", { name: /Inspect calculations/i }));
+    expect(await screen.findByRole("dialog", { name: "Inspect the work." })).toBeVisible();
+  });
+
+  it("keeps judge orientation absent from the normal investor flow", async () => {
+    render(<App />);
+    await screen.findByText("Research answer ready");
+    expect(screen.queryByRole("region", { name: "Track 2 judge orientation" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "How SignalForge reached this answer" }));
+    expect(screen.queryByRole("region", { name: "Track 2 judge orientation" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Judge orientation" }));
+    expect(screen.getByRole("region", { name: "Track 2 judge orientation" })).toBeVisible();
+    expect(window.location.search).toBe("?view=audit&audience=judge");
   });
 });

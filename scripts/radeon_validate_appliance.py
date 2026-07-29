@@ -1,0 +1,262 @@
+#!/usr/bin/env python3
+"""Validate the static zero-touch Radeon appliance contract without Docker or network."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DIGEST_IMAGE = re.compile(r"^[a-z0-9./:_-]+@sha256:[0-9a-f]{64}$")
+
+
+def result(check_id: str, passed: bool, detail: str) -> dict[str, str]:
+    return {"id": check_id, "status": "passed" if passed else "failed", "detail": detail}
+
+
+def validate(root: Path) -> dict[str, Any]:
+    appliance = json.loads(
+        (root / "deploy/radeon/appliance-manifest.json").read_text(encoding="utf-8")
+    )
+    model = json.loads(
+        (root / "deploy/radeon/model-manifest.json").read_text(encoding="utf-8")
+    )
+    native = json.loads(
+        (root / "deploy/radeon/native-toolchain-manifest.json").read_text(encoding="utf-8")
+    )
+    compose = (root / "compose.yaml").read_text(encoding="utf-8")
+    makefile = (root / "Makefile").read_text(encoding="utf-8")
+    environment = (root / "container.env.example").read_text(encoding="utf-8")
+    stage = (root / "scripts/stage_gemma_model.sh").read_text(encoding="utf-8")
+    checks: list[dict[str, str]] = []
+
+    checks.append(
+        result(
+            "platform",
+            appliance.get("platform") == "linux/amd64",
+            "appliance platform is linux/amd64",
+        )
+    )
+    for identity in ("application", "runtime"):
+        image = appliance[identity]["image"]
+        checks.append(
+            result(
+                f"pinned-{identity}-image",
+                bool(DIGEST_IMAGE.fullmatch(image)),
+                f"{identity} image uses an immutable sha256 digest",
+            )
+        )
+        checks.append(
+            result(
+                f"compose-{identity}-identity",
+                image in compose and image in environment,
+                f"{identity} identity is consistent across manifest, Compose, and environment example",
+            )
+        )
+    for identity, image in appliance["utility_images"].items():
+        checks.append(
+            result(
+                f"pinned-utility-{identity}",
+                bool(DIGEST_IMAGE.fullmatch(image)),
+                f"{identity} utility image uses an immutable sha256 digest",
+            )
+        )
+    checks.append(
+        result(
+            "model-sha",
+            bool(re.fullmatch(r"[0-9a-f]{64}", model["sha256"])),
+            "model artifact has a complete SHA-256",
+        )
+    )
+    native_runtime = (root / "scripts/radeon_native_runtime.py").read_text(encoding="utf-8")
+    checks.append(
+        result(
+            "model-manifest-consistency",
+            model["served_model_id"] in compose
+            and model["filename"] in compose
+            and "radeon_model_cache.py" in compose
+            and "deploy/radeon/model-manifest.json" in native_runtime
+            and "radeon_model_cache.hydrate" in native_runtime
+            and 'model_manifest["cache"]["model_relative_path"]' in native_runtime
+            and 'model_manifest["served_model_id"]' in native_runtime,
+            "Compose and native backends consume the same model identity",
+        )
+    )
+    checks.append(
+        result(
+            "native-go-pin",
+            native["go"]["version"] == "1.25.12"
+            and native["go"]["sha256"]
+            == "234828b7a89e0e303d2556310ee549fbcf253d28de937bac3da13d6294262ac1",
+            "native Go toolchain is version- and SHA-pinned",
+        )
+    )
+    checks.append(
+        result(
+            "native-llama-pin",
+            native["llama_cpp"]["revision"]
+            == appliance["execution"]["native"]["llama_cpp_revision"]
+            == "305ba519ab61cdff8044922cba2347826a04453f",
+            "native llama.cpp build uses the reviewed revision",
+        )
+    )
+    checks.append(
+        result(
+            "native-source-locks",
+            native["application"]["package_lock_sha256"]
+            == hashlib.sha256((root / native["application"]["package_lock_path"]).read_bytes()).hexdigest()
+            and native["application"]["go_sum_sha256"]
+            == hashlib.sha256((root / native["application"]["go_sum_path"]).read_bytes()).hexdigest(),
+            "native npm and Go dependency locks match the manifest",
+        )
+    )
+    checks.append(
+        result(
+            "no-local-build",
+            "\n  build:" not in compose and "--no-build" in makefile,
+            "Compose judge startup never requires a local image build",
+        )
+    )
+    checks.append(
+        result(
+            "backend-auto",
+            "SIGNALFORGE_EXECUTION_BACKEND=auto" in environment
+            and "radeon_native_runtime.py" in (root / "scripts/radeon_up.sh").read_text(),
+            "operator startup selects Compose or native without installing host tooling",
+        )
+    )
+    checks.append(
+        result(
+            "internal-local-network",
+            "signalforge:" in compose and "internal: true" in compose,
+            "local application and runtime share an internal network",
+        )
+    )
+    for profile in ("fixture", "radeon-local", "championship", "observability"):
+        checks.append(
+            result(
+                f"profile-{profile}",
+                profile in compose,
+                f"{profile} profile is declared",
+            )
+        )
+    for target in (
+        "radeon-bootstrap",
+        "radeon-preflight",
+        "radeon-up",
+        "radeon-status",
+        "radeon-logs",
+        "radeon-observe",
+        "radeon-down",
+        "radeon-clean",
+        "radeon-reset",
+    ):
+        checks.append(
+            result(
+                f"make-{target}",
+                re.search(rf"(?m)^{re.escape(target)}(?:\s*:[^\n]*)?$", makefile) is not None,
+                f"Make target {target} is available",
+            )
+        )
+    checks.append(
+        result(
+            "stage-file-secret",
+            "SIGNALFORGE_HF_TOKEN_FILE" in stage and "${HF_TOKEN" not in stage,
+            "staging consumes a file-mounted token rather than an environment secret",
+        )
+    )
+    checks.append(
+        result(
+            "no-mac-path",
+            "/Users/" not in compose
+            and "/Users/" not in environment
+            and "/Users/" not in json.dumps(appliance)
+            and "/Users/" not in json.dumps(native),
+            "runtime contracts contain no Mac path",
+        )
+    )
+    checks.append(
+        result(
+            "no-credential-env",
+            "SIGNALFORGE_SPECIALIST_API_KEY=" not in compose
+            and "HF_TOKEN=" not in compose
+            and "HF_TOKEN=" not in environment,
+            "credential values are absent from environment contracts",
+        )
+    )
+    checks.append(
+        result(
+            "native-file-secret",
+            "SIGNALFORGE_SPECIALIST_API_KEY_FILE" in (
+                root / "scripts/radeon_native_runtime.py"
+            ).read_text()
+            and "SIGNALFORGE_SPECIALIST_API_KEY\"" not in (
+                root / "scripts/radeon_native_runtime.py"
+            ).read_text(),
+            "native championship passes only the API key file path",
+        )
+    )
+    tracked = subprocess.check_output(
+        ["git", "-C", str(root), "ls-files"], text=True
+    ).splitlines()
+    checks.append(
+        result(
+            "no-tracked-secrets",
+            not [
+                name
+                for name in tracked
+                if name.startswith(".secrets/")
+                or (name.startswith(".env.") and name != ".env.example")
+            ],
+            "no runtime secret or private environment file is tracked",
+        )
+    )
+    scripts = [
+        "scripts/stage_gemma_model.sh",
+        "scripts/radeon_compose.sh",
+        "scripts/radeon_preflight.sh",
+        "scripts/radeon_up.sh",
+        "scripts/radeon_logs.sh",
+        "scripts/radeon_down.sh",
+    ]
+    syntax = subprocess.run(
+        ["bash", "-n", *scripts],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    checks.append(result("shell-syntax", syntax.returncode == 0, "operator shell scripts parse"))
+    failed = [item for item in checks if item["status"] == "failed"]
+    return {
+        "schema_version": "signalforge/radeon-appliance-static-audit/v1",
+        "status": "failed" if failed else "passed",
+        "appliance_version": appliance["appliance_version"],
+        "checks": checks,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    report = validate(args.root.resolve())
+    encoded = json.dumps(report, indent=2, sort_keys=True) + "\n"
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(encoded, encoding="utf-8")
+    print(encoded, end="")
+    return 0 if report["status"] == "passed" else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -6,7 +6,6 @@ import type {
   PeerEvaluationSuite,
   ProductCatalog,
   Projection,
-  ProtectedIntelligenceRecord,
   RunView,
   ScenarioControl,
   StoredCase,
@@ -93,17 +92,4 @@ export function subscribeToRun(runID: string, onEvent: (event: MessageEvent<stri
 
 export async function getIntelligence(runID: string): Promise<IntelligenceRecord> {
   return readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}/intelligence`));
-}
-
-export async function getProtectedIntelligence(runID: string, token: string): Promise<ProtectedIntelligenceRecord> {
-  return readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}/intelligence/protected`, {
-    headers: { "X-SignalForge-Audit-Token": token }
-  }));
-}
-
-export async function purgeProtectedIntelligence(runID: string, token: string): Promise<void> {
-  await readJSON(await fetch(`/api/v1/runs/${encodeURIComponent(runID)}/intelligence/protected`, {
-    method: "DELETE",
-    headers: { "X-SignalForge-Audit-Token": token }
-  }));
 }

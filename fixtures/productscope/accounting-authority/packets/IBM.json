@@ -1,0 +1,878 @@
+{
+  "schema_version": "signalforge/technology20-accounting-authority-packet/v1",
+  "universe_id": "us-technology-20-v2",
+  "registry_version": "technology20-accounting-authority/2026-07-29",
+  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "company_id": "sec-cik:0000051143",
+  "display_name": "IBM",
+  "primary_ticker": "IBM",
+  "as_of": "2026-07-24T10:32:53.677641Z",
+  "authority_state": "limited",
+  "inputs": [
+    {
+      "canonical_input": "capital_expenditure",
+      "expected_period_type": "duration",
+      "sign_policy": "cash_outflow_positive_magnitude",
+      "disposition": "canonical",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "concepts": [
+        {
+          "mapping": {
+            "mapping_key": "sec-cik:0000051143|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+            "company_id": "sec-cik:0000051143",
+            "canonical_input": "capital_expenditure",
+            "taxonomy_namespace": "us-gaap",
+            "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "canonical",
+            "reason_code": "canonical_us_gaap_concept",
+            "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+            "professional_review_status": "not_required_for_exact_canonical_mapping",
+            "authorized_operations": [
+              "financial.capex_intensity",
+              "financial.free_cash_flow"
+            ],
+            "effective_form_families": [
+              "10-K",
+              "10-Q"
+            ],
+            "invalidation_conditions": [
+              "company_identity_changes",
+              "concept_or_taxonomy_changes",
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "period_unit_currency_or_sign_gate_fails"
+            ],
+            "product_label": "capital_expenditure",
+            "comparable_ranking_eligible": true
+          },
+          "observed_records": 148,
+          "source_forms": [
+            "10-K",
+            "10-Q",
+            "8-K"
+          ],
+          "units": [
+            "USD"
+          ],
+          "currencies": [
+            "USD"
+          ],
+          "dimension_states": [
+            "consolidated"
+          ],
+          "active_annual_sources": [
+            {
+              "fact_id": "sec-companyfacts:61e14f3f1a50f6a96fede366685bd6b9b8a5fc4981cf79bdd879fc5b34c7b40e",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2025-01-01T00:00:00Z",
+              "period_end": "2025-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+              "source_label": "Payments to Acquire Property, Plant, and Equipment",
+              "source_locator": "companyfacts:us-gaap/PaymentsToAcquirePropertyPlantAndEquipment/USD/145",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            },
+            {
+              "fact_id": "sec-companyfacts:d49368a15bdc9aec9a81a3667e103bff55eaa497318b65fb9e9d1b2e0f0d49cb",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2024-01-01T00:00:00Z",
+              "period_end": "2024-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+              "source_label": "Payments to Acquire Property, Plant, and Equipment",
+              "source_locator": "companyfacts:us-gaap/PaymentsToAcquirePropertyPlantAndEquipment/USD/139",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            }
+          ],
+          "excluded_records": {
+            "non_annual_form": 11,
+            "stale_metric_period": 134
+          }
+        }
+      ],
+      "active_source_count": 2,
+      "professional_review_needed": false,
+      "reason_codes": null
+    },
+    {
+      "canonical_input": "net_income",
+      "expected_period_type": "duration",
+      "sign_policy": "company_reported_sign",
+      "disposition": "canonical",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "concepts": [
+        {
+          "mapping": {
+            "mapping_key": "sec-cik:0000051143|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+            "company_id": "sec-cik:0000051143",
+            "canonical_input": "net_income",
+            "taxonomy_namespace": "us-gaap",
+            "taxonomy_concept": "NetIncomeLoss",
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "canonical",
+            "reason_code": "canonical_us_gaap_concept",
+            "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+            "professional_review_status": "not_required_for_exact_canonical_mapping",
+            "authorized_operations": [
+              "financial.cash_conversion",
+              "financial.quality_of_earnings"
+            ],
+            "effective_form_families": [
+              "10-K",
+              "10-Q"
+            ],
+            "invalidation_conditions": [
+              "company_identity_changes",
+              "concept_or_taxonomy_changes",
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "period_unit_currency_or_sign_gate_fails"
+            ],
+            "product_label": "net_income",
+            "comparable_ranking_eligible": true
+          },
+          "observed_records": 123,
+          "source_forms": [
+            "10-K",
+            "10-Q"
+          ],
+          "units": [
+            "USD"
+          ],
+          "currencies": [
+            "USD"
+          ],
+          "dimension_states": [
+            "consolidated"
+          ],
+          "active_annual_sources": [
+            {
+              "fact_id": "sec-companyfacts:a4a9d2b8ca10807f03ad9b64b82492493513a05068c8fe8550ae301ff5ed289a",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2025-01-01T00:00:00Z",
+              "period_end": "2025-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "NetIncomeLoss",
+              "source_label": "Net Income (Loss) Attributable to Parent",
+              "source_locator": "companyfacts:us-gaap/NetIncomeLoss/USD/119",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            },
+            {
+              "fact_id": "sec-companyfacts:47f05aaa58fe96953e20d753bacfcabd62d1b4096f41e930bc27c1685dcefe05",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2024-01-01T00:00:00Z",
+              "period_end": "2024-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "NetIncomeLoss",
+              "source_label": "Net Income (Loss) Attributable to Parent",
+              "source_locator": "companyfacts:us-gaap/NetIncomeLoss/USD/110",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            }
+          ],
+          "excluded_records": {
+            "non_annual_form": 19,
+            "stale_metric_period": 101
+          }
+        }
+      ],
+      "active_source_count": 2,
+      "professional_review_needed": false,
+      "reason_codes": null
+    },
+    {
+      "canonical_input": "operating_cash_flow",
+      "expected_period_type": "duration",
+      "sign_policy": "company_reported_sign",
+      "disposition": "canonical",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "concepts": [
+        {
+          "mapping": {
+            "mapping_key": "sec-cik:0000051143|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+            "company_id": "sec-cik:0000051143",
+            "canonical_input": "operating_cash_flow",
+            "taxonomy_namespace": "us-gaap",
+            "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "canonical",
+            "reason_code": "canonical_us_gaap_concept",
+            "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+            "professional_review_status": "not_required_for_exact_canonical_mapping",
+            "authorized_operations": [
+              "financial.cash_conversion",
+              "financial.free_cash_flow",
+              "financial.quality_of_earnings"
+            ],
+            "effective_form_families": [
+              "10-K",
+              "10-Q"
+            ],
+            "invalidation_conditions": [
+              "company_identity_changes",
+              "concept_or_taxonomy_changes",
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "period_unit_currency_or_sign_gate_fails"
+            ],
+            "product_label": "operating_cash_flow",
+            "comparable_ranking_eligible": true
+          },
+          "observed_records": 105,
+          "source_forms": [
+            "10-K",
+            "10-Q"
+          ],
+          "units": [
+            "USD"
+          ],
+          "currencies": [
+            "USD"
+          ],
+          "dimension_states": [
+            "consolidated"
+          ],
+          "active_annual_sources": [
+            {
+              "fact_id": "sec-companyfacts:15882959527047868470003664f9c670dd7f0ce3352531157c0d4d672ee5f625",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2025-01-01T00:00:00Z",
+              "period_end": "2025-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+              "source_label": "Net Cash Provided by (Used in) Operating Activities",
+              "source_locator": "companyfacts:us-gaap/NetCashProvidedByUsedInOperatingActivities/USD/102",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            },
+            {
+              "fact_id": "sec-companyfacts:90cc847e9db1ea295c6d4c407e77723d59c9785fecba06fca901416c229762c4",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2024-01-01T00:00:00Z",
+              "period_end": "2024-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+              "source_label": "Net Cash Provided by (Used in) Operating Activities",
+              "source_locator": "companyfacts:us-gaap/NetCashProvidedByUsedInOperatingActivities/USD/96",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            }
+          ],
+          "excluded_records": {
+            "non_annual_form": 11,
+            "stale_metric_period": 91
+          }
+        }
+      ],
+      "active_source_count": 2,
+      "professional_review_needed": false,
+      "reason_codes": null
+    },
+    {
+      "canonical_input": "operating_income",
+      "expected_period_type": "duration",
+      "sign_policy": "company_reported_sign",
+      "disposition": "unavailable",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "concepts": null,
+      "active_source_count": 0,
+      "professional_review_needed": false,
+      "reason_codes": [
+        "authorized_annual_source_unavailable"
+      ]
+    },
+    {
+      "canonical_input": "revenue",
+      "expected_period_type": "duration",
+      "sign_policy": "company_reported_sign",
+      "disposition": "rejected",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "concepts": [
+        {
+          "mapping": {
+            "mapping_key": "sec-cik:0000051143|revenue|us-gaap|Revenues|unreviewed",
+            "company_id": "sec-cik:0000051143",
+            "canonical_input": "revenue",
+            "taxonomy_namespace": "us-gaap",
+            "taxonomy_concept": "Revenues",
+            "accounting_perimeter": "unreviewed",
+            "disposition": "rejected",
+            "reason_code": "unreviewed_issuer_specific_concept",
+            "reviewer_basis": "No exact issuer-specific entry exists in the versioned authority registry.",
+            "professional_review_status": "not_submitted_for_review",
+            "authorized_operations": null,
+            "effective_form_families": [
+              "10-K",
+              "10-Q"
+            ],
+            "invalidation_conditions": [
+              "explicit_registry_entry_required"
+            ],
+            "product_label": "revenue",
+            "comparable_ranking_eligible": false
+          },
+          "observed_records": 231,
+          "source_forms": [
+            "10-K",
+            "10-Q",
+            "8-K"
+          ],
+          "units": [
+            "USD"
+          ],
+          "currencies": [
+            "USD"
+          ],
+          "dimension_states": [
+            "consolidated"
+          ],
+          "active_annual_sources": [
+            {
+              "fact_id": "sec-companyfacts:e82e5a23a767421ff334a2363136a916cf0a63eb2091e3d8488907a2c21c0c30",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2025-01-01T00:00:00Z",
+              "period_end": "2025-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "Revenues",
+              "source_label": "Revenues",
+              "source_locator": "companyfacts:us-gaap/Revenues/USD/227",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            },
+            {
+              "fact_id": "sec-companyfacts:a7d27e3993bc9a5b15d7b196803f6d97269c6f46bcc29b6ebed34b05ed95162c",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_start": "2024-01-01T00:00:00Z",
+              "period_end": "2024-12-31T00:00:00Z",
+              "period_type": "duration",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "Revenues",
+              "source_label": "Revenues",
+              "source_locator": "companyfacts:us-gaap/Revenues/USD/218",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            }
+          ],
+          "excluded_records": {
+            "non_annual_form": 19,
+            "stale_metric_period": 209
+          }
+        }
+      ],
+      "active_source_count": 2,
+      "professional_review_needed": false,
+      "reason_codes": [
+        "unreviewed_issuer_specific_concept"
+      ]
+    },
+    {
+      "canonical_input": "stockholders_equity",
+      "expected_period_type": "instant",
+      "sign_policy": "company_reported_sign",
+      "disposition": "canonical",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "concepts": [
+        {
+          "mapping": {
+            "mapping_key": "sec-cik:0000051143|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+            "company_id": "sec-cik:0000051143",
+            "canonical_input": "stockholders_equity",
+            "taxonomy_namespace": "us-gaap",
+            "taxonomy_concept": "StockholdersEquity",
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "canonical",
+            "reason_code": "canonical_us_gaap_concept",
+            "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+            "professional_review_status": "not_required_for_exact_canonical_mapping",
+            "authorized_operations": [
+              "accounting.balance_sheet_identity"
+            ],
+            "effective_form_families": [
+              "10-K",
+              "10-Q"
+            ],
+            "invalidation_conditions": [
+              "company_identity_changes",
+              "concept_or_taxonomy_changes",
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "period_unit_currency_or_sign_gate_fails"
+            ],
+            "product_label": "stockholders_equity",
+            "comparable_ranking_eligible": true
+          },
+          "observed_records": 140,
+          "source_forms": [
+            "10-K",
+            "10-Q",
+            "8-K"
+          ],
+          "units": [
+            "USD"
+          ],
+          "currencies": [
+            "USD"
+          ],
+          "dimension_states": [
+            "consolidated"
+          ],
+          "active_annual_sources": [
+            {
+              "fact_id": "sec-companyfacts:037babf05538099e94350f82778df80a8f18e7af923d6ddd8c67eb58dafd8209",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_end": "2025-12-31T00:00:00Z",
+              "period_type": "instant",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "StockholdersEquity",
+              "source_label": "Stockholders' Equity Attributable to Parent",
+              "source_locator": "companyfacts:us-gaap/StockholdersEquity/USD/135",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            },
+            {
+              "fact_id": "sec-companyfacts:a8a9791a2c55bf367dbd6885b2d1df36de5105b68ea17015b5f759cb7cdd44c0",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_end": "2024-12-31T00:00:00Z",
+              "period_type": "instant",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "StockholdersEquity",
+              "source_label": "Stockholders' Equity Attributable to Parent",
+              "source_locator": "companyfacts:us-gaap/StockholdersEquity/USD/131",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            }
+          ],
+          "excluded_records": {
+            "non_annual_form": 12,
+            "stale_metric_period": 125
+          }
+        }
+      ],
+      "active_source_count": 2,
+      "professional_review_needed": false,
+      "reason_codes": null
+    },
+    {
+      "canonical_input": "total_assets",
+      "expected_period_type": "instant",
+      "sign_policy": "company_reported_sign",
+      "disposition": "canonical",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "concepts": [
+        {
+          "mapping": {
+            "mapping_key": "sec-cik:0000051143|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+            "company_id": "sec-cik:0000051143",
+            "canonical_input": "total_assets",
+            "taxonomy_namespace": "us-gaap",
+            "taxonomy_concept": "Assets",
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "canonical",
+            "reason_code": "canonical_us_gaap_concept",
+            "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+            "professional_review_status": "not_required_for_exact_canonical_mapping",
+            "authorized_operations": [
+              "accounting.balance_sheet_identity"
+            ],
+            "effective_form_families": [
+              "10-K",
+              "10-Q"
+            ],
+            "invalidation_conditions": [
+              "company_identity_changes",
+              "concept_or_taxonomy_changes",
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "period_unit_currency_or_sign_gate_fails"
+            ],
+            "product_label": "total_assets",
+            "comparable_ranking_eligible": true
+          },
+          "observed_records": 154,
+          "source_forms": [
+            "10-K",
+            "10-Q",
+            "8-K"
+          ],
+          "units": [
+            "USD"
+          ],
+          "currencies": [
+            "USD"
+          ],
+          "dimension_states": [
+            "consolidated"
+          ],
+          "active_annual_sources": [
+            {
+              "fact_id": "sec-companyfacts:7dabbbd17d49da3b03311136c98c68f2836798674660adce20bbba126761fc61",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_end": "2025-12-31T00:00:00Z",
+              "period_type": "instant",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "Assets",
+              "source_label": "Assets",
+              "source_locator": "companyfacts:us-gaap/Assets/USD/149",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            },
+            {
+              "fact_id": "sec-companyfacts:f2c5cdae1ebe90566fd8174350b477665a402c7222b9f14bedd0a590c1dd6a0e",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_end": "2024-12-31T00:00:00Z",
+              "period_type": "instant",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "Assets",
+              "source_label": "Assets",
+              "source_locator": "companyfacts:us-gaap/Assets/USD/145",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            }
+          ],
+          "excluded_records": {
+            "non_annual_form": 12,
+            "stale_metric_period": 139
+          }
+        }
+      ],
+      "active_source_count": 2,
+      "professional_review_needed": false,
+      "reason_codes": null
+    },
+    {
+      "canonical_input": "total_liabilities",
+      "expected_period_type": "instant",
+      "sign_policy": "company_reported_sign",
+      "disposition": "canonical",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "concepts": [
+        {
+          "mapping": {
+            "mapping_key": "sec-cik:0000051143|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+            "company_id": "sec-cik:0000051143",
+            "canonical_input": "total_liabilities",
+            "taxonomy_namespace": "us-gaap",
+            "taxonomy_concept": "Liabilities",
+            "accounting_perimeter": "consolidated_periodic_filing",
+            "disposition": "canonical",
+            "reason_code": "canonical_us_gaap_concept",
+            "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+            "professional_review_status": "not_required_for_exact_canonical_mapping",
+            "authorized_operations": [
+              "accounting.balance_sheet_identity"
+            ],
+            "effective_form_families": [
+              "10-K",
+              "10-Q"
+            ],
+            "invalidation_conditions": [
+              "company_identity_changes",
+              "concept_or_taxonomy_changes",
+              "dimensions_are_present",
+              "filing_chain_is_not_active",
+              "period_unit_currency_or_sign_gate_fails"
+            ],
+            "product_label": "total_liabilities",
+            "comparable_ranking_eligible": true
+          },
+          "observed_records": 140,
+          "source_forms": [
+            "10-K",
+            "10-Q",
+            "8-K"
+          ],
+          "units": [
+            "USD"
+          ],
+          "currencies": [
+            "USD"
+          ],
+          "dimension_states": [
+            "consolidated"
+          ],
+          "active_annual_sources": [
+            {
+              "fact_id": "sec-companyfacts:ac185d4f1d4e10ac3f7cc245fd4bfea2e4139d677131d3ee14aeca8967995c0b",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_end": "2025-12-31T00:00:00Z",
+              "period_type": "instant",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "Liabilities",
+              "source_label": "Liabilities",
+              "source_locator": "companyfacts:us-gaap/Liabilities/USD/135",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            },
+            {
+              "fact_id": "sec-companyfacts:c954b117542118b4ef8307ee48ff976cc6a6905262b37c9b2682d78ba56c0d8c",
+              "filing_id": "sec-filing:0000051143-26-000010",
+              "accession_number": "0000051143-26-000010",
+              "form_type": "10-K",
+              "filing_date": "2026-02-24T00:00:00Z",
+              "available_at": "2026-02-24T21:07:07Z",
+              "retrieved_at": "2026-07-24T10:31:33.851433Z",
+              "period_end": "2024-12-31T00:00:00Z",
+              "period_type": "instant",
+              "unit": "USD",
+              "currency": "USD",
+              "scale": 0,
+              "taxonomy_namespace": "us-gaap",
+              "taxonomy_concept": "Liabilities",
+              "source_label": "Liabilities",
+              "source_locator": "companyfacts:us-gaap/Liabilities/USD/131",
+              "source_uri": "https://data.sec.gov/submissions/CIK0000051143.json",
+              "source_sha256": "49c5fd4883e5cbd08f31d396fa5baf01175512eba4e065fe38e12a8cddf9c4f1",
+              "amendment_chain": [
+                "0000051143-26-000010"
+              ],
+              "restatement_state": "not_restated",
+              "supersession_state": "active"
+            }
+          ],
+          "excluded_records": {
+            "non_annual_form": 12,
+            "stale_metric_period": 125
+          }
+        }
+      ],
+      "active_source_count": 2,
+      "professional_review_needed": false,
+      "reason_codes": null
+    }
+  ],
+  "exceptions": [
+    {
+      "exception_id": "accounting-exception-0c8ca8c95a50991bebe8c9f3",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "revenue",
+      "taxonomy_concept": "Revenues",
+      "disposition": "rejected",
+      "reason_code": "unreviewed_issuer_specific_concept",
+      "observed_records": 231,
+      "professional_review_needed": true,
+      "required_action": "Review the active issuer-specific source and either add a bounded registry entry or preserve rejection.",
+      "source_citation": "https://data.sec.gov/submissions/CIK0000051143.json",
+      "source_locator": "companyfacts:us-gaap/Revenues/USD/227"
+    },
+    {
+      "exception_id": "accounting-exception-7238a0e1c3e7aace1a21622e",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "operating_income",
+      "disposition": "unavailable",
+      "reason_code": "authorized_annual_source_unavailable",
+      "observed_records": 0,
+      "professional_review_needed": false,
+      "required_action": "Preserve typed unavailability until an authorized annual source becomes available."
+    }
+  ],
+  "source_hashes": {
+    "catalog_sha256": "9b9979715aa7a6efbd7981025c13e394ecc914f5c06304599df4cdf041ed64d1",
+    "normalized_metrics_sha256": "172ac2b1a8c93b2198020a06b0e162e62ded73da178a683ede591f3d7da45436",
+    "reported_facts_sha256": "23893db1817cacc0c5e638c82fbe93dc790aa3b689b95175010a8dfd6db23af9",
+    "filings_sha256": "316fb1741d6a4845c3734b70f07e0bc4f00f00ccf500739b9e1d57bd4443888b"
+  },
+  "claim_boundary": "This metadata-only packet authorizes deterministic source selection. It contains no calculation values and cannot authorize model arithmetic or an unreviewed equivalence.",
+  "packet_sha256": "10e13b093641806444f3e99fe89dc799b3d8b4f8f705d6e72e1eb698b6cb1b87"
+}

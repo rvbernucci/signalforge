@@ -1,19 +1,16 @@
 name: signalforge
 
 x-app-common: &app-common
-  image: ${SIGNALFORGE_IMAGE:-signalforge:local}
-  build:
-    context: .
-    dockerfile: Dockerfile
-    args:
-      SOURCE_COMMIT: ${SIGNALFORGE_SOURCE_COMMIT:-working-tree}
-      BUILD_VERSION: ${SIGNALFORGE_BUILD_VERSION:-development}
-      BUILD_DATE: ${SIGNALFORGE_BUILD_DATE:-unknown}
-  restart: unless-stopped
+  image: ${SIGNALFORGE_APP_IMAGE:-ghcr.io/rvbernucci/signalforge@sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b}
+  platform: linux/amd64
+  pull_policy: missing
+  restart: "on-failure:3"
   read_only: true
   init: true
-  cap_drop: [ALL]
-  security_opt: [no-new-privileges:true]
+  cap_drop:
+    - ALL
+  security_opt:
+    - "no-new-privileges:true"
   tmpfs:
     - /tmp:size=64m,mode=1777
   environment:
@@ -22,79 +19,312 @@ x-app-common: &app-common
     SIGNALFORGE_OTEL_ALLOW_PRIVATE_NETWORK: "true"
     OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://alloy:4318}
   volumes:
-    - signalforge-data:/var/lib/signalforge
+    - type: bind
+      source: ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}/data
+      target: /var/lib/signalforge
   ports:
-    - "127.0.0.1:8080:8080"
+    - "127.0.0.1:${SIGNALFORGE_APP_PORT:-8080}:8080"
   healthcheck:
-    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/ready"]
+    test:
+      - CMD
+      - wget
+      - -q
+      - -O
+      - /dev/null
+      - http://127.0.0.1:8080/health/ready
     interval: 5s
     timeout: 2s
     retries: 12
     start_period: 5s
-  networks: [signalforge]
+
+x-live-command: &live-command
+  - --listen
+  - 0.0.0.0:8080
+  - --allow-container-listen
+  - --mode
+  - live
+  - --static-dir
+  - /app/web/dist
+  - --base-url
+  - http://llama-rocm:8000/v1
+  - --model
+  - ${SIGNALFORGE_MODEL_ID:-signalforge-gemma4-26b-q4}
+  - --snapshot
+  - /app/fixtures/golden/financial-snapshot.json
+  - --retrieval
+  - /app/fixtures/retrieval/golden-eval.json
+  - --price-inputs
+  - /app/fixtures/golden/market-price-inputs.json
+  - --case-db
+  - /var/lib/signalforge/cases.db
+  - --audit-dir
+  - /var/lib/signalforge/audit
+  - --trace-dir
+  - /var/lib/signalforge/traces
+  - --event-log
+  - /var/lib/signalforge/logs/events.jsonl
 
 services:
-  observability-init:
-    profiles: [observability]
-    image: alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
+  storage-init:
+    profiles:
+      - fixture
+      - radeon-local
+      - championship
+      - observability
+    image: ${SIGNALFORGE_STORAGE_INIT_IMAGE:-alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40}
+    platform: linux/amd64
+    pull_policy: missing
     user: "0:0"
     command:
       - /bin/sh
       - -eu
       - -c
-      - chown -R 10001:10001 /var/loki && chown -R 472:0 /var/lib/grafana
+      - |
+        mkdir -p /persist/data/audit /persist/data/logs /persist/data/traces /persist/models /persist/state
+        chown -R 10001:10001 /persist/data
+        chmod 0750 /persist/data /persist/data/audit /persist/data/logs /persist/data/traces
+        chown 10003:10003 /persist/state
+        chmod 0755 /persist/models
+        chmod 0750 /persist/state
     restart: "no"
     read_only: true
-    cap_drop: [ALL]
-    cap_add: [CHOWN]
-    security_opt: [no-new-privileges:true]
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+    security_opt:
+      - "no-new-privileges:true"
     network_mode: none
     volumes:
-      - loki-data:/var/loki
-      - grafana-data:/var/lib/grafana
+      - type: bind
+        source: ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}
+        target: /persist
+
+  model-init:
+    profiles:
+      - radeon-local
+      - championship
+    image: ${SIGNALFORGE_PYTHON_IMAGE:-python:3.12.11-alpine3.22@sha256:efcdfa6a6b2fd2afb9c7dfa9a5b288a6f68338b5cfdebe6b637d986067d85757}
+    platform: linux/amd64
+    pull_policy: missing
+    user: "0:0"
+    command:
+      - python3
+      - /opt/signalforge/radeon_model_cache.py
+      - --manifest
+      - /opt/signalforge/model-manifest.json
+      - --cache-dir
+      - /models
+      - --source
+      - ${SIGNALFORGE_MODEL_SOURCE:-huggingface}
+      - --token-file
+      - /run/secrets/hf_token
+      - --existing-file
+      - /import/model.gguf
+      - --license-acceptance
+      - ${SIGNALFORGE_ACCEPT_GEMMA_LICENSE:-no}
+      - --retries
+      - ${SIGNALFORGE_MODEL_DOWNLOAD_RETRIES:-5}
+      - --timeout-seconds
+      - ${SIGNALFORGE_MODEL_DOWNLOAD_TIMEOUT_SECONDS:-60}
+      - --state
+      - /state/model-init.json
+    restart: "no"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - "no-new-privileges:true"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+    secrets:
+      - source: hf_token
+        target: hf_token
+    volumes:
+      - type: bind
+        source: ./scripts/radeon_model_cache.py
+        target: /opt/signalforge/radeon_model_cache.py
+        read_only: true
+      - type: bind
+        source: ./deploy/radeon/model-manifest.json
+        target: /opt/signalforge/model-manifest.json
+        read_only: true
+      - type: bind
+        source: ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}/models
+        target: /models
+      - type: bind
+        source: ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}/state
+        target: /state
+      - type: bind
+        source: ${SIGNALFORGE_EXISTING_MODEL_FILE:-/dev/null}
+        target: /import/model.gguf
+        read_only: true
+    networks:
+      - hydration
+
+  llama-rocm:
+    profiles:
+      - radeon-local
+      - championship
+    image: ${SIGNALFORGE_LLAMA_ROCM_IMAGE:-rocm/llama.cpp@sha256:be175932c3c96e882dfbc7e20e0e834f58c89c2925f48b222837ee929dfc47ee}
+    platform: linux/amd64
+    pull_policy: missing
+    user: "${SIGNALFORGE_RUNTIME_UID:-10002}:${SIGNALFORGE_RUNTIME_GID:-10002}"
+    command:
+      - --model
+      - /models/gemma-4-26B_q4_0-it.gguf
+      - --alias
+      - ${SIGNALFORGE_MODEL_ID:-signalforge-gemma4-26b-q4}
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --ctx-size
+      - ${SIGNALFORGE_CONTEXT_SIZE:-32768}
+      - --parallel
+      - ${SIGNALFORGE_PARALLEL_SLOTS:-4}
+      - --batch-size
+      - ${SIGNALFORGE_BATCH_SIZE:-2048}
+      - --ubatch-size
+      - ${SIGNALFORGE_UBATCH_SIZE:-512}
+      - --flash-attn
+      - ${SIGNALFORGE_FLASH_ATTN:-auto}
+      - --cache-type-k
+      - ${SIGNALFORGE_CACHE_TYPE_K:-f16}
+      - --cache-type-v
+      - ${SIGNALFORGE_CACHE_TYPE_V:-f16}
+      - --n-gpu-layers
+      - "999"
+      - --jinja
+      - --metrics
+      - --no-webui
+      - --cont-batching
+      - --kv-unified
+      - --no-mmap
+    restart: "on-failure:3"
+    stop_grace_period: 30s
+    init: true
+    ipc: host
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - "no-new-privileges:true"
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    group_add:
+      - "${SIGNALFORGE_VIDEO_GID:-44}"
+      - "${SIGNALFORGE_RENDER_GID:-109}"
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    environment:
+      HSA_OVERRIDE_GFX_VERSION: ${HSA_OVERRIDE_GFX_VERSION:-11.0.0}
+    depends_on:
+      model-init:
+        condition: service_completed_successfully
+    volumes:
+      - type: bind
+        source: ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}/models
+        target: /models
+        read_only: true
+    expose:
+      - "8000"
+    networks:
+      - signalforge
+
+  runtime-ready:
+    profiles:
+      - radeon-local
+      - championship
+    image: ${SIGNALFORGE_PYTHON_IMAGE:-python:3.12.11-alpine3.22@sha256:efcdfa6a6b2fd2afb9c7dfa9a5b288a6f68338b5cfdebe6b637d986067d85757}
+    platform: linux/amd64
+    pull_policy: missing
+    user: "10003:10003"
+    command:
+      - python3
+      - /opt/signalforge/radeon_runtime_probe.py
+      - --serve
+      - --base-url
+      - http://llama-rocm:8000
+      - --model-id
+      - ${SIGNALFORGE_MODEL_ID:-signalforge-gemma4-26b-q4}
+      - --request-timeout-seconds
+      - "3"
+      - --state
+      - /state/runtime-ready.json
+    restart: "on-failure:3"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - "no-new-privileges:true"
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    depends_on:
+      llama-rocm:
+        condition: service_started
+    volumes:
+      - type: bind
+        source: ./scripts/radeon_runtime_probe.py
+        target: /opt/signalforge/radeon_runtime_probe.py
+        read_only: true
+      - type: bind
+        source: ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}/state
+        target: /state
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=4).read()"
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 5s
+    networks:
+      - signalforge
 
   signalforge:
     <<: *app-common
-    profiles: [fixture]
+    profiles:
+      - fixture
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+    networks:
+      signalforge:
+        aliases:
+          - signalforge
 
   signalforge-local:
     <<: *app-common
-    profiles: [radeon-local]
+    profiles:
+      - radeon-local
     depends_on:
-      llama-rocm:
+      storage-init:
+        condition: service_completed_successfully
+      runtime-ready:
         condition: service_healthy
-    command:
-      - --listen
-      - 0.0.0.0:8080
-      - --allow-container-listen
-      - --mode
-      - live
-      - --static-dir
-      - /app/web/dist
-      - --base-url
-      - http://llama-rocm:8000/v1
-      - --model
-      - ${SIGNALFORGE_MODEL_ID:-signalforge-gemma4-26b-q4}
-      - --snapshot
-      - /app/fixtures/golden/financial-snapshot.json
-      - --retrieval
-      - /app/fixtures/retrieval/golden-eval.json
-      - --price-inputs
-      - /app/fixtures/golden/market-price-inputs.json
-      - --case-db
-      - /var/lib/signalforge/cases.db
-      - --audit-dir
-      - /var/lib/signalforge/audit
-      - --trace-dir
-      - /var/lib/signalforge/traces
-      - --event-log
-      - /var/lib/signalforge/logs/events.jsonl
+    command: *live-command
+    networks:
+      signalforge:
+        aliases:
+          - signalforge
 
   signalforge-championship:
     <<: *app-common
-    profiles: [championship]
+    profiles:
+      - championship
     depends_on:
-      llama-rocm:
+      storage-init:
+        condition: service_completed_successfully
+      runtime-ready:
         condition: service_healthy
     environment:
       SIGNALFORGE_SPECIALIST_API_ENABLED: "true"
@@ -109,119 +339,121 @@ services:
       SIGNALFORGE_OTEL_ALLOW_PRIVATE_NETWORK: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://alloy:4318}
     secrets:
-      - radeon_model_api_key
-    command:
-      - --listen
-      - 0.0.0.0:8080
-      - --allow-container-listen
-      - --mode
-      - live
-      - --static-dir
-      - /app/web/dist
-      - --base-url
-      - http://llama-rocm:8000/v1
-      - --model
-      - ${SIGNALFORGE_MODEL_ID:-signalforge-gemma4-26b-q4}
-      - --snapshot
-      - /app/fixtures/golden/financial-snapshot.json
-      - --retrieval
-      - /app/fixtures/retrieval/golden-eval.json
-      - --price-inputs
-      - /app/fixtures/golden/market-price-inputs.json
-      - --case-db
-      - /var/lib/signalforge/cases.db
-      - --audit-dir
-      - /var/lib/signalforge/audit
-      - --trace-dir
-      - /var/lib/signalforge/traces
-      - --event-log
-      - /var/lib/signalforge/logs/events.jsonl
+      - source: radeon_model_api_key
+        target: radeon_model_api_key
+    command: *live-command
+    networks:
+      signalforge:
+        aliases:
+          - signalforge
+      specialist-egress: {}
 
-  llama-rocm:
-    profiles: [radeon-local, championship]
-    build:
-      context: .
-      dockerfile: deploy/radeon/Dockerfile.llama-rocm
-      args:
-        LLAMA_CPP_REVISION: 305ba519ab61cdff8044922cba2347826a04453f
-    image: signalforge-llama-rocm:305ba519-rocm7.2.1
-    restart: unless-stopped
-    init: true
-    ipc: host
-    group_add:
-      - "${SIGNALFORGE_VIDEO_GID:-44}"
-      - "${SIGNALFORGE_RENDER_GID:-109}"
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    security_opt: [no-new-privileges:true]
-    cap_drop: [ALL]
+  observability-init:
+    profiles:
+      - observability
+    image: ${SIGNALFORGE_STORAGE_INIT_IMAGE:-alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40}
+    platform: linux/amd64
+    pull_policy: missing
+    user: "0:0"
+    command:
+      - /bin/sh
+      - -eu
+      - -c
+      - chown -R 10001:10001 /var/loki && chown -R 472:0 /var/lib/grafana
+    restart: "no"
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+    security_opt:
+      - "no-new-privileges:true"
+    network_mode: none
     volumes:
-      - ${SIGNALFORGE_MODEL_PATH:-./models/gemma-4-26B_q4_0-it.gguf}:/models/gemma-4-26B_q4_0-it.gguf:ro
-    expose: ["8000"]
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 30
-      start_period: 90s
-    networks: [signalforge]
+      - loki-data:/var/loki
+      - grafana-data:/var/lib/grafana
 
   alloy:
-    profiles: [observability]
+    profiles:
+      - observability
     image: grafana/alloy:v1.10.2@sha256:bcf27f18c4402869af112fb39e35e1db3804a404686f4caa20bdf77814219223
-    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy", "/etc/alloy/config.alloy"]
-    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy
+      - /etc/alloy/config.alloy
+    restart: "on-failure:3"
     volumes:
       - ./deploy/observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
-      - signalforge-data:/var/log/signalforge:ro
+      - ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}/data:/var/log/signalforge:ro
       - alloy-data:/var/lib/alloy
     ports:
-      - "127.0.0.1:12345:12345"
-    depends_on: [loki, tempo]
-    networks: [signalforge]
+      - "127.0.0.1:${SIGNALFORGE_ALLOY_PORT:-12345}:12345"
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+      loki:
+        condition: service_started
+      tempo:
+        condition: service_started
+    networks:
+      - signalforge
 
   prometheus:
-    profiles: [observability]
+    profiles:
+      - observability
     image: prom/prometheus:v3.5.0@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996
-    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus", "--storage.tsdb.retention.time=24h", "--web.enable-lifecycle"]
-    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=24h
+      - --web.enable-lifecycle
+    restart: "on-failure:3"
     volumes:
       - ./deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     ports:
-      - "127.0.0.1:9090:9090"
+      - "127.0.0.1:${SIGNALFORGE_PROMETHEUS_PORT:-9090}:9090"
     extra_hosts:
-      - host.docker.internal:host-gateway
-    networks: [signalforge]
+      - "host.docker.internal:host-gateway"
+    networks:
+      - signalforge
+      - operator
 
   loki:
-    profiles: [observability]
+    profiles:
+      - observability
     image: grafana/loki:3.5.3@sha256:3165cecce301ce5b9b6e3530284b080934a05cd5cafac3d3d82edcb887b45ecd
-    command: ["-config.file=/etc/loki/loki.yml"]
-    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/loki.yml
+    restart: "on-failure:3"
     volumes:
       - ./deploy/observability/loki/loki.yml:/etc/loki/loki.yml:ro
       - loki-data:/var/loki
     depends_on:
       observability-init:
         condition: service_completed_successfully
-    networks: [signalforge]
+    networks:
+      - signalforge
 
   tempo:
-    profiles: [observability]
+    profiles:
+      - observability
     image: grafana/tempo:2.8.2@sha256:0ef775495967cd5d7a6b2e146b6ea695d624803c8db8349fb8ce4164f719f9b7
-    command: ["-config.file=/etc/tempo/tempo.yml"]
-    restart: unless-stopped
+    command:
+      - -config.file=/etc/tempo/tempo.yml
+    restart: "on-failure:3"
     volumes:
       - ./deploy/observability/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
       - tempo-data:/var/tempo
-    networks: [signalforge]
+    networks:
+      - signalforge
 
   grafana:
-    profiles: [observability]
+    profiles:
+      - observability
     image: grafana/grafana:12.1.1@sha256:a1701c2180249361737a99a01bc770db39381640e4d631825d38ff4535efa47d
-    restart: unless-stopped
+    restart: "on-failure:3"
     environment:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
@@ -230,13 +462,14 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
     secrets:
-      - grafana_admin_password
+      - source: grafana_admin_password
+        target: grafana_admin_password
     volumes:
       - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./deploy/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${SIGNALFORGE_GRAFANA_PORT:-3000}:3000"
     depends_on:
       observability-init:
         condition: service_completed_successfully
@@ -246,16 +479,18 @@ services:
         condition: service_started
       tempo:
         condition: service_started
-    networks: [signalforge]
+    networks:
+      - signalforge
 
 secrets:
+  hf_token:
+    file: ${SIGNALFORGE_HF_TOKEN_FILE:-./.secrets/hf-token}
   radeon_model_api_key:
-    file: ./.secrets/radeon-model-api-key
+    file: ${SIGNALFORGE_RADEON_API_KEY_FILE:-./.secrets/radeon-model-api-key}
   grafana_admin_password:
-    file: ./.secrets/grafana-admin-password
+    file: ${SIGNALFORGE_GRAFANA_PASSWORD_FILE:-./.secrets/grafana-admin-password}
 
 volumes:
-  signalforge-data:
   alloy-data:
   prometheus-data:
   loki-data:
@@ -265,3 +500,10 @@ volumes:
 networks:
   signalforge:
     name: signalforge
+    internal: true
+  hydration:
+    name: signalforge-hydration
+  specialist-egress:
+    name: signalforge-specialist-egress
+  operator:
+    name: signalforge-operator

@@ -1,0 +1,38 @@
+{
+  "schema_version": "signalforge/model-artifact/v1",
+  "manifest_version": "gemma4-26b-a4b-qat-q4-0-2026-07-29",
+  "model_id": "google/gemma-4-26B-A4B-it-qat-q4_0-gguf",
+  "served_model_id": "signalforge-gemma4-26b-q4",
+  "repository": "google/gemma-4-26B-A4B-it-qat-q4_0-gguf",
+  "revision": "d1c082be9cf3c8a514acf63b8761f4b41935842e",
+  "filename": "gemma-4-26B_q4_0-it.gguf",
+  "expected_size_bytes": 14439363584,
+  "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+  "license": {
+    "id": "gemma",
+    "url": "https://ai.google.dev/gemma/terms",
+    "acceptance_required": true,
+    "redistribution": "Model weights are not embedded in the SignalForge source or application image."
+  },
+  "sources": {
+    "existing": {
+      "enabled": true,
+      "description": "Import an independently acquired exact file after complete size and SHA-256 verification."
+    },
+    "huggingface": {
+      "enabled": true,
+      "url": "https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/resolve/d1c082be9cf3c8a514acf63b8761f4b41935842e/gemma-4-26B_q4_0-it.gguf",
+      "credential": "runtime file-mounted read token"
+    },
+    "oci": {
+      "enabled": false,
+      "description": "Disabled until an independently reviewed redistribution decision permits a public model OCI artifact."
+    }
+  },
+  "cache": {
+    "model_relative_path": "gemma-4-26B_q4_0-it.gguf",
+    "partial_relative_path": ".downloads/gemma-4-26B_q4_0-it.gguf.part",
+    "ready_marker_relative_path": ".signalforge-model-ready.json",
+    "lock_relative_path": ".signalforge-model.lock"
+  }
+}

@@ -168,11 +168,7 @@ func TestFixtureRunCompletesAndStreamsOnlySafeEvents(t *testing.T) {
 	t.Cleanup(httpServer.Close)
 
 	run := postRun(t, httpServer.URL, `{"question":"Compare Microsoft and NVIDIA.","scenario":{"rates":"easing","ai_spending":"resilient"}}`)
-	deadline := time.Now().Add(2 * time.Second)
-	for run.Status == "running" && time.Now().Before(deadline) {
-		time.Sleep(5 * time.Millisecond)
-		run = getRun(t, httpServer.URL, run.RunID)
-	}
+	run = waitForRun(t, httpServer.URL, run)
 	if run.Status != "completed" || run.Result == nil {
 		t.Fatalf("run = %+v", run)
 	}

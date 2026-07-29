@@ -1,0 +1,146 @@
+{
+  "schema_version": "signalforge/technology20-accounting-authority-manifest/v1",
+  "universe_id": "us-technology-20-v2",
+  "as_of": "2026-07-24T10:32:53.677641Z",
+  "registry_version": "technology20-accounting-authority/2026-07-29",
+  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996",
+  "source_hashes": {
+    "catalog_sha256": "9b9979715aa7a6efbd7981025c13e394ecc914f5c06304599df4cdf041ed64d1",
+    "normalized_metrics_sha256": "172ac2b1a8c93b2198020a06b0e162e62ded73da178a683ede591f3d7da45436",
+    "reported_facts_sha256": "23893db1817cacc0c5e638c82fbe93dc790aa3b689b95175010a8dfd6db23af9",
+    "filings_sha256": "316fb1741d6a4845c3734b70f07e0bc4f00f00ccf500739b9e1d57bd4443888b"
+  },
+  "companies": 20,
+  "canonical_inputs": 160,
+  "disposition_count": {
+    "canonical": 144,
+    "context_only": 1,
+    "rejected": 6,
+    "reviewed_alias": 1,
+    "unavailable": 8
+  },
+  "packets": [
+    {
+      "company_id": "sec-cik:0000002488",
+      "primary_ticker": "AMD",
+      "path": "packets/AMD.json",
+      "packet_sha256": "660bf45f0459441d7c13effde9f8c6397626beadeb5a447f22fd7606801232f7"
+    },
+    {
+      "company_id": "sec-cik:0000006951",
+      "primary_ticker": "AMAT",
+      "path": "packets/AMAT.json",
+      "packet_sha256": "4ad2bfac59a7294315696a77f290ba9a128e00f22005b28163741b805543349d"
+    },
+    {
+      "company_id": "sec-cik:0000050863",
+      "primary_ticker": "INTC",
+      "path": "packets/INTC.json",
+      "packet_sha256": "c34aef9dc0b71b616a61076f70939efa50e58651d4e94018b2217c97431998ad"
+    },
+    {
+      "company_id": "sec-cik:0000051143",
+      "primary_ticker": "IBM",
+      "path": "packets/IBM.json",
+      "packet_sha256": "10e13b093641806444f3e99fe89dc799b3d8b4f8f705d6e72e1eb698b6cb1b87"
+    },
+    {
+      "company_id": "sec-cik:0000097476",
+      "primary_ticker": "TXN",
+      "path": "packets/TXN.json",
+      "packet_sha256": "0162e4ad8d1549d680f2ce67423066175380932ca4b46331661b11a5499d18fe"
+    },
+    {
+      "company_id": "sec-cik:0000320193",
+      "primary_ticker": "AAPL",
+      "path": "packets/AAPL.json",
+      "packet_sha256": "9905504cc095033b5a18871cf722f5bf66aa850f91fb6a1b8aeb08446cff25d8"
+    },
+    {
+      "company_id": "sec-cik:0000723125",
+      "primary_ticker": "MU",
+      "path": "packets/MU.json",
+      "packet_sha256": "b354171ab2c7863dc4a4c58d560a4b417a385a8e4d6037eba7c312148419ea02"
+    },
+    {
+      "company_id": "sec-cik:0000789019",
+      "primary_ticker": "MSFT",
+      "path": "packets/MSFT.json",
+      "packet_sha256": "739ae2724f62e302ffb1663003f7f632d4213617fa8e84f1a12714eafeadcdf9"
+    },
+    {
+      "company_id": "sec-cik:0000796343",
+      "primary_ticker": "ADBE",
+      "path": "packets/ADBE.json",
+      "packet_sha256": "f7c649a1f696c53d2b03447f282a0d291a3b5fd311fe05a132480ed394d81d45"
+    },
+    {
+      "company_id": "sec-cik:0000804328",
+      "primary_ticker": "QCOM",
+      "path": "packets/QCOM.json",
+      "packet_sha256": "79bee88497fe8b785d47e4ca72ac8894355b86b44bc9f2ba19f31711b7b0e11a"
+    },
+    {
+      "company_id": "sec-cik:0000858877",
+      "primary_ticker": "CSCO",
+      "path": "packets/CSCO.json",
+      "packet_sha256": "d938ec86fc5acef7706be90811ca56d4fb0dadf2e211b668d7482d445431e252"
+    },
+    {
+      "company_id": "sec-cik:0001018724",
+      "primary_ticker": "AMZN",
+      "path": "packets/AMZN.json",
+      "packet_sha256": "cbce3049a6201e3923f88cd4ca6246ca0bc99b0184f470d6192e9f4d193c81e0"
+    },
+    {
+      "company_id": "sec-cik:0001045810",
+      "primary_ticker": "NVDA",
+      "path": "packets/NVDA.json",
+      "packet_sha256": "704491549731a69c48fbe21255525d7f84d5a3dd8e161f54e921b9dea9cad111"
+    },
+    {
+      "company_id": "sec-cik:0001108524",
+      "primary_ticker": "CRM",
+      "path": "packets/CRM.json",
+      "packet_sha256": "d196252f474b5e8759add19158f32ca90f99f735cfbeb90eb747c92ae4857880"
+    },
+    {
+      "company_id": "sec-cik:0001326801",
+      "primary_ticker": "META",
+      "path": "packets/META.json",
+      "packet_sha256": "b7142763c7945678ce8e75eed91bdea68a1b576e84f6979aee3f8a429f0b598b"
+    },
+    {
+      "company_id": "sec-cik:0001341439",
+      "primary_ticker": "ORCL",
+      "path": "packets/ORCL.json",
+      "packet_sha256": "44e3a5cc471d3e1b0c14e01d35f820cb7ea4a85b3aeb854ccce8e940808f2288"
+    },
+    {
+      "company_id": "sec-cik:0001373715",
+      "primary_ticker": "NOW",
+      "path": "packets/NOW.json",
+      "packet_sha256": "cdd33b099b0b9e12928ae6ffdb5473ce2ca90f17f3a2f7bafeb579e5c7304616"
+    },
+    {
+      "company_id": "sec-cik:0001596532",
+      "primary_ticker": "ANET",
+      "path": "packets/ANET.json",
+      "packet_sha256": "f1441ad27e4957d92edcbca52bd34246536e4785a62e676759679e433cff43e6"
+    },
+    {
+      "company_id": "sec-cik:0001652044",
+      "primary_ticker": "GOOGL",
+      "path": "packets/GOOGL.json",
+      "packet_sha256": "e7183693688da7e12069f18e48d41d131df96171d29f83be0b8c142278cf873d"
+    },
+    {
+      "company_id": "sec-cik:0001730168",
+      "primary_ticker": "AVGO",
+      "path": "packets/AVGO.json",
+      "packet_sha256": "8dcaf687549b984a275a65b4fb05ebb710bd09fb6b384f8472416715fa218db5"
+    }
+  ],
+  "claim_boundary": "The manifest proves deterministic source and mapping decisions, not professional approval, investment suitability, or comparability of context-only perimeters.",
+  "manifest_sha256": "1a3129e801ca8641636c3d63184ef0cedae92771fcba1423e964c287454716fb"
+}

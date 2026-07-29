@@ -1,37 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository="google/gemma-4-26B-A4B-it-qat-q4_0-gguf"
-revision="d1c082be9cf3c8a514acf63b8761f4b41935842e"
-filename="gemma-4-26B_q4_0-it.gguf"
-expected_sha256="3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d"
-destination="${1:-models/gemma4-26b-q4}"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+manifest="${SIGNALFORGE_MODEL_MANIFEST:-$repo_root/deploy/radeon/model-manifest.json}"
+destination="${1:-$repo_root/.signalforge/radeon/models}"
+token_file="${SIGNALFORGE_HF_TOKEN_FILE:-$repo_root/.secrets/hf-token}"
+source="${SIGNALFORGE_MODEL_SOURCE:-huggingface}"
+state="${SIGNALFORGE_MODEL_STATE:-$repo_root/.signalforge/radeon/state/model-init.json}"
+license_args=()
+existing_args=()
 
-if [[ "${SIGNALFORGE_ACCEPT_GEMMA_LICENSE:-}" != "yes" ]]; then
-  echo "Set SIGNALFORGE_ACCEPT_GEMMA_LICENSE=yes only after accepting the upstream Gemma license." >&2
-  exit 1
+if [[ "${SIGNALFORGE_ACCEPT_GEMMA_LICENSE:-}" == "yes" ]]; then
+  license_args+=(--license-accepted)
 fi
-if [[ -z "${HF_TOKEN:-}" ]]; then
-  echo "HF_TOKEN is required in the current process environment and is never written by this script." >&2
-  exit 1
+if [[ -n "${SIGNALFORGE_EXISTING_MODEL_FILE:-}" ]]; then
+  existing_args+=(--existing-file "$SIGNALFORGE_EXISTING_MODEL_FILE")
 fi
-command -v hf >/dev/null 2>&1 || {
-  echo "Install the current Hugging Face CLI before staging the model." >&2
-  exit 1
-}
 
-mkdir -p "$destination"
-chmod 700 "$destination"
-hf download "$repository" \
-  --revision "$revision" \
-  --include "$filename" \
-  --local-dir "$destination"
-
-model="$destination/$filename"
-actual_sha256="$(sha256sum "$model" | awk '{print $1}')"
-if [[ "$actual_sha256" != "$expected_sha256" ]]; then
-  echo "Model SHA-256 mismatch. The staged file was not accepted." >&2
-  exit 1
-fi
-chmod 400 "$model"
-echo "Verified model staged at $model"
+exec python3 "$repo_root/scripts/radeon_model_cache.py" \
+  --manifest "$manifest" \
+  --cache-dir "$destination" \
+  --source "$source" \
+  --token-file "$token_file" \
+  --retries "${SIGNALFORGE_MODEL_DOWNLOAD_RETRIES:-5}" \
+  --timeout-seconds "${SIGNALFORGE_MODEL_DOWNLOAD_TIMEOUT_SECONDS:-60}" \
+  --state "$state" \
+  "${license_args[@]}" \
+  "${existing_args[@]}"

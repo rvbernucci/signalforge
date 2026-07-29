@@ -1,0 +1,4704 @@
+{
+  "schema_version": "signalforge/technology20-accounting-perimeter-registry/v1",
+  "universe_id": "us-technology-20-v2",
+  "registry_version": "technology20-accounting-authority/2026-07-29",
+  "default_disposition": "rejected",
+  "entries": [
+    {
+      "mapping_key": "sec-cik:0000002488|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000002488|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000002488|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000002488|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000002488|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000002488|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000002488|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000002488|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000002488",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000006951|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000006951",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000050863|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000050863",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000051143|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000051143",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000097476|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000097476",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000320193|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000320193",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000723125|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000723125",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000789019|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000789019",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000796343|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000796343",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000804328|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000804328",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0000858877|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0000858877",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001018724|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001018724",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|capital_expenditure|us-gaap|PaymentsToAcquireProductiveAssets|company_reported_property_equipment_and_intangible_assets",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquireProductiveAssets",
+      "accounting_perimeter": "company_reported_property_equipment_and_intangible_assets",
+      "disposition": "context_only",
+      "reason_code": "productive_assets_scope_is_broader_than_ppe_capex",
+      "reviewer_basis": "Issuer-specific SEC filing language identifies a broader productive-assets perimeter.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_line_item_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "reported reinvestment intensity / residual cash proxy",
+      "source_citation": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+      "source_locator": "Consolidated Statements of Cash Flows, investing activities",
+      "bounded_source_language": "Purchases related to property and equipment and intangible assets",
+      "comparable_ranking_eligible": false
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Revenues",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "reviewer_basis": "NVIDIA reports consolidated revenue under the US-GAAP Revenues concept in the active filing chain.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_revenue_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001045810.json",
+      "source_locator": "SEC Company Facts and active periodic filing chain",
+      "bounded_source_language": "Revenues",
+      "comparable_ranking_eligible": false
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001045810|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001045810",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001108524|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001108524",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001326801|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001326801",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001341439|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001341439",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001373715|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001373715",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001596532|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001596532",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|revenue|us-gaap|Revenues|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Revenues",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "reviewed_alias",
+      "reason_code": "issuer_specific_revenue_alias",
+      "reviewer_basis": "Alphabet reports consolidated revenue under the US-GAAP Revenues concept in the active filing chain.",
+      "professional_review_status": "pending_named_professional_disposition",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "issuer_changes_revenue_scope",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "source_citation": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
+      "source_locator": "SEC Company Facts and active periodic filing chain",
+      "bounded_source_language": "Revenues",
+      "comparable_ranking_eligible": false
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001652044|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001652044",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|capital_expenditure|us-gaap|PaymentsToAcquirePropertyPlantAndEquipment|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "capital_expenditure",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.free_cash_flow"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "capital_expenditure",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|net_income|us-gaap|NetIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "net_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "net_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|operating_cash_flow|us-gaap|NetCashProvidedByUsedInOperatingActivities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "operating_cash_flow",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "NetCashProvidedByUsedInOperatingActivities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.cash_conversion",
+        "financial.free_cash_flow",
+        "financial.quality_of_earnings"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_cash_flow",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|operating_income|us-gaap|OperatingIncomeLoss|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "operating_income",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "OperatingIncomeLoss",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.operating_margin"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "operating_income",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|revenue|us-gaap|RevenueFromContractWithCustomerExcludingAssessedTax|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "revenue",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "financial.capex_intensity",
+        "financial.operating_margin",
+        "financial.revenue_growth"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "revenue",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|stockholders_equity|us-gaap|StockholdersEquity|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "stockholders_equity",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "StockholdersEquity",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "stockholders_equity",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|total_assets|us-gaap|Assets|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "total_assets",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Assets",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_assets",
+      "comparable_ranking_eligible": true
+    },
+    {
+      "mapping_key": "sec-cik:0001730168|total_liabilities|us-gaap|Liabilities|consolidated_periodic_filing",
+      "company_id": "sec-cik:0001730168",
+      "canonical_input": "total_liabilities",
+      "taxonomy_namespace": "us-gaap",
+      "taxonomy_concept": "Liabilities",
+      "accounting_perimeter": "consolidated_periodic_filing",
+      "disposition": "canonical",
+      "reason_code": "canonical_us_gaap_concept",
+      "reviewer_basis": "Exact US-GAAP concept and consolidated, dimensionless periodic-filing policy.",
+      "professional_review_status": "not_required_for_exact_canonical_mapping",
+      "authorized_operations": [
+        "accounting.balance_sheet_identity"
+      ],
+      "effective_form_families": [
+        "10-K",
+        "10-Q"
+      ],
+      "invalidation_conditions": [
+        "company_identity_changes",
+        "concept_or_taxonomy_changes",
+        "dimensions_are_present",
+        "filing_chain_is_not_active",
+        "period_unit_currency_or_sign_gate_fails"
+      ],
+      "product_label": "total_liabilities",
+      "comparable_ranking_eligible": true
+    }
+  ],
+  "registry_sha256": "182d5c548bca875599a3718231c44864df40c87e9235593ae89bb44d6223f996"
+}

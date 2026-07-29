@@ -1,43 +1,85 @@
-.PHONY: verify fixture-up fixture-down radeon-local-up championship-up stack-down \
-	mission-control-up mission-control-down stack-status stack-logs evidence-export \
-	radeon-exporter observability-check container-check
+PROFILE ?= radeon-local
+BACKEND ?= auto
+ACCEPT_GEMMA_LICENSE ?= no
+RADEON_NONINTERACTIVE ?= 0
+
+.PHONY: verify fixture-up fixture-down radeon-bootstrap radeon-preflight radeon-up \
+	radeon-local-up championship-up radeon-status radeon-logs radeon-observe \
+	radeon-down radeon-clean radeon-reset stack-down mission-control-up \
+	mission-control-down stack-status stack-logs evidence-export radeon-exporter \
+	observability-check container-check
 
 verify:
 	scripts/verify.sh
 
 fixture-up:
-	scripts/prepare_container_secrets.sh
-	docker compose --profile fixture up --detach --build signalforge
+	SIGNALFORGE_PROFILE=fixture SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		scripts/radeon_up.sh
 
 fixture-down:
-	docker compose --profile fixture down
+	SIGNALFORGE_PROFILE=fixture SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		scripts/radeon_down.sh
+
+radeon-bootstrap:
+	SIGNALFORGE_ACCEPT_GEMMA_LICENSE="$(ACCEPT_GEMMA_LICENSE)" \
+		python3 scripts/radeon_bootstrap.py \
+		--profile "$(PROFILE)" \
+		--backend "$(BACKEND)" \
+		$(if $(filter yes,$(ACCEPT_GEMMA_LICENSE)),--accept-gemma-license,) \
+		$(if $(filter 1,$(RADEON_NONINTERACTIVE)),--noninteractive,)
+
+radeon-preflight:
+	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		scripts/radeon_preflight.sh
+
+radeon-up:
+	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		scripts/radeon_up.sh
 
 radeon-local-up:
-	scripts/prepare_container_secrets.sh
-	docker compose --profile radeon-local --profile observability up --detach --build
+	SIGNALFORGE_PROFILE=radeon-local SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		scripts/radeon_up.sh
 
 championship-up:
-	scripts/prepare_container_secrets.sh
-	docker compose --profile championship --profile observability up --detach --build
+	SIGNALFORGE_PROFILE=championship SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		scripts/radeon_up.sh
 
-stack-down:
-	docker compose --profile fixture --profile radeon-local --profile championship \
-		--profile observability down
+radeon-status:
+	python3 scripts/radeon_status.py --profile "$(PROFILE)" --backend "$(BACKEND)"
+
+radeon-logs:
+	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		scripts/radeon_logs.sh
+
+radeon-observe:
+	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		SIGNALFORGE_OBSERVABILITY=1 \
+		SIGNALFORGE_OTEL_ENABLED=true scripts/radeon_up.sh
+
+radeon-down:
+	SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" scripts/radeon_down.sh
+
+radeon-clean: radeon-down
+	python3 scripts/radeon_reset.py --mode clean --confirm "$(CONFIRM)"
+
+radeon-reset: radeon-down
+	python3 scripts/radeon_reset.py --mode reset --confirm "$(CONFIRM)"
+
+stack-down: radeon-down
 
 mission-control-up:
 	scripts/prepare_container_secrets.sh
-	docker compose --profile fixture --profile observability up --detach --build
+	mkdir -p .signalforge/radeon
+	SIGNALFORGE_PROFILE=fixture SIGNALFORGE_OBSERVABILITY=1 \
+		scripts/radeon_compose.sh current up --detach --no-build
 
 mission-control-down:
-	docker compose --profile fixture --profile observability down
+	SIGNALFORGE_PROFILE=fixture SIGNALFORGE_OBSERVABILITY=1 \
+		scripts/radeon_compose.sh current down
 
-stack-status:
-	docker compose --profile fixture --profile radeon-local --profile championship \
-		--profile observability ps
+stack-status: radeon-status
 
-stack-logs:
-	docker compose --profile fixture --profile radeon-local --profile championship \
-		--profile observability logs --tail=200
+stack-logs: radeon-logs
 
 evidence-export:
 	python3 scripts/export_mission_control_evidence.py \

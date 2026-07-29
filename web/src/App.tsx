@@ -4,14 +4,14 @@ import { CaseNotes, InsightPanel } from "./components/InsightPanel";
 import { MobileHeader, Navigation } from "./components/Navigation";
 import { ProofDrawer } from "./components/ProofDrawer";
 import { IntelligenceDrawer } from "./components/IntelligenceDrawer";
-import { LiveExecutionPlan } from "./components/LiveExecutionPlan";
-import { RunProgress } from "./components/RunProgress";
+import { AuditWorkspace } from "./components/AuditWorkspace";
+import { CompactRunStatus } from "./components/CompactRunStatus";
 import { ScenarioBar } from "./components/ScenarioBar";
 import { ResearchScope } from "./components/ResearchScope";
 import { ArrowIcon, ChipIcon, ShieldIcon, SparkIcon } from "./components/Icons";
 import { MemoryControls } from "./components/CaseLibrary";
 import { useResearchRun } from "./hooks/useResearchRun";
-import { displayCaseTitle, displayCompany } from "./format";
+import { displayCaseTitle } from "./format";
 import type { FinancialSummary, PeerEvaluationSuite, ProductCatalog, Projection, ScenarioControl, WorkspaceConfig } from "./types";
 
 const fallbackScenario: ScenarioControl = { rates: "higher_for_longer", ai_spending: "slower" };
@@ -34,6 +34,9 @@ export function App() {
   const [retain, setRetain] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
+  const initialAuditRoute = readAuditRoute();
+  const [auditOpen, setAuditOpen] = useState(initialAuditRoute.open);
+  const [judgeMode, setJudgeMode] = useState(initialAuditRoute.judge);
   const research = useResearchRun(fixture);
 
   useEffect(() => {
@@ -63,18 +66,32 @@ export function App() {
   useEffect(() => {
     function closeOverlay(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
-      setDrawerOpen(false);
-      setNavOpen(false);
-      setLibraryOpen(false);
-      setIntelligenceOpen(false);
+      if (drawerOpen) setDrawerOpen(false);
+      else if (intelligenceOpen) setIntelligenceOpen(false);
+      else if (libraryOpen) setLibraryOpen(false);
+      else if (auditOpen) closeAudit();
+      else if (navOpen) setNavOpen(false);
     }
     window.addEventListener("keydown", closeOverlay);
     return () => window.removeEventListener("keydown", closeOverlay);
+  }, [auditOpen, drawerOpen, intelligenceOpen, libraryOpen, navOpen]);
+
+  useEffect(() => {
+    function restoreAuditRoute() {
+      const route = readAuditRoute();
+      setAuditOpen(route.open);
+      setJudgeMode(route.judge);
+    }
+    window.addEventListener("popstate", restoreAuditRoute);
+    return () => window.removeEventListener("popstate", restoreAuditRoute);
   }, []);
 
   if (bootError) return <BootFailure />;
   const projection = research.projection ?? fixture;
   if (!projection || !config || !catalog || !financials || !peerEvaluations) return <BootScreen />;
+  const executionPlan = research.executionPlan ?? projection.execution_plan ?? null;
+  const progressEvents = research.events.length > 0 ? research.events : projection.events;
+  const traceID = research.run?.run_id === projection.run_id ? research.run.trace_id : undefined;
 
   function openProof(tab: "evidence" | "calculations", refs: string[] = []) {
     setDrawerTab(tab);
@@ -89,6 +106,23 @@ export function App() {
     void research.askFollowUp(clean, retain);
   }
 
+  function openAudit(judge = false) {
+    setAuditOpen(true);
+    setJudgeMode(judge);
+    writeAuditRoute(true, judge);
+  }
+
+  function closeAudit() {
+    setAuditOpen(false);
+    setJudgeMode(false);
+    writeAuditRoute(false, false);
+  }
+
+  function changeJudgeMode(enabled: boolean) {
+    setJudgeMode(enabled);
+    writeAuditRoute(true, enabled);
+  }
+
   return (
     <div className="app-shell">
       <MobileHeader onOpen={() => setNavOpen(true)} />
@@ -99,7 +133,7 @@ export function App() {
             <span className="status-pulse" />
             <div><span>Research case · {projection.intent.replaceAll("_", " ")}</span><strong>{displayCaseTitle(projection.title)}</strong></div>
           </div>
-          <div className="runtime-badge"><ChipIcon /><span><strong>Local inference</strong>{projection.execution.runtime_label}</span></div>
+          <div className="trust-badge"><ShieldIcon /><span><strong>Governed research</strong>Evidence and limitations stay visible</span></div>
         </header>
 
         <div className="research-canvas">
@@ -127,36 +161,39 @@ export function App() {
             }}
           />
           {research.error && <div className="degraded-banner" role="alert"><ShieldIcon /><span><strong>Fail-safe state</strong>{research.error}</span></div>}
-          {research.executionPlan ?? projection.execution_plan
-            ? <LiveExecutionPlan
-                plan={research.executionPlan ?? projection.execution_plan ?? null}
-                traceID={research.run?.trace_id}
-                running={research.running}
-                connection={research.executionConnection}
-                onProof={(refs) => openProof("evidence", refs)}
-                onCalculations={(refs) => openProof("calculations", refs)}
-                onLineage={() => setIntelligenceOpen(true)}
-              />
-            : <RunProgress events={research.events} running={research.running} />}
-
-          <section className="case-overview" aria-label="Case overview">
-            <div><span className="eyebrow">Companies</span><strong>{projection.companies.map((company) => displayCompany(company.label)).join(" × ")}</strong></div>
-            <div><span className="eyebrow">Evidence coverage</span><strong>{Math.round(projection.metrics.evidence_coverage * 100)}%</strong></div>
-            <div><span className="eyebrow">Supported context claims</span><strong>{projection.metrics.supported_claims} / {projection.metrics.claims}</strong></div>
-            <button onClick={() => openProof("evidence")}><span className="eyebrow">Audit trail</span><strong>Open proof layer <ArrowIcon /></strong></button>
-            <button onClick={() => setIntelligenceOpen(true)} disabled={!config.intelligence_audit}><span className="eyebrow">Intelligence path</span><strong>Inspect orchestration <ArrowIcon /></strong></button>
-          </section>
-
+          <CompactRunStatus
+            plan={executionPlan}
+            events={progressEvents}
+            running={research.running}
+            connection={research.executionConnection}
+            onAudit={() => openAudit(false)}
+          />
           <InsightPanel projection={projection} activeSection={activeSection} onSection={setActiveSection} onProof={openProof} />
           <CaseNotes projection={projection} />
           <FollowUpPanel projection={projection} enabled={config.follow_ups_live} value={followUp} running={research.running} onValue={setFollowUp} onSubmit={submitFollowUp} />
         </div>
         <footer className="site-footer"><span>SignalForge · Private investor intelligence</span><span><ShieldIcon /> AI research can be inaccurate. Verify evidence and deterministic receipts before acting.</span></footer>
       </main>
+      <AuditWorkspace
+        projection={projection}
+        plan={executionPlan}
+        events={progressEvents}
+        traceID={traceID}
+        running={research.running}
+        connection={research.executionConnection}
+        open={auditOpen}
+        judgeMode={judgeMode}
+        intelligenceAvailable={config.intelligence_audit}
+        onClose={closeAudit}
+        onJudgeMode={changeJudgeMode}
+        onProof={(refs) => openProof("evidence", refs)}
+        onCalculations={(refs) => openProof("calculations", refs)}
+        onMissionControl={() => setIntelligenceOpen(true)}
+      />
       <ProofDrawer projection={projection} open={drawerOpen} tab={drawerTab} refs={drawerRefs} onTab={setDrawerTab} onClose={() => setDrawerOpen(false)} />
       <IntelligenceDrawer
         runID={projection.run_id}
-        traceID={research.run?.run_id === projection.run_id ? research.run.trace_id : undefined}
+        traceID={traceID}
         open={intelligenceOpen}
         protectedCapture={config.protected_capture}
         onClose={() => setIntelligenceOpen(false)}
@@ -187,4 +224,26 @@ function BootScreen() {
 
 function BootFailure() {
   return <div className="boot-screen failure" role="alert"><ShieldIcon /><strong>The workspace stopped safely.</strong><small>Start the local SignalForge server, then reload this page.</small></div>;
+}
+
+function readAuditRoute() {
+  if (typeof window === "undefined") return { open: false, judge: false };
+  const params = new URLSearchParams(window.location.search);
+  return {
+    open: params.get("view") === "audit",
+    judge: params.get("view") === "audit" && params.get("audience") === "judge"
+  };
+}
+
+function writeAuditRoute(open: boolean, judge: boolean) {
+  const url = new URL(window.location.href);
+  if (open) {
+    url.searchParams.set("view", "audit");
+    if (judge) url.searchParams.set("audience", "judge");
+    else url.searchParams.delete("audience");
+  } else {
+    url.searchParams.delete("view");
+    url.searchParams.delete("audience");
+  }
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
 }

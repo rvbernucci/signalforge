@@ -203,7 +203,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "b5be3805213073a8715c95ed62b5e63cfc88a0fa1ce77785fa8f153aeb0237ce"
+          "sha256": "11a0079416d83dd71281992ebcbe0d5cbd66420456e5bfca203c8df8017f37de"
         }
       ],
       "status": "passed"
@@ -238,7 +238,7 @@
       "source_hashes": [
         {
           "path": "internal/workspace/load_test.go",
-          "sha256": "4eb8be8cfb6281705bd525ca98840e02aec9145a4186c8f9cfd93aa37072ef6f"
+          "sha256": "b20a6d2fdad8a0e31a0c95eee3e9d86ad50a0ce11606e95af99d3b9d0a986be0"
         }
       ],
       "status": "passed"

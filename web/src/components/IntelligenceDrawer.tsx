@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { getIntelligence, getProtectedIntelligence, purgeProtectedIntelligence } from "../api";
+import { getIntelligence } from "../api";
 import type {
   EngineCallAudit,
   IntelligenceRecord,
   LifecycleAudit,
   ModelCallAudit,
-  ProtectedIntelligenceRecord,
   RetrievalAudit
 } from "../types";
 import { CheckIcon, CloseIcon, ShieldIcon } from "./Icons";
 
-type InspectorTab = "pipeline" | "trace" | "evidence" | "engines" | "prompts";
+type InspectorTab = "pipeline" | "trace" | "evidence" | "engines" | "privacy";
 
 type Props = {
   runID: string;
@@ -22,10 +21,8 @@ type Props = {
 
 export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onClose }: Props) {
   const [record, setRecord] = useState<IntelligenceRecord | null>(null);
-  const [protectedRecord, setProtectedRecord] = useState<ProtectedIntelligenceRecord | null>(null);
   const [tab, setTab] = useState<InspectorTab>("pipeline");
-  const [token, setToken] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "denied" | "error" | "purged">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const closeButton = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const wasOpen = useRef(false);
@@ -41,16 +38,10 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
   }, [open]);
 
   useEffect(() => {
-    if (!open) {
-      setProtectedRecord(null);
-      setToken("");
-      return;
-    }
+    if (!open) return;
     let active = true;
     setStatus("loading");
     setRecord(null);
-    setProtectedRecord(null);
-    setToken("");
     getIntelligence(runID).then((next) => {
       if (!active) return;
       if (!sameIdentity(next, runID, traceID)) {
@@ -64,32 +55,6 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
     });
     return () => { active = false; };
   }, [open, runID, traceID]);
-
-  async function unlock() {
-    if (!token.trim()) return;
-    setStatus("loading");
-    try {
-      setProtectedRecord(await getProtectedIntelligence(runID, token));
-      setStatus("ready");
-    } catch {
-      setProtectedRecord(null);
-      setStatus("denied");
-    }
-  }
-
-  async function purge() {
-    try {
-      await purgeProtectedIntelligence(runID, token);
-      setProtectedRecord(null);
-      setToken("");
-      const next = await getIntelligence(runID);
-      if (!sameIdentity(next, runID, traceID)) throw new Error("lineage identity mismatch");
-      setRecord(next);
-      setStatus("purged");
-    } catch {
-      setStatus("denied");
-    }
-  }
 
   return (
     <>
@@ -105,7 +70,7 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
         </header>
 
         <div className="intelligence-tabs" role="tablist" aria-label="Intelligence views">
-          {(["pipeline", "trace", "evidence", "engines", "prompts"] as InspectorTab[]).map((item) => (
+          {(["pipeline", "trace", "evidence", "engines", "privacy"] as InspectorTab[]).map((item) => (
             <button key={item} role="tab" aria-selected={tab === item} onClick={() => setTab(item)}>{item}</button>
           ))}
         </div>
@@ -118,23 +83,12 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
           {record && tab === "trace" && <TraceTimeline record={record} />}
           {record && tab === "evidence" && <Retrievals items={record.retrievals} />}
           {record && tab === "engines" && <Engines items={record.engine_calls} />}
-          {record && tab === "prompts" && (
-            <ProtectedPanel
-              record={record}
-              protectedRecord={protectedRecord}
-              protectedCapture={protectedCapture}
-              operatorToken={token}
-              status={status}
-              onToken={setToken}
-              onUnlock={() => void unlock()}
-              onPurge={() => void purge()}
-            />
-          )}
+          {record && tab === "privacy" && <PrivacyBoundary record={record} protectedCapture={protectedCapture} />}
         </div>
 
         <footer>
           <ShieldIcon />
-          <span>Telemetry excludes prompt bodies, answers, credentials, private memory, and raw financial values by default.</span>
+          <span>Mission Control exposes bounded metadata only. Prompt bodies, model outputs, credentials, private memory, and hidden reasoning never render in the product UI.</span>
         </footer>
       </aside>
     </>
@@ -303,51 +257,22 @@ function Engines({ items }: { items: EngineCallAudit[] | null | undefined }) {
   ))}</div>;
 }
 
-function ProtectedPanel({ record, protectedRecord, protectedCapture, operatorToken, status, onToken, onUnlock, onPurge }: {
+function PrivacyBoundary({ record, protectedCapture }: {
   record: IntelligenceRecord;
-  protectedRecord: ProtectedIntelligenceRecord | null;
   protectedCapture: boolean;
-  operatorToken: string;
-  status: string;
-  onToken: (value: string) => void;
-  onUnlock: () => void;
-  onPurge: () => void;
 }) {
-  if (!protectedCapture || !record.capture.enabled) {
-    return <InspectorState title="Protected capture is off" detail="This is the default. Enable it explicitly with a file-mounted operator token for a short diagnostic session." />;
-  }
-  if (!record.capture.available) {
-    return <InspectorState title={`Protected capture ${record.capture.status}`} detail="Metadata and hashes remain available; body artifacts cannot be recovered." />;
-  }
-  if (!protectedRecord) {
-    return (
-      <section className="audit-unlock">
-        <ShieldIcon />
-        <span className="eyebrow">Local operator authorization</span>
-        <h3>Unlock sanitized model I/O.</h3>
-        <p>The token remains only in this component's memory. It is never stored in the browser or emitted to telemetry.</p>
-        <form onSubmit={(event) => { event.preventDefault(); onUnlock(); }}>
-          <input type="password" value={operatorToken} onChange={(event) => onToken(event.target.value)} autoComplete="off" placeholder="Ephemeral audit token" aria-label="Protected audit token" />
-          <button disabled={!operatorToken.trim() || status === "loading"}>Unlock</button>
-        </form>
-        {status === "denied" && <p className="audit-denied" role="alert">Authorization failed or the capture expired.</p>}
-        <small>Expires {formatDateTime(record.capture.expires_at)}</small>
-      </section>
-    );
-  }
   return (
-    <section className="protected-record">
-      <header><div><span className="eyebrow">Authorized diagnostic view</span><h3>Sanitized inputs and outputs</h3></div><button onClick={onPurge}>Purge now</button></header>
-      <div className="protected-question"><span>Interpreted request</span><pre>{protectedRecord.question}</pre></div>
-      {(protectedRecord.model_calls ?? []).map((call) => (
-        <details className="protected-call" key={call.model_call_id}>
-          <summary>{call.parameters.model}<span>{call.parameters.max_tokens} token budget</span></summary>
-          {call.messages.map((message, index) => <div key={`${message.role}-${index}`}><span>{message.role}</span><pre>{message.content}</pre></div>)}
-          {call.raw_output && <div><span>Structured model output</span><pre>{call.raw_output}</pre></div>}
-        </details>
-      ))}
-      {(protectedRecord.model_calls?.length ?? 0) === 0 && <InspectorState title="No model bodies in this run" detail="The protected request remains available, but fixture replay made no model call." />}
-      <small>Automatic expiry: {formatDateTime(protectedRecord.expires_at)}</small>
+    <section className="privacy-boundary-card">
+      <ShieldIcon />
+      <span className="eyebrow">Product disclosure boundary</span>
+      <h3>Operational proof without model bodies</h3>
+      <p>SignalForge renders hashes, routes, token counts, timing, source locators, and receipt metadata. It never renders raw prompts, model outputs, credentials, private memory, or chain-of-thought in Research or Audit view.</p>
+      <dl>
+        <div><dt>Capture policy</dt><dd>{protectedCapture && record.capture.enabled ? "Operator diagnostics configured outside this UI" : "Off by default"}</dd></div>
+        <div><dt>Metadata status</dt><dd>{humanize(record.capture.status)}</dd></div>
+        <div><dt>Stored body bytes shown</dt><dd>0</dd></div>
+        <div><dt>Maximum metadata boundary</dt><dd>{record.capture.maximum_bytes.toLocaleString("en-US")} bytes</dd></div>
+      </dl>
     </section>
   );
 }

@@ -89,6 +89,23 @@ func TestAnnualDurationPolicyAllowsDifferentFiscalCalendarsWithCaveat(t *testing
 	}
 }
 
+func TestContextOnlyAccountingPerimeterNeverEntersComparableRanking(t *testing.T) {
+	now := time.Date(2026, 7, 24, 12, 0, 0, 0, time.UTC)
+	item := request(t, now)
+	for index := range item.Operands {
+		item.Operands[index].AccountingPerimeter = "company_reported_property_equipment_and_intangible_assets"
+	}
+	item, _ = contracts.PopulateMetricComparabilityRequestHash(item)
+	receipt, err := Evaluate(item, now.Add(time.Minute), DefaultPolicy())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if receipt.Disposition != contracts.ComparisonNotComparable ||
+		!strings.Contains(ExplainRefusal(receipt), "ranking_eligible_accounting_perimeter") {
+		t.Fatalf("context-only perimeter entered ranking: %+v", receipt)
+	}
+}
+
 func request(t *testing.T, now time.Time) contracts.MetricComparabilityRequest {
 	t.Helper()
 	start := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)

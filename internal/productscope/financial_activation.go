@@ -21,22 +21,29 @@ const CompanyFinancialActivationSchemaV1 = "signalforge/technology20-financial-a
 const FinancialMetricFreshnessPolicy = "period-end-age-760d/v1"
 const FinancialConsolidationPolicy = "dimensionless-consolidated-facts-only/v1"
 const CapexPerimeterPolicy = "us-gaap-payments-to-acquire-ppe-only/v1"
+const ReviewedRevenueAliasPolicy = "company-specific-us-gaap-revenues/v1"
+const ProductiveAssetsContextPerimeter = "company_reported_property_equipment_and_intangible_assets"
 
 type CompanyFinancialActivation struct {
-	SchemaVersion        string                         `json:"schema_version"`
-	UniverseID           string                         `json:"universe_id"`
-	CompanyID            string                         `json:"company_id"`
-	AsOf                 time.Time                      `json:"as_of"`
-	CodeCommit           string                         `json:"code_commit"`
-	FreshnessPolicy      string                         `json:"freshness_policy"`
-	ConsolidationPolicy  string                         `json:"consolidation_policy"`
-	CapexPerimeterPolicy string                         `json:"capex_perimeter_policy"`
-	Receipts             []contracts.CalculationReceipt `json:"receipts"`
-	Abstentions          []contracts.TypedAbstention    `json:"abstentions"`
-	Excluded             map[string]int                 `json:"excluded_records"`
-	SourceConcepts       map[string][]string            `json:"source_concepts"`
-	SourceForms          map[string][]string            `json:"source_forms"`
-	ReportSHA256         string                         `json:"report_sha256"`
+	SchemaVersion             string                         `json:"schema_version"`
+	UniverseID                string                         `json:"universe_id"`
+	CompanyID                 string                         `json:"company_id"`
+	AsOf                      time.Time                      `json:"as_of"`
+	CodeCommit                string                         `json:"code_commit"`
+	AccountingRegistryVersion string                         `json:"accounting_registry_version"`
+	AccountingRegistrySHA256  string                         `json:"accounting_registry_sha256"`
+	FreshnessPolicy           string                         `json:"freshness_policy"`
+	ConsolidationPolicy       string                         `json:"consolidation_policy"`
+	CapexPerimeterPolicy      string                         `json:"capex_perimeter_policy"`
+	Receipts                  []contracts.CalculationReceipt `json:"receipts"`
+	Abstentions               []contracts.TypedAbstention    `json:"abstentions"`
+	Excluded                  map[string]int                 `json:"excluded_records"`
+	SourceConcepts            map[string][]string            `json:"source_concepts"`
+	SourceForms               map[string][]string            `json:"source_forms"`
+	ContextualReceipts        []contracts.CalculationReceipt `json:"contextual_receipts,omitempty"`
+	ContextualConcepts        map[string][]string            `json:"contextual_source_concepts,omitempty"`
+	ContextualPerimeters      map[string]string              `json:"contextual_accounting_perimeters,omitempty"`
+	ReportSHA256              string                         `json:"report_sha256"`
 }
 
 type operationSpec struct {
@@ -112,12 +119,16 @@ func BuildCompanyFinancialActivation(
 	report := CompanyFinancialActivation{
 		SchemaVersion: CompanyFinancialActivationSchemaV1, UniverseID: UniverseID,
 		CompanyID: companyID, AsOf: asOf.UTC(), CodeCommit: codeCommit,
-		FreshnessPolicy:      FinancialMetricFreshnessPolicy,
-		ConsolidationPolicy:  FinancialConsolidationPolicy,
-		CapexPerimeterPolicy: CapexPerimeterPolicy, Excluded: map[string]int{},
+		AccountingRegistryVersion: runtimeAccountingAuthorityRegistry.RegistryVersion,
+		AccountingRegistrySHA256:  runtimeAccountingAuthorityRegistry.RegistrySHA256,
+		FreshnessPolicy:           FinancialMetricFreshnessPolicy,
+		ConsolidationPolicy:       FinancialConsolidationPolicy,
+		CapexPerimeterPolicy:      CapexPerimeterPolicy, Excluded: map[string]int{},
 		SourceConcepts: map[string][]string{}, SourceForms: map[string][]string{},
+		ContextualConcepts: map[string][]string{}, ContextualPerimeters: map[string]string{},
 	}
 	eligible := make([]data.NormalizedMetric, 0, len(metrics))
+	contextualEligible := make([]data.NormalizedMetric, 0, len(metrics))
 	for _, metric := range metrics {
 		if metric.CompanyID != companyID {
 			continue
@@ -134,22 +145,29 @@ func BuildCompanyFinancialActivation(
 			report.Excluded["stale_metric_period"]++
 			continue
 		}
-		if metric.ComparabilityStatus != "standardized" {
-			report.Excluded["unreviewed_semantic_mapping"]++
-			continue
-		}
 		fact, authorized := periodicFactAuthority(metric, facts)
 		if !authorized {
 			report.Excluded["periodic_fact_authority_missing"]++
 			continue
 		}
+		if metric.Unit != "USD" || metric.Currency != "USD" {
+			report.Excluded["unit_or_currency_mismatch"]++
+			continue
+		}
+		if !financialSemanticAuthority(metric, fact) {
+			if contextOnlyFinancialAuthority(metric, fact) {
+				report.ContextualConcepts[metric.CanonicalMetric] = appendUniqueSorted(
+					report.ContextualConcepts[metric.CanonicalMetric], fact.Concept,
+				)
+				contextualEligible = append(contextualEligible, metric)
+				continue
+			}
+			report.Excluded["unreviewed_semantic_mapping"]++
+			continue
+		}
 		if metric.CanonicalMetric == "capital_expenditure" &&
 			fact.Concept != "PaymentsToAcquirePropertyPlantAndEquipment" {
 			report.Excluded["capex_perimeter_not_approved"]++
-			continue
-		}
-		if metric.Unit != "USD" || metric.Currency != "USD" {
-			report.Excluded["unit_or_currency_mismatch"]++
 			continue
 		}
 		report.SourceConcepts[metric.CanonicalMetric] = appendUniqueSorted(
@@ -159,6 +177,7 @@ func BuildCompanyFinancialActivation(
 			report.SourceForms[metric.CanonicalMetric], fact.FormType,
 		)
 		eligible = append(eligible, metric)
+		contextualEligible = append(contextualEligible, metric)
 	}
 	executor, err := engine.NewWithClock(codeCommit, func() time.Time { return asOf.UTC() })
 	if err != nil {
@@ -186,6 +205,28 @@ func BuildCompanyFinancialActivation(
 		}
 		report.Receipts = append(report.Receipts, *result.Receipt)
 	}
+	if len(report.ContextualConcepts["capital_expenditure"]) > 0 {
+		for _, spec := range companyOperationSpecs {
+			if spec.OperationID != "financial.capex_intensity" &&
+				spec.OperationID != "financial.free_cash_flow" {
+				continue
+			}
+			inputs, reason := selectOperationInputs(contextualEligible, spec)
+			if reason != "" {
+				continue
+			}
+			request, requestErr := operationRequest(runID+"-context", companyID, spec, inputs)
+			if requestErr != nil {
+				return CompanyFinancialActivation{}, requestErr
+			}
+			result := executor.Execute(request)
+			if result.Failure != nil {
+				continue
+			}
+			report.ContextualReceipts = append(report.ContextualReceipts, *result.Receipt)
+			report.ContextualPerimeters[spec.OperationID] = ProductiveAssetsContextPerimeter
+		}
+	}
 	for _, operationID := range unavailableCompanyOperations {
 		report.Abstentions = append(report.Abstentions, operationAbstention(
 			runID, companyID, operationID, "required_normalized_inputs_unavailable", asOf,
@@ -193,6 +234,9 @@ func BuildCompanyFinancialActivation(
 	}
 	sort.Slice(report.Receipts, func(i, j int) bool {
 		return report.Receipts[i].OperationID < report.Receipts[j].OperationID
+	})
+	sort.Slice(report.ContextualReceipts, func(i, j int) bool {
+		return report.ContextualReceipts[i].OperationID < report.ContextualReceipts[j].OperationID
 	})
 	sort.Slice(report.Abstentions, func(i, j int) bool {
 		return report.Abstentions[i].MetricIDs[0] < report.Abstentions[j].MetricIDs[0]
@@ -210,6 +254,10 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 		report.CompanyID == "" || report.AsOf.IsZero() || report.CodeCommit == "" || report.ReportSHA256 == "" {
 		return errors.New("company financial activation envelope is invalid")
 	}
+	if report.AccountingRegistryVersion != runtimeAccountingAuthorityRegistry.RegistryVersion ||
+		report.AccountingRegistrySHA256 != runtimeAccountingAuthorityRegistry.RegistrySHA256 {
+		return errors.New("company financial activation accounting registry is missing or mismatched")
+	}
 	if report.FreshnessPolicy != FinancialMetricFreshnessPolicy {
 		return errors.New("company financial activation freshness policy is invalid")
 	}
@@ -223,6 +271,21 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 				if concept != "PaymentsToAcquirePropertyPlantAndEquipment" {
 					return errors.New("company financial activation contains an unauthorized capex concept")
 				}
+			}
+		}
+		if metricID == "revenue" {
+			for _, concept := range concepts {
+				if concept != "RevenueFromContractWithCustomerExcludingAssessedTax" &&
+					!reviewedFinancialConceptAlias(report.CompanyID, metricID, concept) {
+					return errors.New("company financial activation contains an unauthorized revenue concept")
+				}
+			}
+		}
+	}
+	for metricID, concepts := range report.ContextualConcepts {
+		for _, concept := range concepts {
+			if !reviewedContextOnlyConcept(report.CompanyID, metricID, concept) {
+				return errors.New("company financial activation contains an unauthorized context-only concept")
 			}
 		}
 	}
@@ -252,6 +315,30 @@ func ValidateCompanyFinancialActivation(report CompanyFinancialActivation) error
 			return errors.New("company financial activation contains invalid abstention")
 		}
 		operations[abstention.MetricIDs[0]] = true
+	}
+	contextualOperations := map[string]bool{}
+	for _, receipt := range report.ContextualReceipts {
+		if err := contracts.ValidateCalculationReceipt(receipt); err != nil {
+			return err
+		}
+		if receipt.OperationID != "financial.capex_intensity" &&
+			receipt.OperationID != "financial.free_cash_flow" {
+			return errors.New("company financial activation contains an unauthorized contextual operation")
+		}
+		if contextualOperations[receipt.OperationID] || len(receipt.Scope.CompanyIDs) != 1 ||
+			receipt.Scope.CompanyIDs[0] != report.CompanyID ||
+			report.ContextualPerimeters[receipt.OperationID] != ProductiveAssetsContextPerimeter ||
+			!operations[receipt.OperationID] {
+			return errors.New("company financial activation contains invalid contextual authority")
+		}
+		contextualOperations[receipt.OperationID] = true
+	}
+	if len(report.ContextualPerimeters) != len(contextualOperations) {
+		return errors.New("company financial activation contextual perimeter coverage is invalid")
+	}
+	if len(contextualOperations) > 0 &&
+		!reviewedContextOnlyConcept(report.CompanyID, "capital_expenditure", "PaymentsToAcquireProductiveAssets") {
+		return errors.New("company financial activation contextual receipts lack reviewed source authority")
 	}
 	if len(operations) != len(companyOperationSpecs)+len(unavailableCompanyOperations) {
 		return errors.New("company financial activation has incomplete operation coverage")
@@ -416,6 +503,8 @@ func technologyCompany(companyID string) bool {
 }
 
 func periodicFactAuthority(metric data.NormalizedMetric, facts map[string]data.ReportedFact) (data.ReportedFact, bool) {
+	var selected data.ReportedFact
+	found := false
 	for _, factID := range metric.SourceFactIDs {
 		fact, exists := facts[factID]
 		if !exists || fact.CompanyID != metric.CompanyID || fact.Unit != metric.Unit ||
@@ -430,14 +519,57 @@ func periodicFactAuthority(metric data.NormalizedMetric, facts map[string]data.R
 		}
 		if metric.PeriodType == "instant" && fact.InstantDate != nil &&
 			fact.InstantDate.Equal(metric.PeriodEnd) {
-			return fact, true
+			if !found || fact.AvailableAt.After(selected.AvailableAt) ||
+				(fact.AvailableAt.Equal(selected.AvailableAt) && fact.FactID > selected.FactID) {
+				selected, found = fact, true
+			}
 		}
 		if metric.PeriodType == "duration" && fact.StartDate != nil && fact.EndDate != nil &&
 			fact.StartDate.Equal(metric.PeriodStart) && fact.EndDate.Equal(metric.PeriodEnd) {
-			return fact, true
+			if !found || fact.AvailableAt.After(selected.AvailableAt) ||
+				(fact.AvailableAt.Equal(selected.AvailableAt) && fact.FactID > selected.FactID) {
+				selected, found = fact, true
+			}
 		}
 	}
-	return data.ReportedFact{}, false
+	return selected, found
+}
+
+func financialSemanticAuthority(metric data.NormalizedMetric, fact data.ReportedFact) bool {
+	mapping := ResolveAccountingMapping(
+		runtimeAccountingAuthorityRegistry,
+		metric.CompanyID,
+		metric.CanonicalMetric,
+		fact.Taxonomy,
+		fact.Concept,
+	)
+	return accountingMappingNumericallyAuthoritative(mapping)
+}
+
+func reviewedFinancialConceptAlias(companyID, canonicalMetric, concept string) bool {
+	mapping := ResolveAccountingMapping(
+		runtimeAccountingAuthorityRegistry, companyID, canonicalMetric, "us-gaap", concept,
+	)
+	return accountingMappingNumericallyAuthoritative(mapping) &&
+		mapping.Disposition == AccountingReviewedAlias
+}
+
+func contextOnlyFinancialAuthority(metric data.NormalizedMetric, fact data.ReportedFact) bool {
+	mapping := ResolveAccountingMapping(
+		runtimeAccountingAuthorityRegistry,
+		metric.CompanyID,
+		metric.CanonicalMetric,
+		fact.Taxonomy,
+		fact.Concept,
+	)
+	return accountingMappingContextDisplayAuthorized(mapping)
+}
+
+func reviewedContextOnlyConcept(companyID, canonicalMetric, concept string) bool {
+	mapping := ResolveAccountingMapping(
+		runtimeAccountingAuthorityRegistry, companyID, canonicalMetric, "us-gaap", concept,
+	)
+	return accountingMappingContextDisplayAuthorized(mapping)
 }
 
 func uniqueStrings(values []string) []string {

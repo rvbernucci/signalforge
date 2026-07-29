@@ -1,0 +1,28 @@
+{
+  "schema_version": "signalforge/radeon-native-toolchain/v1",
+  "manifest_version": "radeon-native-2026-07-29",
+  "platform": "linux/amd64",
+  "go": {
+    "version": "1.25.12",
+    "filename": "go1.25.12.linux-amd64.tar.gz",
+    "url": "https://go.dev/dl/go1.25.12.linux-amd64.tar.gz",
+    "expected_size_bytes": 59856753,
+    "sha256": "234828b7a89e0e303d2556310ee549fbcf253d28de937bac3da13d6294262ac1",
+    "install_relative_path": "toolchains/go-1.25.12"
+  },
+  "llama_cpp": {
+    "repository": "https://github.com/ggml-org/llama.cpp.git",
+    "revision": "305ba519ab61cdff8044922cba2347826a04453f",
+    "source_relative_path": "toolchains/llama.cpp-305ba519ab61",
+    "server_relative_path": "toolchains/llama.cpp-305ba519ab61/build-rocm/bin/llama-server"
+  },
+  "application": {
+    "go_module": "github.com/rvbernucci/signalforge",
+    "command": "./cmd/signalforge-workspace",
+    "binary_relative_path": "bin/signalforge-workspace",
+    "package_lock_path": "web/package-lock.json",
+    "package_lock_sha256": "9adae0ab12dc3a00a8e559f5775adcccf99932a59d7a646598aedeb61d1c6f4a",
+    "go_sum_path": "go.sum",
+    "go_sum_sha256": "2e972aa3174195a2f0da487150a4d897f734ee18c72014b9da6d8ed3575a9c5f"
+  }
+}

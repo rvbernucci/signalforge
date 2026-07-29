@@ -952,16 +952,23 @@ func (server *Server) complete(record *runRecord, projection Projection, report 
 				Type: "retention", Status: status, Label: label, At: now, Attributes: attributes,
 			})
 		}
-		server.publish(record, StreamEvent{Type: "workspace", Status: "completed", Label: "Research case ready", At: now})
+		// Publish the terminal event and commit its read model under one lock. The event
+		// mutates the signed execution projection, so exposing "completed" any earlier
+		// would let a client observe a stale projection hash.
+		server.publishWithCommit(record,
+			StreamEvent{Type: "workspace", Status: "completed", Label: "Research case ready", At: now},
+			func() {
+				if record.execution != nil {
+					projection.ExecutionPlan = cloneExecutionPlanPointer(record.execution)
+				}
+				record.view.Status = "completed"
+				record.view.CompletedAt = &now
+				record.view.Result = &projection
+				record.view.Retention = retention
+				record.report = report
+			},
+		)
 		server.mu.Lock()
-		if record.execution != nil {
-			projection.ExecutionPlan = cloneExecutionPlanPointer(record.execution)
-		}
-		record.view.Status = "completed"
-		record.view.CompletedAt = &now
-		record.view.Result = &projection
-		record.view.Retention = retention
-		record.report = report
 		server.evictCompletedRunsLocked()
 		server.mu.Unlock()
 	})
@@ -975,17 +982,25 @@ func (server *Server) fail(record *runRecord, code string, retryable bool) {
 		if code == "context_cancelled" {
 			status = "cancelled"
 		}
-		server.publish(record, StreamEvent{Type: "workspace", Status: status, Label: failureLabel(code), At: now})
+		server.publishWithCommit(record,
+			StreamEvent{Type: "workspace", Status: status, Label: failureLabel(code), At: now},
+			func() {
+				record.view.Status = status
+				record.view.CompletedAt = &now
+				record.view.Failure = &PublicFailure{Code: code, Retryable: retryable}
+			},
+		)
 		server.mu.Lock()
-		record.view.Status = status
-		record.view.CompletedAt = &now
-		record.view.Failure = &PublicFailure{Code: code, Retryable: retryable}
 		server.evictCompletedRunsLocked()
 		server.mu.Unlock()
 	})
 }
 
 func (server *Server) publish(record *runRecord, event StreamEvent) bool {
+	return server.publishWithCommit(record, event, nil)
+}
+
+func (server *Server) publishWithCommit(record *runRecord, event StreamEvent, commit func()) bool {
 	server.mu.Lock()
 	event.Sequence = record.nextSequence + 1
 	event.RunID = record.view.RunID
@@ -1012,6 +1027,9 @@ func (server *Server) publish(record *runRecord, event StreamEvent) bool {
 	record.events = append(record.events, event)
 	if len(record.events) > maximumStoredRunEvents {
 		record.events = append([]StreamEvent(nil), record.events[len(record.events)-maximumStoredRunEvents:]...)
+	}
+	if commit != nil {
+		commit()
 	}
 	for subscriber := range record.subscribers {
 		select {

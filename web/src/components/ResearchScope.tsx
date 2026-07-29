@@ -26,6 +26,12 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
   const selectedEvaluation = selectedLane
     ? peers.lanes.find((lane) => lane.lane_id === selectedLane.lane_id)
     : undefined;
+  const receiptMetricIDs = new Set(
+    selectedEvaluation?.receipts.map((receipt) => receipt.operands[0]?.canonical_metric_id).filter(Boolean) ?? []
+  );
+  const hasContextOnlyMetrics = selectedEvaluation?.receipts.some(
+    (receipt) => receipt.disposition === "not_comparable"
+  ) ?? false;
   const visible = catalog.companies.filter((company) => {
     if (!deferredQuery) return true;
     return [company.display_name, company.primary_ticker, company.research_cluster, company.peer_group]
@@ -58,60 +64,76 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
     <section className="research-scope" aria-labelledby="research-scope-title">
       <header>
         <div>
-          <span className="eyebrow">Governed product universe</span>
-          <h2 id="research-scope-title">Twenty companies. No implied comparability.</h2>
+          <span className="eyebrow">Research scope</span>
+          <h2 id="research-scope-title">
+            {selected.length
+              ? selected.map((id) => companyByID.get(id)?.display_name ?? id).join(" and ")
+              : "Choose the business you want to understand."}
+          </h2>
         </div>
-        <span className="catalog-count">{catalog.companies.length} issuers · {catalog.peer_lanes.length} candidate peer lanes</span>
+        <span className="catalog-count">{selected.length ? `${selected.length} selected` : `${catalog.companies.length} available companies`}</span>
       </header>
-      <div className="scope-mode" aria-label="Research mode">
-        <button type="button" aria-pressed={mode === "standalone"} onClick={() => changeMode("standalone")}>Research one company</button>
-        <button type="button" aria-pressed={mode === "comparison"} onClick={() => changeMode("comparison")}>Compare companies</button>
-      </div>
-      <label className="company-search">
-        <span className="sr-only">Search company, ticker, or cluster</span>
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search company, ticker, cluster, or peer group" />
-      </label>
-      <div className="company-grid" role="list" aria-label="Technology 20 companies">
-        {visible.map((company) => {
-          const available = live && company.research_enabled;
-          const isSelected = selected.includes(company.company_id);
-          return (
-            <button
-              type="button"
-              role="listitem"
-              key={company.company_id}
-              className={isSelected ? "is-selected" : ""}
-              aria-pressed={isSelected}
-              onClick={() => choose(company)}
-              title={available ? `Research ${company.display_name}` : `Inspect bounded evidence for ${company.display_name}`}
-            >
-              <span><strong>{company.primary_ticker}</strong><small>{company.display_name}</small></span>
-              <span className={`activation-state state-${company.activation_state}`}>{company.activation_state.replaceAll("_", " ")}</span>
-            </button>
-          );
-        })}
-      </div>
-      {visible.length === 0 && <p className="catalog-empty">No governed company matches this search.</p>}
+      <details className="scope-chooser">
+        <summary>
+          <span>
+            <strong>{selected.length ? "Change company scope" : "Select a company or comparison pair"}</strong>
+            <small>Search the governed Technology 20 universe</small>
+          </span>
+          <em>Configure</em>
+        </summary>
+        <div className="scope-chooser-body">
+          <div className="scope-mode" aria-label="Research mode">
+            <button type="button" aria-pressed={mode === "standalone"} onClick={() => changeMode("standalone")}>Research one company</button>
+            <button type="button" aria-pressed={mode === "comparison"} onClick={() => changeMode("comparison")}>Compare companies</button>
+          </div>
+          <label className="company-search">
+            <span className="sr-only">Search company, ticker, or cluster</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search company, ticker, cluster, or peer group" />
+          </label>
+          <div className="company-grid" role="list" aria-label="Technology 20 companies">
+            {visible.map((company) => {
+              const available = live && company.research_enabled;
+              const isSelected = selected.includes(company.company_id);
+              return (
+                <button
+                  type="button"
+                  role="listitem"
+                  key={company.company_id}
+                  className={isSelected ? "is-selected" : ""}
+                  aria-pressed={isSelected}
+                  onClick={() => choose(company)}
+                  title={available ? `Research ${company.display_name}` : `Inspect bounded evidence for ${company.display_name}`}
+                >
+                  <span><strong>{company.primary_ticker}</strong><small>{company.display_name}</small></span>
+                  <span className={`activation-state state-${company.activation_state}`}>{company.activation_state.replaceAll("_", " ")}</span>
+                </button>
+              );
+            })}
+          </div>
+          {visible.length === 0 && <p className="catalog-empty">No governed company matches this search.</p>}
+          {mode === "comparison" && (
+            <div className="peer-lanes">
+              <span className="eyebrow">Candidate peer lanes</span>
+              {catalog.peer_lanes.map((lane) => {
+                const evaluation = peers.lanes.find((item) => item.lane_id === lane.lane_id);
+                return (
+                <button type="button" key={lane.lane_id} disabled={!lane.enabled}>
+                  <span>{lane.company_ids.map((id) => companyByID.get(id)?.primary_ticker ?? id).join(" / ")}</span>
+                  <small>{evaluation?.releasable_metric_ids.length ?? 0} metric receipts · {evaluation?.withheld_metric_ids.length ?? 0} withheld</small>
+                  <ArrowIcon />
+                </button>
+              )})}
+            </div>
+          )}
+          <p className="catalog-boundary"><ShieldIcon /><span><strong>{live ? "Activation is enforced at runtime." : "Catalog preview in fixture mode."}</strong>{catalog.claim_boundary}</span></p>
+        </div>
+      </details>
       {mode === "standalone" && selected.length === 1 && financialByID.get(selected[0]) && (
         <CompanyAuthority
           company={financialByID.get(selected[0])!}
           profile={companyByID.get(selected[0])!}
           scenario={scenario}
         />
-      )}
-      {mode === "comparison" && (
-        <div className="peer-lanes">
-          <span className="eyebrow">Candidate peer lanes</span>
-          {catalog.peer_lanes.map((lane) => {
-            const evaluation = peers.lanes.find((item) => item.lane_id === lane.lane_id);
-            return (
-            <button type="button" key={lane.lane_id} disabled={!lane.enabled}>
-              <span>{lane.company_ids.map((id) => companyByID.get(id)?.primary_ticker ?? id).join(" / ")}</span>
-              <small>{evaluation?.releasable_metric_ids.length ?? 0} metric receipts · {evaluation?.withheld_metric_ids.length ?? 0} withheld</small>
-              <ArrowIcon />
-            </button>
-          )})}
-        </div>
       )}
       {mode === "comparison" && selected.length === 2 && (
         <div className={`comparison-decision ${selectedLane?.enabled ? "is-enabled" : "is-guarded"}`} role="status">
@@ -127,15 +149,29 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
               {selectedEvaluation && (
                 <div className="comparison-metrics" role="region" aria-label="Metric-level comparison authority">
                   {selectedEvaluation.receipts.map((receipt) => (
-                    <article key={receipt.receipt_sha256}>
-                      <span>{labelOperation(receipt.operands[0]?.canonical_metric_id ?? "unknown metric")}</span>
-                      <strong>{labelReason(receipt.disposition)}</strong>
-                      {receipt.required_caveat_ids?.length
-                        ? <small>{receipt.required_caveat_ids.map(labelReason).join(" · ")}</small>
-                        : <small>No additional metric caveat recorded.</small>}
+                    <article className={receipt.disposition === "not_comparable" ? "is-context-only" : ""} key={receipt.receipt_sha256}>
+                      <span>{receipt.disposition === "not_comparable"
+                        ? contextualMetricLabel(receipt.operands[0]?.canonical_metric_id ?? "unknown metric")
+                        : labelOperation(receipt.operands[0]?.canonical_metric_id ?? "unknown metric")}</span>
+                      <strong>{receipt.disposition === "not_comparable" ? "Context only*" : labelReason(receipt.disposition)}</strong>
+                      {receipt.disposition === "not_comparable" && (
+                        <div className="context-operands">
+                          {receipt.operands.map((operand) => (
+                            <span key={`${receipt.receipt_sha256}-${operand.company_id}`}>
+                              <b>{operand.security_id?.split(":").at(-1) ?? companyByID.get(operand.company_id)?.primary_ticker ?? operand.company_id}</b>
+                              <em>{renderPeerOperand(operand)}</em>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {receipt.reason_codes?.length
+                        ? <small>{receipt.reason_codes.map(labelReason).join(" · ")}</small>
+                        : receipt.required_caveat_ids?.length
+                          ? <small>{receipt.required_caveat_ids.map(labelReason).join(" · ")}</small>
+                          : <small>No additional metric caveat recorded.</small>}
                     </article>
                   ))}
-                  {selectedEvaluation.withheld_metric_ids.map((metricID) => (
+                  {selectedEvaluation.withheld_metric_ids.filter((metricID) => !receiptMetricIDs.has(metricID)).map((metricID) => (
                     <article className="is-withheld" key={metricID}>
                       <span>{labelOperation(metricID)}</span>
                       <strong>Withheld</strong>
@@ -143,6 +179,11 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
                     </article>
                   ))}
                 </div>
+              )}
+              {hasContextOnlyMetrics && (
+                <p className="context-footnote">
+                  * Values are deterministic company-reported proxies, not directly comparable metrics. Different accounting perimeters are shown explicitly; no ranking or relative conclusion is released.
+                </p>
               )}
               <small>{selectedLane.reason_codes.map(labelReason).join(" · ")}</small>
             </div>
@@ -155,7 +196,6 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
           )}
         </div>
       )}
-      <p className="catalog-boundary"><ShieldIcon /><span><strong>{live ? "Activation is enforced at runtime." : "Catalog preview in fixture mode."}</strong>{catalog.claim_boundary}</span></p>
     </section>
   );
 }
@@ -220,6 +260,12 @@ function labelOperation(value: string) {
   return value.split(".").at(-1)?.replaceAll("_", " ") ?? value;
 }
 
+function contextualMetricLabel(value: string) {
+  if (value === "financial.capex_intensity") return "reported reinvestment intensity";
+  if (value === "financial.free_cash_flow") return "residual cash proxy";
+  return labelOperation(value);
+}
+
 function labelReason(value: string) {
   const words = value.replaceAll("_", " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
@@ -235,6 +281,26 @@ function renderOutput(result: FinancialResult) {
     return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1, style: "currency", currency: output.currency ?? "USD" }).format(numeric);
   }
   return output.value;
+}
+
+function renderPeerOperand(operand: {
+  value?: string;
+  unit?: string;
+  currency?: string;
+}) {
+  if (!operand.value) return "Unavailable";
+  const numeric = Number(operand.value);
+  if (!Number.isFinite(numeric)) return operand.value;
+  if (operand.unit === "ratio") return `${(numeric * 100).toFixed(1)}%`;
+  if (operand.unit === "currency") {
+    return new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+      style: "currency",
+      currency: operand.currency ?? "USD"
+    }).format(numeric);
+  }
+  return operand.value;
 }
 
 function latestValue(values: string[]) {

@@ -45,13 +45,18 @@ func BuildPeerEvaluationSuite(
 		return PeerEvaluationSuite{}, errors.New("peer evaluation cannot precede catalog authority")
 	}
 	reportByCompany := map[string]map[string]contracts.CalculationReceipt{}
+	contextByCompany := map[string]map[string]contracts.CalculationReceipt{}
 	for companyID, report := range reports {
 		if err := ValidateCompanyFinancialActivation(report); err != nil {
 			return PeerEvaluationSuite{}, err
 		}
 		reportByCompany[companyID] = map[string]contracts.CalculationReceipt{}
+		contextByCompany[companyID] = map[string]contracts.CalculationReceipt{}
 		for _, receipt := range report.Receipts {
 			reportByCompany[companyID][receipt.OperationID] = receipt
+		}
+		for _, receipt := range report.ContextualReceipts {
+			contextByCompany[companyID][receipt.OperationID] = receipt
 		}
 	}
 	companyByID := map[string]PublicCompany{}
@@ -78,6 +83,15 @@ func BuildPeerEvaluationSuite(
 		for _, metricID := range lane.AllowedMetricIDs {
 			left, leftFound := reportByCompany[lane.CompanyIDs[0]][metricID]
 			right, rightFound := reportByCompany[lane.CompanyIDs[1]][metricID]
+			leftContext, rightContext := false, false
+			if !leftFound {
+				left, leftFound = contextByCompany[lane.CompanyIDs[0]][metricID]
+				leftContext = leftFound
+			}
+			if !rightFound {
+				right, rightFound = contextByCompany[lane.CompanyIDs[1]][metricID]
+				rightContext = rightFound
+			}
 			if !leftFound || !rightFound {
 				result.Abstentions = append(result.Abstentions, comparisonAbstention(
 					lane, metricID, generatedAt, "comparison_operand_unavailable",
@@ -91,8 +105,8 @@ func BuildPeerEvaluationSuite(
 				RunID:         "peer-evaluation-" + lane.LaneID, LaneID: lane.LaneID,
 				AsOf: catalog.AsOf, ReviewerPolicyVersion: comparability.AnnualPolicyVersionV1,
 				Operands: []contracts.MetricComparisonOperand{
-					financialOperand(companyByID[lane.CompanyIDs[0]], leftReport, left),
-					financialOperand(companyByID[lane.CompanyIDs[1]], rightReport, right),
+					financialOperand(companyByID[lane.CompanyIDs[0]], leftReport, left, leftContext),
+					financialOperand(companyByID[lane.CompanyIDs[1]], rightReport, right, rightContext),
 				},
 			})
 			if err != nil {
@@ -121,28 +135,76 @@ func financialOperand(
 	company PublicCompany,
 	report CompanyFinancialActivation,
 	receipt contracts.CalculationReceipt,
+	contextOnly bool,
 ) contracts.MetricComparisonOperand {
 	currentPeriod := receipt.Scope.Periods[len(receipt.Scope.Periods)-1]
 	start, end := parseReceiptPeriod(currentPeriod)
 	output := receipt.Outputs[0].Quantity
-	concepts := operationConcepts(report, receipt)
+	concepts := operationConcepts(report, receipt, contextOnly)
+	accountingPerimeter := "consolidated_periodic_filing"
+	if contextOnly {
+		accountingPerimeter = report.ContextualPerimeters[receipt.OperationID]
+	}
 	return contracts.MetricComparisonOperand{
 		CompanyID: company.CompanyID, SecurityID: "ticker:" + company.PrimaryTicker,
 		SourceObservationIDs: append([]string(nil), receipt.EvidenceRefs...),
 		SourceHashes:         sourceHashes(receipt.EvidenceRefs),
 		AvailableAt:          receipt.SourceAsOf, RetrievedAt: report.AsOf,
 		CanonicalMetricID: receipt.OperationID, MetricVersion: receipt.FormulaVersion,
-		TaxonomyConcept: strings.Join(concepts, "+"),
-		Value:           output.Value, Unit: output.Unit, Currency: output.Currency, Scale: output.Scale,
+		TaxonomyConcept:    strings.Join(concepts, "+"),
+		ExtensionMappingID: reviewedOperationMappingID(report, receipt, concepts),
+		Value:              output.Value, Unit: output.Unit, Currency: output.Currency, Scale: output.Scale,
 		SignPolicy: "formula_defined", DimensionalIdentity: "consolidated",
 		PeriodType: periodType(start, end), FiscalStart: &start, FiscalEnd: end,
-		FilingDate: receipt.SourceAsOf, AccountingPerimeter: "consolidated_periodic_filing",
+		FilingDate: receipt.SourceAsOf, AccountingPerimeter: accountingPerimeter,
 		DefinitionID:     receipt.OperationID + "/" + receipt.FormulaVersion,
 		RestatementState: "active_amendment_chain", SupersessionState: "active",
 	}
 }
 
-func operationConcepts(report CompanyFinancialActivation, receipt contracts.CalculationReceipt) []string {
+func reviewedOperationMappingID(
+	report CompanyFinancialActivation,
+	receipt contracts.CalculationReceipt,
+	operationSourceConcepts []string,
+) string {
+	usesRevenue := false
+	for _, spec := range companyOperationSpecs {
+		if spec.OperationID != receipt.OperationID {
+			continue
+		}
+		for _, canonicalMetric := range spec.Inputs {
+			if canonicalMetric == "revenue" {
+				usesRevenue = true
+				break
+			}
+		}
+	}
+	if !usesRevenue {
+		return ""
+	}
+	revenueConcepts := report.SourceConcepts["revenue"]
+	if len(revenueConcepts) != 1 {
+		return ""
+	}
+	if revenueConcepts[0] != "RevenueFromContractWithCustomerExcludingAssessedTax" &&
+		!reviewedFinancialConceptAlias(report.CompanyID, "revenue", revenueConcepts[0]) {
+		return ""
+	}
+	concepts := append([]string(nil), operationSourceConcepts...)
+	for index, concept := range concepts {
+		if concept == revenueConcepts[0] {
+			concepts[index] = "RevenueFromContractWithCustomerExcludingAssessedTax"
+		}
+	}
+	sort.Strings(concepts)
+	return ReviewedRevenueAliasPolicy + ":" + strings.Join(concepts, "+")
+}
+
+func operationConcepts(
+	report CompanyFinancialActivation,
+	receipt contracts.CalculationReceipt,
+	contextOnly bool,
+) []string {
 	concepts := []string{}
 	for _, input := range receipt.NormalizedInputs {
 		for _, spec := range companyOperationSpecs {
@@ -150,7 +212,11 @@ func operationConcepts(report CompanyFinancialActivation, receipt contracts.Calc
 				continue
 			}
 			canonical := spec.Inputs[input.InputID]
-			concepts = append(concepts, report.SourceConcepts[canonical]...)
+			if contextOnly && len(report.ContextualConcepts[canonical]) > 0 {
+				concepts = append(concepts, report.ContextualConcepts[canonical]...)
+			} else {
+				concepts = append(concepts, report.SourceConcepts[canonical]...)
+			}
 		}
 	}
 	sort.Strings(concepts)

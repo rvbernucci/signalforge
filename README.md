@@ -86,6 +86,21 @@ Both ports bind to loopback. Fixture inference requires no GPU, model, credentia
 See [Radeon Mission Control](docs/radeon-mission-control.md) for the four dashboards, the protected
 Inference Inspector, privacy boundaries, and exact validation commands.
 
+For a fresh AMD OneClick workspace with this public repository on `main` and persistent
+`/workspace` storage, the canonical Radeon path is:
+
+```bash
+make radeon-bootstrap BACKEND=auto ACCEPT_GEMMA_LICENSE=yes
+make radeon-up BACKEND=auto
+```
+
+`auto` uses digest-pinned Docker Compose services when Docker is healthy and otherwise uses the
+native ROCm toolchain already present in the AMD image. Bootstrap installs no host packages,
+copies no Mac files, and writes no model weight to Git. It provisions pinned toolchains under
+persistent storage, downloads the separately licensed Gemma artifact only after explicit
+acceptance, verifies its byte size and SHA-256 before publication, and reuses the verified cache on
+later starts. See [Zero-Touch Radeon Appliance](docs/radeon-zero-touch-appliance.md).
+
 ## Technology 20 vNext Evaluation Lane
 
 The current `main` branch contains a guarded expansion from the immutable Microsoft/NVIDIA
@@ -97,6 +112,12 @@ The vNext lane currently provides:
 
 - a governed issuer and share-class catalog for twenty companies;
 - SEC-first point-in-time data authority and deterministic financial-activation reports;
+- one hash-bound accounting-authority packet per issuer, covering 160 canonical
+  company-operation inputs with explicit concept, period, unit, currency, dimension, amendment,
+  freshness, and review gates;
+- fail-closed accounting dispositions: canonical mappings may become calculation authority, while
+  aliases, issuer-specific concepts, context-only observations, rejected mappings, and unavailable
+  inputs remain non-authoritative until their documented review is accepted;
 - 80 baseline standalone development journeys plus a separate 60-case public augmentation for
   economics, valuation-readiness, and thesis monitoring; sealed evaluation remains isolated;
 - five bounded peer lanes with metric-level `comparable`,
@@ -186,17 +207,19 @@ are not universal model-quality claims.
   invented references, contradictory review, and partial-specialist degradation;
 - governed follow-up envelopes that preserve parent identity, point-in-time scope, entities,
   comparison mode, and evidence/receipt lineage while requiring fresh authorization in every run;
-- a responsive React/TypeScript research workspace with a hash-bound, expandable execution plan,
-  eight stable parent phases, resumable privacy-safe SSE progress, scenario controls, case-aware
-  follow-ups, distinct evidence and calculation surfaces, explicit degraded states, and a Go
-  projection that excludes prompts, responses, credentials, and private reasoning;
-- a correlated Intelligence Inspector for model identity, prompt hashes, token use, RAG lineage,
-  deterministic engine receipts, review, and release, with a disabled-by-default, token-protected,
-  expiring local vault for sanitized model input/output;
+- a responsive React/TypeScript Research View that keeps the answer, comparison, evidence, and
+  dialogue surfaces primary, with only a compact execution status visible by default;
+- an on-demand Audit View that expands the signed plan, role and route decisions, authorized
+  sources, deterministic calculations, lineage, model/runtime identity, timing, and Mission
+  Control links without exposing prompts, response bodies, credentials, or private reasoning;
+- stable judge navigation through `?view=audit&audience=judge`, backed by the same signed
+  projection as the user-facing answer rather than a second execution authority;
 - privacy-safe OpenTelemetry, bounded Prometheus metrics, structured JSONL events, a resilient
   `amd-smi`/`rocm-smi` exporter, and four provisioned Grafana Mission Control dashboards;
-- reproducible `linux/amd64` fixture, ROCm llama.cpp, local-only, championship, and observability
-  container surfaces with file-mounted secrets and no startup model download;
+- reproducible `linux/amd64` fixture, local-only, championship, and observability container
+  surfaces, plus an automatic native ROCm fallback for AMD OneClick workspaces without Docker;
+- a separate, resumable and hash-verified model-hydration phase, persistent cache, file-mounted
+  secrets, and startup refusal against partial or mismatched weights;
 - a deterministic Context Compiler that preserves conflicts, applies an explicit finding-statement
   budget, and emits governed evidence context;
   <!-- evidence-claim:context-compiler -->
@@ -391,12 +414,17 @@ terminal log. It separates the readable investment analysis from source evidence
 calculation receipts, assumptions, limitations, and system caveats. Streamed events expose bounded
 orchestration status without exposing prompts, response bodies, token details, or chain-of-thought.
 
-Every accepted research plan is projected into an independently expandable live checklist inside
-the conversation. The card shows the bounded objective, role authority, dependency graph, execution
-wave, route reason, attempts, duration, release checks, and safe artifact IDs for every step. Active
-steps expand automatically; completed steps remain available for inspection. Proof and lineage
-actions reuse the existing evidence, calculation, and Intelligence Inspector surfaces rather than
-creating a second execution authority.
+The default Research View keeps the conversation, readable answer, comparison, sources, and
+calculation findings in the foreground. A compact status surface reports progress without turning
+the product into an operations console. The user or judge can select **How SignalForge reached this
+answer** to open the Audit View; `?view=audit&audience=judge` provides a stable review entry point.
+
+Every accepted research plan is projected into that independently expandable audit workspace. It
+shows the bounded objective, role authority, dependency graph, execution wave, route reason,
+attempts, duration, release checks, authorized sources, deterministic receipts, model/runtime
+identity, and safe artifact IDs. Active steps expand automatically; completed steps remain
+available for inspection. Proof, lineage, and Mission Control actions reuse the existing signed
+projection rather than creating a second execution authority.
 
 The dashboard is observational only. A three-journey ablation compares execution with the event
 projection disabled and enabled, proving identical model-adapter call counts, canonical request
@@ -621,30 +649,33 @@ go run ./cmd/signalforge-calculate \
 
 ### Reproduce The Selected Radeon Runtime
 
-On the AMD ROCm 7.2.1 `gfx1100` workspace, install the current `hf` CLI if needed, authenticate
-with a read token through `HF_TOKEN`, and keep model artifacts outside Git:
+On a fresh AMD ROCm 7.2.1 `gfx1100` workspace, use the public repository and persistent
+`/workspace` storage. No Mac-to-Radeon copy, preinstalled Go toolchain, Docker installation, or
+manual model command is required:
 
 ```bash
-scripts/build_llama_rocm.sh
-
-hf download google/gemma-4-26B-A4B-it-qat-q4_0-gguf \
-  --revision d1c082be9cf3c8a514acf63b8761f4b41935842e \
-  --include gemma-4-26B_q4_0-it.gguf \
-  --local-dir models/gemma4-26b-q4
-
-SIGNALFORGE_VERIFY_MODEL_HASH=1 scripts/serve_llama_rocm.sh
+make radeon-bootstrap BACKEND=auto ACCEPT_GEMMA_LICENSE=yes
+make radeon-up BACKEND=auto
 ```
 
-The equivalent license-gated, hash-verifying staging command is:
+When the verified model is absent, bootstrap requests the Hugging Face read token through a hidden
+terminal prompt and stores it only in the ignored `.secrets/` boundary. The model, Go toolchain,
+`llama.cpp` source revision, application dependencies, and generated runtime state are pinned or
+hash-verified before use. `BACKEND=auto` prefers healthy Compose and otherwise selects the native
+OneClick path without installing duplicate host tooling.
 
 ```bash
-SIGNALFORGE_ACCEPT_GEMMA_LICENSE=yes \
-HF_TOKEN="$HF_TOKEN" \
-scripts/stage_gemma_model.sh models/gemma4-26b-q4
+make radeon-status BACKEND=auto
+make radeon-logs BACKEND=auto
 ```
 
-The server binds to `127.0.0.1:8000` by default and exposes an OpenAI-compatible API. In another
-shell, reproduce the contract suite and summary:
+The model server binds to loopback and exposes an OpenAI-compatible API; the application is
+published at `http://127.0.0.1:8080`. Native PID receipts, redacted logs, build receipts, model
+readiness, and application state remain under `/workspace/signalforge-runtime`. The complete
+backend, profile, cleanup, network, and interruption contracts are in
+[Zero-Touch Radeon Appliance](docs/radeon-zero-touch-appliance.md).
+
+After the runtime is ready, reproduce the contract suite and summary:
 
 ```bash
 go run ./cmd/signalforge-benchmark \
