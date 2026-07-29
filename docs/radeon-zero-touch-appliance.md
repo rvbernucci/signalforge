@@ -58,6 +58,11 @@ and `/v1/models`, and start SignalForge. It prints:
 
 The default workspace is <http://127.0.0.1:8080>.
 
+The persistent root defaults to `/workspace/signalforge-runtime`. When a separate PVC mount is
+preferred, export `SIGNALFORGE_PERSIST_ROOT` before both commands. Bootstrap, preflight, startup,
+status, shutdown, and reset then resolve the same path; no command silently falls back to another
+cache.
+
 ## Automatic Execution Backend
 
 `SIGNALFORGE_EXECUTION_BACKEND=auto` is the default.

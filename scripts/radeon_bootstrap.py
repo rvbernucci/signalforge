@@ -57,6 +57,17 @@ def prompt_secret(label: str) -> str:
     return first
 
 
+def resolve_persist_root(explicit: Path | None) -> Path:
+    if explicit is not None:
+        return explicit.expanduser()
+    configured = os.environ.get("SIGNALFORGE_PERSIST_ROOT", "").strip()
+    if configured:
+        return Path(configured).expanduser()
+    if Path("/workspace").is_dir():
+        return Path("/workspace/signalforge-runtime")
+    return ROOT / ".signalforge" / "radeon"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", choices=("fixture", "radeon-local", "championship"), default="radeon-local")
@@ -71,11 +82,7 @@ def main() -> int:
     parser.add_argument("--skip-network-check", action="store_true")
     args = parser.parse_args()
 
-    persist_root = args.persist_root or (
-        Path("/workspace/signalforge-runtime")
-        if Path("/workspace").is_dir()
-        else ROOT / ".signalforge" / "radeon"
-    )
+    persist_root = resolve_persist_root(args.persist_root)
     secrets = ROOT / ".secrets"
     ensure_private_directory(secrets)
     for directory in (

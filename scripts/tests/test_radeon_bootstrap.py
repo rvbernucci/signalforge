@@ -4,6 +4,7 @@ import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -44,6 +45,21 @@ class RadeonBootstrapTests(unittest.TestCase):
             MODULE.ensure_placeholder(path, 0o600)
             self.assertEqual(path.read_text(), "preserve-me")
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+
+    def test_persist_root_prefers_explicit_then_environment(self) -> None:
+        with mock.patch.dict(
+            "os.environ",
+            {"SIGNALFORGE_PERSIST_ROOT": "/tmp/signalforge-from-environment"},
+            clear=False,
+        ):
+            self.assertEqual(
+                MODULE.resolve_persist_root(None),
+                Path("/tmp/signalforge-from-environment"),
+            )
+            self.assertEqual(
+                MODULE.resolve_persist_root(Path("~/signalforge-explicit")),
+                Path("~/signalforge-explicit").expanduser(),
+            )
 
 
 if __name__ == "__main__":
