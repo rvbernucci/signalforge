@@ -70,8 +70,9 @@ The default workspace is <http://127.0.0.1:8080>.
   `305ba519ab61cdff8044922cba2347826a04453f`, built by the OneClick CMake/Ninja/`hipcc`
   toolchain for `gfx1100`.
 - Native frontend construction uses `npm ci` and the pinned package lock. Backend construction
-  uses the pinned Go toolchain, `go.sum`, `GOTOOLCHAIN=local`, persistent module/build caches, and
-  a clean Git commit identity.
+  uses the pinned Go toolchain, `go.sum`, `GOTOOLCHAIN=local`, the Radeon-region Go proxy and
+  checksum mirror declared in the native manifest, persistent module/build caches, and a clean Git
+  commit identity.
 - Native processes bind to loopback. PID receipts, logs, build receipts, health state, and
   readiness live under `/workspace/signalforge-runtime/state/native` with private permissions.
 - Championship passes only `.secrets/radeon-model-api-key` to the application through
@@ -163,7 +164,8 @@ manifest, Compose default, environment example, and static appliance audit toget
 
 The cache supports:
 
-- `huggingface`: resumable, retry-bounded HTTP download using a file-mounted read token;
+- `huggingface`: resumable, retry-bounded HTTP download through the Radeon-region Hugging Face
+  mirror using a file-mounted read token, while preserving the canonical Hugging Face locator;
 - `existing`: import of an independently acquired exact file, still subject to complete size and
   hash verification; and
 - `oci`: deliberately disabled until a separate rights decision permits model redistribution.
@@ -202,9 +204,11 @@ without the exact confirmation phrase.
 
 ## Network Boundary
 
-First-run pulls are declared in `deploy/radeon/appliance-manifest.json`. They include GHCR,
-Docker Hub authentication and registry endpoints, Hugging Face, and the provider's signed model
-object hosts. The preflight performs TLS connectivity checks without credentials.
+First-run pulls are declared by backend in `deploy/radeon/appliance-manifest.json`. Compose checks
+only its OCI registries. Native checks the AMD-image Git proxy, Google Go distribution, the
+Radeon-region Go module/checksum mirrors, and npm. The model destination is checked only when a
+local model is required and the verified cache is absent. The preflight performs TLS connectivity
+checks without credentials.
 
 After hydration:
 

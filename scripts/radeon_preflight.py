@@ -235,6 +235,22 @@ def network_facts(destinations: list[str], timeout: float) -> list[dict[str, Any
     return results
 
 
+def required_network_destinations(
+    manifest: dict[str, Any],
+    *,
+    profile: str,
+    backend: str | None,
+    model_cache_ready: bool,
+) -> list[str]:
+    configured = manifest["first_run_network_destinations"]
+    if isinstance(configured, list):
+        return configured
+    selected = list(configured.get(backend or "", []))
+    if profile in {"radeon-local", "championship"} and not model_cache_ready:
+        selected.extend(configured.get("model", []))
+    return sorted(set(selected))
+
+
 def collect_facts(
     manifest: dict[str, Any],
     model_manifest: dict[str, Any],
@@ -242,6 +258,8 @@ def collect_facts(
     secrets_dir: Path,
     check_network: bool,
     network_timeout: float,
+    profile: str,
+    requested_backend: str,
 ) -> dict[str, Any]:
     if persist_root.exists() and (not persist_root.is_dir() or persist_root.is_symlink()):
         disk_path = persist_root.parent
@@ -251,6 +269,17 @@ def collect_facts(
     disk = shutil.disk_usage(disk_path)
     parent_mode = stat.S_IMODE(secrets_dir.stat().st_mode) if secrets_dir.is_dir() else None
     execution_backends = radeon_backend.backend_facts(manifest)
+    try:
+        selected_backend = radeon_backend.resolve_backend(requested_backend, execution_backends)
+    except radeon_backend.BackendError:
+        selected_backend = None
+    cache_ready = model_ready(persist_root / "models", model_manifest)
+    destinations = required_network_destinations(
+        manifest,
+        profile=profile,
+        backend=selected_backend,
+        model_cache_ready=cache_ready,
+    )
     return {
         "platform": {
             "system": platform.system().lower(),
@@ -272,7 +301,7 @@ def collect_facts(
             "exists": persist_root.is_dir(),
             "is_symlink": persist_root.is_symlink(),
         },
-        "model_cache_ready": model_ready(persist_root / "models", model_manifest),
+        "model_cache_ready": cache_ready,
         "secrets": {
             "directory": {
                 "path": str(secrets_dir),
@@ -284,7 +313,7 @@ def collect_facts(
             "grafana_password": secret_metadata(secrets_dir / "grafana-admin-password"),
         },
         "network": (
-            network_facts(manifest["first_run_network_destinations"], network_timeout)
+            network_facts(destinations, network_timeout)
             if check_network
             else []
         ),
@@ -463,13 +492,18 @@ def evaluate(
                 )
 
     secret_directory = facts["secrets"]["directory"]
+    secret_directory_safe = (
+        not secret_directory["exists"]
+        or (
+            secret_directory["mode"] is not None
+            and secret_directory["mode"] & 0o077 == 0
+        )
+    )
     checks.append(
         check(
             "secret-directory",
-            secret_directory["exists"]
-            and secret_directory["mode"] is not None
-            and secret_directory["mode"] & 0o077 == 0,
-            "secret directory exists with no group/world access",
+            secret_directory_safe,
+            "secret directory is absent or has no group/world access",
         )
     )
     for name in ("hf_token", "radeon_api_key", "grafana_password"):
@@ -580,6 +614,8 @@ def main() -> int:
         args.secrets_dir,
         args.check_network,
         args.network_timeout,
+        args.profile,
+        args.backend,
     )
     checks = evaluate(
         facts,

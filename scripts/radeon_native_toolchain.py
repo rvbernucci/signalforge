@@ -225,7 +225,11 @@ def verify_source_locks(manifest: dict[str, Any]) -> None:
             raise NativeToolchainError(f"source lock does not match native manifest: {path}")
 
 
-def native_build_environment(go_binary: Path, persist_root: Path) -> dict[str, str]:
+def native_build_environment(
+    go_binary: Path,
+    persist_root: Path,
+    manifest: dict[str, Any],
+) -> dict[str, str]:
     environment = {**os.environ}
     go_root = go_binary.parents[1]
     environment.update(
@@ -235,6 +239,8 @@ def native_build_environment(go_binary: Path, persist_root: Path) -> dict[str, s
             "GOMODCACHE": str(persist_root / "cache/go-mod"),
             "GOCACHE": str(persist_root / "cache/go-build"),
             "npm_config_cache": str(persist_root / "cache/npm"),
+            "GOPROXY": str(manifest["application"]["go_proxy"]),
+            "GOSUMDB": str(manifest["application"]["go_sumdb"]),
             "PATH": f"{go_root / 'bin'}:{environment.get('PATH', '')}",
             "LC_ALL": "C",
         }
@@ -297,7 +303,7 @@ def build_application(
         ):
             return binary, receipt
 
-    environment = native_build_environment(go_binary, persist_root)
+    environment = native_build_environment(go_binary, persist_root, manifest)
     logs = persist_root / "state/native/logs"
     ensure_directory(logs)
     run_logged(

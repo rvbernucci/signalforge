@@ -117,7 +117,11 @@ class RadeonPreflightTests(unittest.TestCase):
         self.manifest = json.loads(
             (ROOT / "deploy/radeon/appliance-manifest.json").read_text(encoding="utf-8")
         )
-        self.manifest["first_run_network_destinations"] = ["ghcr.io:443"]
+        self.manifest["first_run_network_destinations"] = {
+            "compose": ["ghcr.io:443"],
+            "native": ["gh-proxy.org:443"],
+            "model": ["hf-mirror.com:443"],
+        }
 
     def test_local_profile_passes_on_supported_synthetic_radeon_host(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -194,6 +198,45 @@ class RadeonPreflightTests(unittest.TestCase):
         failed = {item["id"] for item in checks if item["status"] == "failed"}
         self.assertNotIn("hf-token", failed)
         self.assertNotIn("license", failed)
+
+    def test_fixture_allows_secret_directory_to_be_absent(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            facts = base_facts(Path(directory))
+            facts["secrets"]["directory"] = {
+                "path": str(Path(directory) / ".secrets"),
+                "exists": False,
+                "mode": None,
+            }
+            facts["secrets"]["hf_token"]["exists"] = False
+            facts["secrets"]["radeon_api_key"]["exists"] = False
+            facts["secrets"]["grafana_password"]["exists"] = False
+            checks = MODULE.evaluate(
+                facts,
+                self.manifest,
+                profile="fixture",
+                license_accepted=False,
+                model_source="huggingface",
+                check_network=False,
+            )
+        failed = {item["id"] for item in checks if item["status"] == "failed"}
+        self.assertNotIn("secret-directory", failed)
+
+    def test_native_network_scope_excludes_compose_and_adds_model_only_when_needed(self) -> None:
+        native_fixture = MODULE.required_network_destinations(
+            self.manifest,
+            profile="fixture",
+            backend="native",
+            model_cache_ready=False,
+        )
+        native_local = MODULE.required_network_destinations(
+            self.manifest,
+            profile="radeon-local",
+            backend="native",
+            model_cache_ready=False,
+        )
+        self.assertEqual(native_fixture, ["gh-proxy.org:443"])
+        self.assertEqual(native_local, ["gh-proxy.org:443", "hf-mirror.com:443"])
+        self.assertNotIn("ghcr.io:443", native_local)
 
     def test_generated_environment_contains_only_derived_nonsecrets(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

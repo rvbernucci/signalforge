@@ -29,6 +29,15 @@ class RadeonNativeToolchainTests(unittest.TestCase):
             "234828b7a89e0e303d2556310ee549fbcf253d28de937bac3da13d6294262ac1",
         )
         self.assertEqual(
+            manifest["go"]["url"],
+            "https://dl.google.com/go/go1.25.12.linux-amd64.tar.gz",
+        )
+        self.assertEqual(manifest["application"]["go_proxy"], "https://goproxy.cn,direct")
+        self.assertEqual(
+            manifest["application"]["go_sumdb"],
+            "sum.golang.org https://sum.golang.google.cn",
+        )
+        self.assertEqual(
             manifest["llama_cpp"]["revision"],
             "305ba519ab61cdff8044922cba2347826a04453f",
         )
@@ -66,6 +75,20 @@ class RadeonNativeToolchainTests(unittest.TestCase):
             (ROOT / "deploy/radeon/native-toolchain-manifest.json").read_text()
         )
         MODULE.verify_source_locks(manifest)
+
+    def test_native_environment_uses_manifest_bound_go_mirrors(self) -> None:
+        manifest = json.loads(
+            (ROOT / "deploy/radeon/native-toolchain-manifest.json").read_text()
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            go_binary = root / "go/bin/go"
+            environment = MODULE.native_build_environment(go_binary, root, manifest)
+        self.assertEqual(environment["GOPROXY"], "https://goproxy.cn,direct")
+        self.assertEqual(
+            environment["GOSUMDB"],
+            "sum.golang.org https://sum.golang.google.cn",
+        )
 
 
 if __name__ == "__main__":

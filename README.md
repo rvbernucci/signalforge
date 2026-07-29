@@ -98,8 +98,9 @@ make radeon-up BACKEND=auto
 native ROCm toolchain already present in the AMD image. Bootstrap installs no host packages,
 copies no Mac files, and writes no model weight to Git. It provisions pinned toolchains under
 persistent storage, downloads the separately licensed Gemma artifact only after explicit
-acceptance, verifies its byte size and SHA-256 before publication, and reuses the verified cache on
-later starts. See [Zero-Touch Radeon Appliance](docs/radeon-zero-touch-appliance.md).
+acceptance, uses region-accessible transports while preserving canonical artifact identities,
+verifies byte size and SHA-256 before publication, and reuses the verified cache on later starts.
+See [Zero-Touch Radeon Appliance](docs/radeon-zero-touch-appliance.md).
 
 ## Technology 20 vNext Evaluation Lane
 

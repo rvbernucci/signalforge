@@ -64,22 +64,23 @@
     "championship": "Local ROCm authority plus bounded organizer Radeon API specialists.",
     "observability": "Optional Prometheus, Loki, Tempo, Alloy, and Grafana operator surfaces."
   },
-  "first_run_network_destinations": [
-    "ghcr.io:443",
-    "registry-1.docker.io:443",
-    "auth.docker.io:443",
-    "huggingface.co:443",
-    "cdn-lfs.hf.co:443",
-    "cas-bridge.xethub.hf.co:443",
-    "go.dev:443",
-    "dl.google.com:443",
-    "proxy.golang.org:443",
-    "sum.golang.org:443",
-    "storage.googleapis.com:443",
-    "registry.npmjs.org:443",
-    "github.com:443",
-    "gh-proxy.org:443"
-  ],
+  "first_run_network_destinations": {
+    "compose": [
+      "ghcr.io:443",
+      "registry-1.docker.io:443",
+      "auth.docker.io:443"
+    ],
+    "native": [
+      "gh-proxy.org:443",
+      "dl.google.com:443",
+      "goproxy.cn:443",
+      "sum.golang.google.cn:443",
+      "registry.npmjs.org:443"
+    ],
+    "model": [
+      "hf-mirror.com:443"
+    ]
+  },
   "steady_state": {
     "fixture": "Compose internal network or native loopback only",
     "radeon-local": "Compose internal network or native loopback only",

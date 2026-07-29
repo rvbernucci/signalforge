@@ -120,6 +120,36 @@ def validate(root: Path) -> dict[str, Any]:
     )
     checks.append(
         result(
+            "native-regional-downloads",
+            native["go"]["url"].startswith("https://dl.google.com/")
+            and native["application"]["go_proxy"] == "https://goproxy.cn,direct"
+            and native["application"]["go_sumdb"]
+            == "sum.golang.org https://sum.golang.google.cn",
+            "native dependency transport matches the Radeon region and remains lock-verified",
+        )
+    )
+    network = appliance["first_run_network_destinations"]
+    checks.append(
+        result(
+            "backend-scoped-network",
+            set(network) == {"compose", "native", "model"}
+            and "gh-proxy.org:443" in network["native"]
+            and "hf-mirror.com:443" in network["model"],
+            "first-run connectivity is scoped to the selected backend and model requirement",
+        )
+    )
+    checks.append(
+        result(
+            "model-transport-authority",
+            model["sources"]["huggingface"]["url"].startswith("https://hf-mirror.com/")
+            and model["sources"]["huggingface"]["canonical_url"].startswith(
+                "https://huggingface.co/"
+            ),
+            "regional model transport preserves the canonical Hugging Face locator",
+        )
+    )
+    checks.append(
+        result(
             "no-local-build",
             "\n  build:" not in compose and "--no-build" in makefile,
             "Compose judge startup never requires a local image build",
