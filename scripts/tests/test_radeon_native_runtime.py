@@ -86,6 +86,62 @@ class RadeonNativeRuntimeTests(unittest.TestCase):
                     poll_seconds=0.001,
                 )
 
+    def test_wait_app_rejects_runtime_or_model_identity_mismatch(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(MODULE, "read_process", return_value={"pid": 123}),
+            mock.patch.object(MODULE, "process_matches", return_value=True),
+            mock.patch.object(
+                MODULE,
+                "fetch_json",
+                return_value={
+                    "status": "ready",
+                    "mode": "live",
+                    "build_version": "expected-build",
+                    "identities": {
+                        "runtime": "sha256:wrong-runtime",
+                        "model": "sha256:expected-model",
+                    },
+                },
+            ),
+        ):
+            with self.assertRaisesRegex(MODULE.NativeRuntimeError, "identity"):
+                MODULE.wait_app(
+                    Path(directory),
+                    timeout_seconds=1,
+                    expected_build_version="expected-build",
+                    expected_mode="live",
+                    expected_runtime_identity="sha256:expected-runtime",
+                    expected_model_identity="sha256:expected-model",
+                    poll_seconds=0.001,
+                )
+
+    def test_wait_app_rejects_application_identity_mismatch(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(MODULE, "read_process", return_value={"pid": 123}),
+            mock.patch.object(MODULE, "process_matches", return_value=True),
+            mock.patch.object(
+                MODULE,
+                "fetch_json",
+                return_value={
+                    "status": "ready",
+                    "mode": "fixture",
+                    "build_version": "expected-build",
+                    "identities": {"application": "sha256:wrong-application"},
+                },
+            ),
+        ):
+            with self.assertRaisesRegex(MODULE.NativeRuntimeError, "identity"):
+                MODULE.wait_app(
+                    Path(directory),
+                    timeout_seconds=1,
+                    expected_build_version="expected-build",
+                    expected_mode="fixture",
+                    expected_application_identity="sha256:expected-application",
+                    poll_seconds=0.001,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

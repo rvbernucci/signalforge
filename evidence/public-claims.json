@@ -272,11 +272,11 @@
         },
         {
           "path": "internal/workspace/server.go",
-          "sha256": "03d8d45b75fb0761149b3334bc4be8f4909dd4ab764bdb1ee19bdfc769c3ea3b"
+          "sha256": "e01ecf9172ba1343e7ecb5ec191f2f1ded671da4fb4069e92a478074b7f12532"
         },
         {
           "path": "web/src/App.tsx",
-          "sha256": "ea19a835766cde428f9a7118563875ff3cd414669ddf5ad208b48c32df544ea9"
+          "sha256": "579bbd28d8ddf0833ef75de35a272452f2a30fe53f595fe2c332fe08c070c579"
         }
       ],
       "public_files": [
@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "evidence/hardening-matrix.json",
-          "sha256": "71adcffd0909bcbad901fad01aa88e1cd6ff5cbf40c90ed63d31875426b92378"
+          "sha256": "e356e56f3f26c01ccc34f2e3fd79627a2dc0eb499e226c9844479155d38b54e0"
         },
         {
           "path": "configs/hardening/sprint12-matrix-v1.json",
@@ -408,7 +408,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "a9feccb947bc1974a66410afaef8a9be00b91dcfd502549c8eb4970c40013050"
+          "sha256": "00c3b241de18f0e760f76ab7cbf88e86a8a08ce67bed56cf83455ec2c751113c"
         },
         {
           "path": "web/src/components/CaseLibrary.tsx",

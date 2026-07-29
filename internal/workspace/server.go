@@ -42,21 +42,24 @@ const (
 )
 
 type ServerConfig struct {
-	Mode               string
-	FixturePath        string
-	CatalogPath        string
-	FinancialsPath     string
-	PeerEvaluationPath string
-	StaticDir          string
-	Golden             golden.RunConfig
-	EventDelay         time.Duration
-	Now                func() time.Time
-	RunTimeout         time.Duration
-	MaxBodyBytes       int64
-	CaseStore          CaseStore
-	RuntimeBreaker     *resilience.Breaker
-	AuditStore         *intelligenceaudit.Store
-	BuildVersion       string
+	Mode                string
+	FixturePath         string
+	CatalogPath         string
+	FinancialsPath      string
+	PeerEvaluationPath  string
+	StaticDir           string
+	Golden              golden.RunConfig
+	EventDelay          time.Duration
+	Now                 func() time.Time
+	RunTimeout          time.Duration
+	MaxBodyBytes        int64
+	CaseStore           CaseStore
+	RuntimeBreaker      *resilience.Breaker
+	AuditStore          *intelligenceaudit.Store
+	BuildVersion        string
+	ApplicationIdentity string
+	RuntimeIdentity     string
+	ModelIdentity       string
 }
 
 type Server struct {
@@ -69,6 +72,7 @@ type Server struct {
 	runs       map[string]*runRecord
 	runOrder   []string
 	breaker    *resilience.Breaker
+	readiness  ReadinessIdentities
 }
 
 type runRecord struct {
@@ -229,6 +233,19 @@ func NewServer(config ServerConfig) (*Server, error) {
 	if err := productscope.ValidatePeerEvaluationSuite(server.peers); err != nil {
 		return nil, fmt.Errorf("validate workspace peer evaluation: %w", err)
 	}
+	server.readiness, err = buildReadinessIdentities(
+		config,
+		server.fixture.Execution.Model,
+		map[string][]byte{
+			"fixture":         payload,
+			"catalog":         catalogPayload,
+			"financials":      financialPayload,
+			"peer_evaluation": peerPayload,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("build workspace readiness identities: %w", err)
+	}
 	if config.AuditStore != nil {
 		recorder, auditErr := config.AuditStore.Begin(context.Background(), server.fixture.RunID,
 			server.fixture.RequestID, server.fixture.Question)
@@ -292,6 +309,7 @@ func (server *Server) handleReadiness(writer http.ResponseWriter, _ *http.Reques
 		"status":        "ready",
 		"mode":          server.config.Mode,
 		"build_version": server.config.BuildVersion,
+		"identities":    server.readiness,
 		"dependencies": map[string]string{
 			"model_runtime":      modelDependency,
 			"case_retention":     availability(server.config.CaseStore != nil),

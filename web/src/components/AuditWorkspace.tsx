@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
-import type { ExecutionPlan, Projection, SafeEvent } from "../types";
+import type { ExecutionPlan, Projection, SafeEvent, WorkspaceReadiness } from "../types";
 import { ArrowIcon, CheckIcon, CloseIcon, DocumentIcon, ReceiptIcon, ShieldIcon } from "./Icons";
 import { LiveExecutionPlan } from "./LiveExecutionPlan";
 
 type Props = {
   projection: Projection;
+  readiness?: WorkspaceReadiness;
   plan: ExecutionPlan | null;
   events: SafeEvent[];
   traceID?: string;
@@ -22,6 +23,7 @@ type Props = {
 
 export function AuditWorkspace({
   projection,
+  readiness,
   plan,
   events,
   traceID,
@@ -123,6 +125,21 @@ export function AuditWorkspace({
             <div><span>Runtime</span><code>{projection.execution.runtime_label}</code></div>
             <div><span>As of</span><time dateTime={projection.as_of}>{formatDateTime(projection.as_of)}</time></div>
           </section>
+
+          {readiness && (
+            <details className="audit-artifact-identities">
+              <summary>Exact source and artifact identities</summary>
+              <div>
+                <span>Source commit</span><code>{readiness.identities.source}</code>
+                <span>Application artifact</span><code>{readiness.identities.application}</code>
+                <span>Inference runtime</span><code>{readiness.identities.runtime}</code>
+                <span>Model artifact</span><code>{readiness.identities.model}</code>
+                <span>Served model</span><code>{readiness.identities.served_model}</code>
+                <span>Configuration</span><code>{readiness.identities.configuration_sha256}</code>
+                <span>Governed data</span><code>{readiness.identities.data_sha256}</code>
+              </div>
+            </details>
+          )}
 
           <section className="audit-shortcuts" aria-label="Audit shortcuts">
             <button type="button" onClick={() => onProof([])}>

@@ -1,10 +1,26 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import fixtureData from "../../../fixtures/workspace/golden-case.json";
-import type { Projection, SafeEvent } from "../types";
+import type { Projection, SafeEvent, WorkspaceReadiness } from "../types";
 import { AuditWorkspace } from "./AuditWorkspace";
 
 const projection = fixtureData as unknown as Projection;
+const readiness: WorkspaceReadiness = {
+  status: "ready",
+  mode: "fixture",
+  build_version: "commit-test",
+  identities: {
+    schema_version: "signalforge/readiness-identities/v1",
+    source: "commit-test",
+    application: "sha256:application-test",
+    runtime: "sha256:runtime-test",
+    model: "not-required",
+    served_model: projection.execution.model,
+    configuration_sha256: "c".repeat(64),
+    data_sha256: "d".repeat(64)
+  },
+  dependencies: {}
+};
 
 describe("AuditWorkspace", () => {
   it("uses the accepted projection and excludes unsafe event attributes", () => {
@@ -26,6 +42,7 @@ describe("AuditWorkspace", () => {
     render(
       <AuditWorkspace
         projection={projection}
+        readiness={readiness}
         plan={null}
         events={unsafeEvents}
         running={false}
@@ -43,6 +60,10 @@ describe("AuditWorkspace", () => {
 
     expect(screen.getByRole("region", { name: "Exact accepted-run identity" })).toHaveTextContent(projection.run_id);
     expect(screen.getByRole("region", { name: "Exact accepted-run identity" })).toHaveTextContent(projection.execution.model);
+    fireEvent.click(screen.getByText("Exact source and artifact identities"));
+    expect(screen.getByText("Source commit").parentElement).toHaveTextContent("commit-test");
+    expect(screen.getByText("Application artifact").parentElement).toHaveTextContent("sha256:application-test");
+    expect(screen.getByText("Inference runtime").parentElement).toHaveTextContent("sha256:runtime-test");
     expect(screen.getByText("Recorded governed journey")).toBeInTheDocument();
     expect(screen.queryByText("private-prompt-body")).not.toBeInTheDocument();
     expect(screen.queryByText("private-model-output")).not.toBeInTheDocument();

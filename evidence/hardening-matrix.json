@@ -203,7 +203,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "a9feccb947bc1974a66410afaef8a9be00b91dcfd502549c8eb4970c40013050"
+          "sha256": "00c3b241de18f0e760f76ab7cbf88e86a8a08ce67bed56cf83455ec2c751113c"
         }
       ],
       "status": "passed"
@@ -220,7 +220,7 @@
         },
         {
           "path": "cmd/signalforge-workspace/main.go",
-          "sha256": "7aed073e436a20eea54ad79a5d93b3c838a085c00a0741ad342c1c6d5f279708"
+          "sha256": "54e638951d1d99c0de62b04ebdf7551391a200a90130e2afca6a313a1215e7c3"
         }
       ],
       "status": "passed"

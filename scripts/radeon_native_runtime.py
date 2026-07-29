@@ -337,6 +337,9 @@ def wait_app(
     timeout_seconds: float,
     expected_build_version: str,
     expected_mode: str,
+    expected_application_identity: str | None = None,
+    expected_runtime_identity: str | None = None,
+    expected_model_identity: str | None = None,
     poll_seconds: float = 1,
 ) -> dict[str, Any]:
     deadline = time.monotonic() + timeout_seconds
@@ -347,9 +350,22 @@ def wait_app(
             raise NativeRuntimeError("SignalForge application exited before readiness")
         health = fetch_json(f"http://127.0.0.1:{port}/health/ready")
         if health and health.get("status") == "ready":
+            identities = health.get("identities", {})
             if (
                 health.get("build_version") != expected_build_version
                 or health.get("mode") != expected_mode
+                or (
+                    expected_application_identity is not None
+                    and identities.get("application") != expected_application_identity
+                )
+                or (
+                    expected_runtime_identity is not None
+                    and identities.get("runtime") != expected_runtime_identity
+                )
+                or (
+                    expected_model_identity is not None
+                    and identities.get("model") != expected_model_identity
+                )
             ):
                 raise NativeRuntimeError(
                     "SignalForge readiness identity does not match the launched binary"
@@ -508,6 +524,21 @@ def start(
             {"status": "preparing", "phase": "application-startup", "profile": profile},
         )
         app_binary = Path(toolchain["application_binary"])
+        app_runtime_identity = "sha256:" + str(toolchain["application"]["binary_sha256"])
+        app_model_identity = "not-required"
+        if profile in {"radeon-local", "championship"}:
+            app_runtime_identity = "sha256:" + str(toolchain["llama_cpp"]["binary_sha256"])
+            app_model_identity = "sha256:" + str(model_manifest["sha256"])
+        environment = app_environment(persist_root, profile, secrets_dir)
+        environment.update(
+            {
+                "SIGNALFORGE_APPLICATION_ARTIFACT_IDENTITY": (
+                    "sha256:" + str(toolchain["application"]["binary_sha256"])
+                ),
+                "SIGNALFORGE_RUNTIME_IDENTITY": app_runtime_identity,
+                "SIGNALFORGE_MODEL_ARTIFACT_IDENTITY": app_model_identity,
+            }
+        )
         ensure_loopback_port_available(
             int(os.environ.get("SIGNALFORGE_APP_PORT", "8080")),
             "application",
@@ -517,13 +548,18 @@ def start(
             "app",
             app_command(app_binary, persist_root, profile),
             str(app_binary),
-            app_environment(persist_root, profile, secrets_dir),
+            environment,
         )
         wait_app(
             persist_root,
             float(os.environ.get("SIGNALFORGE_NATIVE_APP_READY_TIMEOUT_SECONDS", "120")),
             str(toolchain["application"]["source_commit"]),
             "fixture" if profile == "fixture" else "live",
+            expected_application_identity=(
+                "sha256:" + str(toolchain["application"]["binary_sha256"])
+            ),
+            expected_runtime_identity=app_runtime_identity,
+            expected_model_identity=app_model_identity,
         )
     except Exception:
         for name in ("app", "llama"):

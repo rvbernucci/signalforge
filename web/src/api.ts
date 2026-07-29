@@ -9,7 +9,8 @@ import type {
   RunView,
   ScenarioControl,
   StoredCase,
-  WorkspaceConfig
+  WorkspaceConfig,
+  WorkspaceReadiness
 } from "./types";
 
 type Problem = { error?: { code?: string } };
@@ -24,6 +25,10 @@ async function readJSON<T>(response: Response): Promise<T> {
 
 export async function getConfig(): Promise<WorkspaceConfig> {
   return readJSON(await fetch("/api/v1/config"));
+}
+
+export async function getReadiness(): Promise<WorkspaceReadiness> {
+  return readJSON(await fetch("/health/ready"));
 }
 
 export async function getCatalog(): Promise<ProductCatalog> {

@@ -559,8 +559,10 @@ def shell_value(value: str) -> str:
 def generated_environment(
     facts: dict[str, Any],
     manifest: dict[str, Any],
+    model_manifest: dict[str, Any],
     *,
     persist_root: Path,
+    profile: str,
     license_accepted: bool,
     model_source: str,
     execution_backend: str,
@@ -568,12 +570,21 @@ def generated_environment(
     devices = facts["devices"]
     values = {
         "SIGNALFORGE_ACCEPT_GEMMA_LICENSE": "yes" if license_accepted else "no",
+        "SIGNALFORGE_APPLICATION_ARTIFACT_IDENTITY": manifest["application"]["image"],
         "SIGNALFORGE_APP_IMAGE": manifest["application"]["image"],
         "SIGNALFORGE_EXECUTION_BACKEND": execution_backend,
         "SIGNALFORGE_LLAMA_ROCM_IMAGE": manifest["runtime"]["image"],
+        "SIGNALFORGE_MODEL_ARTIFACT_IDENTITY": (
+            "not-required" if profile == "fixture" else "sha256:" + model_manifest["sha256"]
+        ),
         "SIGNALFORGE_MODEL_SOURCE": model_source,
         "SIGNALFORGE_PERSIST_ROOT": str(persist_root.resolve()),
         "SIGNALFORGE_RENDER_GID": str(devices["render"]["gid"] or 109),
+        "SIGNALFORGE_RUNTIME_IDENTITY": (
+            manifest["application"]["image"]
+            if profile == "fixture"
+            else manifest["runtime"]["image"]
+        ),
         "SIGNALFORGE_VIDEO_GID": str(devices["kfd"]["gid"] or 44),
     }
     return "".join(f"{key}={shell_value(str(value))}\n" for key, value in sorted(values.items()))
@@ -652,7 +663,9 @@ def main() -> int:
             generated_environment(
                 facts,
                 manifest,
+                model_manifest,
                 persist_root=persist_root,
+                profile=args.profile,
                 license_accepted=args.license_accepted,
                 model_source=args.model_source,
                 execution_backend=selected_backend,

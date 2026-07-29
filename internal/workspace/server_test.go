@@ -113,6 +113,19 @@ func TestFixtureServerExposesSafeConfigurationAndCase(t *testing.T) {
 		}},
 		{path: "/health/ready", read: func(t *testing.T, body []byte) {
 			assertJSONField(t, body, "build_version", "fixture-build-v1")
+			var response struct {
+				Identities ReadinessIdentities `json:"identities"`
+			}
+			if err := json.Unmarshal(body, &response); err != nil {
+				t.Fatal(err)
+			}
+			if response.Identities.SchemaVersion != ReadinessIdentitySchemaV1 ||
+				response.Identities.Source != "fixture-build-v1" ||
+				response.Identities.Application != "source@fixture-build-v1" ||
+				len(response.Identities.ConfigurationSHA256) != 64 ||
+				len(response.Identities.DataSHA256) != 64 {
+				t.Fatalf("readiness identities are incomplete: %+v", response.Identities)
+			}
 		}},
 		{path: "/api/v1/config", read: func(t *testing.T, body []byte) {
 			assertJSONField(t, body, "follow_ups_live", false)

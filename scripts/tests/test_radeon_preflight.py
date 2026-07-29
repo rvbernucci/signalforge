@@ -117,6 +117,9 @@ class RadeonPreflightTests(unittest.TestCase):
         self.manifest = json.loads(
             (ROOT / "deploy/radeon/appliance-manifest.json").read_text(encoding="utf-8")
         )
+        self.model_manifest = json.loads(
+            (ROOT / "deploy/radeon/model-manifest.json").read_text(encoding="utf-8")
+        )
         self.manifest["first_run_network_destinations"] = {
             "compose": ["ghcr.io:443"],
             "native": ["gh-proxy.org:443"],
@@ -244,7 +247,9 @@ class RadeonPreflightTests(unittest.TestCase):
             generated = MODULE.generated_environment(
                 base_facts(root),
                 self.manifest,
+                self.model_manifest,
                 persist_root=root / "runtime",
+                profile="radeon-local",
                 license_accepted=True,
                 model_source="huggingface",
                 execution_backend="compose",
@@ -252,6 +257,9 @@ class RadeonPreflightTests(unittest.TestCase):
         self.assertIn("SIGNALFORGE_RENDER_GID=993", generated)
         self.assertIn("SIGNALFORGE_VIDEO_GID=992", generated)
         self.assertIn("SIGNALFORGE_ACCEPT_GEMMA_LICENSE=yes", generated)
+        self.assertIn("SIGNALFORGE_APPLICATION_ARTIFACT_IDENTITY=ghcr.io/", generated)
+        self.assertIn("SIGNALFORGE_MODEL_ARTIFACT_IDENTITY=sha256:", generated)
+        self.assertIn("SIGNALFORGE_RUNTIME_IDENTITY=rocm/llama.cpp@sha256:", generated)
         self.assertNotIn("TOKEN", generated)
         self.assertNotIn("API_KEY", generated)
 

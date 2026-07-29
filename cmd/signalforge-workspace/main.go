@@ -104,6 +104,9 @@ func main() {
 		Mode: *mode, FixturePath: *fixturePath, CatalogPath: *catalogPath, StaticDir: *staticDir,
 		EventDelay: *eventDelay, RunTimeout: *timeout, CaseStore: store,
 		AuditStore: auditStore, BuildVersion: *codeCommit,
+		ApplicationIdentity: strings.TrimSpace(os.Getenv("SIGNALFORGE_APPLICATION_ARTIFACT_IDENTITY")),
+		RuntimeIdentity:     strings.TrimSpace(os.Getenv("SIGNALFORGE_RUNTIME_IDENTITY")),
+		ModelIdentity:       strings.TrimSpace(os.Getenv("SIGNALFORGE_MODEL_ARTIFACT_IDENTITY")),
 		Golden: golden.RunConfig{
 			SnapshotPath: *snapshotPath, RetrievalPath: *retrievalPath,
 			TraceDir: *traceDir, BaseURL: *baseURL, Model: *model,

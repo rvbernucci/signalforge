@@ -16,6 +16,23 @@ export type WorkspaceConfig = {
   protected_capture: boolean;
 };
 
+export type WorkspaceReadiness = {
+  status: "ready";
+  mode: "fixture" | "live";
+  build_version: string;
+  identities: {
+    schema_version: "signalforge/readiness-identities/v1";
+    source: string;
+    application: string;
+    runtime: string;
+    model: string;
+    served_model: string;
+    configuration_sha256: string;
+    data_sha256: string;
+  };
+  dependencies: Record<string, string>;
+};
+
 export type ProductCompany = {
   company_id: string;
   display_name: string;

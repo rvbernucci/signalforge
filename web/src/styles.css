@@ -622,6 +622,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
 .audit-identity > div { display: grid; gap: 4px; min-width: 0; padding: 9px 10px; background: #232e26; }
 .audit-identity span { color: #88968c; font-size: .46rem; letter-spacing: .08em; text-transform: uppercase; }
 .audit-identity code, .audit-identity time { overflow: hidden; color: #d6dfd8; font-size: .56rem; text-overflow: ellipsis; white-space: nowrap; }
+.audit-artifact-identities { margin: 0 0 10px; border: 1px solid #3a473d; background: #1d2821; }
+.audit-artifact-identities summary { padding: 10px 12px; color: #d7c575; cursor: pointer; font-size: .55rem; letter-spacing: .06em; text-transform: uppercase; }
+.audit-artifact-identities > div { display: grid; grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr); gap: 1px; padding: 1px; background: #3a473d; }
+.audit-artifact-identities span, .audit-artifact-identities code { min-width: 0; padding: 8px 10px; background: #232e26; }
+.audit-artifact-identities span { color: #88968c; font-size: .48rem; letter-spacing: .06em; text-transform: uppercase; }
+.audit-artifact-identities code { overflow-wrap: anywhere; color: #d6dfd8; font-size: .54rem; }
 .audit-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 12px; }
 .audit-shortcuts > button { display: grid; grid-template-columns: 24px 1fr 16px; gap: 9px; align-items: center; min-width: 0; padding: 11px 12px; color: #dce4de; text-align: left; border: 1px solid #46544a; background: #222d25; cursor: pointer; }
 .audit-shortcuts > button:hover { color: #f3dda0; border-color: #766638; background: #2b352b; }

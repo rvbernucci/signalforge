@@ -5,7 +5,7 @@ import financialData from "../../fixtures/productscope/technology20-financial-su
 import peerData from "../../fixtures/productscope/technology20-peer-evaluation.json";
 import { App } from "./App";
 import { displayCaseTitle } from "./format";
-import type { FinancialSummary, IntelligenceRecord, PeerEvaluationSuite, ProductCatalog, Projection, WorkspaceConfig } from "./types";
+import type { FinancialSummary, IntelligenceRecord, PeerEvaluationSuite, ProductCatalog, Projection, WorkspaceConfig, WorkspaceReadiness } from "./types";
 
 const fixture = fixtureData as unknown as Projection;
 const financialFixture = financialData as unknown as FinancialSummary;
@@ -90,6 +90,27 @@ const config: WorkspaceConfig = {
   retention_default: false,
   intelligence_audit: true,
   protected_capture: false
+};
+
+const readiness: WorkspaceReadiness = {
+  status: "ready",
+  mode: "fixture",
+  build_version: "commit-test",
+  identities: {
+    schema_version: "signalforge/readiness-identities/v1",
+    source: "commit-test",
+    application: "sha256:application-test",
+    runtime: "sha256:runtime-test",
+    model: "not-required",
+    served_model: "signalforge-gemma4-26b-q4",
+    configuration_sha256: "c".repeat(64),
+    data_sha256: "d".repeat(64)
+  },
+  dependencies: {
+    model_runtime: "not_required",
+    case_retention: "available",
+    intelligence_audit: "available"
+  }
 };
 
 const catalog: ProductCatalog = {
@@ -184,7 +205,8 @@ describe("SignalForge workspace", () => {
     window.history.replaceState({}, "", "/");
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      const value = url.endsWith("/api/v1/config") ? config
+      const value = url.endsWith("/health/ready") ? readiness
+        : url.endsWith("/api/v1/config") ? config
         : url.endsWith("/api/v1/catalog") ? catalog
         : url.endsWith("/api/v1/financials") ? financials
         : url.endsWith("/api/v1/peer-evaluations") ? peers
@@ -215,7 +237,7 @@ describe("SignalForge workspace", () => {
     await screen.findByText("Ask a harder question.");
     fireEvent.click(screen.getByRole("button", { name: /Transmission Mechanisms/i }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Transmission Mechanisms" })).toBeInTheDocument());
-    expect(fetch).toHaveBeenCalledTimes(5);
+    expect(fetch).toHaveBeenCalledTimes(6);
   });
 
   it("states the fixture follow-up limitation instead of pretending it is live", async () => {
@@ -296,7 +318,8 @@ describe("SignalForge workspace", () => {
   it("shows deterministic context without ranking accounting perimeters that differ", async () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      const value = url.endsWith("/api/v1/config") ? config
+      const value = url.endsWith("/health/ready") ? readiness
+        : url.endsWith("/api/v1/config") ? config
         : url.endsWith("/api/v1/catalog") ? catalog
         : url.endsWith("/api/v1/financials") ? financials
         : url.endsWith("/api/v1/peer-evaluations") ? peersWithContext
@@ -323,7 +346,8 @@ describe("SignalForge workspace", () => {
   it("keeps standalone contextual receipts visibly separate from authoritative results", async () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      const value = url.endsWith("/api/v1/config") ? config
+      const value = url.endsWith("/health/ready") ? readiness
+        : url.endsWith("/api/v1/config") ? config
         : url.endsWith("/api/v1/catalog") ? catalog
         : url.endsWith("/api/v1/financials") ? financialsWithStandaloneContext
         : url.endsWith("/api/v1/peer-evaluations") ? peers
@@ -366,7 +390,8 @@ describe("SignalForge workspace", () => {
     };
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      const value = url.endsWith("/api/v1/config") ? config
+      const value = url.endsWith("/health/ready") ? readiness
+        : url.endsWith("/api/v1/config") ? config
         : url.endsWith("/api/v1/catalog") ? longCatalog
         : url.endsWith("/api/v1/financials") ? financials
         : url.endsWith("/api/v1/peer-evaluations") ? peers
@@ -390,7 +415,8 @@ describe("SignalForge workspace", () => {
         } as Response;
       }
       const url = String(input);
-      const value = url.endsWith("/api/v1/config") ? config
+      const value = url.endsWith("/health/ready") ? readiness
+        : url.endsWith("/api/v1/config") ? config
         : url.endsWith("/api/v1/catalog") ? catalog
         : url.endsWith("/api/v1/financials") ? financials
         : url.endsWith("/api/v1/peer-evaluations") ? peers
@@ -407,7 +433,8 @@ describe("SignalForge workspace", () => {
     const withoutObservability = { ...config, intelligence_audit: false, protected_capture: false };
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      const value = url.endsWith("/api/v1/config") ? withoutObservability
+      const value = url.endsWith("/health/ready") ? readiness
+        : url.endsWith("/api/v1/config") ? withoutObservability
         : url.endsWith("/api/v1/catalog") ? catalog
         : url.endsWith("/api/v1/financials") ? financials
         : url.endsWith("/api/v1/peer-evaluations") ? peers
@@ -457,7 +484,7 @@ describe("SignalForge workspace", () => {
     expect(screen.getByText("Track 2 capabilities in the product")).toBeInTheDocument();
     expect(screen.getByText("Tool invocation")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Exact accepted-run identity" })).toHaveTextContent(fixture.run_id);
-    expect(fetch).toHaveBeenCalledTimes(5);
+    expect(fetch).toHaveBeenCalledTimes(6);
     fireEvent.click(screen.getByRole("button", { name: /Inspect calculations/i }));
     expect(await screen.findByRole("dialog", { name: "Inspect the work." })).toBeVisible();
   });

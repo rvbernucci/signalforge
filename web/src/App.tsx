@@ -1,5 +1,5 @@
 import { startTransition, useEffect, useState } from "react";
-import { getCatalog, getConfig, getFinancials, getGoldenCase, getPeerEvaluations } from "./api";
+import { getCatalog, getConfig, getFinancials, getGoldenCase, getPeerEvaluations, getReadiness } from "./api";
 import { CaseNotes, InsightPanel } from "./components/InsightPanel";
 import { MobileHeader, Navigation } from "./components/Navigation";
 import { ProofDrawer } from "./components/ProofDrawer";
@@ -12,13 +12,14 @@ import { ArrowIcon, ChipIcon, ShieldIcon, SparkIcon } from "./components/Icons";
 import { MemoryControls } from "./components/CaseLibrary";
 import { useResearchRun } from "./hooks/useResearchRun";
 import { displayCaseTitle } from "./format";
-import type { FinancialSummary, PeerEvaluationSuite, ProductCatalog, Projection, ScenarioControl, WorkspaceConfig } from "./types";
+import type { FinancialSummary, PeerEvaluationSuite, ProductCatalog, Projection, ScenarioControl, WorkspaceConfig, WorkspaceReadiness } from "./types";
 
 const fallbackScenario: ScenarioControl = { rates: "higher_for_longer", ai_spending: "slower" };
 
 export function App() {
   const [fixture, setFixture] = useState<Projection | null>(null);
   const [config, setConfig] = useState<WorkspaceConfig | null>(null);
+  const [readiness, setReadiness] = useState<WorkspaceReadiness | null>(null);
   const [catalog, setCatalog] = useState<ProductCatalog | null>(null);
   const [financials, setFinancials] = useState<FinancialSummary | null>(null);
   const [peerEvaluations, setPeerEvaluations] = useState<PeerEvaluationSuite | null>(null);
@@ -41,11 +42,12 @@ export function App() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([getGoldenCase(), getConfig(), getCatalog(), getFinancials(), getPeerEvaluations()]).then(([nextFixture, nextConfig, nextCatalog, nextFinancials, nextPeers]) => {
+    Promise.all([getGoldenCase(), getConfig(), getReadiness(), getCatalog(), getFinancials(), getPeerEvaluations()]).then(([nextFixture, nextConfig, nextReadiness, nextCatalog, nextFinancials, nextPeers]) => {
       if (!active) return;
       startTransition(() => {
         setFixture(nextFixture);
         setConfig(nextConfig);
+        setReadiness(nextReadiness);
         setCatalog(nextCatalog);
         setFinancials(nextFinancials);
         setPeerEvaluations(nextPeers);
@@ -88,7 +90,7 @@ export function App() {
 
   if (bootError) return <BootFailure />;
   const projection = research.projection ?? fixture;
-  if (!projection || !config || !catalog || !financials || !peerEvaluations) return <BootScreen />;
+  if (!projection || !config || !readiness || !catalog || !financials || !peerEvaluations) return <BootScreen />;
   const executionPlan = research.executionPlan ?? projection.execution_plan ?? null;
   const progressEvents = research.events.length > 0 ? research.events : projection.events;
   const traceID = research.run?.run_id === projection.run_id ? research.run.trace_id : undefined;
@@ -176,6 +178,7 @@ export function App() {
       </main>
       <AuditWorkspace
         projection={projection}
+        readiness={readiness}
         plan={executionPlan}
         events={progressEvents}
         traceID={traceID}
