@@ -175,8 +175,9 @@ def ensure_go(
 
     staging_parent = persist_root / "toolchains"
     ensure_directory(staging_parent)
+    for stale in staging_parent.glob(f".go-{config['version']}.extract-*"):
+        remove_directory(stale)
     staging = staging_parent / f".go-{config['version']}.extract-{os.getpid()}"
-    remove_directory(staging)
     safe_extract_go(archive, staging)
     extracted = staging / "go"
     observed = go_version(extracted / "bin/go")

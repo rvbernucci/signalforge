@@ -93,6 +93,22 @@ class RadeonNativeToolchainTests(unittest.TestCase):
             "sum.golang.org https://sum.golang.google.cn",
         )
 
+    def test_remove_directory_rejects_symlink_and_removes_stale_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            stale = root / ".go-1.25.12.extract-interrupted"
+            stale.mkdir()
+            (stale / "partial").write_text("incomplete")
+            MODULE.remove_directory(stale)
+            self.assertFalse(stale.exists())
+
+            target = root / "target"
+            target.mkdir()
+            link = root / "unsafe-link"
+            link.symlink_to(target, target_is_directory=True)
+            with self.assertRaisesRegex(MODULE.NativeToolchainError, "symbolic-link"):
+                MODULE.remove_directory(link)
+
 
 if __name__ == "__main__":
     unittest.main()
