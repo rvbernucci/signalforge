@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -92,6 +93,22 @@ def process_matches(record: dict[str, Any]) -> bool:
 
 def process_record_path(persist_root: Path, name: str) -> Path:
     return persist_root / f"state/native/{name}.process.json"
+
+
+def ensure_loopback_port_available(port: int, component: str) -> None:
+    if port < 1 or port > 65535:
+        raise NativeRuntimeError(f"invalid {component} loopback port: {port}")
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        probe.bind(("127.0.0.1", port))
+    except OSError as error:
+        raise NativeRuntimeError(
+            f"{component} loopback port 127.0.0.1:{port} is already occupied "
+            "by an untracked process"
+        ) from error
+    finally:
+        probe.close()
 
 
 def read_process(persist_root: Path, name: str) -> dict[str, Any] | None:
@@ -318,6 +335,8 @@ def fetch_json(url: str, timeout: float = 3) -> dict[str, Any] | None:
 def wait_app(
     persist_root: Path,
     timeout_seconds: float,
+    expected_build_version: str,
+    expected_mode: str,
     poll_seconds: float = 1,
 ) -> dict[str, Any]:
     deadline = time.monotonic() + timeout_seconds
@@ -328,6 +347,13 @@ def wait_app(
             raise NativeRuntimeError("SignalForge application exited before readiness")
         health = fetch_json(f"http://127.0.0.1:{port}/health/ready")
         if health and health.get("status") == "ready":
+            if (
+                health.get("build_version") != expected_build_version
+                or health.get("mode") != expected_mode
+            ):
+                raise NativeRuntimeError(
+                    "SignalForge readiness identity does not match the launched binary"
+                )
             return health
         time.sleep(poll_seconds)
     raise NativeRuntimeError("SignalForge application did not become ready before timeout")
@@ -453,6 +479,10 @@ def start(
                 persist_root / "state/native/startup.json",
                 {"status": "preparing", "phase": "model-load", "profile": profile},
             )
+            ensure_loopback_port_available(
+                int(os.environ.get("SIGNALFORGE_MODEL_PORT", "8000")),
+                "local model",
+            )
             start_process(
                 persist_root,
                 "llama",
@@ -478,6 +508,10 @@ def start(
             {"status": "preparing", "phase": "application-startup", "profile": profile},
         )
         app_binary = Path(toolchain["application_binary"])
+        ensure_loopback_port_available(
+            int(os.environ.get("SIGNALFORGE_APP_PORT", "8080")),
+            "application",
+        )
         start_process(
             persist_root,
             "app",
@@ -488,6 +522,8 @@ def start(
         wait_app(
             persist_root,
             float(os.environ.get("SIGNALFORGE_NATIVE_APP_READY_TIMEOUT_SECONDS", "120")),
+            str(toolchain["application"]["source_commit"]),
+            "fixture" if profile == "fixture" else "live",
         )
     except Exception:
         for name in ("app", "llama"):

@@ -75,6 +75,9 @@ The default workspace is <http://127.0.0.1:8080>.
   commit identity.
 - Native processes bind to loopback. PID receipts, logs, build receipts, health state, and
   readiness live under `/workspace/signalforge-runtime/state/native` with private permissions.
+- Native startup refuses an application or model port owned by an untracked process, and
+  application readiness must report the exact source commit and runtime profile launched by the
+  supervisor.
 - Championship passes only `.secrets/radeon-model-api-key` to the application through
   `SIGNALFORGE_SPECIALIST_API_KEY_FILE`; the value is not placed in an environment variable or
   command line.

@@ -289,8 +289,9 @@ func (server *Server) handleReadiness(writer http.ResponseWriter, _ *http.Reques
 		modelDependency = "configured"
 	}
 	writeJSON(writer, http.StatusOK, map[string]any{
-		"status": "ready",
-		"mode":   server.config.Mode,
+		"status":        "ready",
+		"mode":          server.config.Mode,
+		"build_version": server.config.BuildVersion,
 		"dependencies": map[string]string{
 			"model_runtime":      modelDependency,
 			"case_retention":     availability(server.config.CaseStore != nil),

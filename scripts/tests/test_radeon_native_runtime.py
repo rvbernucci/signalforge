@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import importlib.util
+import socket
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,6 +45,46 @@ class RadeonNativeRuntimeTests(unittest.TestCase):
         self.assertEqual(status["phase"], "model-runtime")
         self.assertFalse(status["processes"]["app"]["alive"])
         self.assertFalse(status["processes"]["llama"]["alive"])
+
+    def test_port_guard_rejects_an_untracked_listener(self) -> None:
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.addCleanup(listener.close)
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        port = listener.getsockname()[1]
+        with self.assertRaisesRegex(MODULE.NativeRuntimeError, "untracked process"):
+            MODULE.ensure_loopback_port_available(port, "application")
+
+    def test_port_guard_allows_an_unused_loopback_port(self) -> None:
+        reservation = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        reservation.bind(("127.0.0.1", 0))
+        port = reservation.getsockname()[1]
+        reservation.close()
+        MODULE.ensure_loopback_port_available(port, "application")
+
+    def test_wait_app_rejects_readiness_from_a_different_build(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(MODULE, "read_process", return_value={"pid": 123}),
+            mock.patch.object(MODULE, "process_matches", return_value=True),
+            mock.patch.object(
+                MODULE,
+                "fetch_json",
+                return_value={
+                    "status": "ready",
+                    "mode": "fixture",
+                    "build_version": "different-build",
+                },
+            ),
+        ):
+            with self.assertRaisesRegex(MODULE.NativeRuntimeError, "identity"):
+                MODULE.wait_app(
+                    Path(directory),
+                    timeout_seconds=1,
+                    expected_build_version="expected-build",
+                    expected_mode="fixture",
+                    poll_seconds=0.001,
+                )
 
 
 if __name__ == "__main__":

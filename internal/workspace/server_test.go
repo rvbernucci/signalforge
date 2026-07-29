@@ -101,7 +101,7 @@ func (store *fakeCaseStore) saveCount() int {
 }
 
 func TestFixtureServerExposesSafeConfigurationAndCase(t *testing.T) {
-	server := newFixtureTestServer(t)
+	server := newFixtureTestServerWithConfig(t, ServerConfig{BuildVersion: "fixture-build-v1"})
 	handler := server.Handler()
 
 	for _, testCase := range []struct {
@@ -110,6 +110,9 @@ func TestFixtureServerExposesSafeConfigurationAndCase(t *testing.T) {
 	}{
 		{path: "/api/v1/health", read: func(t *testing.T, body []byte) {
 			assertJSONField(t, body, "local_only", true)
+		}},
+		{path: "/health/ready", read: func(t *testing.T, body []byte) {
+			assertJSONField(t, body, "build_version", "fixture-build-v1")
 		}},
 		{path: "/api/v1/config", read: func(t *testing.T, body []byte) {
 			assertJSONField(t, body, "follow_ups_live", false)
