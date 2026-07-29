@@ -153,8 +153,7 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 		remoteClient := benchmark.Client{
 			BaseURL: strings.TrimRight(config.SpecialistBaseURL, "/"),
 			APIKey:  config.SpecialistAPIKey, ReuseConnections: true,
-			EmbedResponseFormatInPrompt: true,
-			HTTPClient:                  config.SpecialistHTTPClient,
+			HTTPClient: config.SpecialistHTTPClient,
 		}
 		remoteRecorder := newRecordingCompleterForProvider(remoteClient, config.SpecialistProvider, config.ModelObserver)
 		specialistAdapters, err = localagent.New(remoteRecorder, config.SpecialistModel, provider)

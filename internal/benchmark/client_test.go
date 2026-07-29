@@ -102,6 +102,65 @@ func TestCompleteAuthenticatesRemoteCompatibleEndpointWithoutClosingConnection(t
 	}
 }
 
+func TestCompletePreservesNativeJSONSchemaForCompatibleEndpoint(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Close {
+			t.Fatal("remote-compatible client should preserve HTTP connections")
+		}
+		var payload map[string]any
+		if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
+			t.Fatal(err)
+		}
+		format, ok := payload["response_format"].(map[string]any)
+		if !ok || format["type"] != "json_schema" {
+			t.Fatalf("native JSON Schema response format was not preserved: %#v", payload["response_format"])
+		}
+		messages, ok := payload["messages"].([]any)
+		if !ok || len(messages) != 2 {
+			t.Fatalf("unexpected messages: %#v", payload["messages"])
+		}
+		system, ok := messages[0].(map[string]any)
+		if !ok || strings.Contains(system["content"].(string), "Transport compatibility contract") {
+			t.Fatal("native-schema request must not duplicate the schema in the prompt")
+		}
+		response.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprintln(response, `data: {"choices":[{"delta":{"content":"{\"status\":\"approved\"}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":4,"total_tokens":7}}`)
+		fmt.Fprintln(response, "data: [DONE]")
+	}))
+	defer server.Close()
+
+	completion, err := (Client{
+		BaseURL: server.URL, APIKey: "test-secret", ReuseConnections: true,
+	}).Complete(context.Background(), Request{
+		Model: "test-model", Messages: []Message{
+			{Role: "system", Content: "Return JSON."},
+			{Role: "user", Content: "Test"},
+		},
+		MaxTokens: 8,
+		ResponseFormat: map[string]any{
+			"type": "json_schema",
+			"json_schema": map[string]any{
+				"name": "status",
+				"schema": map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"status": map[string]any{"type": "string"},
+					},
+					"required":             []string{"status"},
+					"additionalProperties": false,
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completion.Answer != `{"status":"approved"}` || completion.FinishReason != "stop" ||
+		completion.Usage.TotalTokens != 7 {
+		t.Fatalf("unexpected completion: %+v", completion)
+	}
+}
+
 func TestCompleteSerializesModelSpecificThinkingControl(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		var payload map[string]any
