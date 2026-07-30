@@ -23,6 +23,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import radeon_model_cache
+import radeon_manifest
 import radeon_native_toolchain
 import radeon_runtime_probe
 
@@ -278,16 +279,21 @@ def app_environment(persist_root: Path, profile: str, secrets_dir: Path) -> dict
     return environment
 
 
-def app_command(binary: Path, persist_root: Path, profile: str) -> list[str]:
+def app_command(
+    binary: Path,
+    persist_root: Path,
+    profile: str,
+    source_root: Path = ROOT,
+) -> list[str]:
     data = persist_root / "data"
     common = [
         str(binary),
         "--listen",
         f"127.0.0.1:{os.environ.get('SIGNALFORGE_APP_PORT', '8080')}",
         "--static-dir",
-        str(ROOT / "web/dist"),
+        str(source_root / "web/dist"),
         "--catalog",
-        str(ROOT / "fixtures/productscope/technology20-catalog.json"),
+        str(source_root / "fixtures/productscope/technology20-catalog.json"),
         "--case-db",
         str(data / "cases.db"),
         "--audit-dir",
@@ -302,7 +308,7 @@ def app_command(binary: Path, persist_root: Path, profile: str) -> list[str]:
             "--mode",
             "fixture",
             "--fixture",
-            str(ROOT / "fixtures/workspace/golden-case.json"),
+            str(source_root / "fixtures/workspace/golden-case.json"),
             "--event-delay",
             "0",
         ]
@@ -314,11 +320,11 @@ def app_command(binary: Path, persist_root: Path, profile: str) -> list[str]:
         "--model",
         "signalforge-gemma4-26b-q4",
         "--snapshot",
-        str(ROOT / "fixtures/golden/financial-snapshot.json"),
+        str(source_root / "fixtures/golden/financial-snapshot.json"),
         "--retrieval",
-        str(ROOT / "fixtures/retrieval/golden-eval.json"),
+        str(source_root / "fixtures/retrieval/golden-eval.json"),
         "--price-inputs",
-        str(ROOT / "fixtures/golden/market-price-inputs.json"),
+        str(source_root / "fixtures/golden/market-price-inputs.json"),
     ]
 
 
@@ -436,13 +442,39 @@ def native_status(persist_root: Path, profile: str) -> dict[str, Any]:
     }
 
 
+def enforce_source_authority(
+    status: dict[str, Any],
+    manifest_selection: radeon_manifest.ManifestSelection,
+    resolved_source_commit: str,
+) -> dict[str, Any]:
+    application_receipt = (status.get("toolchain") or {}).get("application") or {}
+    authority_error = radeon_native_toolchain.application_authority_error(
+        application_receipt,
+        manifest_selection,
+        resolved_source_commit,
+    )
+    if status.get("status") == "ready" and authority_error:
+        status["status"] = "preparing"
+        status["phase"] = authority_error
+    return status
+
+
 def start(
     persist_root: Path,
     profile: str,
     secrets_dir: Path,
     *,
+    manifest_selection: radeon_manifest.ManifestSelection,
     allow_dirty: bool,
 ) -> dict[str, Any]:
+    try:
+        resolved_source_commit = radeon_native_toolchain.resolve_source_commit(
+            ROOT,
+            manifest_selection.manifest["application"]["source_commit"],
+        )
+        radeon_native_toolchain.git_source_identity(ROOT, allow_dirty)
+    except radeon_native_toolchain.NativeToolchainError as error:
+        raise NativeRuntimeError(f"authorized source validation failed: {error}") from error
     for directory in (
         persist_root,
         persist_root / "data",
@@ -454,19 +486,39 @@ def start(
         persist_root / "state/native/home",
     ):
         ensure_private_directory(directory)
-    current = native_status(persist_root, profile)
+    current = enforce_source_authority(
+        native_status(persist_root, profile),
+        manifest_selection,
+        resolved_source_commit,
+    )
     if current["status"] == "ready":
         return current
     for name in ("app", "llama"):
         if read_process(persist_root, name):
             stop_process(persist_root, name)
-    model_manifest_path = ROOT / "deploy/radeon/model-manifest.json"
-    toolchain_manifest_path = ROOT / "deploy/radeon/native-toolchain-manifest.json"
+    appliance = manifest_selection.manifest
+    model_manifest_path = radeon_manifest.component_path(
+        appliance["model_manifest"],
+        "model_manifest",
+    )
+    toolchain_manifest_path = radeon_manifest.component_path(
+        appliance["execution"]["native"]["toolchain_manifest"],
+        "execution.native.toolchain_manifest",
+    )
     model_manifest = json.loads(model_manifest_path.read_text(encoding="utf-8"))
     toolchain_manifest = json.loads(toolchain_manifest_path.read_text(encoding="utf-8"))
     atomic_json(
         persist_root / "state/native/startup.json",
-        {"status": "preparing", "phase": "model-hydration", "profile": profile},
+        {
+            "status": "preparing",
+            "phase": "model-hydration",
+            "profile": profile,
+            "manifest_authority": {
+                "path": manifest_selection.reference,
+                "sha256": manifest_selection.sha256,
+            },
+            "application_source_commit": resolved_source_commit,
+        },
     )
     if profile in {"radeon-local", "championship"}:
         hydrate_model(persist_root, model_manifest_path, secrets_dir)
@@ -478,6 +530,8 @@ def start(
         persist_root,
         profile,
         toolchain_manifest,
+        appliance_selection=manifest_selection,
+        resolved_source_commit=resolved_source_commit,
         allow_dirty=allow_dirty,
         retries=int(os.environ.get("SIGNALFORGE_MODEL_DOWNLOAD_RETRIES", "5")),
         download_timeout_seconds=float(
@@ -487,6 +541,26 @@ def start(
             os.environ.get("SIGNALFORGE_NATIVE_BUILD_TIMEOUT_SECONDS", "1800")
         ),
     )
+    authority_error = radeon_native_toolchain.application_authority_error(
+        toolchain["application"],
+        manifest_selection,
+        resolved_source_commit,
+    )
+    if authority_error:
+        raise NativeRuntimeError(
+            f"native application receipt failed release authority: {authority_error}"
+        )
+    source_root = Path(str(toolchain["application"].get("source_root", "")))
+    expected_source_root = (
+        persist_root / f"state/native/sources/{resolved_source_commit}"
+    ).resolve()
+    if (
+        not source_root.is_absolute()
+        or source_root.resolve() != expected_source_root
+        or not source_root.is_dir()
+        or source_root.is_symlink()
+    ):
+        raise NativeRuntimeError("native application source root failed release authority")
     try:
         if profile in {"radeon-local", "championship"}:
             llama_binary = Path(toolchain["llama_cpp"]["binary"])
@@ -546,7 +620,7 @@ def start(
         start_process(
             persist_root,
             "app",
-            app_command(app_binary, persist_root, profile),
+            app_command(app_binary, persist_root, profile, source_root),
             str(app_binary),
             environment,
         )
@@ -610,6 +684,8 @@ def main() -> int:
                 choices=("fixture", "radeon-local", "championship"),
                 required=True,
             )
+            child.add_argument("--manifest", type=Path)
+            child.add_argument("--manifest-sha256")
         if command == "up":
             child.add_argument("--secrets-dir", type=Path, default=ROOT / ".secrets")
             child.add_argument("--allow-dirty", action="store_true")
@@ -618,15 +694,38 @@ def main() -> int:
     args = parser.parse_args()
     persist_root = args.persist_root.expanduser().resolve()
     try:
+        manifest_selection = None
+        resolved_source_commit = None
+        if args.command in {"up", "status"}:
+            generated_manifest = radeon_manifest.read_generated_environment(
+                persist_root / "state/generated.env"
+            )
+            manifest_selection = radeon_manifest.select_manifest(
+                args.manifest,
+                args.manifest_sha256,
+                generated_environment=generated_manifest,
+            )
+            resolved_source_commit = radeon_native_toolchain.resolve_source_commit(
+                ROOT,
+                manifest_selection.manifest["application"]["source_commit"],
+            )
         if args.command == "up":
+            assert manifest_selection is not None
             result = start(
                 persist_root,
                 args.profile,
                 args.secrets_dir,
+                manifest_selection=manifest_selection,
                 allow_dirty=args.allow_dirty,
             )
         elif args.command == "status":
-            result = native_status(persist_root, args.profile)
+            assert manifest_selection is not None
+            assert resolved_source_commit is not None
+            result = enforce_source_authority(
+                native_status(persist_root, args.profile),
+                manifest_selection,
+                resolved_source_commit,
+            )
         elif args.command == "down":
             result = stop(persist_root)
         else:
@@ -634,6 +733,7 @@ def main() -> int:
             return 0
     except (
         NativeRuntimeError,
+        radeon_manifest.ManifestError,
         radeon_model_cache.ModelCacheError,
         radeon_native_toolchain.NativeToolchainError,
         OSError,

@@ -12,8 +12,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+import radeon_manifest
+
 VALID_BACKENDS = {"auto", "compose", "native"}
 
 
@@ -108,15 +113,18 @@ def resolve_backend(requested: str, facts: dict[str, Any]) -> str:
     return requested
 
 
-def read_generated_backend(path: Path) -> str | None:
-    if not path.is_file() or path.is_symlink():
-        return None
-    for line in path.read_text(encoding="utf-8").splitlines():
-        key, separator, value = line.partition("=")
-        if separator and key == "SIGNALFORGE_EXECUTION_BACKEND":
-            candidate = value.strip()
-            if candidate in {"compose", "native"}:
-                return candidate
+def read_generated_backend(
+    path: Path,
+    generated_environment: dict[str, str] | None = None,
+) -> str | None:
+    generated = (
+        generated_environment
+        if generated_environment is not None
+        else radeon_manifest.read_generated_environment(path)
+    )
+    candidate = generated.get("SIGNALFORGE_EXECUTION_BACKEND", "").strip()
+    if candidate in {"compose", "native"}:
+        return candidate
     return None
 
 
@@ -136,15 +144,30 @@ def main() -> int:
     parser.add_argument(
         "--manifest",
         type=Path,
-        default=ROOT / "deploy/radeon/appliance-manifest.json",
     )
+    parser.add_argument("--manifest-sha256")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    try:
+        generated_manifest = radeon_manifest.read_generated_environment(
+            args.persist_root / "state/generated.env"
+        )
+        selection = radeon_manifest.select_manifest(
+            args.manifest,
+            args.manifest_sha256,
+            generated_environment=generated_manifest,
+        )
+    except (radeon_manifest.ManifestError, OSError) as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    manifest = selection.manifest
     requested = (
         args.backend
         or os.environ.get("SIGNALFORGE_EXECUTION_BACKEND")
-        or read_generated_backend(args.persist_root / "state/generated.env")
+        or read_generated_backend(
+            args.persist_root / "state/generated.env",
+            generated_manifest,
+        )
         or manifest["execution"]["default_backend"]
     )
     facts = backend_facts(manifest)
@@ -156,7 +179,15 @@ def main() -> int:
     if args.json:
         print(
             json.dumps(
-                {"requested": requested, "selected": selected, "facts": facts},
+                {
+                    "requested": requested,
+                    "selected": selected,
+                    "manifest_authority": {
+                        "path": selection.reference,
+                        "sha256": selection.sha256,
+                    },
+                    "facts": facts,
+                },
                 indent=2,
                 sort_keys=True,
             )

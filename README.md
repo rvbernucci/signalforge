@@ -94,6 +94,27 @@ make radeon-bootstrap BACKEND=auto ACCEPT_GEMMA_LICENSE=yes
 make radeon-up BACKEND=auto
 ```
 
+These commands intentionally select the accepted `v1.1.1` rollback authority. The unpromoted
+Sprint 41 candidate is opt-in and never replaces that safe default:
+
+```bash
+make radeon-bootstrap \
+  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
+  BACKEND=auto \
+  ACCEPT_GEMMA_LICENSE=yes
+make radeon-up \
+  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
+  BACKEND=auto
+```
+
+Bootstrap records the selected manifest path and SHA-256 in private generated state. Preflight,
+startup, Compose, native execution, and status reject conflicting selectors or changed manifest
+bytes. Native execution also resolves `application.source_commit` from that authority, requires
+the Git object to exist locally, materializes it into an isolated persistent tree, and builds and
+serves the application assets from that exact commit. A receipt or cached binary tied to another
+manifest, manifest SHA, declared commit, or resolved commit fails closed before the application
+receives the organizer API-key file path.
+
 `auto` uses digest-pinned Docker Compose services when Docker is healthy and otherwise uses the
 native ROCm toolchain already present in the AMD image. Bootstrap installs no host packages,
 copies no Mac files, and writes no model weight to Git. It provisions pinned toolchains under

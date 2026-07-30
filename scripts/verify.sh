@@ -22,6 +22,14 @@ go test ./internal/casestore ./internal/permissions ./internal/resilience ./inte
 python3 scripts/reference_finance.py
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 python3 -m py_compile \
+  scripts/radeon_manifest.py \
+  scripts/radeon_backend.py \
+  scripts/radeon_bootstrap.py \
+  scripts/radeon_native_runtime.py \
+  scripts/radeon_native_toolchain.py \
+  scripts/radeon_preflight.py \
+  scripts/radeon_status.py \
+  scripts/radeon_validate_appliance.py \
   scripts/build_project_spec.py \
   scripts/run_hardening_matrix.py \
   scripts/run_dashboard_cpu_ablation.py \
@@ -78,7 +86,11 @@ done < <(find contracts evidence fixtures configs -type f -name '*.json' -print0
 
 bash -n scripts/serve_llama_rocm.sh scripts/run_radeon_profile.sh scripts/verify_clean_startup.sh \
   scripts/stage_gemma_model.sh scripts/prepare_container_secrets.sh scripts/verify_container_fixture.sh \
-  scripts/build_runtime_license_bundle.sh
+  scripts/build_runtime_license_bundle.sh scripts/radeon_generated_env.sh scripts/radeon_preflight.sh \
+  scripts/radeon_up.sh scripts/radeon_compose.sh
+python3 scripts/radeon_validate_appliance.py >/dev/null
+python3 scripts/radeon_validate_appliance.py \
+  --manifest deploy/radeon/appliance-manifest.vnext.json >/dev/null
 python3 scripts/validate_observability.py
 python3 scripts/audit_restricted_egress.py >/dev/null
 python3 -m py_compile deploy/observability/radeon-exporter/exporter.py scripts/validate_observability.py

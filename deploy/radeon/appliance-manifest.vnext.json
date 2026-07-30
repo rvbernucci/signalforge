@@ -1,0 +1,90 @@
+{
+  "schema_version": "signalforge/radeon-appliance/v2",
+  "appliance_version": "sprint41-vnext-d2f94b5",
+  "platform": "linux/amd64",
+  "application": {
+    "image": "ghcr.io/rvbernucci/signalforge@sha256:fc834f936a6dd4e972fd1dc8d51688efc743444a59b2127559e0e91647efe58c",
+    "release": "sha-d2f94b5",
+    "source_commit": "d2f94b51fc3cb95edff12f31ff7e5827678ea0b7"
+  },
+  "runtime": {
+    "image": "rocm/llama.cpp@sha256:be175932c3c96e882dfbc7e20e0e834f58c89c2925f48b222837ee929dfc47ee",
+    "upstream": "AMD ROCm validated llama.cpp server",
+    "llama_cpp_revision": "b6652.amd0",
+    "container_rocm_version": "7.0.0",
+    "host_rocm_tested_version": "7.2.1",
+    "model_port": 8000,
+    "context_size": 32768,
+    "parallel_slots": 4
+  },
+  "execution": {
+    "default_backend": "auto",
+    "compose": {
+      "minimum_docker_version": "24.0",
+      "minimum_compose_version": "2.20"
+    },
+    "native": {
+      "toolchain_manifest": "deploy/radeon/native-toolchain-manifest.json",
+      "required_host_commands": [
+        "git",
+        "curl",
+        "python3",
+        "node",
+        "npm",
+        "cmake",
+        "ninja",
+        "hipcc"
+      ],
+      "minimum_python_version": "3.11",
+      "minimum_node_version": "20.19",
+      "minimum_cmake_version": "3.20",
+      "llama_cpp_repository": "https://github.com/ggml-org/llama.cpp.git",
+      "llama_cpp_revision": "305ba519ab61cdff8044922cba2347826a04453f"
+    }
+  },
+  "utility_images": {
+    "python": "python:3.12.11-alpine3.22@sha256:efcdfa6a6b2fd2afb9c7dfa9a5b288a6f68338b5cfdebe6b637d986067d85757",
+    "storage_init": "alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40"
+  },
+  "model_manifest": "deploy/radeon/model-manifest.json",
+  "minimum_free_bytes": 42949672960,
+  "persistent_root_default": "/workspace/signalforge-runtime",
+  "gpu": {
+    "required_devices": [
+      "/dev/kfd",
+      "/dev/dri"
+    ],
+    "allowed_architectures": [
+      "gfx1100"
+    ]
+  },
+  "profiles": {
+    "fixture": "No GPU, model, API credential, or external network is required after image pull.",
+    "radeon-local": "Hydrated Gemma model and local ROCm inference only.",
+    "championship": "Local ROCm authority plus bounded organizer Radeon API specialists.",
+    "observability": "Optional Prometheus, Loki, Tempo, Alloy, and Grafana operator surfaces."
+  },
+  "first_run_network_destinations": {
+    "compose": [
+      "ghcr.io:443",
+      "registry-1.docker.io:443",
+      "auth.docker.io:443"
+    ],
+    "native": [
+      "gh-proxy.org:443",
+      "dl.google.com:443",
+      "goproxy.cn:443",
+      "sum.golang.google.cn:443",
+      "registry.npmjs.org:443"
+    ],
+    "model": [
+      "hf-mirror.com:443"
+    ]
+  },
+  "steady_state": {
+    "fixture": "Compose internal network or native loopback only",
+    "radeon-local": "Compose internal network or native loopback only",
+    "championship": "organizer Radeon API egress from the application process only",
+    "observability": "internal Docker network and loopback host publications only"
+  }
+}

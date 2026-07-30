@@ -24,10 +24,9 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import radeon_backend
+import radeon_manifest
 
 
-DEFAULT_MANIFEST = ROOT / "deploy" / "radeon" / "appliance-manifest.json"
-DEFAULT_MODEL_MANIFEST = ROOT / "deploy" / "radeon" / "model-manifest.json"
 MAC_PATH_PATTERN = re.compile(r"^/(?:Users|Volumes)/")
 GFX_PATTERN = re.compile(r"\bgfx[0-9a-f]+\b", re.IGNORECASE)
 
@@ -565,6 +564,7 @@ def generated_environment(
     facts: dict[str, Any],
     manifest: dict[str, Any],
     model_manifest: dict[str, Any],
+    manifest_selection: radeon_manifest.ManifestSelection,
     *,
     persist_root: Path,
     profile: str,
@@ -575,6 +575,8 @@ def generated_environment(
     devices = facts["devices"]
     values = {
         "SIGNALFORGE_ACCEPT_GEMMA_LICENSE": "yes" if license_accepted else "no",
+        "SIGNALFORGE_APPLIANCE_MANIFEST": manifest_selection.reference,
+        "SIGNALFORGE_APPLIANCE_MANIFEST_SHA256": manifest_selection.sha256,
         "SIGNALFORGE_APPLICATION_ARTIFACT_IDENTITY": manifest["application"]["image"],
         "SIGNALFORGE_APP_IMAGE": manifest["application"]["image"],
         "SIGNALFORGE_EXECUTION_BACKEND": execution_backend,
@@ -597,8 +599,9 @@ def generated_environment(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
-    parser.add_argument("--model-manifest", type=Path, default=DEFAULT_MODEL_MANIFEST)
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--manifest-sha256")
+    parser.add_argument("--model-manifest", type=Path)
     parser.add_argument("--profile", choices=("fixture", "radeon-local", "championship"), default="radeon-local")
     parser.add_argument("--persist-root", type=Path)
     parser.add_argument("--secrets-dir", type=Path, default=ROOT / ".secrets")
@@ -615,8 +618,26 @@ def main() -> int:
     parser.add_argument("--network-timeout", type=float, default=4)
     args = parser.parse_args()
 
-    manifest = load_json(args.manifest)
-    model_manifest = load_json(args.model_manifest)
+    try:
+        manifest_selection = radeon_manifest.select_manifest(
+            args.manifest,
+            args.manifest_sha256,
+        )
+    except (radeon_manifest.ManifestError, OSError) as error:
+        print(f"Radeon appliance manifest rejected: {error}", file=sys.stderr)
+        return 2
+    manifest = manifest_selection.manifest
+    model_manifest_path = radeon_manifest.component_path(
+        manifest["model_manifest"],
+        "model_manifest",
+    )
+    if args.model_manifest and args.model_manifest.expanduser().resolve() != model_manifest_path:
+        print(
+            "Radeon model manifest override conflicts with the appliance authority.",
+            file=sys.stderr,
+        )
+        return 2
+    model_manifest = load_json(model_manifest_path)
     default_root = (
         Path(manifest["persistent_root_default"])
         if Path("/workspace").is_dir()
@@ -656,6 +677,10 @@ def main() -> int:
         "selected_backend": selected_backend,
         "status": "failed" if failed else "passed",
         "appliance_version": manifest["appliance_version"],
+        "manifest_authority": {
+            "path": manifest_selection.reference,
+            "sha256": manifest_selection.sha256,
+        },
         "facts": facts,
         "checks": checks,
     }
@@ -669,6 +694,7 @@ def main() -> int:
                 facts,
                 manifest,
                 model_manifest,
+                manifest_selection,
                 persist_root=persist_root,
                 profile=args.profile,
                 license_accepted=args.license_accepted,

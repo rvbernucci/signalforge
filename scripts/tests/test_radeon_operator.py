@@ -50,7 +50,7 @@ class RadeonOperatorTests(unittest.TestCase):
                     "Service": "signalforge-local",
                     "State": "running",
                     "Health": "healthy",
-                    "Image": "pinned",
+                    "Image": self.appliance["application"]["image"],
                 }
             ],
             compose_error=None,
@@ -58,6 +58,8 @@ class RadeonOperatorTests(unittest.TestCase):
             model_state={"status": "ready"},
             runtime_state={"status": "ready"},
             appliance_manifest=self.appliance,
+            manifest_reference="deploy/radeon/appliance-manifest.json",
+            manifest_sha256="1" * 64,
             model_manifest=self.model,
             app_port=8080,
             grafana_port=3000,
@@ -75,12 +77,208 @@ class RadeonOperatorTests(unittest.TestCase):
             model_state=None,
             runtime_state=None,
             appliance_manifest=self.appliance,
+            manifest_reference="deploy/radeon/appliance-manifest.json",
+            manifest_sha256="1" * 64,
             model_manifest=self.model,
             app_port=8080,
             grafana_port=3000,
         )
         self.assertEqual(status["status"], "preparing")
         self.assertEqual(status["phase"], "model-hydration")
+
+    def test_compose_status_rejects_application_identity_mismatch(self) -> None:
+        status = STATUS.build_status(
+            profile="fixture",
+            services=[
+                {
+                    "Service": "signalforge",
+                    "State": "running",
+                    "Health": "healthy",
+                    "Image": "ghcr.io/rvbernucci/signalforge@sha256:" + "0" * 64,
+                }
+            ],
+            compose_error=None,
+            app_health={"status": "ready"},
+            model_state=None,
+            runtime_state=None,
+            appliance_manifest=self.appliance,
+            manifest_reference="deploy/radeon/appliance-manifest.json",
+            manifest_sha256="1" * 64,
+            model_manifest=self.model,
+            app_port=8080,
+            grafana_port=3000,
+        )
+        self.assertEqual(status["status"], "preparing")
+        self.assertEqual(status["phase"], "application-identity-mismatch")
+
+    def test_native_status_rejects_missing_or_mismatched_application_receipt(self) -> None:
+        declared_commit = self.appliance["application"]["source_commit"]
+        resolved_commit = subprocess.check_output(
+            ["git", "rev-parse", f"{declared_commit}^{{commit}}"],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+        missing = STATUS.bind_native_identity(
+            {
+                "status": "ready",
+                "phase": "ready",
+                "application_health": {
+                    "status": "ready",
+                    "identities": {"application": "sha256:" + "1" * 64},
+                },
+                "toolchain": {},
+            },
+            self.appliance,
+            "deploy/radeon/appliance-manifest.json",
+            "2" * 64,
+        )
+        self.assertEqual(missing["status"], "preparing")
+        self.assertEqual(missing["phase"], "application-identity-missing")
+
+        mismatched = STATUS.bind_native_identity(
+            {
+                "status": "ready",
+                "phase": "ready",
+                "application_health": {
+                    "status": "ready",
+                    "identities": {"application": "sha256:" + "3" * 64},
+                },
+                "toolchain": {
+                    "application": {
+                        "source_commit": resolved_commit,
+                        "declared_source_commit": declared_commit,
+                        "appliance_manifest": "deploy/radeon/appliance-manifest.json",
+                        "appliance_manifest_sha256": "2" * 64,
+                        "binary_sha256": "5" * 64,
+                    }
+                },
+            },
+            self.appliance,
+            "deploy/radeon/appliance-manifest.json",
+            "2" * 64,
+        )
+        self.assertEqual(mismatched["status"], "preparing")
+        self.assertEqual(mismatched["phase"], "application-identity-mismatch")
+
+    def test_native_status_rejects_source_outside_selected_manifest_authority(self) -> None:
+        binary_sha256 = "5" * 64
+        status = STATUS.bind_native_identity(
+            {
+                "status": "ready",
+                "phase": "ready",
+                "application_health": {
+                    "status": "ready",
+                    "identities": {"application": f"sha256:{binary_sha256}"},
+                },
+                "toolchain": {
+                    "application": {
+                        "source_commit": "4" * 40,
+                        "declared_source_commit": "4" * 40,
+                        "appliance_manifest": "deploy/radeon/appliance-manifest.json",
+                        "appliance_manifest_sha256": "2" * 64,
+                        "binary_sha256": binary_sha256,
+                    }
+                },
+            },
+            self.appliance,
+            "deploy/radeon/appliance-manifest.json",
+            "2" * 64,
+        )
+        self.assertEqual(status["status"], "preparing")
+        self.assertEqual(status["phase"], "application-source-authority-mismatch")
+
+    def test_native_status_rejects_legacy_or_wrong_manifest_authority(self) -> None:
+        declared_commit = self.appliance["application"]["source_commit"]
+        resolved_commit = subprocess.check_output(
+            ["git", "rev-parse", f"{declared_commit}^{{commit}}"],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+        binary_sha256 = "5" * 64
+        base_status = {
+            "status": "ready",
+            "phase": "ready",
+            "application_health": {
+                "status": "ready",
+                "identities": {"application": f"sha256:{binary_sha256}"},
+            },
+        }
+
+        legacy = STATUS.bind_native_identity(
+            {
+                **base_status,
+                "toolchain": {
+                    "application": {
+                        "source_commit": resolved_commit,
+                        "binary_sha256": binary_sha256,
+                    }
+                },
+            },
+            self.appliance,
+            "deploy/radeon/appliance-manifest.json",
+            "2" * 64,
+        )
+        self.assertEqual(legacy["status"], "preparing")
+        self.assertEqual(legacy["phase"], "application-source-authority-missing")
+
+        wrong_manifest = STATUS.bind_native_identity(
+            {
+                **base_status,
+                "toolchain": {
+                    "application": {
+                        "source_commit": resolved_commit,
+                        "declared_source_commit": declared_commit,
+                        "appliance_manifest": "deploy/radeon/appliance-manifest.json",
+                        "appliance_manifest_sha256": "3" * 64,
+                        "binary_sha256": binary_sha256,
+                    }
+                },
+            },
+            self.appliance,
+            "deploy/radeon/appliance-manifest.json",
+            "2" * 64,
+        )
+        self.assertEqual(wrong_manifest["status"], "preparing")
+        self.assertEqual(
+            wrong_manifest["phase"],
+            "application-source-authority-mismatch",
+        )
+
+    def test_native_status_accepts_matching_application_receipt(self) -> None:
+        declared_commit = self.appliance["application"]["source_commit"]
+        resolved_commit = subprocess.check_output(
+            ["git", "rev-parse", f"{declared_commit}^{{commit}}"],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+        binary_sha256 = "5" * 64
+        status = STATUS.bind_native_identity(
+            {
+                "status": "ready",
+                "phase": "ready",
+                "application_health": {
+                    "status": "ready",
+                    "identities": {"application": f"sha256:{binary_sha256}"},
+                },
+                "toolchain": {
+                    "application": {
+                        "source_commit": resolved_commit,
+                        "declared_source_commit": declared_commit,
+                        "appliance_manifest": "deploy/radeon/appliance-manifest.json",
+                        "appliance_manifest_sha256": "2" * 64,
+                        "binary_sha256": binary_sha256,
+                    }
+                },
+            },
+            self.appliance,
+            "deploy/radeon/appliance-manifest.json",
+            "2" * 64,
+        )
+        self.assertEqual(status["status"], "ready")
+        self.assertEqual(
+            status["identities"]["executed_application_binary_sha256"],
+            binary_sha256,
+        )
 
     def test_log_redactor_removes_secret_and_private_bodies(self) -> None:
         line = (
@@ -202,6 +400,37 @@ class RadeonOperatorTests(unittest.TestCase):
                     text=True,
                 )
 
+    @unittest.skipUnless(shutil.which("docker"), "Docker is unavailable on this test host")
+    def test_docker_compose_renders_explicit_candidate_without_changing_defaults(self) -> None:
+        candidate = json.loads(
+            (ROOT / "deploy/radeon/appliance-manifest.vnext.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        result = subprocess.run(
+            [
+                "docker",
+                "compose",
+                "--env-file",
+                "container.env.example",
+                "--profile",
+                "fixture",
+                "config",
+                "--images",
+            ],
+            cwd=ROOT,
+            env={
+                **os.environ,
+                "SIGNALFORGE_APP_IMAGE": candidate["application"]["image"],
+                "SIGNALFORGE_LLAMA_ROCM_IMAGE": candidate["runtime"]["image"],
+            },
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn(candidate["application"]["image"], result.stdout)
+        self.assertIn(self.appliance["application"]["image"], (ROOT / "container.env.example").read_text())
+
     def test_static_appliance_audit_passes(self) -> None:
         result = subprocess.run(
             ["python3", "scripts/radeon_validate_appliance.py"],
@@ -212,6 +441,27 @@ class RadeonOperatorTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(json.loads(result.stdout)["status"], "passed")
+
+    def test_static_candidate_appliance_audit_passes(self) -> None:
+        result = subprocess.run(
+            [
+                "python3",
+                "scripts/radeon_validate_appliance.py",
+                "--manifest",
+                "deploy/radeon/appliance-manifest.vnext.json",
+            ],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report["status"], "passed")
+        self.assertEqual(
+            report["manifest_authority"]["path"],
+            "deploy/radeon/appliance-manifest.vnext.json",
+        )
 
 
 if __name__ == "__main__":

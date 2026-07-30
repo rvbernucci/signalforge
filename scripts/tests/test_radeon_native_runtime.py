@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import socket
 import tempfile
 import unittest
@@ -15,6 +16,7 @@ SPEC = importlib.util.spec_from_file_location(
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
+MANIFEST = MODULE.radeon_manifest
 
 
 class RadeonNativeRuntimeTests(unittest.TestCase):
@@ -31,12 +33,93 @@ class RadeonNativeRuntimeTests(unittest.TestCase):
     def test_native_commands_bind_model_and_application_to_loopback(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            command = MODULE.app_command(root / "signalforge-workspace", root, "radeon-local")
+            source_root = root / "authorized-source"
+            command = MODULE.app_command(
+                root / "signalforge-workspace",
+                root,
+                "radeon-local",
+                source_root,
+            )
             llama_environment = MODULE.llama_environment(root, root / "llama-server")
         self.assertIn("127.0.0.1:8080", command)
         self.assertIn("http://127.0.0.1:8000/v1", command)
+        self.assertIn(str(source_root / "web/dist"), command)
+        self.assertIn(
+            str(source_root / "fixtures/golden/financial-snapshot.json"),
+            command,
+        )
         self.assertEqual(llama_environment["SIGNALFORGE_MODEL_HOST"], "127.0.0.1")
         self.assertEqual(llama_environment["SIGNALFORGE_VERIFY_MODEL_HASH"], "1")
+
+    def test_start_rejects_unresolvable_manifest_source_before_hydration(self) -> None:
+        appliance = json.loads(
+            (ROOT / "deploy/radeon/appliance-manifest.vnext.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        appliance["application"]["source_commit"] = "f" * 40
+        selection = MANIFEST.ManifestSelection(
+            path=ROOT / "deploy/radeon/appliance-manifest.vnext.json",
+            reference="deploy/radeon/appliance-manifest.vnext.json",
+            sha256="1" * 64,
+            manifest=appliance,
+        )
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(MODULE, "hydrate_model") as hydrate,
+        ):
+            with self.assertRaisesRegex(MODULE.NativeRuntimeError, "authorized source"):
+                MODULE.start(
+                    Path(directory),
+                    "championship",
+                    ROOT / ".secrets",
+                    manifest_selection=selection,
+                    allow_dirty=True,
+                )
+        hydrate.assert_not_called()
+
+    def test_mismatched_build_receipt_never_reaches_credential_environment(self) -> None:
+        selection = MANIFEST.select_manifest(
+            ROOT / "deploy/radeon/appliance-manifest.vnext.json",
+            environment={},
+        )
+        binary_sha256 = "5" * 64
+        unauthorized_toolchain = {
+            "application": {
+                "source_commit": "f" * 40,
+                "declared_source_commit": "f" * 40,
+                "appliance_manifest": selection.reference,
+                "appliance_manifest_sha256": selection.sha256,
+                "binary_sha256": binary_sha256,
+            },
+            "application_binary": "/tmp/unauthorized-signalforge",
+            "llama_cpp": None,
+        }
+        stale_status = {
+            "status": "ready",
+            "phase": "ready",
+            "toolchain": {"application": unauthorized_toolchain["application"]},
+        }
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(MODULE, "native_status", return_value=stale_status),
+            mock.patch.object(MODULE, "read_process", return_value=None),
+            mock.patch.object(
+                MODULE.radeon_native_toolchain,
+                "prepare",
+                return_value=unauthorized_toolchain,
+            ),
+            mock.patch.object(MODULE, "app_environment") as app_environment,
+        ):
+            with self.assertRaisesRegex(MODULE.NativeRuntimeError, "release authority"):
+                MODULE.start(
+                    Path(directory),
+                    "fixture",
+                    ROOT / ".secrets",
+                    manifest_selection=selection,
+                    allow_dirty=True,
+                )
+        app_environment.assert_not_called()
 
     def test_empty_native_status_is_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

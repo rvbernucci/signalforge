@@ -8,6 +8,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -22,10 +23,14 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import radeon_model_cache
+import radeon_manifest
 
 
 class NativeToolchainError(RuntimeError):
     pass
+
+
+FULL_GIT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -102,6 +107,108 @@ def safe_extract_go(archive: Path, destination: Path) -> None:
     except Exception:
         remove_directory(destination)
         raise
+
+
+def safe_extract_source(archive: Path, destination: Path) -> None:
+    if destination.exists():
+        raise NativeToolchainError(f"extraction destination already exists: {destination}")
+    destination.mkdir(parents=True, mode=0o700)
+    try:
+        with tarfile.open(archive, "r:") as bundle:
+            members = bundle.getmembers()
+            if not members:
+                raise NativeToolchainError("application source archive is empty")
+            for member in members:
+                relative = PurePosixPath(member.name)
+                if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+                    raise NativeToolchainError(
+                        f"unsafe application source archive member: {member.name}"
+                    )
+                if member.issym() or member.islnk() or member.isdev() or member.isfifo():
+                    raise NativeToolchainError(
+                        f"unsupported application source archive member type: {member.name}"
+                    )
+                target = destination.joinpath(*relative.parts)
+                if member.isdir():
+                    target.mkdir(parents=True, exist_ok=True)
+                    os.chmod(target, member.mode & 0o777)
+                    continue
+                if not member.isfile():
+                    raise NativeToolchainError(
+                        f"unsupported application source archive member: {member.name}"
+                    )
+                target.parent.mkdir(parents=True, exist_ok=True)
+                source = bundle.extractfile(member)
+                if source is None:
+                    raise NativeToolchainError(
+                        f"cannot read application source archive member: {member.name}"
+                    )
+                with source, target.open("wb") as output:
+                    shutil.copyfileobj(source, output, 1024 * 1024)
+                os.chmod(target, member.mode & 0o777)
+    except Exception:
+        remove_directory(destination)
+        raise
+
+
+def resolve_source_commit(root: Path, declared_commit: str) -> str:
+    if not radeon_manifest.SOURCE_COMMIT.fullmatch(declared_commit):
+        raise NativeToolchainError("authorized source commit is malformed")
+    result = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", f"{declared_commit}^{{commit}}"],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    resolved = result.stdout.strip()
+    if (
+        result.returncode
+        or not FULL_GIT_COMMIT.fullmatch(resolved)
+        or not resolved.startswith(declared_commit)
+    ):
+        raise NativeToolchainError(
+            "authorized source commit is unavailable or ambiguous in the local repository"
+        )
+    return resolved
+
+
+def materialize_source(repository: Path, commit: str, destination: Path) -> None:
+    if not FULL_GIT_COMMIT.fullmatch(commit):
+        raise NativeToolchainError("resolved application source commit is invalid")
+    ensure_directory(destination.parent)
+    staging = destination.parent / f".{destination.name}.extract-{os.getpid()}"
+    archive = destination.parent / f".{destination.name}.archive-{os.getpid()}.tar"
+    remove_directory(staging)
+    remove_directory(destination)
+    archive.unlink(missing_ok=True)
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repository),
+                "archive",
+                "--format=tar",
+                "--output",
+                str(archive),
+                commit,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        if result.returncode or not archive.is_file() or archive.is_symlink():
+            raise NativeToolchainError(
+                "failed to materialize the authorized application source commit"
+            )
+        safe_extract_source(archive, staging)
+        os.replace(staging, destination)
+    finally:
+        archive.unlink(missing_ok=True)
+        if staging.exists():
+            remove_directory(staging)
 
 
 def go_version(go_binary: Path) -> str | None:
@@ -216,15 +323,43 @@ def git_source_identity(root: Path, allow_dirty: bool) -> tuple[str, bool]:
     return commit, dirty
 
 
-def verify_source_locks(manifest: dict[str, Any]) -> None:
+def verify_source_locks(
+    manifest: dict[str, Any],
+    source_root: Path = ROOT,
+) -> None:
     app = manifest["application"]
     for path_key, sha_key in (
         ("package_lock_path", "package_lock_sha256"),
         ("go_sum_path", "go_sum_sha256"),
     ):
-        path = ROOT / app[path_key]
+        path = source_root / app[path_key]
         if not path.is_file() or sha256_file(path) != app[sha_key]:
             raise NativeToolchainError(f"source lock does not match native manifest: {path}")
+
+
+def application_authority_error(
+    receipt: dict[str, Any],
+    selection: radeon_manifest.ManifestSelection,
+    resolved_source_commit: str,
+) -> str | None:
+    declared_source_commit = selection.manifest["application"]["source_commit"]
+    if (
+        not FULL_GIT_COMMIT.fullmatch(str(receipt.get("source_commit", "")))
+        or not isinstance(receipt.get("declared_source_commit"), str)
+        or not isinstance(receipt.get("appliance_manifest"), str)
+        or not radeon_manifest.SHA256.fullmatch(
+            str(receipt.get("appliance_manifest_sha256", ""))
+        )
+    ):
+        return "application-source-authority-missing"
+    if (
+        receipt["source_commit"] != resolved_source_commit
+        or receipt["declared_source_commit"] != declared_source_commit
+        or receipt["appliance_manifest"] != selection.reference
+        or receipt["appliance_manifest_sha256"] != selection.sha256
+    ):
+        return "application-source-authority-mismatch"
+    return None
 
 
 def native_build_environment(
@@ -284,45 +419,68 @@ def build_application(
     manifest: dict[str, Any],
     go_binary: Path,
     *,
+    appliance_selection: radeon_manifest.ManifestSelection,
+    resolved_source_commit: str,
     allow_dirty: bool,
     timeout_seconds: float,
 ) -> tuple[Path, dict[str, Any]]:
-    verify_source_locks(manifest)
-    commit, dirty = git_source_identity(ROOT, allow_dirty)
+    operator_commit, operator_dirty = git_source_identity(ROOT, allow_dirty)
     app = manifest["application"]
     binary = persist_root / app["binary_relative_path"]
     marker = persist_root / "state/native/app-build.json"
-    if marker.is_file() and binary.is_file() and not binary.is_symlink():
+    source_root = persist_root / f"state/native/sources/{resolved_source_commit}"
+    if (
+        marker.is_file()
+        and binary.is_file()
+        and not binary.is_symlink()
+        and source_root.is_dir()
+        and not source_root.is_symlink()
+        and (source_root / "web/dist/index.html").is_file()
+    ):
         try:
             receipt = load_json(marker)
         except (OSError, json.JSONDecodeError):
             receipt = {}
         if (
-            receipt.get("source_commit") == commit
+            application_authority_error(
+                receipt,
+                appliance_selection,
+                resolved_source_commit,
+            )
+            is None
             and receipt.get("package_lock_sha256") == app["package_lock_sha256"]
             and receipt.get("go_sum_sha256") == app["go_sum_sha256"]
             and receipt.get("binary_sha256") == sha256_file(binary)
+            and receipt.get("source_root") == str(source_root)
         ):
+            verify_source_locks(manifest, source_root)
             return binary, receipt
 
+    materialize_source(ROOT, resolved_source_commit, source_root)
+    verify_source_locks(manifest, source_root)
     environment = native_build_environment(go_binary, persist_root, manifest)
     logs = persist_root / "state/native/logs"
     ensure_directory(logs)
-    run_logged(
-        ["npm", "ci", "--no-audit", "--no-fund"],
-        cwd=ROOT / "web",
-        environment=environment,
-        log_path=logs / "native-build.log",
-        timeout=timeout_seconds,
-    )
-    run_logged(
-        ["npm", "run", "build"],
-        cwd=ROOT / "web",
-        environment=environment,
-        log_path=logs / "native-build.log",
-        timeout=timeout_seconds,
-    )
-    if not (ROOT / "web/dist/index.html").is_file():
+    node_modules = source_root / "web/node_modules"
+    try:
+        run_logged(
+            ["npm", "ci", "--no-audit", "--no-fund"],
+            cwd=source_root / "web",
+            environment=environment,
+            log_path=logs / "native-build.log",
+            timeout=timeout_seconds,
+        )
+        run_logged(
+            ["npm", "run", "build"],
+            cwd=source_root / "web",
+            environment=environment,
+            log_path=logs / "native-build.log",
+            timeout=timeout_seconds,
+        )
+    finally:
+        if node_modules.exists():
+            remove_directory(node_modules)
+    if not (source_root / "web/dist/index.html").is_file():
         raise NativeToolchainError("frontend build did not publish web/dist/index.html")
     ensure_directory(binary.parent)
     temporary = binary.with_name(f".{binary.name}.{os.getpid()}.tmp")
@@ -333,12 +491,12 @@ def build_application(
                 "build",
                 "-trimpath",
                 "-ldflags",
-                f"-s -w -X main.buildCommit={commit}",
+                f"-s -w -X main.buildCommit={resolved_source_commit}",
                 "-o",
                 str(temporary),
                 app["command"],
             ],
-            cwd=ROOT,
+            cwd=source_root,
             environment=environment,
             log_path=logs / "native-build.log",
             timeout=timeout_seconds,
@@ -349,8 +507,16 @@ def build_application(
         temporary.unlink(missing_ok=True)
     receipt = {
         "schema_version": "signalforge/native-app-build/v1",
-        "source_commit": commit,
-        "source_dirty": dirty,
+        "source_commit": resolved_source_commit,
+        "declared_source_commit": appliance_selection.manifest["application"][
+            "source_commit"
+        ],
+        "source_dirty": False,
+        "source_root": str(source_root),
+        "operator_commit": operator_commit,
+        "operator_dirty": operator_dirty,
+        "appliance_manifest": appliance_selection.reference,
+        "appliance_manifest_sha256": appliance_selection.sha256,
         "go_version": manifest["go"]["version"],
         "package_lock_sha256": app["package_lock_sha256"],
         "go_sum_sha256": app["go_sum_sha256"],
@@ -419,12 +585,18 @@ def prepare(
     profile: str,
     manifest: dict[str, Any],
     *,
+    appliance_selection: radeon_manifest.ManifestSelection,
+    resolved_source_commit: str | None = None,
     allow_dirty: bool,
     retries: int,
     download_timeout_seconds: float,
     build_timeout_seconds: float,
 ) -> dict[str, Any]:
     ensure_directory(persist_root)
+    resolved_source_commit = resolved_source_commit or resolve_source_commit(
+        ROOT,
+        appliance_selection.manifest["application"]["source_commit"],
+    )
     lock_path = persist_root / "state/native/toolchain.lock"
     ensure_directory(lock_path.parent)
     with lock_path.open("a+b") as lock:
@@ -439,6 +611,8 @@ def prepare(
             persist_root,
             manifest,
             go_binary,
+            appliance_selection=appliance_selection,
+            resolved_source_commit=resolved_source_commit,
             allow_dirty=allow_dirty,
             timeout_seconds=build_timeout_seconds,
         )
@@ -469,16 +643,23 @@ def main() -> int:
         type=Path,
         default=ROOT / "deploy/radeon/native-toolchain-manifest.json",
     )
+    parser.add_argument("--appliance-manifest", type=Path)
+    parser.add_argument("--appliance-manifest-sha256")
     parser.add_argument("--allow-dirty", action="store_true")
     parser.add_argument("--retries", type=int, default=5)
     parser.add_argument("--download-timeout-seconds", type=float, default=60)
     parser.add_argument("--build-timeout-seconds", type=float, default=1800)
     args = parser.parse_args()
     try:
+        appliance_selection = radeon_manifest.select_manifest(
+            args.appliance_manifest,
+            args.appliance_manifest_sha256,
+        )
         result = prepare(
             args.persist_root.expanduser().resolve(),
             args.profile,
             load_json(args.manifest),
+            appliance_selection=appliance_selection,
             allow_dirty=args.allow_dirty,
             retries=args.retries,
             download_timeout_seconds=args.download_timeout_seconds,
@@ -486,6 +667,7 @@ def main() -> int:
         )
     except (
         NativeToolchainError,
+        radeon_manifest.ManifestError,
         radeon_model_cache.ModelCacheError,
         OSError,
         subprocess.SubprocessError,

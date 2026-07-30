@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import subprocess
 import tarfile
 import tempfile
 import unittest
@@ -72,6 +73,57 @@ class RadeonNativeToolchainTests(unittest.TestCase):
             with self.assertRaisesRegex(MODULE.NativeToolchainError, "unsafe"):
                 MODULE.safe_extract_go(archive, root / "extract")
             self.assertFalse((root / "escape").exists())
+
+    def test_materialized_application_source_comes_from_selected_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repository"
+            repository.mkdir()
+            subprocess.run(["git", "init", "--quiet"], cwd=repository, check=True)
+            subprocess.run(
+                ["git", "config", "user.email", "test@example.invalid"],
+                cwd=repository,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "SignalForge Test"],
+                cwd=repository,
+                check=True,
+            )
+            source = repository / "source.txt"
+            source.write_text("authorized\n", encoding="utf-8")
+            subprocess.run(["git", "add", "source.txt"], cwd=repository, check=True)
+            subprocess.run(
+                ["git", "commit", "--quiet", "-m", "authorized source"],
+                cwd=repository,
+                check=True,
+            )
+            selected_commit = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=repository,
+                text=True,
+            ).strip()
+            source.write_text("unselected working tree\n", encoding="utf-8")
+
+            destination = root / "materialized"
+            MODULE.materialize_source(repository, selected_commit, destination)
+
+            self.assertEqual(
+                (destination / "source.txt").read_text(encoding="utf-8"),
+                "authorized\n",
+            )
+
+    def test_safe_source_extraction_rejects_symbolic_links(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "unsafe.tar"
+            with tarfile.open(archive, "w") as bundle:
+                info = tarfile.TarInfo("link")
+                info.type = tarfile.SYMTYPE
+                info.linkname = "/etc/passwd"
+                bundle.addfile(info)
+            with self.assertRaisesRegex(MODULE.NativeToolchainError, "unsupported"):
+                MODULE.safe_extract_source(archive, root / "extract")
 
     def test_source_lock_hashes_match_the_native_manifest(self) -> None:
         manifest = json.loads(

@@ -261,6 +261,7 @@ class RadeonPreflightTests(unittest.TestCase):
                 base_facts(root),
                 self.manifest,
                 self.model_manifest,
+                MODULE.radeon_manifest.select_manifest(environment={}),
                 persist_root=root / "runtime",
                 profile="radeon-local",
                 license_accepted=True,
@@ -270,6 +271,14 @@ class RadeonPreflightTests(unittest.TestCase):
         self.assertIn("SIGNALFORGE_RENDER_GID=993", generated)
         self.assertIn("SIGNALFORGE_VIDEO_GID=992", generated)
         self.assertIn("SIGNALFORGE_ACCEPT_GEMMA_LICENSE=yes", generated)
+        self.assertIn(
+            "SIGNALFORGE_APPLIANCE_MANIFEST=deploy/radeon/appliance-manifest.json",
+            generated,
+        )
+        self.assertRegex(
+            generated,
+            r"SIGNALFORGE_APPLIANCE_MANIFEST_SHA256=[0-9a-f]{64}",
+        )
         self.assertIn("SIGNALFORGE_APPLICATION_ARTIFACT_IDENTITY=ghcr.io/", generated)
         self.assertIn("SIGNALFORGE_MODEL_ARTIFACT_IDENTITY=sha256:", generated)
         self.assertIn("SIGNALFORGE_RUNTIME_IDENTITY=rocm/llama.cpp@sha256:", generated)

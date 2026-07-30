@@ -2,6 +2,7 @@ PROFILE ?= radeon-local
 BACKEND ?= auto
 ACCEPT_GEMMA_LICENSE ?= no
 RADEON_NONINTERACTIVE ?= 0
+MANIFEST ?=
 
 .PHONY: verify fixture-up fixture-down radeon-bootstrap radeon-preflight radeon-up \
 	radeon-local-up championship-up radeon-status radeon-logs radeon-observe \
@@ -14,6 +15,7 @@ verify:
 
 fixture-up:
 	SIGNALFORGE_PROFILE=fixture SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
 		scripts/radeon_up.sh
 
 fixture-down:
@@ -22,30 +24,37 @@ fixture-down:
 
 radeon-bootstrap:
 	SIGNALFORGE_ACCEPT_GEMMA_LICENSE="$(ACCEPT_GEMMA_LICENSE)" \
+		SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
 		python3 scripts/radeon_bootstrap.py \
 		--profile "$(PROFILE)" \
 		--backend "$(BACKEND)" \
+		$(if $(strip $(MANIFEST)),--manifest "$(MANIFEST)",) \
 		$(if $(filter yes,$(ACCEPT_GEMMA_LICENSE)),--accept-gemma-license,) \
 		$(if $(filter 1,$(RADEON_NONINTERACTIVE)),--noninteractive,)
 
 radeon-preflight:
 	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
 		scripts/radeon_preflight.sh
 
 radeon-up:
 	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
 		scripts/radeon_up.sh
 
 radeon-local-up:
 	SIGNALFORGE_PROFILE=radeon-local SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
 		scripts/radeon_up.sh
 
 championship-up:
 	SIGNALFORGE_PROFILE=championship SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
 		scripts/radeon_up.sh
 
 radeon-status:
-	python3 scripts/radeon_status.py --profile "$(PROFILE)" --backend "$(BACKEND)"
+	SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
+		python3 scripts/radeon_status.py --profile "$(PROFILE)" --backend "$(BACKEND)"
 
 radeon-logs:
 	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
@@ -53,6 +62,7 @@ radeon-logs:
 
 radeon-observe:
 	SIGNALFORGE_PROFILE="$(PROFILE)" SIGNALFORGE_EXECUTION_BACKEND="$(BACKEND)" \
+		SIGNALFORGE_APPLIANCE_MANIFEST="$(MANIFEST)" \
 		SIGNALFORGE_OBSERVABILITY=1 \
 		SIGNALFORGE_OTEL_ENABLED=true scripts/radeon_up.sh
 

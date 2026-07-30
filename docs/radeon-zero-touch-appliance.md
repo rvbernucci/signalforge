@@ -29,6 +29,21 @@ make radeon-bootstrap ACCEPT_GEMMA_LICENSE=yes
 make radeon-up
 ```
 
+The default remains the accepted `v1.1.1` rollback. To exercise the separate, unpromoted vNext
+candidate, select its manifest explicitly for both commands:
+
+```bash
+make radeon-bootstrap \
+  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
+  ACCEPT_GEMMA_LICENSE=yes
+make radeon-up MANIFEST=deploy/radeon/appliance-manifest.vnext.json
+```
+
+The first successful preflight records the selected repository-relative path and SHA-256 under
+persistent state. A later command rejects a conflicting CLI, environment, or generated-state
+selection. It also rejects changed bytes, symbolic links, paths outside `deploy/radeon`, mutable
+image tags, and non-`linux/amd64` manifests before startup.
+
 The setup command:
 
 - selects `compose` only when Docker Engine and Compose are healthy, otherwise selects `native`;
@@ -76,13 +91,21 @@ cache.
   toolchain for `gfx1100`.
 - Native frontend construction uses `npm ci` and the pinned package lock. Backend construction
   uses the pinned Go toolchain, `go.sum`, `GOTOOLCHAIN=local`, the Radeon-region Go proxy and
-  checksum mirror declared in the native manifest, persistent module/build caches, and a clean Git
-  commit identity.
+  checksum mirror declared in the native manifest, and persistent module/build caches.
+- Native application construction never compiles the mutable working tree. It resolves the
+  selected appliance manifest's `application.source_commit`, requires that object to exist in the
+  local Git database, safely materializes it through `git archive` into an isolated persistent
+  tree, verifies the dependency locks there, and builds both frontend and Go binary from that
+  exact commit. It performs no runtime Git fetch.
 - Native processes bind to loopback. PID receipts, logs, build receipts, health state, and
   readiness live under `/workspace/signalforge-runtime/state/native` with private permissions.
 - Native startup refuses an application or model port owned by an untracked process, and
-  application readiness must report the exact source commit and runtime profile launched by the
-  supervisor.
+  application readiness must report the exact source commit, binary digest, and runtime profile
+  launched by the supervisor.
+- Native build receipts bind the resolved source commit to the declared commit, selected manifest
+  path, and selected manifest SHA-256. Old, incomplete, or mismatched receipts cannot be reused,
+  cannot remain `ready`, and are rejected before the specialist credential path is added to the
+  application environment.
 - Championship passes only `.secrets/radeon-model-api-key` to the application through
   `SIGNALFORGE_SPECIALIST_API_KEY_FILE`; the value is not placed in an environment variable or
   command line.
@@ -150,7 +173,8 @@ Git, an OCI layer, or a command-line argument.
 
 The authoritative identities live in:
 
-- `deploy/radeon/appliance-manifest.json`;
+- `deploy/radeon/appliance-manifest.json`, the accepted rollback default;
+- `deploy/radeon/appliance-manifest.vnext.json`, the explicit unpromoted candidate;
 - `deploy/radeon/model-manifest.json`; and
 - `deploy/radeon/native-toolchain-manifest.json`; and
 - the generated preflight report under `/workspace/signalforge-runtime/state/preflight.json`.
@@ -165,8 +189,14 @@ The current zero-touch contract pins:
 - the exact Gemma repository, revision, filename, byte size, SHA-256, license locator, and served
   model ID.
 
-No moving tag is sufficient for a release. A future application release must update the appliance
-manifest, Compose default, environment example, and static appliance audit together.
+No moving tag is sufficient for a release. A candidate reaches Compose only through the
+hash-bound generated environment. The static Compose and environment-example defaults change only
+after promotion, when the candidate becomes the new accepted rollback authority.
+
+For the native backend, the selected source commit must be present in the local Git object
+database. A normal clone satisfies this contract for the accepted rollback and vNext authorities.
+A shallow or incomplete clone that excludes the selected commit fails closed; startup never
+silently fetches or substitutes another revision.
 
 ## Model Hydration Contract
 
@@ -212,8 +242,8 @@ without the exact confirmation phrase.
 
 ## Network Boundary
 
-First-run pulls are declared by backend in `deploy/radeon/appliance-manifest.json`. Compose checks
-only its OCI registries. Native checks the AMD-image Git proxy, Google Go distribution, the
+First-run pulls are declared by backend in the selected appliance manifest. Compose checks only
+its OCI registries. Native checks the AMD-image Git proxy, Google Go distribution, the
 Radeon-region Go module/checksum mirrors, and npm. The model destination is checked only when a
 local model is required and the verified cache is absent. The preflight performs TLS connectivity
 checks without credentials.
@@ -238,6 +268,8 @@ The model runtime is never published to the host. Observability endpoints bind t
 | `application-startup` | Model is ready but the workspace is not | Inspect application health and redacted logs |
 | `compose-unavailable` | Existing Docker/Compose cannot be used | Repair the host image; the appliance will not install a duplicate runtime |
 | `native-build` | Go, npm, application, or llama.cpp has not completed | Inspect redacted `native-build.log`; no host package is installed |
+| `application-source-authority-missing` | A cached native receipt predates or omits the selected release authority | Restart with `make radeon-up`; the authorized source is rebuilt |
+| `application-source-authority-mismatch` | Native receipt, source commit, manifest path, or manifest SHA differs from the selected authority | Stop and inspect the selected manifest; no credentialed app is released |
 | `model-runtime` | Native llama-server is absent or unhealthy | Check the pinned build receipt and `make radeon-logs` |
 | `ready` | App, verified model, and mandatory dependencies satisfy the selected profile | Open the workspace URL |
 
@@ -250,7 +282,10 @@ The following checks run without a live GPU:
 
 ```bash
 python3 scripts/radeon_validate_appliance.py
+python3 scripts/radeon_validate_appliance.py \
+  --manifest deploy/radeon/appliance-manifest.vnext.json
 python3 -m unittest \
+  scripts.tests.test_radeon_manifest \
   scripts.tests.test_radeon_backend \
   scripts.tests.test_radeon_model_cache \
   scripts.tests.test_radeon_native_toolchain \

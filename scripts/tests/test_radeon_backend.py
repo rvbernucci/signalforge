@@ -59,6 +59,7 @@ class RadeonBackendTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "generated.env"
             path.write_text("SIGNALFORGE_EXECUTION_BACKEND=native\n")
+            path.chmod(0o600)
             self.assertEqual(MODULE.read_generated_backend(path), "native")
             path.write_text("SIGNALFORGE_EXECUTION_BACKEND=auto\n")
             self.assertIsNone(MODULE.read_generated_backend(path))

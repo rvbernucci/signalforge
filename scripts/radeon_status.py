@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -21,7 +22,13 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import radeon_backend
+import radeon_manifest
 import radeon_native_runtime
+import radeon_native_toolchain
+
+
+GIT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 def load_json(path: Path) -> dict[str, Any] | None:
@@ -120,6 +127,80 @@ def expected_app_service(profile: str) -> str:
     }[profile]
 
 
+def bind_native_identity(
+    status: dict[str, Any],
+    appliance: dict[str, Any],
+    manifest_reference: str,
+    manifest_sha256: str,
+) -> dict[str, Any]:
+    toolchain = status.get("toolchain") or {}
+    application_receipt = toolchain.get("application") or {}
+    source_commit = application_receipt.get("source_commit")
+    binary_sha256 = application_receipt.get("binary_sha256")
+    health_identity = (
+        (status.get("application_health") or {})
+        .get("identities", {})
+        .get("application")
+    )
+    receipt_complete = bool(
+        isinstance(source_commit, str)
+        and GIT_COMMIT.fullmatch(source_commit)
+        and isinstance(binary_sha256, str)
+        and SHA256.fullmatch(binary_sha256)
+    )
+    identity_matches = bool(
+        receipt_complete and health_identity == f"sha256:{binary_sha256}"
+    )
+    selection = radeon_manifest.ManifestSelection(
+        path=ROOT / manifest_reference,
+        reference=manifest_reference,
+        sha256=manifest_sha256,
+        manifest=appliance,
+    )
+    try:
+        resolved_source_commit = radeon_native_toolchain.resolve_source_commit(
+            ROOT,
+            appliance["application"]["source_commit"],
+        )
+        authority_error = radeon_native_toolchain.application_authority_error(
+            application_receipt,
+            selection,
+            resolved_source_commit,
+        )
+    except radeon_native_toolchain.NativeToolchainError:
+        resolved_source_commit = None
+        authority_error = "application-source-authority-mismatch"
+    if status.get("status") == "ready" and not receipt_complete:
+        status["status"] = "preparing"
+        status["phase"] = "application-identity-missing"
+    elif status.get("status") == "ready" and authority_error:
+        status["status"] = "preparing"
+        status["phase"] = authority_error
+    elif status.get("status") == "ready" and not identity_matches:
+        status["status"] = "preparing"
+        status["phase"] = "application-identity-mismatch"
+    status["manifest_authority"] = {
+        "path": manifest_reference,
+        "sha256": manifest_sha256,
+    }
+    status["identities"] = {
+        "appliance_version": appliance["appliance_version"],
+        "appliance_manifest": manifest_reference,
+        "appliance_manifest_sha256": manifest_sha256,
+        "declared_application_image": appliance["application"]["image"],
+        "declared_application_source_commit": appliance["application"]["source_commit"],
+        "resolved_application_source_commit": resolved_source_commit,
+        "executed_application_source_commit": (
+            source_commit if receipt_complete else None
+        ),
+        "executed_application_binary_sha256": (
+            binary_sha256 if receipt_complete else None
+        ),
+        "llama_cpp_revision": appliance["execution"]["native"]["llama_cpp_revision"],
+    }
+    return status
+
+
 def build_status(
     *,
     profile: str,
@@ -129,6 +210,8 @@ def build_status(
     model_state: dict[str, Any] | None,
     runtime_state: dict[str, Any] | None,
     appliance_manifest: dict[str, Any],
+    manifest_reference: str,
+    manifest_sha256: str,
     model_manifest: dict[str, Any],
     app_port: int,
     grafana_port: int,
@@ -136,9 +219,14 @@ def build_status(
     summarized = service_summary(services)
     expected = expected_app_service(profile)
     app_service = next((item for item in summarized if item["service"] == expected), None)
+    expected_image = appliance_manifest["application"]["image"]
+    application_image_matches = bool(
+        app_service and app_service["image"] == expected_image
+    )
     app_ready = (
         app_service is not None
         and app_service["state"] == "running"
+        and application_image_matches
         and app_health is not None
         and app_health.get("status") == "ready"
     )
@@ -152,6 +240,8 @@ def build_status(
         phase = "ready"
     elif compose_error:
         phase = "compose-unavailable"
+    elif app_service is not None and not application_image_matches:
+        phase = "application-identity-mismatch"
     elif local_required and not model_ready:
         phase = "model-hydration"
     elif local_required and not runtime_ready:
@@ -168,6 +258,10 @@ def build_status(
         "application_health": app_health,
         "model_state": model_state,
         "runtime_state": runtime_state,
+        "manifest_authority": {
+            "path": manifest_reference,
+            "sha256": manifest_sha256,
+        },
         "identities": {
             "appliance_version": appliance_manifest["appliance_version"],
             "application_image": appliance_manifest["application"]["image"],
@@ -188,21 +282,40 @@ def main() -> int:
     parser.add_argument("--profile", choices=("fixture", "radeon-local", "championship"), default="radeon-local")
     parser.add_argument("--backend", choices=("auto", "compose", "native"), default="auto")
     parser.add_argument("--persist-root", type=Path)
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--manifest-sha256")
     parser.add_argument("--wait-seconds", type=float, default=0)
     parser.add_argument("--poll-seconds", type=float, default=3)
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     persist_root = args.persist_root or radeon_backend.default_persist_root()
-    appliance = json.loads(
-        (ROOT / "deploy/radeon/appliance-manifest.json").read_text(encoding="utf-8")
+    try:
+        generated_manifest = radeon_manifest.read_generated_environment(
+            persist_root / "state/generated.env"
+        )
+        manifest_selection = radeon_manifest.select_manifest(
+            args.manifest,
+            args.manifest_sha256,
+            generated_environment=generated_manifest,
+        )
+    except (radeon_manifest.ManifestError, OSError) as error:
+        print(f"SignalForge appliance: unavailable ({error})", file=sys.stderr)
+        return 2
+    appliance = manifest_selection.manifest
+    model_manifest_path = radeon_manifest.component_path(
+        appliance["model_manifest"],
+        "model_manifest",
     )
     model = json.loads(
-        (ROOT / "deploy/radeon/model-manifest.json").read_text(encoding="utf-8")
+        model_manifest_path.read_text(encoding="utf-8")
     )
     requested_backend = args.backend
     if requested_backend == "auto":
         requested_backend = (
-            radeon_backend.read_generated_backend(persist_root / "state/generated.env")
+            radeon_backend.read_generated_backend(
+                persist_root / "state/generated.env",
+                generated_manifest,
+            )
             or "auto"
         )
     try:
@@ -218,14 +331,19 @@ def main() -> int:
         deadline = time.monotonic() + args.wait_seconds
         while True:
             status = radeon_native_runtime.native_status(persist_root, args.profile)
-            status["identities"] = {
-                "appliance_version": appliance["appliance_version"],
-                "source_commit": appliance["application"]["source_commit"],
-                "llama_cpp_revision": appliance["execution"]["native"]["llama_cpp_revision"],
-                "model_id": model["served_model_id"],
-                "model_revision": model["revision"],
-                "model_sha256": model["sha256"],
-            }
+            status = bind_native_identity(
+                status,
+                appliance,
+                manifest_selection.reference,
+                manifest_selection.sha256,
+            )
+            status["identities"].update(
+                {
+                    "model_id": model["served_model_id"],
+                    "model_revision": model["revision"],
+                    "model_sha256": model["sha256"],
+                }
+            )
             if status["status"] == "ready" or time.monotonic() >= deadline:
                 break
             time.sleep(args.poll_seconds)
@@ -265,6 +383,8 @@ def main() -> int:
             model_state=load_json(persist_root / "state/model-init.json"),
             runtime_state=load_json(persist_root / "state/runtime-ready.json"),
             appliance_manifest=appliance,
+            manifest_reference=manifest_selection.reference,
+            manifest_sha256=manifest_selection.sha256,
             model_manifest=model,
             app_port=app_port,
             grafana_port=grafana_port,

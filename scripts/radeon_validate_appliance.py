@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import radeon_manifest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DIGEST_IMAGE = re.compile(r"^[a-z0-9./:_-]+@sha256:[0-9a-f]{64}$")
@@ -22,19 +24,61 @@ def result(check_id: str, passed: bool, detail: str) -> dict[str, str]:
     return {"id": check_id, "status": "passed" if passed else "failed", "detail": detail}
 
 
-def validate(root: Path) -> dict[str, Any]:
-    appliance = json.loads(
-        (root / "deploy/radeon/appliance-manifest.json").read_text(encoding="utf-8")
+def resolve_git_commit(root: Path, declared_commit: str) -> str | None:
+    resolved = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", f"{declared_commit}^{{commit}}"],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    candidate = resolved.stdout.strip()
+    if resolved.returncode or not re.fullmatch(r"[0-9a-f]{40}", candidate):
+        return None
+    return candidate if candidate.startswith(declared_commit) else None
+
+
+def git_blob_sha256(root: Path, commit: str, path: str) -> str | None:
+    blob = subprocess.run(
+        ["git", "-C", str(root), "show", f"{commit}:{path}"],
+        check=False,
+        capture_output=True,
+        timeout=30,
+    )
+    if blob.returncode:
+        return None
+    return hashlib.sha256(blob.stdout).hexdigest()
+
+
+def validate(root: Path, manifest_path: Path | None = None) -> dict[str, Any]:
+    selection = radeon_manifest.select_manifest(
+        manifest_path or root / "deploy/radeon/appliance-manifest.json",
+        environment={},
+    )
+    appliance = selection.manifest
+    default_manifest_path = root / "deploy/radeon/appliance-manifest.json"
+    default_appliance = json.loads(default_manifest_path.read_text(encoding="utf-8"))
+    is_default = selection.path == default_manifest_path.resolve()
+    model_manifest_path = radeon_manifest.component_path(
+        appliance["model_manifest"],
+        "model_manifest",
+    )
+    native_manifest_path = radeon_manifest.component_path(
+        appliance["execution"]["native"]["toolchain_manifest"],
+        "execution.native.toolchain_manifest",
     )
     model = json.loads(
-        (root / "deploy/radeon/model-manifest.json").read_text(encoding="utf-8")
+        model_manifest_path.read_text(encoding="utf-8")
     )
     native = json.loads(
-        (root / "deploy/radeon/native-toolchain-manifest.json").read_text(encoding="utf-8")
+        native_manifest_path.read_text(encoding="utf-8")
     )
     compose = (root / "compose.yaml").read_text(encoding="utf-8")
     makefile = (root / "Makefile").read_text(encoding="utf-8")
     environment = (root / "container.env.example").read_text(encoding="utf-8")
+    preflight = (root / "scripts/radeon_preflight.py").read_text(encoding="utf-8")
+    preflight_shell = (root / "scripts/radeon_preflight.sh").read_text(encoding="utf-8")
+    startup = (root / "scripts/radeon_up.sh").read_text(encoding="utf-8")
     stage = (root / "scripts/stage_gemma_model.sh").read_text(encoding="utf-8")
     checks: list[dict[str, str]] = []
 
@@ -54,13 +98,51 @@ def validate(root: Path) -> dict[str, Any]:
                 f"{identity} image uses an immutable sha256 digest",
             )
         )
+        if is_default:
+            identity_consistent = image in compose and image in environment
+            identity_detail = (
+                f"{identity} rollback identity is consistent across manifest, Compose, "
+                "and environment example"
+            )
+        else:
+            variable = {
+                "application": "SIGNALFORGE_APP_IMAGE",
+                "runtime": "SIGNALFORGE_LLAMA_ROCM_IMAGE",
+            }[identity]
+            identity_consistent = (
+                variable in compose
+                and variable in preflight
+                and "SIGNALFORGE_APPLIANCE_MANIFEST" in preflight_shell
+                and "--manifest-sha256" in startup
+            )
+            identity_detail = (
+                f"{identity} candidate identity is transported through the hash-bound "
+                "generated environment"
+            )
         checks.append(
             result(
                 f"compose-{identity}-identity",
-                image in compose and image in environment,
-                f"{identity} identity is consistent across manifest, Compose, and environment example",
+                identity_consistent,
+                identity_detail,
             )
         )
+    checks.append(
+        result(
+            "rollback-default-preserved",
+            default_appliance["application"]["image"] in compose
+            and default_appliance["application"]["image"] in environment
+            and default_appliance["runtime"]["image"] in compose
+            and default_appliance["runtime"]["image"] in environment,
+            "accepted rollback remains the static Compose and environment default",
+        )
+    )
+    checks.append(
+        result(
+            "candidate-source-commit",
+            is_default or bool(re.fullmatch(r"[0-9a-f]{40}", appliance["application"]["source_commit"])),
+            "candidate application source commit is complete",
+        )
+    )
     for identity, image in appliance["utility_images"].items():
         checks.append(
             result(
@@ -83,7 +165,8 @@ def validate(root: Path) -> dict[str, Any]:
             model["served_model_id"] in compose
             and model["filename"] in compose
             and "radeon_model_cache.py" in compose
-            and "deploy/radeon/model-manifest.json" in native_runtime
+            and "radeon_manifest.component_path" in native_runtime
+            and 'appliance["model_manifest"]' in native_runtime
             and "radeon_model_cache.hydrate" in native_runtime
             and 'model_manifest["cache"]["model_relative_path"]' in native_runtime
             and 'model_manifest["served_model_id"]' in native_runtime,
@@ -116,6 +199,61 @@ def validate(root: Path) -> dict[str, Any]:
             and native["application"]["go_sum_sha256"]
             == hashlib.sha256((root / native["application"]["go_sum_path"]).read_bytes()).hexdigest(),
             "native npm and Go dependency locks match the manifest",
+        )
+    )
+    resolved_source_commit = resolve_git_commit(
+        root,
+        appliance["application"]["source_commit"],
+    )
+    checks.append(
+        result(
+            "native-authorized-source-available",
+            resolved_source_commit is not None,
+            "selected application source commit resolves locally without a runtime fetch",
+        )
+    )
+    checks.append(
+        result(
+            "native-authorized-source-locks",
+            resolved_source_commit is not None
+            and git_blob_sha256(
+                root,
+                resolved_source_commit,
+                native["application"]["package_lock_path"],
+            )
+            == native["application"]["package_lock_sha256"]
+            and git_blob_sha256(
+                root,
+                resolved_source_commit,
+                native["application"]["go_sum_path"],
+            )
+            == native["application"]["go_sum_sha256"],
+            "dependency locks in the selected source commit match the native toolchain authority",
+        )
+    )
+    native_toolchain = (
+        root / "scripts/radeon_native_toolchain.py"
+    ).read_text(encoding="utf-8")
+    native_status = (root / "scripts/radeon_status.py").read_text(encoding="utf-8")
+    checks.append(
+        result(
+            "native-source-authority-wiring",
+            "--manifest \"$SIGNALFORGE_APPLIANCE_MANIFEST\"" in startup
+            and "--manifest-sha256 \"$SIGNALFORGE_APPLIANCE_MANIFEST_SHA256\"" in startup
+            and "resolve_source_commit" in native_runtime
+            and "materialize_source" in native_toolchain
+            and "application_authority_error" in native_runtime
+            and "application-source-authority-mismatch" in native_status,
+            "native startup, build, and status share the selected manifest source authority",
+        )
+    )
+    checks.append(
+        result(
+            "native-selected-source-assets",
+            "source_root / \"web/dist\"" in native_runtime
+            and "source_root / \"fixtures/productscope/technology20-catalog.json\""
+            in native_runtime,
+            "native runtime assets come from the same selected source tree as the binary",
         )
     )
     checks.append(
@@ -270,6 +408,10 @@ def validate(root: Path) -> dict[str, Any]:
         "schema_version": "signalforge/radeon-appliance-static-audit/v1",
         "status": "failed" if failed else "passed",
         "appliance_version": appliance["appliance_version"],
+        "manifest_authority": {
+            "path": selection.reference,
+            "sha256": selection.sha256,
+        },
         "checks": checks,
     }
 
@@ -277,9 +419,14 @@ def validate(root: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--manifest", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    report = validate(args.root.resolve())
+    try:
+        report = validate(args.root.resolve(), args.manifest)
+    except (radeon_manifest.ManifestError, OSError, KeyError, json.JSONDecodeError) as error:
+        print(f"Radeon appliance validation failed: {error}", file=sys.stderr)
+        return 2
     encoded = json.dumps(report, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

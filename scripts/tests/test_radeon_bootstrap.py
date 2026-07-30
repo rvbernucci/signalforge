@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -60,6 +63,35 @@ class RadeonBootstrapTests(unittest.TestCase):
                 MODULE.resolve_persist_root(Path("~/signalforge-explicit")),
                 Path("~/signalforge-explicit").expanduser(),
             )
+
+    def test_conflicting_manifest_authorities_fail_before_bootstrap(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--profile",
+                    "fixture",
+                    "--manifest",
+                    "deploy/radeon/appliance-manifest.vnext.json",
+                    "--persist-root",
+                    directory,
+                    "--noninteractive",
+                    "--skip-network-check",
+                ],
+                cwd=ROOT,
+                env={
+                    **os.environ,
+                    "SIGNALFORGE_APPLIANCE_MANIFEST": (
+                        "deploy/radeon/appliance-manifest.json"
+                    ),
+                },
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("conflicting appliance manifest", result.stderr)
 
 
 if __name__ == "__main__":

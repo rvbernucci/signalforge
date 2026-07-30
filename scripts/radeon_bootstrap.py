@@ -13,6 +13,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+import radeon_manifest
 
 
 def atomic_secret(path: Path, value: str, mode: int = 0o600) -> None:
@@ -77,10 +82,21 @@ def main() -> int:
         default=os.environ.get("SIGNALFORGE_EXECUTION_BACKEND", "auto"),
     )
     parser.add_argument("--persist-root", type=Path)
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--manifest-sha256")
     parser.add_argument("--accept-gemma-license", action="store_true")
     parser.add_argument("--noninteractive", action="store_true")
     parser.add_argument("--skip-network-check", action="store_true")
     args = parser.parse_args()
+
+    try:
+        manifest_selection = radeon_manifest.select_manifest(
+            args.manifest,
+            args.manifest_sha256,
+        )
+    except (radeon_manifest.ManifestError, OSError) as error:
+        print(f"Radeon appliance manifest rejected: {error}", file=sys.stderr)
+        return 2
 
     persist_root = resolve_persist_root(args.persist_root)
     secrets = ROOT / ".secrets"
@@ -150,6 +166,10 @@ def main() -> int:
         str(ROOT / "scripts" / "radeon_preflight.py"),
         "--profile",
         args.profile,
+        "--manifest",
+        str(manifest_selection.path),
+        "--manifest-sha256",
+        manifest_selection.sha256,
         "--persist-root",
         str(persist_root),
         "--secrets-dir",
@@ -171,6 +191,10 @@ def main() -> int:
     if result.returncode:
         return result.returncode
     print("Bootstrap prepared only existing host capabilities; no duplicate tooling was installed.")
+    print(
+        "Appliance manifest: "
+        f"{manifest_selection.reference}@sha256:{manifest_selection.sha256}"
+    )
     print(f"Persistent runtime root: {persist_root}")
     print(f"Generated non-secret environment: {environment}")
     return 0
