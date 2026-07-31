@@ -20,6 +20,8 @@ import (
 
 const maxModelResponseBytes = 1 << 20
 
+const deterministicRecoveryNotice = "Local semantic generation was unavailable after bounded recovery; this packet contains only application-owned deterministic authority."
+
 type Completer interface {
 	Complete(context.Context, benchmark.Request) (benchmark.Completion, error)
 }
@@ -219,12 +221,20 @@ func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequ
 	}
 	completion, err := adapters.complete(ctx, prompt, string(input))
 	if err != nil {
+		if ctx.Err() == nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+			if packet, recoveryErr := deterministicRecoveryPacket(request, material); recoveryErr == nil {
+				return packet, nil
+			}
+		}
 		return contracts.ContextPacket{}, err
 	}
 	var body packetBody
 	if decodeErr := decodeJSONObject(completion.Answer, &body); decodeErr != nil {
 		if !isIncompleteJSON(decodeErr) {
 			return contracts.ContextPacket{}, fmt.Errorf("decode context packet body: %w", decodeErr)
+		}
+		if packet, recoveryErr := deterministicRecoveryPacket(request, material); recoveryErr == nil {
+			return packet, nil
 		}
 		retryPrompt := prompt
 		retryPrompt.System += " The previous structured response was truncated. On this single bounded retry, keep every string concise, respect the role's finding and counterevidence limits, include only material gaps, and close the JSON object."
@@ -243,6 +253,77 @@ func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequ
 		}
 	}
 	return buildContextPacket(request, material, body)
+}
+
+func deterministicRecoveryPacket(request contracts.ContextRequest, material Material) (contracts.ContextPacket, error) {
+	packet, err := buildContextPacket(request, material, packetBody{
+		Uncertainties: []string{deterministicRecoveryNotice},
+	})
+	if err != nil {
+		return contracts.ContextPacket{}, err
+	}
+	if !deterministicRecoveryHasRoleAuthority(packet, material, request) {
+		return contracts.ContextPacket{}, errors.New("deterministic recovery produced no role-appropriate authorized claims")
+	}
+	return packet, nil
+}
+
+func deterministicRecoveryHasRoleAuthority(packet contracts.ContextPacket, material Material, request contracts.ContextRequest) bool {
+	claims := append(append([]contracts.Finding(nil), packet.Findings...), packet.Counterevidence...)
+	evidenceByID := make(map[string]contracts.EvidenceItem, len(material.Evidence.Items))
+	for _, item := range material.Evidence.Items {
+		evidenceByID[item.EvidenceRef.EvidenceID] = item
+	}
+	receiptByID := make(map[string]contracts.CalculationReceipt, len(material.CalculationReceipts))
+	for _, receipt := range material.CalculationReceipts {
+		receiptByID[receipt.ReceiptID] = receipt
+	}
+	for _, finding := range claims {
+		switch request.SpecialistRole {
+		case roles.BusinessStrategy:
+			for _, reference := range finding.EvidenceRefs {
+				if item, ok := evidenceByID[reference]; ok && isSECItem1BusinessSection(item.EvidenceRef.DocumentSection) {
+					return true
+				}
+			}
+		case roles.AccountingReporting:
+			for _, reference := range finding.EvidenceRefs {
+				item, ok := evidenceByID[reference]
+				if ok && (item.EvidenceRef.SourceType == "accounting_authority_policy" ||
+					(item.State == contracts.EvidenceIncomparable && strings.HasPrefix(reference, "comparison:"))) {
+					return true
+				}
+			}
+		case roles.FinancialQuality:
+			if finding.Origin == contracts.FindingOriginDeterministic &&
+				len(finding.CalculationRefs)+len(finding.NumericalRefs) > 0 {
+				return true
+			}
+		case roles.Valuation:
+			for _, reference := range finding.CalculationRefs {
+				if receipt, ok := receiptByID[reference]; ok && isRequiredValuationReceipt(receipt.OperationID) {
+					return true
+				}
+			}
+		case roles.EconomicsTransmission:
+			if len(request.Assumptions) > 0 && finding.ClaimType == contracts.ClaimHypothesis &&
+				len(finding.AssumptionRefs) > 0 {
+				return true
+			}
+		case roles.MarketBehavior:
+			for _, reference := range finding.EvidenceRefs {
+				if item, ok := evidenceByID[reference]; ok && item.EvidenceRef.SourceType == "official_exchange_close" {
+					return true
+				}
+			}
+			for _, reference := range finding.CalculationRefs {
+				if receipt, ok := receiptByID[reference]; ok && strings.HasPrefix(receipt.OperationID, "market.") {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func buildContextPacket(request contracts.ContextRequest, material Material, body packetBody) (contracts.ContextPacket, error) {

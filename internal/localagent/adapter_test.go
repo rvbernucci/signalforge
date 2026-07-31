@@ -31,6 +31,16 @@ func (client *fakeCompleter) Complete(_ context.Context, request benchmark.Reque
 	return benchmark.Completion{Answer: answer}, nil
 }
 
+type failingCompleter struct {
+	err      error
+	requests []benchmark.Request
+}
+
+func (client *failingCompleter) Complete(_ context.Context, request benchmark.Request) (benchmark.Completion, error) {
+	client.requests = append(client.requests, request)
+	return benchmark.Completion{}, client.err
+}
+
 type staticMaterials struct{ material Material }
 
 func (provider staticMaterials) Load(_ context.Context, _ contracts.ContextRequest) (Material, error) {
@@ -595,6 +605,70 @@ func TestSpecialistRetriesOnlyIncompleteJSONWithBoundedBudget(t *testing.T) {
 		t.Fatalf("truncation retry omitted its concise recovery contract: %+v", client.requests[1].Messages)
 	}
 	assertBoundedRecoverySchema(t, client.requests[1])
+}
+
+func TestSpecialistUsesDeterministicAuthorityWithoutRetryingTruncatedSemanticOutput(t *testing.T) {
+	now := time.Now().UTC()
+	material := validMaterial(now)
+	material.Evidence.Items[0].EvidenceRef.DocumentSection = "Item 1. Business"
+	client := &fakeCompleter{answers: []string{`{"findings":[`}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: material})
+
+	packet, err := adapter.Run(context.Background(), validContextRequest(now))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(client.requests) != 1 || len(packet.Findings) != 1 ||
+		packet.Findings[0].Origin != contracts.FindingOriginSourceExtraction {
+		t.Fatalf("deterministic source authority did not recover truncation: packet=%+v calls=%d", packet, len(client.requests))
+	}
+	if !slices.Contains(packet.Uncertainties, deterministicRecoveryNotice) {
+		t.Fatalf("deterministic recovery was not disclosed: %+v", packet.Uncertainties)
+	}
+}
+
+func TestSpecialistUsesDeterministicAuthorityAfterProviderFailure(t *testing.T) {
+	now := time.Now().UTC()
+	material := numericalMaterial(now)
+	request := validContextRequest(now)
+	request.SpecialistRole = roles.FinancialQuality
+	client := &failingCompleter{err: errors.New("provider unavailable")}
+	adapter, _ := New(client, "local-model", staticMaterials{material: material})
+
+	packet, err := adapter.Run(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(client.requests) != 1 || len(packet.Findings) == 0 {
+		t.Fatalf("deterministic numerical authority did not recover provider failure: packet=%+v calls=%d", packet, len(client.requests))
+	}
+	if !slices.Contains(packet.Uncertainties, deterministicRecoveryNotice) {
+		t.Fatalf("deterministic recovery was not disclosed: %+v", packet.Uncertainties)
+	}
+}
+
+func TestSpecialistDoesNotUseCrossRoleDeterministicAuthority(t *testing.T) {
+	now := time.Now().UTC()
+	client := &failingCompleter{err: errors.New("provider unavailable")}
+	adapter, _ := New(client, "local-model", staticMaterials{material: numericalMaterial(now)})
+
+	_, err := adapter.Run(context.Background(), validContextRequest(now))
+	if err == nil || err.Error() != "provider unavailable" {
+		t.Fatalf("business role accepted unrelated numerical authority: %v", err)
+	}
+}
+
+func TestSpecialistDoesNotRecoverCancelledInference(t *testing.T) {
+	now := time.Now().UTC()
+	material := validMaterial(now)
+	material.Evidence.Items[0].EvidenceRef.DocumentSection = "Item 1. Business"
+	client := &failingCompleter{err: context.Canceled}
+	adapter, _ := New(client, "local-model", staticMaterials{material: material})
+
+	_, err := adapter.Run(context.Background(), validContextRequest(now))
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled inference published deterministic recovery: %v", err)
+	}
 }
 
 func TestSpecialistOrchestratorRetryStartsWithExpandedBudget(t *testing.T) {
