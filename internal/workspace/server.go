@@ -54,6 +54,7 @@ type ServerConfig struct {
 	EventDelay           time.Duration
 	Now                  func() time.Time
 	RunTimeout           time.Duration
+	LiveRunConcurrency   int
 	MaxBodyBytes         int64
 	CaseStore            CaseStore
 	RuntimeBreaker       *resilience.Breaker
@@ -76,6 +77,7 @@ type Server struct {
 	runs       map[string]*runRecord
 	runOrder   []string
 	breaker    *resilience.Breaker
+	liveRuns   chan struct{}
 	readiness  ReadinessIdentities
 }
 
@@ -173,6 +175,12 @@ func NewServer(config ServerConfig) (*Server, error) {
 	if config.RunTimeout <= 0 {
 		config.RunTimeout = 6 * time.Minute
 	}
+	if config.LiveRunConcurrency <= 0 {
+		config.LiveRunConcurrency = 1
+	}
+	if config.LiveRunConcurrency > 4 {
+		return nil, errors.New("live run concurrency must be between one and four")
+	}
 	if config.MaxBodyBytes <= 0 {
 		config.MaxBodyBytes = 16 << 10
 	}
@@ -180,7 +188,10 @@ func NewServer(config ServerConfig) (*Server, error) {
 	if breaker == nil {
 		breaker = resilience.NewBreaker(3, 30*time.Second)
 	}
-	server := &Server{config: config, runs: map[string]*runRecord{}, breaker: breaker}
+	server := &Server{
+		config: config, runs: map[string]*runRecord{}, breaker: breaker,
+		liveRuns: make(chan struct{}, config.LiveRunConcurrency),
+	}
 	if strings.TrimSpace(config.FixturePath) == "" {
 		return nil, errors.New("workspace fixture path is required")
 	}
@@ -827,6 +838,25 @@ func cloneResearchRequest(request contracts.ResearchRequest) contracts.ResearchR
 }
 
 func (server *Server) executeLive(record *runRecord, question string, assumptions []string, requestOverride *contracts.ResearchRequest) {
+	rootContext, rootCancel := context.WithCancel(context.Background())
+	server.mu.Lock()
+	record.cancel = rootCancel
+	server.mu.Unlock()
+	defer rootCancel()
+
+	queueContext, queueCancel := context.WithTimeout(rootContext, server.config.RunTimeout)
+	err := server.acquireLiveRun(queueContext)
+	queueCancel()
+	if err != nil {
+		if errors.Is(rootContext.Err(), context.Canceled) {
+			server.fail(record, "context_cancelled", false)
+		} else {
+			server.fail(record, "local_runtime_queue_timeout", true)
+		}
+		return
+	}
+	defer server.releaseLiveRun()
+
 	if !server.breaker.Allow(server.config.Now()) {
 		server.fail(record, "local_runtime_temporarily_unavailable", true)
 		return
@@ -839,11 +869,14 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 		server.fail(record, "request_scope_invalid", false)
 		return
 	}
-	journeyContext, journeySpan := telemetry.StartJourney(context.Background(), record.view.RunID, requestID, ModeLive)
+	journeyContext, journeySpan := telemetry.StartJourney(rootContext, record.view.RunID, requestID, ModeLive)
 	defer journeySpan.End()
 	ctx, cancel := context.WithTimeout(journeyContext, server.config.RunTimeout)
 	server.mu.Lock()
-	record.cancel = cancel
+	record.cancel = func() {
+		rootCancel()
+		cancel()
+	}
 	server.mu.Unlock()
 	defer cancel()
 	config := server.config.Golden
@@ -891,6 +924,19 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 		return
 	}
 	server.complete(record, projection, &report)
+}
+
+func (server *Server) acquireLiveRun(ctx context.Context) error {
+	select {
+	case server.liveRuns <- struct{}{}:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (server *Server) releaseLiveRun() {
+	<-server.liveRuns
 }
 
 func (server *Server) beginAudit(ctx context.Context, runID, requestID, question string) *intelligenceaudit.Recorder {

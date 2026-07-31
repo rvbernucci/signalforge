@@ -51,6 +51,7 @@ func main() {
 	codeCommit := flag.String("code-commit", buildCommit, "code revision recorded in receipts")
 	timeout := flag.Duration("timeout", 6*time.Minute, "complete local run timeout")
 	contextConcurrency := flag.Int("context-concurrency", 4, "shared local model slots and maximum concurrent specialists per journey, from 1 to 4")
+	liveRunConcurrency := flag.Int("live-run-concurrency", 1, "maximum simultaneous live journeys sharing the local model, from 1 to 4")
 	flag.Parse()
 
 	if err := validateListen(*listenAddress, *allowContainerListen); err != nil {
@@ -110,7 +111,8 @@ func main() {
 	}
 	workspaceServer, err := workspace.NewServer(workspace.ServerConfig{
 		Mode: *mode, FixturePath: *fixturePath, CatalogPath: *catalogPath, StaticDir: *staticDir,
-		EventDelay: *eventDelay, RunTimeout: *timeout, CaseStore: store,
+		EventDelay: *eventDelay, RunTimeout: *timeout, LiveRunConcurrency: *liveRunConcurrency,
+		CaseStore:  store,
 		AuditStore: auditStore, BuildVersion: *codeCommit,
 		ApplicationIdentity: strings.TrimSpace(os.Getenv("SIGNALFORGE_APPLICATION_ARTIFACT_IDENTITY")),
 		RuntimeIdentity:     strings.TrimSpace(os.Getenv("SIGNALFORGE_RUNTIME_IDENTITY")),

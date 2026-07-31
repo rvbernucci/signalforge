@@ -945,6 +945,43 @@ func newFixtureTestServerWithConfig(t *testing.T, overrides ServerConfig) *Serve
 	return server
 }
 
+func TestLiveRunGateSerializesJourneysAndHonorsCancellation(t *testing.T) {
+	server := &Server{liveRuns: make(chan struct{}, 1)}
+	if err := server.acquireLiveRun(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	acquired := make(chan error, 1)
+	go func() {
+		acquired <- server.acquireLiveRun(context.Background())
+	}()
+	select {
+	case err := <-acquired:
+		t.Fatalf("second journey bypassed the occupied gate: %v", err)
+	case <-time.After(20 * time.Millisecond):
+	}
+	server.releaseLiveRun()
+	select {
+	case err := <-acquired:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("second journey did not acquire the released gate")
+	}
+	server.releaseLiveRun()
+
+	if err := server.acquireLiveRun(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	if err := server.acquireLiveRun(ctx); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("queued journey error = %v, expected context deadline", err)
+	}
+	server.releaseLiveRun()
+}
+
 func postRun(t *testing.T, baseURL, payload string) RunView {
 	t.Helper()
 	response := postRaw(t, baseURL+"/api/v1/runs", payload)
