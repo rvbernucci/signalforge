@@ -128,6 +128,20 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 	ensureVisibleComparisonBoundary(&body, material)
 	neutralizeUnsupportedCausalAttribution(&body)
 	draftErr := validateRequestedSectionSet(body.Sections, input.Request.RequestedOutputs)
+	if draftErr != nil {
+		// Evidence, assumptions, and limitations are application-owned presentation
+		// sections. Repairing only one of those missing sections is safer and faster
+		// than asking the model to regenerate an otherwise valid analytical answer.
+		// Missing analytical sections and unknown section types still require the
+		// bounded model retry below.
+		if repairErr := repairApplicationOwnedSectionSet(
+			&body,
+			input.Request.RequestedOutputs,
+			material.Claims,
+		); repairErr == nil {
+			draftErr = validateRequestedSectionSet(body.Sections, input.Request.RequestedOutputs)
+		}
+	}
 	if draftErr == nil {
 		draftErr = validateNumericallySilentDraft(body)
 		if draftErr != nil {

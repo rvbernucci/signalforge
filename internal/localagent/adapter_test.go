@@ -1125,16 +1125,49 @@ func TestSynthesizerRetriesIncompleteJSONOnce(t *testing.T) {
 	}
 }
 
-func TestSynthesizerRepairsDuplicatedAndMissingSectionOnce(t *testing.T) {
+func TestSynthesizerRepairsDuplicatedAndMissingAuxiliarySectionWithoutRetry(t *testing.T) {
 	now := time.Now().UTC()
 	invalid := `{"sections":[
 	  {"section_type":"business_overview","title":"Overview","content":"Revenue grew.","claim_refs":["claim-1"]},
 	  {"section_type":"business_overview","title":"Duplicate","content":"Another overview.","claim_refs":["claim-1"]},
 	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
 	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
+	client := &fakeCompleter{answers: []string{invalid}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+	critique := contracts.CritiqueReport{
+		SchemaVersion: contracts.SchemaVersionV1, ReportID: "critique-1", RunID: "run-1",
+		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueApprove,
+		ApprovedClaims: []string{"claim-1"}, CreatedAt: now,
+	}
+	answer, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
+		Request: validResearchRequest(now), Packets: []contracts.ContextPacket{validPacket(now)},
+		Critiques: []contracts.CritiqueReport{critique},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(client.requests) != 1 {
+		t.Fatalf("application-owned section repair spent an unnecessary inference: %+v", client.requests)
+	}
+	if got := []string{
+		answer.Sections[0].SectionType,
+		answer.Sections[1].SectionType,
+		answer.Sections[2].SectionType,
+	}; !slices.Equal(got, validResearchRequest(now).RequestedOutputs) {
+		t.Fatalf("Go did not reconstruct requested section order: %v", got)
+	}
+}
+
+func TestSynthesizerRetriesMissingAnalyticalSectionOnce(t *testing.T) {
+	now := time.Now().UTC()
+	invalid := `{"sections":[
+	  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":["claim-1"]},
+	  {"section_type":"evidence","title":"Duplicate","content":"Another evidence section.","claim_refs":["claim-1"]},
+	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
+	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
 	safe := `{"sections":[
 	  {"section_type":"business_overview","title":"Overview","content":"Revenue grew.","claim_refs":["claim-1"]},
-	  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":[]},
+	  {"section_type":"evidence","title":"Evidence","content":"Primary filing evidence.","claim_refs":["claim-1"]},
 	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
 	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
 	client := &fakeCompleter{answers: []string{invalid, safe}}
@@ -1152,43 +1185,11 @@ func TestSynthesizerRepairsDuplicatedAndMissingSectionOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(client.requests) != 2 ||
-		!strings.Contains(client.requests[1].Messages[0].Content, "every requested section_type exactly once") {
-		t.Fatalf("section-set repair was not bounded and explicit: %+v", client.requests)
-	}
-	if got := []string{
-		answer.Sections[0].SectionType,
-		answer.Sections[1].SectionType,
-		answer.Sections[2].SectionType,
-	}; !slices.Equal(got, validResearchRequest(now).RequestedOutputs) {
-		t.Fatalf("Go did not reconstruct requested section order: %v", got)
-	}
-}
-
-func TestSynthesizerDeterministicallyRepairsOnlyAuxiliarySectionAfterBoundedRetry(t *testing.T) {
-	now := time.Now().UTC()
-	invalid := `{"sections":[
-	  {"section_type":"business_overview","title":"Overview","content":"Revenue grew.","claim_refs":["claim-1"]},
-	  {"section_type":"business_overview","title":"Duplicate","content":"Another overview.","claim_refs":["claim-1"]},
-	  {"section_type":"limitations","title":"Limitations","content":"Period coverage is limited.","claim_refs":[]}
-	],"assumptions":[],"limitations":["Period coverage is limited."],"next_actions":[]}`
-	client := &fakeCompleter{answers: []string{invalid, invalid}}
-	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
-	critique := contracts.CritiqueReport{
-		SchemaVersion: contracts.SchemaVersionV1, ReportID: "critique-1", RunID: "run-1",
-		ReviewerRole: roles.EvidenceCritic, Decision: contracts.CritiqueApprove,
-		ApprovedClaims: []string{"claim-1"}, CreatedAt: now,
-	}
-	answer, err := adapter.Synthesize(context.Background(), orchestrator.SynthesisInput{
-		Request: validResearchRequest(now), Packets: []contracts.ContextPacket{validPacket(now)},
-		Critiques: []contracts.CritiqueReport{critique},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(client.requests) != 2 || answer.Sections[1].SectionType != "evidence" ||
+		!strings.Contains(client.requests[1].Messages[0].Content, "every requested section_type exactly once") ||
+		answer.Sections[1].SectionType != "evidence" ||
 		!slices.Equal(answer.Sections[1].ClaimRefs, []string{"claim-1"}) ||
 		!slices.Equal(answer.Sections[1].EvidenceRefs, []string{"evidence-1"}) {
-		t.Fatalf("application-owned evidence section was not reconstructed safely: %+v", answer.Sections)
+		t.Fatalf("missing analytical section did not require one bounded retry: %+v", answer.Sections)
 	}
 }
 

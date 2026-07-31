@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -13,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rvbernucci/signalforge/internal/evalcheckpoint"
 	"github.com/rvbernucci/signalforge/internal/golden"
 	"github.com/rvbernucci/signalforge/internal/modelapi"
 	"github.com/rvbernucci/signalforge/internal/producteval"
@@ -34,7 +33,7 @@ func main() {
 	maxCases := flag.Int("max-cases", 0, "maximum cases to execute; zero means all")
 	startIndex := flag.Int("start-index", 0, "zero-based first case index")
 	caseID := flag.String("case-id", "", "optional exact journey ID")
-	resume := flag.Bool("resume", true, "reuse completed private case reports")
+	resume := flag.Bool("resume", true, "reuse only exact-identity private case checkpoints")
 	flag.Parse()
 
 	if strings.TrimSpace(*financialDirectory) == "" || strings.TrimSpace(*outputDirectory) == "" {
@@ -57,7 +56,27 @@ func main() {
 	if err != nil {
 		fatal(err)
 	}
-	suiteSHA, err := fileSHA256(*suitePath)
+	suiteSHA, err := evalcheckpoint.FileSHA256(*suitePath)
+	if err != nil {
+		fatal(err)
+	}
+	catalogSHA, err := evalcheckpoint.FileSHA256(*catalogPath)
+	if err != nil {
+		fatal(err)
+	}
+	peerSHA, err := evalcheckpoint.FileSHA256(*peerPath)
+	if err != nil {
+		fatal(err)
+	}
+	financialSHA, err := evalcheckpoint.DirectorySHA256(*financialDirectory)
+	if err != nil {
+		fatal(err)
+	}
+	executable, err := os.Executable()
+	if err != nil {
+		fatal(err)
+	}
+	runnerSHA, err := evalcheckpoint.FileSHA256(executable)
 	if err != nil {
 		fatal(err)
 	}
@@ -71,6 +90,8 @@ func main() {
 	evaluation := producteval.StandaloneEvaluation{
 		SchemaVersion: producteval.StandaloneEvaluationSchemaV1,
 		UniverseID:    productscope.UniverseID, Split: suite.Split, SuiteSHA256: suiteSHA,
+		CatalogSHA256: catalogSHA, PeerAuthoritySHA256: peerSHA,
+		FinancialAuthoritySHA256: financialSHA, RunnerSHA256: runnerSHA,
 		SourceCommit: *sourceCommit, ModelID: *model, BaseURL: *baseURL,
 		SpecialistProvider: specialist.Provider, SpecialistModel: specialist.TextModel,
 		StartedAt: time.Now().UTC(), CasesSelected: len(selected),
@@ -80,8 +101,25 @@ func main() {
 	}
 	for index, item := range selected {
 		casePath := filepath.Join(*outputDirectory, "cases", item.JourneyID+".json")
-		var result producteval.StandaloneCaseResult
-		if *resume && readOptionalJSON(casePath, &result) == nil && result.JourneyID == item.JourneyID {
+		runID := fmt.Sprintf("sprint32-%s-%03d", suite.Split, *startIndex+index)
+		requestID := fmt.Sprintf("sprint32-request-%s-%03d", suite.Split, *startIndex+index)
+		identity := evalcheckpoint.Identity{
+			SchemaVersion:  evalcheckpoint.IdentitySchemaVersion,
+			EvaluationKind: "standalone", SuiteSHA256: suiteSHA,
+			CatalogSHA256: catalogSHA, PeerAuthoritySHA256: peerSHA,
+			FinancialAuthoritySHA256: financialSHA, RunnerSHA256: runnerSHA,
+			SourceCommit: *sourceCommit, ModelID: *model, BaseURL: *baseURL,
+			SpecialistEnabled: specialist.Enabled, SpecialistProvider: specialist.Provider,
+			SpecialistBaseURL: specialist.BaseURL, SpecialistModel: specialist.TextModel,
+			Timeout: timeout.String(), ContextConcurrency: *contextConcurrency,
+			JourneyID: item.JourneyID, QuestionSHA256: evalcheckpoint.SHA256String(item.Question),
+			RunID: runID, RequestID: requestID,
+		}
+		if err := evalcheckpoint.ValidateIdentity(identity); err != nil {
+			fatal(err)
+		}
+		result, resumed := readCheckpoint(casePath, identity)
+		if *resume && resumed && result.JourneyID == item.JourneyID {
 			appendResult(&evaluation, result)
 			writeCheckpoint(*outputDirectory, evaluation)
 			fmt.Printf("[%d/%d] %s resumed contract=%t\n", index+1, len(selected), item.JourneyID, result.ContractPassed)
@@ -89,8 +127,7 @@ func main() {
 		}
 		request, parseErr := requestparser.ParseDeterministic(requestparser.Input{
 			Text: item.Question, AsOf: suite.AsOf,
-			RunID:     fmt.Sprintf("sprint32-%s-%03d", suite.Split, *startIndex+index),
-			RequestID: fmt.Sprintf("sprint32-request-%s-%03d", suite.Split, *startIndex+index),
+			RunID: runID, RequestID: requestID,
 		})
 		if parseErr != nil {
 			result = failedCase(item, "request_parse_failed")
@@ -118,7 +155,7 @@ func main() {
 				}
 			}
 		}
-		writeJSON(casePath, result)
+		writeJSON(casePath, evalcheckpoint.NewEnvelope(identity, result))
 		appendResult(&evaluation, result)
 		writeCheckpoint(*outputDirectory, evaluation)
 		fmt.Printf("[%d/%d] %s runtime=%t contract=%t calls=%d duration_ms=%.0f\n",
@@ -228,12 +265,16 @@ func readJSON(path string, target any) {
 	}
 }
 
-func readOptionalJSON(path string, target any) error {
+func readCheckpoint(path string, identity evalcheckpoint.Identity) (producteval.StandaloneCaseResult, bool) {
 	payload, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return producteval.StandaloneCaseResult{}, false
 	}
-	return json.Unmarshal(payload, target)
+	result, err := evalcheckpoint.Decode[producteval.StandaloneCaseResult](payload, identity)
+	if err != nil {
+		return producteval.StandaloneCaseResult{}, false
+	}
+	return result, true
 }
 
 func writeJSON(path string, value any) {
@@ -251,15 +292,6 @@ func writeJSON(path string, value any) {
 	if err := os.Rename(temporary, path); err != nil {
 		fatal(err)
 	}
-}
-
-func fileSHA256(path string) (string, error) {
-	payload, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	digest := sha256.Sum256(payload)
-	return hex.EncodeToString(digest[:]), nil
 }
 
 func fatal(err error) {

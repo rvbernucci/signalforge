@@ -41,27 +41,31 @@ type StandaloneCaseResult struct {
 }
 
 type StandaloneEvaluation struct {
-	SchemaVersion      string                 `json:"schema_version"`
-	UniverseID         string                 `json:"universe_id"`
-	Split              string                 `json:"split"`
-	SuiteSHA256        string                 `json:"suite_sha256"`
-	SourceCommit       string                 `json:"source_commit"`
-	ModelID            string                 `json:"model_id"`
-	BaseURL            string                 `json:"base_url"`
-	SpecialistProvider string                 `json:"specialist_provider,omitempty"`
-	SpecialistModel    string                 `json:"specialist_model,omitempty"`
-	StartedAt          time.Time              `json:"started_at"`
-	CompletedAt        time.Time              `json:"completed_at"`
-	CasesSelected      int                    `json:"cases_selected"`
-	CasesCompleted     int                    `json:"cases_completed"`
-	ContractsPassed    int                    `json:"contracts_passed"`
-	RuntimeFailures    int                    `json:"runtime_failures"`
-	TotalModelCalls    int                    `json:"total_model_calls"`
-	TotalPromptTokens  int                    `json:"total_prompt_tokens"`
-	TotalOutputTokens  int                    `json:"total_completion_tokens"`
-	Results            []StandaloneCaseResult `json:"results"`
-	ClaimBoundary      string                 `json:"claim_boundary"`
-	ReleaseDisposition string                 `json:"release_disposition"`
+	SchemaVersion            string                 `json:"schema_version"`
+	UniverseID               string                 `json:"universe_id"`
+	Split                    string                 `json:"split"`
+	SuiteSHA256              string                 `json:"suite_sha256"`
+	CatalogSHA256            string                 `json:"catalog_sha256"`
+	PeerAuthoritySHA256      string                 `json:"peer_authority_sha256"`
+	FinancialAuthoritySHA256 string                 `json:"financial_authority_sha256"`
+	RunnerSHA256             string                 `json:"runner_sha256"`
+	SourceCommit             string                 `json:"source_commit"`
+	ModelID                  string                 `json:"model_id"`
+	BaseURL                  string                 `json:"base_url"`
+	SpecialistProvider       string                 `json:"specialist_provider,omitempty"`
+	SpecialistModel          string                 `json:"specialist_model,omitempty"`
+	StartedAt                time.Time              `json:"started_at"`
+	CompletedAt              time.Time              `json:"completed_at"`
+	CasesSelected            int                    `json:"cases_selected"`
+	CasesCompleted           int                    `json:"cases_completed"`
+	ContractsPassed          int                    `json:"contracts_passed"`
+	RuntimeFailures          int                    `json:"runtime_failures"`
+	TotalModelCalls          int                    `json:"total_model_calls"`
+	TotalPromptTokens        int                    `json:"total_prompt_tokens"`
+	TotalOutputTokens        int                    `json:"total_completion_tokens"`
+	Results                  []StandaloneCaseResult `json:"results"`
+	ClaimBoundary            string                 `json:"claim_boundary"`
+	ReleaseDisposition       string                 `json:"release_disposition"`
 }
 
 type PeerCaseResult struct {
@@ -91,27 +95,31 @@ type PeerCaseResult struct {
 }
 
 type PeerEvaluation struct {
-	SchemaVersion      string           `json:"schema_version"`
-	UniverseID         string           `json:"universe_id"`
-	Split              string           `json:"split"`
-	SuiteSHA256        string           `json:"suite_sha256"`
-	SourceCommit       string           `json:"source_commit"`
-	ModelID            string           `json:"model_id"`
-	BaseURL            string           `json:"base_url"`
-	SpecialistProvider string           `json:"specialist_provider,omitempty"`
-	SpecialistModel    string           `json:"specialist_model,omitempty"`
-	StartedAt          time.Time        `json:"started_at"`
-	CompletedAt        time.Time        `json:"completed_at"`
-	CasesSelected      int              `json:"cases_selected"`
-	CasesCompleted     int              `json:"cases_completed"`
-	ContractsPassed    int              `json:"contracts_passed"`
-	RuntimeFailures    int              `json:"runtime_failures"`
-	TotalModelCalls    int              `json:"total_model_calls"`
-	TotalPromptTokens  int              `json:"total_prompt_tokens"`
-	TotalOutputTokens  int              `json:"total_completion_tokens"`
-	Results            []PeerCaseResult `json:"results"`
-	ClaimBoundary      string           `json:"claim_boundary"`
-	ReleaseDisposition string           `json:"release_disposition"`
+	SchemaVersion            string           `json:"schema_version"`
+	UniverseID               string           `json:"universe_id"`
+	Split                    string           `json:"split"`
+	SuiteSHA256              string           `json:"suite_sha256"`
+	CatalogSHA256            string           `json:"catalog_sha256"`
+	PeerAuthoritySHA256      string           `json:"peer_authority_sha256"`
+	FinancialAuthoritySHA256 string           `json:"financial_authority_sha256"`
+	RunnerSHA256             string           `json:"runner_sha256"`
+	SourceCommit             string           `json:"source_commit"`
+	ModelID                  string           `json:"model_id"`
+	BaseURL                  string           `json:"base_url"`
+	SpecialistProvider       string           `json:"specialist_provider,omitempty"`
+	SpecialistModel          string           `json:"specialist_model,omitempty"`
+	StartedAt                time.Time        `json:"started_at"`
+	CompletedAt              time.Time        `json:"completed_at"`
+	CasesSelected            int              `json:"cases_selected"`
+	CasesCompleted           int              `json:"cases_completed"`
+	ContractsPassed          int              `json:"contracts_passed"`
+	RuntimeFailures          int              `json:"runtime_failures"`
+	TotalModelCalls          int              `json:"total_model_calls"`
+	TotalPromptTokens        int              `json:"total_prompt_tokens"`
+	TotalOutputTokens        int              `json:"total_completion_tokens"`
+	Results                  []PeerCaseResult `json:"results"`
+	ClaimBoundary            string           `json:"claim_boundary"`
+	ReleaseDisposition       string           `json:"release_disposition"`
 }
 
 func ScoreStandaloneCase(
