@@ -44,6 +44,7 @@ type RunConfig struct {
 	Prices               []PriceInput
 	HTTPClient           *http.Client
 	SpecialistHTTPClient *http.Client
+	LocalModelLimiter    *benchmark.Limiter
 	ContextConcurrency   int
 	EventSink            orchestrator.EventSink
 	ModelObserver        intelligenceaudit.ModelObserver
@@ -140,7 +141,10 @@ func Run(ctx context.Context, config RunConfig) (Report, error) {
 			return Report{}, fmt.Errorf("build golden material provider: %w", err)
 		}
 	}
-	client := benchmark.Client{BaseURL: strings.TrimRight(config.BaseURL, "/"), HTTPClient: config.HTTPClient}
+	client := benchmark.Client{
+		BaseURL: strings.TrimRight(config.BaseURL, "/"), HTTPClient: config.HTTPClient,
+		Limiter: config.LocalModelLimiter,
+	}
 	localRecorder := newRecordingCompleterForProvider(client, "local-rocm", config.ModelObserver)
 	localAdapters, err := localagent.New(localRecorder, config.Model, provider)
 	if err != nil {

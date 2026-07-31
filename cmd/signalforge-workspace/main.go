@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rvbernucci/signalforge/internal/benchmark"
 	"github.com/rvbernucci/signalforge/internal/casestore"
 	"github.com/rvbernucci/signalforge/internal/golden"
 	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
@@ -49,7 +50,7 @@ func main() {
 	model := flag.String("model", "signalforge-gemma4-26b-q4", "local model identifier")
 	codeCommit := flag.String("code-commit", buildCommit, "code revision recorded in receipts")
 	timeout := flag.Duration("timeout", 6*time.Minute, "complete local run timeout")
-	contextConcurrency := flag.Int("context-concurrency", 4, "concurrent local specialist calls, from 1 to 4")
+	contextConcurrency := flag.Int("context-concurrency", 4, "shared local model slots and maximum concurrent specialists per journey, from 1 to 4")
 	flag.Parse()
 
 	if err := validateListen(*listenAddress, *allowContainerListen); err != nil {
@@ -88,6 +89,13 @@ func main() {
 	if err != nil {
 		fatal(err)
 	}
+	localModelLimiter, err := benchmark.NewLimiter(*contextConcurrency)
+	if err != nil || *contextConcurrency > 4 {
+		if err == nil {
+			err = errors.New("--context-concurrency must be between one and four")
+		}
+		fatal(err)
+	}
 	prices, err := loadPrices(*priceInputsPath)
 	if err != nil {
 		fatal(err)
@@ -112,6 +120,7 @@ func main() {
 			TraceDir: *traceDir, BaseURL: *baseURL, Model: *model,
 			CodeCommit: *codeCommit, Timeout: *timeout, Prices: prices,
 			ContextConcurrency: *contextConcurrency,
+			LocalModelLimiter:  localModelLimiter,
 			SpecialistProvider: specialist.Provider, SpecialistBaseURL: specialist.BaseURL,
 			SpecialistModel: specialist.TextModel, SpecialistAPIKey: specialist.APIKey,
 			SpecialistHTTPClient: specialistHTTPClient(specialist),

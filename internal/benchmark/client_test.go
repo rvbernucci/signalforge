@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -41,6 +43,80 @@ func TestCompleteMeasuresStreamAndUsage(t *testing.T) {
 	}
 	if completion.TTFT <= 0 || completion.Duration <= 0 {
 		t.Fatalf("missing timing data: %+v", completion)
+	}
+}
+
+func TestCompleteSharesAggregateConcurrencyLimit(t *testing.T) {
+	var active atomic.Int32
+	var maximum atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+		current := active.Add(1)
+		defer active.Add(-1)
+		for {
+			observed := maximum.Load()
+			if current <= observed || maximum.CompareAndSwap(observed, current) {
+				break
+			}
+		}
+		time.Sleep(30 * time.Millisecond)
+		response.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprintln(response, `data: {"choices":[{"delta":{"content":"ok"},"finish_reason":"stop"}],"usage":{}}`)
+		fmt.Fprintln(response, "data: [DONE]")
+	}))
+	defer server.Close()
+
+	limiter, err := NewLimiter(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := Client{BaseURL: server.URL, Limiter: limiter}
+	var wait sync.WaitGroup
+	errors := make(chan error, 6)
+	for index := 0; index < 6; index++ {
+		wait.Add(1)
+		go func() {
+			defer wait.Done()
+			_, completeErr := client.Complete(context.Background(), Request{
+				Model: "test-model", Messages: []Message{{Role: "user", Content: "Test"}}, MaxTokens: 8,
+			})
+			errors <- completeErr
+		}()
+	}
+	wait.Wait()
+	close(errors)
+	for completeErr := range errors {
+		if completeErr != nil {
+			t.Fatal(completeErr)
+		}
+	}
+	if maximum.Load() != 2 {
+		t.Fatalf("maximum concurrent requests = %d, expected 2", maximum.Load())
+	}
+}
+
+func TestCompleteCancelsWhileWaitingForSharedSlot(t *testing.T) {
+	limiter, err := NewLimiter(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := limiter.acquire(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	defer limiter.release()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	_, err = (Client{BaseURL: "http://127.0.0.1:1", Limiter: limiter}).Complete(ctx, Request{
+		Model: "test-model", Messages: []Message{{Role: "user", Content: "Test"}}, MaxTokens: 8,
+	})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("waiting completion = %v, expected context deadline", err)
+	}
+}
+
+func TestNewLimiterRejectsNonPositiveLimit(t *testing.T) {
+	if _, err := NewLimiter(0); err == nil {
+		t.Fatal("expected non-positive completion limit rejection")
 	}
 }
 

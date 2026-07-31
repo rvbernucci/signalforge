@@ -19,6 +19,7 @@ type Client struct {
 	ReuseConnections            bool
 	EmbedResponseFormatInPrompt bool
 	HTTPClient                  *http.Client
+	Limiter                     *Limiter
 }
 
 type temporaryCompletionError struct {
@@ -96,6 +97,10 @@ func (client Client) Complete(ctx context.Context, request Request) (Completion,
 	if client.BaseURL == "" || request.Model == "" || len(request.Messages) == 0 {
 		return Completion{}, errors.New("completion request is incomplete")
 	}
+	if err := client.Limiter.acquire(ctx); err != nil {
+		return Completion{}, fmt.Errorf("acquire completion slot: %w", err)
+	}
+	defer client.Limiter.release()
 	if client.EmbedResponseFormatInPrompt && len(request.ResponseFormat) > 0 {
 		if err := embedResponseFormat(&request); err != nil {
 			return Completion{}, err
