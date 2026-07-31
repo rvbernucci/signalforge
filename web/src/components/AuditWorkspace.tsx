@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
 import type { ExecutionPlan, Projection, SafeEvent, WorkspaceReadiness } from "../types";
 import { ArrowIcon, CheckIcon, CloseIcon, DocumentIcon, ReceiptIcon, ShieldIcon } from "./Icons";
 import { LiveExecutionPlan } from "./LiveExecutionPlan";
+import { useDialogFocus } from "../hooks/useDialogFocus";
 
 type Props = {
   projection: Projection;
@@ -12,6 +12,7 @@ type Props = {
   running: boolean;
   connection: "idle" | "live" | "recovering" | "unavailable";
   open: boolean;
+  suspended: boolean;
   judgeMode: boolean;
   intelligenceAvailable: boolean;
   onClose: () => void;
@@ -30,6 +31,7 @@ export function AuditWorkspace({
   running,
   connection,
   open,
+  suspended,
   judgeMode,
   intelligenceAvailable,
   onClose,
@@ -38,59 +40,25 @@ export function AuditWorkspace({
   onCalculations,
   onMissionControl
 }: Props) {
-  const closeButton = useRef<HTMLButtonElement>(null);
-  const panel = useRef<HTMLElement>(null);
-  const returnFocus = useRef<HTMLElement | null>(null);
-  const wasOpen = useRef(false);
-
-  useEffect(() => {
-    if (open && !wasOpen.current) {
-      returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      closeButton.current?.focus();
-    } else if (!open && wasOpen.current) {
-      returnFocus.current?.focus();
-    }
-    wasOpen.current = open;
-  }, [open]);
-
-  function keepFocusInside(event: React.KeyboardEvent<HTMLElement>) {
-    if (event.key !== "Tab" || !panel.current) return;
-    const focusable = Array.from(panel.current.querySelectorAll<HTMLElement>(
-      'button:not(:disabled), a[href], input:not(:disabled), summary, [tabindex]:not([tabindex="-1"])'
-    )).filter((item) =>
-      !item.hasAttribute("inert")
-      && item.getAttribute("aria-hidden") !== "true"
-      && item.getClientRects().length > 0
-    );
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable.at(-1)!;
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
+  const focus = useDialogFocus(open, onClose);
 
   return (
     <>
       <button
         className={`drawer-scrim audit-workspace-scrim ${open ? "is-open" : ""}`}
         onClick={onClose}
-        aria-label="Dismiss audit workspace"
-        tabIndex={open ? 0 : -1}
+        aria-hidden="true"
+        tabIndex={-1}
       />
       <aside
-        ref={panel}
+        ref={focus.panelRef}
         className={`audit-workspace ${open ? "is-open" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="audit-workspace-title"
-        aria-hidden={!open}
-        inert={!open}
-        onKeyDown={keepFocusInside}
+        aria-hidden={!open || suspended}
+        inert={!open || suspended}
+        onKeyDown={focus.onKeyDown}
       >
         <header className="audit-workspace-header">
           <div>
@@ -107,7 +75,7 @@ export function AuditWorkspace({
             >
               {judgeMode ? "Hide judge orientation" : "Judge orientation"}
             </button>
-            <button ref={closeButton} className="icon-button" onClick={onClose} aria-label="Close audit workspace">
+            <button ref={focus.initialFocusRef} className="icon-button" onClick={onClose} aria-label="Close audit workspace">
               <CloseIcon />
             </button>
           </div>

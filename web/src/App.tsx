@@ -185,6 +185,7 @@ export function App() {
         running={research.running}
         connection={research.executionConnection}
         open={auditOpen}
+        suspended={drawerOpen || intelligenceOpen}
         judgeMode={judgeMode}
         intelligenceAvailable={config.intelligence_audit}
         onClose={closeAudit}

@@ -48,6 +48,7 @@ describe("AuditWorkspace", () => {
         running={false}
         connection="live"
         open
+        suspended={false}
         judgeMode={false}
         intelligenceAvailable
         onClose={vi.fn()}
@@ -79,6 +80,7 @@ describe("AuditWorkspace", () => {
       running: true,
       connection: "live" as const,
       open: true,
+      suspended: false,
       judgeMode: true,
       intelligenceAvailable: true,
       onClose: vi.fn(),
@@ -106,6 +108,7 @@ describe("AuditWorkspace", () => {
         running={false}
         connection="unavailable"
         open
+        suspended={false}
         judgeMode={false}
         intelligenceAvailable={false}
         onClose={vi.fn()}

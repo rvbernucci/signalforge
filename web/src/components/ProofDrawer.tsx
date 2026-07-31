@@ -1,6 +1,7 @@
-import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import type { CalculationCard, EvidenceCard, Projection } from "../types";
 import { CheckIcon, CloseIcon, DocumentIcon, ReceiptIcon, ShieldIcon } from "./Icons";
+import { useDialogFocus } from "../hooks/useDialogFocus";
 
 type Props = {
   projection: Projection;
@@ -13,9 +14,7 @@ type Props = {
 
 export function ProofDrawer({ projection, open, tab, refs, onTab, onClose }: Props) {
   const [query, setQuery] = useState("");
-  const closeButton = useRef<HTMLButtonElement>(null);
-  const returnFocus = useRef<HTMLElement | null>(null);
-  const wasOpen = useRef(false);
+  const focus = useDialogFocus(open, onClose);
   const deferredQuery = useDeferredValue(query.toLowerCase());
   const evidence = projection.evidence.filter((item) =>
     (refs.length === 0 || refs.includes(item.evidence_id)) && searchableEvidence(item).includes(deferredQuery)
@@ -24,23 +23,13 @@ export function ProofDrawer({ projection, open, tab, refs, onTab, onClose }: Pro
     (refs.length === 0 || refs.includes(item.receipt_id)) && searchableCalculation(item).includes(deferredQuery)
   );
 
-  useEffect(() => {
-    if (open && !wasOpen.current) {
-      returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      closeButton.current?.focus();
-    } else if (!open && wasOpen.current) {
-      returnFocus.current?.focus();
-    }
-    wasOpen.current = open;
-  }, [open]);
-
   return (
     <>
-      <button className={`drawer-scrim ${open ? "is-open" : ""}`} onClick={onClose} aria-label="Dismiss proof overlay" tabIndex={open ? 0 : -1} />
-      <aside className={`proof-drawer ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-labelledby="proof-drawer-title" aria-hidden={!open} inert={!open}>
+      <button className={`drawer-scrim ${open ? "is-open" : ""}`} onClick={onClose} aria-hidden="true" tabIndex={-1} />
+      <aside ref={focus.panelRef} className={`proof-drawer ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-labelledby="proof-drawer-title" aria-hidden={!open} inert={!open} onKeyDown={focus.onKeyDown}>
         <header>
           <div><span className="eyebrow">Proof layer</span><h2 id="proof-drawer-title">Inspect the work.</h2></div>
-          <button ref={closeButton} className="icon-button" onClick={onClose} aria-label="Close proof drawer"><CloseIcon /></button>
+          <button ref={focus.initialFocusRef} className="icon-button" onClick={onClose} aria-label="Close proof drawer"><CloseIcon /></button>
         </header>
         <div className="proof-tabs" role="tablist">
           <button role="tab" aria-selected={tab === "evidence"} onClick={() => onTab("evidence")}><DocumentIcon /> Evidence <span>{evidence.length}</span></button>

@@ -274,10 +274,48 @@ describe("SignalForge workspace", () => {
     const trigger = screen.getByRole("button", { name: /Inspect source evidence/i });
     trigger.focus();
     fireEvent.click(trigger);
-    expect(screen.getByRole("button", { name: "Close proof drawer" })).toHaveFocus();
-    fireEvent.keyDown(window, { key: "Escape" });
+    const close = screen.getByRole("button", { name: "Close proof drawer" });
+    expect(close).toHaveFocus();
+    fireEvent.keyDown(close, { key: "Escape" });
     await waitFor(() => expect(trigger).toHaveFocus());
     expect(screen.getByRole("dialog", { name: "How SignalForge reached this answer" })).toBeVisible();
+  });
+
+  it("contains proof keyboard focus and suspends the underlying audit dialog", async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "How SignalForge reached this answer" }));
+    const audit = screen.getByRole("dialog", { name: "How SignalForge reached this answer" });
+    const trigger = screen.getByRole("button", { name: /Inspect source evidence/i });
+    fireEvent.click(trigger);
+
+    const proof = screen.getByRole("dialog", { name: "Inspect the work." });
+    const close = screen.getByRole("button", { name: "Close proof drawer" });
+    expect(audit).toHaveAttribute("aria-hidden", "true");
+    expect(audit).toHaveAttribute("inert");
+    expect(close).toHaveFocus();
+
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    expect(proof).toContainElement(document.activeElement as HTMLElement);
+    expect(close).not.toHaveFocus();
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Tab" });
+    expect(close).toHaveFocus();
+
+    fireEvent.keyDown(close, { key: "Escape" });
+    expect(audit).toHaveAttribute("aria-hidden", "false");
+    expect(audit).not.toHaveAttribute("inert");
+    expect(audit).toContainElement(document.activeElement as HTMLElement);
+  });
+
+  it("keeps an empty case library inside one keyboard focus boundary", async () => {
+    render(<App />);
+    await screen.findByText("Save this case locally");
+    fireEvent.click(screen.getByRole("button", { name: "Open saved cases" }));
+    const close = await screen.findByRole("button", { name: "Close case library" });
+
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    expect(close).toHaveFocus();
+    fireEvent.keyDown(close, { key: "Tab" });
+    expect(close).toHaveFocus();
   });
 
   it("shows an honest empty state when proof filtering has no matches", async () => {

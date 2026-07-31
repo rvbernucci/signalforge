@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getIntelligence } from "../api";
+import { useDialogFocus } from "../hooks/useDialogFocus";
 import type {
   EngineCallAudit,
   IntelligenceRecord,
@@ -23,19 +24,7 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
   const [record, setRecord] = useState<IntelligenceRecord | null>(null);
   const [tab, setTab] = useState<InspectorTab>("pipeline");
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
-  const closeButton = useRef<HTMLButtonElement>(null);
-  const returnFocus = useRef<HTMLElement | null>(null);
-  const wasOpen = useRef(false);
-
-  useEffect(() => {
-    if (open && !wasOpen.current) {
-      returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      closeButton.current?.focus();
-    } else if (!open && wasOpen.current) {
-      returnFocus.current?.focus();
-    }
-    wasOpen.current = open;
-  }, [open]);
+  const focus = useDialogFocus(open, onClose);
 
   useEffect(() => {
     if (!open) return;
@@ -58,15 +47,15 @@ export function IntelligenceDrawer({ runID, traceID, open, protectedCapture, onC
 
   return (
     <>
-      <button className={`drawer-scrim intelligence-scrim ${open ? "is-open" : ""}`} onClick={onClose} aria-label="Dismiss intelligence overlay" tabIndex={open ? 0 : -1} />
-      <aside className={`intelligence-drawer ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-labelledby="intelligence-title" aria-hidden={!open} inert={!open}>
+      <button className={`drawer-scrim intelligence-scrim ${open ? "is-open" : ""}`} onClick={onClose} aria-hidden="true" tabIndex={-1} />
+      <aside ref={focus.panelRef} className={`intelligence-drawer ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-labelledby="intelligence-title" aria-hidden={!open} inert={!open} onKeyDown={focus.onKeyDown}>
         <header>
           <div>
             <span className="eyebrow">Radeon Mission Control</span>
             <h2 id="intelligence-title">Intelligence lineage.</h2>
             <p>Every agent, source, engine, and release decision tied to one run.</p>
           </div>
-          <button ref={closeButton} className="icon-button" onClick={onClose} aria-label="Close intelligence inspector"><CloseIcon /></button>
+          <button ref={focus.initialFocusRef} className="icon-button" onClick={onClose} aria-label="Close intelligence inspector"><CloseIcon /></button>
         </header>
 
         <div className="intelligence-tabs" role="tablist" aria-label="Intelligence views">
