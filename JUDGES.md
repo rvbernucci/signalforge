@@ -140,8 +140,15 @@ Open `http://127.0.0.1:8080`. The selected Radeon model and runtime reproduction
 ## Honest Scope
 
 - The deepest recorded product journey compares Microsoft and NVIDIA.
-- Twenty US technology companies are represented through governed activation states; unavailable
-  or unreviewed directions remain fail-closed.
+- The current `main` branch promotes twenty US technology company authorities and five bounded
+  peer lanes from 180/180 contract- and runtime-passing development and sealed journeys. This
+  Technology 20 candidate is not yet relabelled as the frozen championship release, and
+  unavailable, context-only, or non-comparable directions remain fail-closed.
+- The exact vNext source `ce4f2ca` admits one complete local research journey at a time while
+  retaining up to four specialist calls inside that journey. Two representative journeys submitted
+  together both completed in a controlled Radeon replay. Their elapsed times were `98.116 s` and
+  `152.149 s` including queue time, so this is bounded resilience evidence, not a 30-second latency
+  claim.
 - The 80-operation total is the composed deterministic registry, not a claim that the current
   natural-language planner automatically selects every registered operation.
 - In the frozen frontend, aggregate header/sidebar labels can say `Local inference` or `local calls`

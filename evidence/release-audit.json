@@ -116,9 +116,9 @@
   "self_excluded_path": "evidence/release-audit.json",
   "summary": {
     "all_checks_passed": true,
-    "public_files": 764,
-    "text_files_scanned": 740,
-    "total_bytes": 19800411
+    "public_files": 765,
+    "text_files_scanned": 741,
+    "total_bytes": 19809709
   },
   "synthetic_secret_sentinels": [
     {

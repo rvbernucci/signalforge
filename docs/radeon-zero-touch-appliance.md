@@ -29,8 +29,9 @@ make radeon-bootstrap ACCEPT_GEMMA_LICENSE=yes
 make radeon-up
 ```
 
-The default remains the accepted `v1.1.1` rollback. To exercise the separate, unpromoted vNext
-candidate, select its manifest explicitly for both commands:
+The default remains the accepted `v1.1.1` rollback. To exercise the separately promoted
+Technology 20 vNext candidate before final championship release, select its manifest explicitly
+for both commands:
 
 ```bash
 make radeon-bootstrap \
@@ -72,6 +73,13 @@ and `/v1/models`, and start SignalForge. It prints:
 - the local workspace URL.
 
 The default workspace is <http://127.0.0.1:8080>.
+
+The vNext application admits one complete local research journey at a time by default while
+retaining up to four specialist model calls within the active journey. This shared gate prevents
+multiple user journeys from independently saturating the same four-slot Gemma runtime. A waiting
+journey remains cancellable and receives a full execution budget only after admission. Operators
+may change `--live-run-concurrency`, but values above one are experimental on the recorded
+single-GPU profile and are not part of the bounded resilience evidence.
 
 The persistent root defaults to `/workspace/signalforge-runtime`. When a separate PVC mount is
 preferred, export `SIGNALFORGE_PERSIST_ROOT` before both commands. Bootstrap, preflight, startup,
@@ -174,7 +182,7 @@ Git, an OCI layer, or a command-line argument.
 The authoritative identities live in:
 
 - `deploy/radeon/appliance-manifest.json`, the accepted rollback default;
-- `deploy/radeon/appliance-manifest.vnext.json`, the explicit unpromoted candidate;
+- `deploy/radeon/appliance-manifest.vnext.json`, the explicit promoted Technology 20 candidate;
 - `deploy/radeon/model-manifest.json`; and
 - `deploy/radeon/native-toolchain-manifest.json`; and
 - the generated preflight report under `/workspace/signalforge-runtime/state/preflight.json`.
@@ -191,7 +199,8 @@ The current zero-touch contract pins:
 
 No moving tag is sufficient for a release. A candidate reaches Compose only through the
 hash-bound generated environment. The static Compose and environment-example defaults change only
-after promotion, when the candidate becomes the new accepted rollback authority.
+after every final-release gate passes and the candidate becomes the new accepted rollback
+authority.
 
 For the native backend, the selected source commit must be present in the local Git object
 database. A normal clone satisfies this contract for the accepted rollback and vNext authorities.

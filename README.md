@@ -94,8 +94,9 @@ make radeon-bootstrap BACKEND=auto ACCEPT_GEMMA_LICENSE=yes
 make radeon-up BACKEND=auto
 ```
 
-These commands intentionally select the accepted `v1.1.1` rollback authority. The unpromoted
-Sprint 41 candidate is opt-in and never replaces that safe default:
+These commands intentionally select the accepted `v1.1.1` rollback authority. The promoted
+Technology 20 Sprint 41 candidate remains opt-in until its remaining exact-runtime, factual,
+usability, rights, media, and final-release gates close:
 
 ```bash
 make radeon-bootstrap \
@@ -123,12 +124,12 @@ acceptance, uses region-accessible transports while preserving canonical artifac
 verifies byte size and SHA-256 before publication, and reuses the verified cache on later starts.
 See [Zero-Touch Radeon Appliance](docs/radeon-zero-touch-appliance.md).
 
-## Technology 20 vNext Evaluation Lane
+## Technology 20 vNext Candidate
 
 The current `main` branch contains a guarded expansion from the immutable Microsoft/NVIDIA
-baseline to twenty US-listed technology issuers. All twenty companies are discoverable in the
-workspace and have explicit machine-readable activation states. This does **not** mean that every
-company, metric, or pair is research-ready.
+baseline to twenty US-listed technology issuers. All twenty company authorities and five bounded
+peer lanes are promoted under one hash-bound human decision and four exact evaluation summaries.
+This does **not** make every metric directly comparable or establish universal factual accuracy.
 
 The vNext lane currently provides:
 
@@ -152,15 +153,27 @@ The vNext lane currently provides:
 - local Radeon semantic evaluation with both independent critics and one final synthesis;
 - a workspace that exposes company authority, evidence recency, governed periods, explicit
   unavailable price dates, scenario assumptions, deterministic receipts, abstentions,
-  metric-level peer dispositions, and adjacent comparison caveats without enabling a guarded
-  company or pair; and
+  metric-level peer dispositions, and adjacent comparison caveats without expanding authority
+  beyond the promoted company or lane; and
 - fail-closed workspace states that preserve the last accepted case when the local model,
   optional API, retrieval, or a deterministic tool is unavailable.
 
-Peer lanes that have not completed their company-specific evidence and domain gates remain
-evaluation-only. Private prompts, responses, source bodies, model weights, sealed labels, and raw
-evaluation reports are intentionally absent from this repository. The public fixtures and tests
-prove contracts and deterministic authority; they do not claim universal factual accuracy.
+The promotion is bound to source `4498e60c16821586f830d196269f39702f38ca99`, its four aggregate
+evaluation hashes, the named decision hash, and the public
+[Technology 20 promotion manifest](evidence/technology20-promotion-manifest.json). All 180
+development and sealed journeys passed their bounded contract and runtime gates. Context-only,
+unavailable, or non-comparable metrics remain withheld even inside a promoted lane.
+
+The current exact vNext application source is
+`ce4f2cabf0981bec09cf80c805864515f42fa41c`; its public `linux/amd64` image index is
+`sha256:2537c832a43b3e71e2352d18ae959803c2b2a218133517e96c4526ee0aeb3ab3`.
+It retains up to four concurrent specialist calls inside one research journey while admitting one
+complete local journey at a time. In a controlled Radeon replay, two representative journeys
+submitted together both completed through this shared gate. The second journey included queue
+time, and the result does not satisfy or claim the 30-second response target.
+Private prompts, responses, source bodies, model weights, sealed labels, and raw evaluation
+reports are intentionally absent from this repository. Public promotion proves bounded authority,
+not universal factual accuracy or final championship release.
 
 ## Project Documentation
 
@@ -610,7 +623,8 @@ go run ./cmd/signalforge-workspace \
   --static-dir web/dist \
   --base-url http://127.0.0.1:8000/v1 \
   --model signalforge-gemma4-26b-q4 \
-  --context-concurrency 4
+  --context-concurrency 4 \
+  --live-run-concurrency 1
 ```
 
 The workspace refuses non-loopback bind addresses. When it runs on a Radeon host, access it through
