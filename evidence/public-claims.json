@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "evidence/hardening-matrix.json",
-          "sha256": "706e2818cd0366077c3e98465471d9299802605902edbb55f350c52288e9292f"
+          "sha256": "a4d996b8aa40f3d97f36bb71f193e1bda0040412f2997eaaf97b1a2cd599c1a8"
         },
         {
           "path": "configs/hardening/sprint12-matrix-v1.json",

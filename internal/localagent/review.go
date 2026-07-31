@@ -98,9 +98,10 @@ func (adapters *Adapters) Review(ctx context.Context, input orchestrator.ReviewI
 			return contracts.CritiqueReport{}, fmt.Errorf("decode critique body: %w", decodeErr)
 		}
 		retryPrompt := prompt
-		retryPrompt.MaxTokens *= 2
-		if retryPrompt.MaxTokens > 3200 {
-			retryPrompt.MaxTokens = 3200
+		retryPrompt.System += " The previous structured review was truncated. On this single bounded retry, classify every supplied claim ID exactly once, keep issue descriptions and repair hints concise, and close the JSON object."
+		retryPrompt.MaxTokens *= 3
+		if retryPrompt.MaxTokens > 4800 {
+			retryPrompt.MaxTokens = 4800
 		}
 		completion, err = adapters.complete(ctx, retryPrompt, string(payload))
 		if err != nil {

@@ -1007,8 +1007,11 @@ func TestReviewerRetriesIncompleteJSONOnce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(client.requests) != 2 || client.requests[1].MaxTokens != 2800 {
+	if len(client.requests) != 2 || client.requests[1].MaxTokens != 4200 {
 		t.Fatalf("review truncation retry was not bounded: %+v", client.requests)
+	}
+	if !strings.Contains(client.requests[1].Messages[0].Content, "classify every supplied claim ID exactly once") {
+		t.Fatalf("review truncation retry omitted its concise recovery contract: %+v", client.requests[1].Messages)
 	}
 }
 
