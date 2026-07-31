@@ -106,6 +106,22 @@ func repairAuthorizedNumericalDraft(body *finalBody, material synthesisPromptInp
 	body.NextActions = removeNumericalMetadata(body.NextActions)
 	for index := range body.Sections {
 		section := &body.Sections[index]
+		switch section.SectionType {
+		case "assumptions":
+			section.Title = "Assumptions"
+			if len(body.Assumptions) == 0 {
+				section.Content = noAuthorizedAssumptions
+			} else {
+				section.Content = strings.Join(body.Assumptions, " ")
+			}
+			section.ClaimRefs = nil
+			continue
+		case "limitations":
+			section.Title = "Limitations"
+			section.Content = strings.Join(body.Limitations, " ")
+			section.ClaimRefs = nil
+			continue
+		}
 		if !containsAuthoritativeNumericalLiteral(section.Title) &&
 			!containsAuthoritativeNumericalLiteral(section.Content) {
 			continue

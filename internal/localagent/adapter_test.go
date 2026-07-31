@@ -647,6 +647,23 @@ func TestSpecialistUsesDeterministicAuthorityAfterProviderFailure(t *testing.T) 
 	}
 }
 
+func TestSpecialistCanonicalizesDuplicateReferencesWithoutExpandingAuthority(t *testing.T) {
+	now := time.Now().UTC()
+	client := &fakeCompleter{answers: []string{`{
+	  "findings":[{"claim_id":"claim-1","claim_type":"fact","statement":"Revenue grew.","evidence_refs":["evidence-1","evidence-1"],"calculation_refs":[],"numerical_refs":[],"assumption_refs":[],"confidence":0.9}],
+	  "counterevidence":[],"assumptions":[],"missing_evidence":[],"conflicts":[],"uncertainties":[],"handoff_notes":[]
+	}`}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+
+	packet, err := adapter.Run(context.Background(), validContextRequest(now))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(packet.Findings) != 1 || !slices.Equal(packet.Findings[0].EvidenceRefs, []string{"evidence-1"}) {
+		t.Fatalf("duplicate reference changed or invalidated authority: %+v", packet.Findings)
+	}
+}
+
 func TestSpecialistDoesNotUseCrossRoleDeterministicAuthority(t *testing.T) {
 	now := time.Now().UTC()
 	client := &failingCompleter{err: errors.New("provider unavailable")}
@@ -1301,7 +1318,7 @@ func TestDeterministicRepairNarrowsNumericalEvidenceProseWithApprovedClaim(t *te
 func TestDeterministicRepairNarrowsEveryApprovedSection(t *testing.T) {
 	for _, sectionType := range []string{
 		"business_overview", "financial_quality", "comparison", "valuation_range",
-		"thesis", "limitations", "counterevidence", "invalidation_conditions",
+		"thesis", "counterevidence", "invalidation_conditions",
 	} {
 		t.Run(sectionType, func(t *testing.T) {
 			body := finalBody{Sections: []answerSectionDraft{{
@@ -1324,6 +1341,29 @@ func TestDeterministicRepairNarrowsEveryApprovedSection(t *testing.T) {
 				t.Fatalf("qualitative repair did not narrow safely: %+v", body.Sections[0])
 			}
 		})
+	}
+}
+
+func TestDeterministicRepairSynchronizesApplicationOwnedLimitationsBeforeValidation(t *testing.T) {
+	body := finalBody{
+		Sections: []answerSectionDraft{{
+			SectionType: "limitations",
+			Title:       "Two limitations",
+			Content:     "The model proposed 2 unsupported limitations.",
+			ClaimRefs:   []string{"claim-qualitative"},
+		}},
+		Limitations: []string{
+			"The analysis covers one reporting period.",
+			"Source authority remains bounded by the stated as-of date.",
+		},
+	}
+	if err := repairAuthorizedNumericalDraft(&body, synthesisPromptInput{}); err != nil {
+		t.Fatal(err)
+	}
+	if body.Sections[0].Title != "Limitations" ||
+		body.Sections[0].Content != "Source authority remains bounded by the stated as-of date." ||
+		len(body.Sections[0].ClaimRefs) != 0 {
+		t.Fatalf("application-owned limitations were not synchronized safely: %+v", body.Sections[0])
 	}
 }
 

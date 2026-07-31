@@ -108,7 +108,7 @@
         },
         {
           "path": "internal/localagent/adapter_test.go",
-          "sha256": "61938703b8bf704d56a58406753e59bcb6b1b5251179d9d33e0ea2b102a22300"
+          "sha256": "9745fb5873771a175aa0703b98cf10364f95e55d0ffef74b25fe108a006da4b1"
         },
         {
           "path": "internal/localagent/synthesis.go",

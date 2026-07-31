@@ -366,6 +366,7 @@ func buildContextPacket(request contracts.ContextRequest, material Material, bod
 		appendMissingValuationReceiptFindings(&packet, material.CalculationReceipts, material.NumericalContext)
 	}
 	assignCanonicalClaimIDs(&packet, request.ContextRequestID)
+	canonicalizePacketCollections(&packet)
 	for index := range packet.Findings {
 		packet.Findings[index].ValidAsOf = request.Scope.AsOf
 	}
@@ -385,6 +386,24 @@ func buildContextPacket(request contracts.ContextRequest, material Material, bod
 		return contracts.ContextPacket{}, err
 	}
 	return packet, nil
+}
+
+func canonicalizePacketCollections(packet *contracts.ContextPacket) {
+	packet.Assumptions = dedupeStrings(packet.Assumptions)
+	packet.MissingEvidence = dedupeStrings(packet.MissingEvidence)
+	packet.Conflicts = dedupeStrings(packet.Conflicts)
+	packet.Uncertainties = dedupeStrings(packet.Uncertainties)
+	packet.HandoffNotes = dedupeStrings(packet.HandoffNotes)
+	canonicalize := func(findings []contracts.Finding) {
+		for index := range findings {
+			findings[index].EvidenceRefs = dedupeStrings(findings[index].EvidenceRefs)
+			findings[index].CalculationRefs = dedupeStrings(findings[index].CalculationRefs)
+			findings[index].NumericalRefs = dedupeStrings(findings[index].NumericalRefs)
+			findings[index].AssumptionRefs = dedupeStrings(findings[index].AssumptionRefs)
+		}
+	}
+	canonicalize(packet.Findings)
+	canonicalize(packet.Counterevidence)
 }
 
 // Request assumptions need a bounded transmission mechanism even when the model proposes an
