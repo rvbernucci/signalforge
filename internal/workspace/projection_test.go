@@ -84,3 +84,36 @@ func TestProjectFailsClosedOnUnknownSectionAuthority(t *testing.T) {
 		t.Fatal("unknown workspace authority must fail closed")
 	}
 }
+
+func TestValidateAcceptsGovernedStandaloneAndRejectsUnsupportedCardinality(t *testing.T) {
+	projection := Projection{
+		SchemaVersion: SchemaVersionV1,
+		CaseID:        "case-standalone",
+		RunID:         "run-standalone",
+		RequestID:     "request-standalone",
+		Status:        "completed",
+		Question:      "What does Adobe sell?",
+		AsOf:          time.Now().UTC(),
+		Companies:     []Company{{EntityID: "adobe", Label: "Adobe"}},
+		Sections:      []Section{{SectionType: "business_overview", Content: "Bounded answer."}},
+		Execution: Execution{
+			LocalOnly: true, EndpointScope: "loopback_only",
+		},
+	}
+	if err := Validate(projection); err != nil {
+		t.Fatalf("governed standalone projection rejected: %v", err)
+	}
+
+	projection.Companies = nil
+	if err := Validate(projection); err == nil {
+		t.Fatal("company-free projection must fail closed")
+	}
+	projection.Companies = []Company{
+		{EntityID: "a", Label: "A"},
+		{EntityID: "b", Label: "B"},
+		{EntityID: "c", Label: "C"},
+	}
+	if err := Validate(projection); err == nil {
+		t.Fatal("unsupported three-company projection must fail closed")
+	}
+}

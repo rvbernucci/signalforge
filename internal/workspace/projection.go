@@ -188,7 +188,8 @@ func Project(report golden.Report) (Projection, error) {
 func Validate(projection Projection) error {
 	if projection.SchemaVersion != SchemaVersionV1 || projection.CaseID == "" || projection.RunID == "" ||
 		projection.RequestID == "" || projection.Status != "completed" || projection.Question == "" ||
-		projection.AsOf.IsZero() || len(projection.Companies) != 2 || len(projection.Sections) == 0 {
+		projection.AsOf.IsZero() || len(projection.Companies) < 1 || len(projection.Companies) > 2 ||
+		len(projection.Sections) == 0 {
 		return errors.New("research workspace envelope is invalid")
 	}
 	if !projection.Execution.LocalOnly || projection.Execution.EndpointScope != "loopback_only" {
