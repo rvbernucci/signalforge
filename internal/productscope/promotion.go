@@ -260,7 +260,7 @@ func PromoteTechnology20(input PromotionInput) (
 		if passed {
 			company.ActivationState = contracts.ActivationResearchReady
 			company.ResearchEnabled = true
-			company.ReasonCodes = nil
+			company.ReasonCodes = []string{}
 			company.PromotionEvidenceSHA256 = append([]string(nil), companyEvidence...)
 			outcome.Evidence = append([]string(nil), companyEvidence...)
 			promotedCompanies[company.CompanyID] = true
@@ -288,10 +288,10 @@ func PromoteTechnology20(input PromotionInput) (
 		outcome := PromotionOutcome{SubjectID: lane.LaneID, Promoted: passed}
 		if passed {
 			lane.Enabled = true
-			lane.ReasonCodes = nil
+			lane.ReasonCodes = []string{}
 			lane.PromotionEvidenceSHA256 = append([]string(nil), laneEvidence...)
 			evaluation.Promoted = true
-			evaluation.ReasonCodes = nil
+			evaluation.ReasonCodes = []string{}
 			evaluation.PromotionEvidenceSHA256 = append([]string(nil), laneEvidence...)
 			outcome.Evidence = append([]string(nil), laneEvidence...)
 		} else {

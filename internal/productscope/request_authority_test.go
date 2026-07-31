@@ -24,7 +24,8 @@ func TestRequestAuthorityBindsCompanyAndComparisonReceipts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bound.AuthorityState != "limited" || len(bound.AuthorityRefs) < 4 {
+	if bound.AuthorityState != "comparison_ready" || len(bound.AuthorityRefs) < 4 ||
+		len(bound.AuthorityReasonCodes) != 0 {
 		t.Fatalf("authority was not bound: %+v", bound)
 	}
 }

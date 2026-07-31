@@ -317,6 +317,14 @@ func TestPublicReleaseProviderEnforcesPromotionAndProjectsVerifiableReceipts(t *
 		t.Fatal(err)
 	}
 	adobeID := "sec-cik:0000796343"
+	for index := range catalog.Companies {
+		if catalog.Companies[index].CompanyID == adobeID {
+			catalog.Companies[index].ResearchEnabled = false
+			catalog.Companies[index].ActivationState = contracts.ActivationDataReady
+			catalog.Companies[index].ReasonCodes = []string{"standalone_journey_not_yet_promoted"}
+			catalog.Companies[index].PromotionEvidenceSHA256 = nil
+		}
+	}
 	provider, err := NewPublicReleaseProvider(catalog, summary, peers)
 	if err != nil {
 		t.Fatal(err)

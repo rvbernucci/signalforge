@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "evidence/hardening-matrix.json",
-          "sha256": "a4d996b8aa40f3d97f36bb71f193e1bda0040412f2997eaaf97b1a2cd599c1a8"
+          "sha256": "fddedd6947178a1c6d9a13c90dcbe64d9afc8cb849ceecff91ded4bb382a26c7"
         },
         {
           "path": "configs/hardening/sprint12-matrix-v1.json",
@@ -408,7 +408,7 @@
         },
         {
           "path": "internal/workspace/server_test.go",
-          "sha256": "22e85c66272976e33beefb2999ec2573823afc795422164b27d2727ac2e9a439"
+          "sha256": "5108b42584fb6cf332114be06488b30eb03032b7a7d0a108420c848a54c29c65"
         },
         {
           "path": "web/src/components/CaseLibrary.tsx",

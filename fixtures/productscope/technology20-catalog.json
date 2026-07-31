@@ -6,6 +6,7 @@
   "activation_policy_version": "technology20-activation/v1",
   "peer_lane_policy_version": "technology20-peer-lanes/v1",
   "source_registry_sha256": "e2dd93ecc4be3d5792798c2d8bd072f9581db5be06ee3a9d97ac11627dbeb056",
+  "promotion_decision_sha256": "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181",
   "companies": [
     {
       "company_id": "sec-cik:0000796343",
@@ -17,18 +18,22 @@
       "research_cluster": "enterprise_software",
       "peer_group": "enterprise_applications_and_cloud",
       "research_role": "creative and document software, recurring revenue, and AI monetization",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 19,
         "missing": 5,
         "not_applicable": 48,
         "partial": 8
       },
-      "profile_sha256": "a263b95e2c530a5bbdeb79968db14e6c35505e23e6e783e335053b4e16953ca2"
+      "profile_sha256": "a263b95e2c530a5bbdeb79968db14e6c35505e23e6e783e335053b4e16953ca2",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000002488",
@@ -40,17 +45,21 @@
       "research_cluster": "semiconductors",
       "peer_group": "accelerated_compute",
       "research_role": "CPU, GPU, adaptive computing, and data-center share",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 25,
         "not_applicable": 48,
         "partial": 7
       },
-      "profile_sha256": "509453cf42cfe4da30448c5c3cc52fb485b44a88b80c8fc15bfd3d900e29fadc"
+      "profile_sha256": "509453cf42cfe4da30448c5c3cc52fb485b44a88b80c8fc15bfd3d900e29fadc",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001652044",
@@ -63,17 +72,21 @@
       "research_cluster": "platforms_and_cloud",
       "peer_group": "hyperscale_platforms",
       "research_role": "digital advertising, cloud, AI infrastructure, and platform economics",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "0ac17fdc7c40d021bfef8dbeebf49f615da1fa581f1e8750d5c037633ab526fb"
+      "profile_sha256": "0ac17fdc7c40d021bfef8dbeebf49f615da1fa581f1e8750d5c037633ab526fb",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001018724",
@@ -85,17 +98,21 @@
       "research_cluster": "platforms_and_cloud",
       "peer_group": "hyperscale_platforms",
       "research_role": "commerce, logistics, cloud infrastructure, and advertising",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 25,
         "not_applicable": 48,
         "partial": 7
       },
-      "profile_sha256": "1f469c0d62629eed3b85f1de27ecff2b9aeb1e26c4bec75bb179f8d7df8bf732"
+      "profile_sha256": "1f469c0d62629eed3b85f1de27ecff2b9aeb1e26c4bec75bb179f8d7df8bf732",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000320193",
@@ -107,17 +124,21 @@
       "research_cluster": "devices_and_infrastructure",
       "peer_group": "consumer_compute_devices",
       "research_role": "integrated devices, services, installed base, and capital returns",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "8028ab006fef7f4d736513eb6118f43743165157599688b5974839928920800d"
+      "profile_sha256": "8028ab006fef7f4d736513eb6118f43743165157599688b5974839928920800d",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000006951",
@@ -129,17 +150,21 @@
       "research_cluster": "semiconductors",
       "peer_group": "specialized_semiconductor_economics",
       "research_role": "semiconductor equipment demand, fab investment, and cycle exposure",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "c41d863115cdbe24ef7b295c3064b3c594401f2afe167508eb1327f5f95c4f24"
+      "profile_sha256": "c41d863115cdbe24ef7b295c3064b3c594401f2afe167508eb1327f5f95c4f24",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001596532",
@@ -151,17 +176,21 @@
       "research_cluster": "devices_and_infrastructure",
       "peer_group": "network_infrastructure",
       "research_role": "cloud networking, AI clusters, customer concentration, and operating leverage",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "0c20984f18bedb5bfe61e75a657ed86df0ef612e0566f35922a9243302f163b7"
+      "profile_sha256": "0c20984f18bedb5bfe61e75a657ed86df0ef612e0566f35922a9243302f163b7",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001730168",
@@ -173,17 +202,21 @@
       "research_cluster": "semiconductors",
       "peer_group": "diversified_compute_infrastructure",
       "research_role": "custom silicon, connectivity, infrastructure software, and acquisition economics",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "0c91df5377e64cf8190fd1e860914f01ab3b1a756a2daf78b8c97420ad2104e9"
+      "profile_sha256": "0c91df5377e64cf8190fd1e860914f01ab3b1a756a2daf78b8c97420ad2104e9",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000858877",
@@ -195,17 +228,21 @@
       "research_cluster": "devices_and_infrastructure",
       "peer_group": "network_infrastructure",
       "research_role": "enterprise networking, recurring mix, and AI infrastructure demand",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "840fd085ef28f205105113bf7e081ef1d633d67baa889c672696b7dc70664f4c"
+      "profile_sha256": "840fd085ef28f205105113bf7e081ef1d633d67baa889c672696b7dc70664f4c",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000051143",
@@ -217,18 +254,22 @@
       "research_cluster": "enterprise_software",
       "peer_group": "enterprise_applications_and_cloud",
       "research_role": "hybrid cloud, software, infrastructure, consulting, and capital allocation",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 19,
         "missing": 5,
         "not_applicable": 48,
         "partial": 8
       },
-      "profile_sha256": "62da789431198a1a179645f4cfc4657650e75c81b7b4485d7a7a3869bb5ca27c"
+      "profile_sha256": "62da789431198a1a179645f4cfc4657650e75c81b7b4485d7a7a3869bb5ca27c",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000050863",
@@ -240,17 +281,21 @@
       "research_cluster": "semiconductors",
       "peer_group": "diversified_compute_infrastructure",
       "research_role": "CPU demand, foundry investment, manufacturing intensity, and turnaround risk",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 25,
         "not_applicable": 48,
         "partial": 7
       },
-      "profile_sha256": "e359e61ecd6873f044228d020eef5d45bf5e2e121eaa2df2907ef569f64d0810"
+      "profile_sha256": "e359e61ecd6873f044228d020eef5d45bf5e2e121eaa2df2907ef569f64d0810",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001326801",
@@ -262,17 +307,21 @@
       "research_cluster": "platforms_and_cloud",
       "peer_group": "hyperscale_platforms",
       "research_role": "digital advertising, social platforms, and AI capital intensity",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "7c6025e73d8c39d306f84e0d6337d96fee835df69ee68a4282ac72974ff7f4ad"
+      "profile_sha256": "7c6025e73d8c39d306f84e0d6337d96fee835df69ee68a4282ac72974ff7f4ad",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000723125",
@@ -284,17 +333,21 @@
       "research_cluster": "semiconductors",
       "peer_group": "specialized_semiconductor_economics",
       "research_role": "memory cycles, pricing, inventories, and capital intensity",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "390d09cc6e5a4f1b96f348efb8c6158fe7c3c3f7673ed488e0224dd8436b99a7"
+      "profile_sha256": "390d09cc6e5a4f1b96f348efb8c6158fe7c3c3f7673ed488e0224dd8436b99a7",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000789019",
@@ -306,17 +359,21 @@
       "research_cluster": "platforms_and_cloud",
       "peer_group": "hyperscale_platforms",
       "research_role": "enterprise software, cloud infrastructure, and AI platform demand",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "096428f8107c265f3b702d11430bcd05930a781c073385240b10e458f46bccf3"
+      "profile_sha256": "096428f8107c265f3b702d11430bcd05930a781c073385240b10e458f46bccf3",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001045810",
@@ -328,17 +385,21 @@
       "research_cluster": "semiconductors",
       "peer_group": "accelerated_compute",
       "research_role": "accelerated computing, data-center demand, and platform economics",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "62e968fd1b3794a3a9ec69bb29d99ebaf95f2019b6268134e189f853e59773a4"
+      "profile_sha256": "62e968fd1b3794a3a9ec69bb29d99ebaf95f2019b6268134e189f853e59773a4",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001341439",
@@ -350,17 +411,21 @@
       "research_cluster": "enterprise_software",
       "peer_group": "enterprise_applications_and_cloud",
       "research_role": "database software, cloud infrastructure, and contracted revenue",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 25,
         "not_applicable": 48,
         "partial": 7
       },
-      "profile_sha256": "3efb359b64c4f54f811924ec9c48ed0d3d39a9b3b3d36294597f1f26c0a0e367"
+      "profile_sha256": "3efb359b64c4f54f811924ec9c48ed0d3d39a9b3b3d36294597f1f26c0a0e367",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000804328",
@@ -372,18 +437,22 @@
       "research_cluster": "semiconductors",
       "peer_group": "diversified_compute_infrastructure",
       "research_role": "wireless semiconductors, licensing economics, and edge computing",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 15,
         "missing": 7,
         "not_applicable": 48,
         "partial": 10
       },
-      "profile_sha256": "7f43672497caecd5a369b1df9b1b245b1162709ef459524640cbabdc3ea2d461"
+      "profile_sha256": "7f43672497caecd5a369b1df9b1b245b1162709ef459524640cbabdc3ea2d461",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001108524",
@@ -395,17 +464,21 @@
       "research_cluster": "enterprise_software",
       "peer_group": "enterprise_applications_and_cloud",
       "research_role": "subscription software, remaining obligations, margins, and dilution",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "2ef73d3607854c384b321f6f748340f7fd84a40516942e9e85107eb39b14e55e"
+      "profile_sha256": "2ef73d3607854c384b321f6f748340f7fd84a40516942e9e85107eb39b14e55e",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0001373715",
@@ -417,17 +490,21 @@
       "research_cluster": "enterprise_software",
       "peer_group": "enterprise_applications_and_cloud",
       "research_role": "workflow software, contracted revenue, growth, and stock compensation",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "6c9a5052c1685ae1f6d532ef80d4992a97477913b6a0d2d9190724cc45178284"
+      "profile_sha256": "6c9a5052c1685ae1f6d532ef80d4992a97477913b6a0d2d9190724cc45178284",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "company_id": "sec-cik:0000097476",
@@ -439,17 +516,21 @@
       "research_cluster": "semiconductors",
       "peer_group": "specialized_semiconductor_economics",
       "research_role": "analog semiconductors, industrial exposure, and long-cycle manufacturing",
-      "activation_state": "data_ready",
-      "research_enabled": false,
-      "reason_codes": [
-        "standalone_journey_not_yet_promoted"
-      ],
+      "activation_state": "research_ready",
+      "research_enabled": true,
+      "reason_codes": [],
       "metric_state_count": {
         "covered": 26,
         "not_applicable": 48,
         "partial": 6
       },
-      "profile_sha256": "523c26aad51b6f7ef93193a9190e7fab490b2c05b78641dfe7e99a03a73f6b0d"
+      "profile_sha256": "523c26aad51b6f7ef93193a9190e7fab490b2c05b78641dfe7e99a03a73f6b0d",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "844f1f2038e0f7d7b6e3103f45140afcba9cd6538a748a16623c059755637d8d",
+        "c755e69d1602b67ba2b974d93b04ec354fa1b630ed0fbf7c9c9582ab8a15eced",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     }
   ],
   "peer_lanes": [
@@ -471,11 +552,15 @@
         "financial.free_cash_flow",
         "financial.cash_conversion"
       ],
-      "enabled": false,
-      "reason_codes": [
-        "peer_lane_not_yet_promoted"
-      ],
-      "lane_sha256": "0b331e4875b142ac9631ec4cabed8f0ff3ea8ae2430895a478c85d7c82e6006e"
+      "enabled": true,
+      "reason_codes": [],
+      "lane_sha256": "0b331e4875b142ac9631ec4cabed8f0ff3ea8ae2430895a478c85d7c82e6006e",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "lane_id": "microsoft-alphabet",
@@ -496,11 +581,15 @@
         "financial.capex_intensity",
         "financial.cash_conversion"
       ],
-      "enabled": false,
-      "reason_codes": [
-        "peer_lane_not_yet_promoted"
-      ],
-      "lane_sha256": "3ce7defdf2efe383e74ed2852ef43db2d4d508962e3163189182df53a99bdfcc"
+      "enabled": true,
+      "reason_codes": [],
+      "lane_sha256": "3ce7defdf2efe383e74ed2852ef43db2d4d508962e3163189182df53a99bdfcc",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "lane_id": "nvidia-amd",
@@ -520,11 +609,15 @@
         "financial.free_cash_flow",
         "financial.capex_intensity"
       ],
-      "enabled": false,
-      "reason_codes": [
-        "peer_lane_not_yet_promoted"
-      ],
-      "lane_sha256": "ee2fcb627948e4031bab1b0ff27567de6354634c00e43b2d81cb18eb04053153"
+      "enabled": true,
+      "reason_codes": [],
+      "lane_sha256": "ee2fcb627948e4031bab1b0ff27567de6354634c00e43b2d81cb18eb04053153",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "lane_id": "oracle-microsoft",
@@ -544,11 +637,15 @@
         "financial.free_cash_flow",
         "financial.capex_intensity"
       ],
-      "enabled": false,
-      "reason_codes": [
-        "peer_lane_not_yet_promoted"
-      ],
-      "lane_sha256": "eea15b727c4080054815668dc659191b75dd06d77d46e3c08a1d089ef0b4a419"
+      "enabled": true,
+      "reason_codes": [],
+      "lane_sha256": "eea15b727c4080054815668dc659191b75dd06d77d46e3c08a1d089ef0b4a419",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     },
     {
       "lane_id": "salesforce-servicenow",
@@ -568,11 +665,15 @@
         "financial.dilution",
         "financial.cash_conversion"
       ],
-      "enabled": false,
-      "reason_codes": [
-        "peer_lane_not_yet_promoted"
-      ],
-      "lane_sha256": "8dc770483c282b157820724dc5587b6f4fd3801f264f88fc59ef05616f313659"
+      "enabled": true,
+      "reason_codes": [],
+      "lane_sha256": "8dc770483c282b157820724dc5587b6f4fd3801f264f88fc59ef05616f313659",
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
+      ]
     }
   ],
   "claim_boundary": "Catalog presence means the issuer identity and SEC-derived data coverage were validated. Research and comparison remain disabled until their separate journey and comparability gates pass."

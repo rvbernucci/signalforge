@@ -568,7 +568,7 @@
           ]
         }
       ],
-      "promoted": false
+      "promoted": true
     },
     {
       "company_ids": [
@@ -1499,7 +1499,7 @@
           ]
         }
       ],
-      "promoted": false
+      "promoted": true
     },
     {
       "company_ids": [
@@ -2259,7 +2259,7 @@
           ]
         }
       ],
-      "promoted": false
+      "promoted": true
     },
     {
       "company_ids": [
@@ -2981,7 +2981,7 @@
           "required_caveat_ids": []
         }
       ],
-      "promoted": false
+      "promoted": true
     },
     {
       "company_ids": [
@@ -3541,11 +3541,11 @@
           ]
         }
       ],
-      "promoted": false
+      "promoted": true
     }
   ],
   "policy_version": "metric-comparability-annual-duration/v1",
   "schema_version": "signalforge/technology20-peer-boundary-matrix/v1",
-  "source_sha256": "9fbf78de6d627ee128ba0ba2c13529d4b3dd10b838b13a23f3fdf5854434d8c5",
+  "source_sha256": "3a56b8d7f6e3f3475b7ceec95c2811923d1eda09887aadb55efe24707ff8a8bd",
   "universe_id": "us-technology-20-v2"
 }

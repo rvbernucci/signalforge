@@ -3,6 +3,7 @@
   "universe_id": "us-technology-20-v2",
   "as_of": "2026-07-24T10:32:53.677641Z",
   "policy_version": "metric-comparability-annual-duration/v1",
+  "promotion_decision_sha256": "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181",
   "lanes": [
     {
       "lane_id": "cisco-arista",
@@ -681,9 +682,13 @@
       "withheld_metric_ids": [
         "financial.cash_conversion"
       ],
-      "promoted": false,
-      "reason_codes": [
-        "peer_journeys_and_professional_review_pending"
+      "promoted": true,
+      "reason_codes": [],
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
       ]
     },
     {
@@ -1781,9 +1786,13 @@
         "financial.revenue_growth"
       ],
       "withheld_metric_ids": [],
-      "promoted": false,
-      "reason_codes": [
-        "peer_journeys_and_professional_review_pending"
+      "promoted": true,
+      "reason_codes": [],
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
       ]
     },
     {
@@ -2689,9 +2698,13 @@
         "financial.revenue_growth"
       ],
       "withheld_metric_ids": [],
-      "promoted": false,
-      "reason_codes": [
-        "peer_journeys_and_professional_review_pending"
+      "promoted": true,
+      "reason_codes": [],
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
       ]
     },
     {
@@ -3546,9 +3559,13 @@
         "financial.operating_margin",
         "financial.revenue_growth"
       ],
-      "promoted": false,
-      "reason_codes": [
-        "peer_journeys_and_professional_review_pending"
+      "promoted": true,
+      "reason_codes": [],
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
       ]
     },
     {
@@ -4210,9 +4227,13 @@
       "withheld_metric_ids": [
         "financial.dilution"
       ],
-      "promoted": false,
-      "reason_codes": [
-        "peer_journeys_and_professional_review_pending"
+      "promoted": true,
+      "reason_codes": [],
+      "promotion_evidence_sha256": [
+        "13cdfadfcacc5d07f15d0ebae761442608d62ca758fb9a8cfa6177df3aefea2c",
+        "1763e745e30dd9687e3607c827913b75e56aed5097921ffe7a04f4254cbe329d",
+        "262b8adfac00296873d1d48bc8fae233be999130c0b783de165cf29fe4ee586e",
+        "cc4bade454b230a5854ba2d278403749fd8a0f85758c4bd8896492f0cede7181"
       ]
     }
   ],

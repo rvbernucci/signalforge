@@ -68,8 +68,13 @@ func evaluate(
 		ClaimBoundary: "This preflight proves deterministic parsing, pair authority binding, planning, and frozen metric dispositions. It does not evaluate answer quality or promote a peer lane.",
 	}
 	dispositions := map[string]map[string]string{}
+	authorityStates := map[string]string{}
 	for _, lane := range peers.Lanes {
 		dispositions[lane.LaneID] = map[string]string{}
+		authorityStates[lane.LaneID] = "limited"
+		if lane.Promoted {
+			authorityStates[lane.LaneID] = "comparison_ready"
+		}
 		for _, receipt := range lane.Receipts {
 			dispositions[lane.LaneID][receipt.Operands[0].CanonicalMetricID] = string(receipt.Disposition)
 		}
@@ -99,7 +104,8 @@ func evaluate(
 			continue
 		}
 		result.PlannerPassed++
-		if sameMap(item.ExpectedMetrics, dispositions[item.LaneID]) && bound.AuthorityState == "limited" {
+		if sameMap(item.ExpectedMetrics, dispositions[item.LaneID]) &&
+			bound.AuthorityState == authorityStates[item.LaneID] {
 			result.DispositionPassed++
 		} else {
 			result.Failures["disposition"]++

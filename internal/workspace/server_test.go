@@ -1118,7 +1118,7 @@ func TestPrepareLiveRequestBindsStandaloneTechnology20Authority(t *testing.T) {
 	}
 	if len(request.Entities) != 1 ||
 		request.Entities[0].EntityID != "sec-cik:0000796343" ||
-		request.AuthorityState != "data_ready" ||
+		request.AuthorityState != "research_ready" ||
 		len(request.Assumptions) != 1 {
 		t.Fatalf("standalone authority = %+v", request)
 	}
@@ -1128,7 +1128,7 @@ func TestPrepareLiveRequestBindsStandaloneTechnology20Authority(t *testing.T) {
 	}
 }
 
-func TestPrepareLiveRequestBindsGuardedPeerWithoutExpandingIt(t *testing.T) {
+func TestPrepareLiveRequestBindsPromotedPeerWithoutExpandingItsEvidence(t *testing.T) {
 	server := newFixtureTestServer(t)
 	request, err := server.prepareLiveRequest(
 		"Compare Cisco Systems and Arista Networks on financial quality.",
@@ -1141,8 +1141,9 @@ func TestPrepareLiveRequestBindsGuardedPeerWithoutExpandingIt(t *testing.T) {
 		t.Fatal(err)
 	}
 	if request.Comparison.Mode != "peer" || len(request.Entities) != 2 ||
-		request.AuthorityState != "limited" ||
-		!strings.Contains(strings.Join(request.AuthorityReasonCodes, " "), "pending") {
+		request.AuthorityState != "comparison_ready" ||
+		len(request.AuthorityReasonCodes) != 0 ||
+		len(request.AuthorityRefs) != 5 {
 		t.Fatalf("peer authority = %+v", request)
 	}
 }
