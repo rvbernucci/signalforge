@@ -15,6 +15,31 @@ SPEC.loader.exec_module(MODULE)
 
 
 class Technology20EvaluationSummaryTests(unittest.TestCase):
+    def write_evaluation(
+        self,
+        shard: Path,
+        *,
+        source_commit: str = "a" * 40,
+        cases: int = 1,
+    ) -> None:
+        (shard / "evaluation.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "signalforge/technology20-standalone-evaluation/v1",
+                    "universe_id": "technology-20",
+                    "split": "sealed_holdout",
+                    "suite_sha256": "b" * 64,
+                    "source_commit": source_commit,
+                    "model_id": "signalforge-gemma4-26b-q4",
+                    "base_url": "http://127.0.0.1:8000/v1",
+                    "specialist_provider": None,
+                    "specialist_model": None,
+                    "cases_selected": cases,
+                    "cases_completed": cases,
+                }
+            )
+        )
+
     def test_summary_is_aggregate_only_and_measures_gates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -75,6 +100,53 @@ class Technology20EvaluationSummaryTests(unittest.TestCase):
                 10.0,
             )
             self.assertNotIn("private_prompt", json.dumps(result))
+            self.assertEqual(result["summary_sha256"], MODULE.summary_sha256(result))
+
+    def test_required_identity_binds_commit_suite_model_and_final_shards(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cases = root / "shard-00" / "cases"
+            cases.mkdir(parents=True)
+            (cases / "case.json").write_text(
+                json.dumps(
+                    {
+                        "journey_id": "ADBE-business",
+                        "company_id": "sec-cik:0000796343",
+                        "question_id": "business",
+                    }
+                )
+            )
+            self.write_evaluation(root / "shard-00")
+
+            result = MODULE.summarize(root, 1, require_identity=True)
+
+            identity = result["evaluation_identity"]
+            self.assertEqual(identity["source_commit"], "a" * 40)
+            self.assertEqual(identity["suite_sha256"], "b" * 64)
+            self.assertTrue(identity["loopback_core_inference"])
+            self.assertEqual(len(identity["shard_evaluation_sha256"]), 1)
+
+    def test_required_identity_rejects_non_loopback_or_mixed_commit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for index, commit in enumerate(("a" * 40, "c" * 40)):
+                shard = root / f"shard-{index:02d}"
+                cases = shard / "cases"
+                cases.mkdir(parents=True)
+                (cases / f"case-{index}.json").write_text(
+                    json.dumps({"journey_id": f"case-{index}"})
+                )
+                self.write_evaluation(shard, source_commit=commit)
+            with self.assertRaisesRegex(ValueError, "source_commit"):
+                MODULE.summarize(root, 2, require_identity=True)
+
+            second = root / "shard-01" / "evaluation.json"
+            payload = json.loads(second.read_text())
+            payload["source_commit"] = "a" * 40
+            payload["base_url"] = "https://example.com/v1"
+            second.write_text(json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, "loopback core inference"):
+                MODULE.summarize(root, 2, require_identity=True)
 
     def test_gate_failures_are_visible_without_private_output_or_failure_code(self):
         with tempfile.TemporaryDirectory() as directory:

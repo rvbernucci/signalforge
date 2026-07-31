@@ -11,6 +11,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 
 SCHEMA_VERSION = "signalforge/technology20-evaluation-summary/v2"
@@ -55,6 +56,99 @@ def percentile(values: list[float], probability: float) -> float:
 
 def rate(passed: int, total: int) -> float:
     return round(passed / total, 6) if total else 0.0
+
+
+def evaluation_identity(
+    input_directory: Path,
+    case_paths: list[Path],
+    require_identity: bool,
+) -> dict[str, Any] | None:
+    shard_roots = sorted({path.parent.parent for path in case_paths})
+    if not shard_roots:
+        return None
+    metadata_paths = [root / "evaluation.json" for root in shard_roots]
+    existing = [path for path in metadata_paths if path.is_file()]
+    if not existing:
+        if require_identity:
+            raise ValueError("evaluation identity is required but no final metadata exists")
+        return None
+    if len(existing) != len(metadata_paths):
+        raise ValueError("evaluation identity is incomplete across shards")
+
+    records: list[tuple[Path, dict[str, Any]]] = []
+    identity_fields = (
+        "schema_version",
+        "universe_id",
+        "split",
+        "suite_sha256",
+        "source_commit",
+        "model_id",
+        "specialist_provider",
+        "specialist_model",
+    )
+    for root, path in zip(shard_roots, metadata_paths, strict=True):
+        payload = json.loads(path.read_text())
+        case_count = len(list((root / "cases").glob("*.json")))
+        if int(payload.get("cases_completed", -1)) != case_count:
+            raise ValueError(f"{path} does not account for every shard case")
+        if int(payload.get("cases_selected", -1)) != case_count:
+            raise ValueError(f"{path} is not a complete final shard evaluation")
+        records.append((path, payload))
+
+    reference = records[0][1]
+    for path, payload in records[1:]:
+        for field in identity_fields:
+            if payload.get(field) != reference.get(field):
+                raise ValueError(f"{path} disagrees on evaluation identity field {field}")
+
+    source_commit = str(reference.get("source_commit", "")).strip()
+    suite_sha256 = str(reference.get("suite_sha256", "")).strip()
+    model_id = str(reference.get("model_id", "")).strip()
+    if (
+        len(source_commit) != 40
+        or any(character not in "0123456789abcdef" for character in source_commit)
+        or len(suite_sha256) != 64
+        or any(character not in "0123456789abcdef" for character in suite_sha256)
+        or not model_id
+    ):
+        raise ValueError("evaluation identity contains an invalid commit, suite, or model")
+
+    for path, payload in records:
+        endpoint = urlparse(str(payload.get("base_url", "")))
+        if endpoint.scheme not in {"http", "https"} or endpoint.hostname not in {
+            "127.0.0.1",
+            "localhost",
+            "::1",
+        }:
+            raise ValueError(f"{path} did not use loopback core inference")
+
+    return {
+        "schema_version": reference["schema_version"],
+        "universe_id": reference["universe_id"],
+        "split": reference["split"],
+        "suite_sha256": suite_sha256,
+        "source_commit": source_commit,
+        "model_id": model_id,
+        "specialist_provider": reference.get("specialist_provider"),
+        "specialist_model": reference.get("specialist_model"),
+        "loopback_core_inference": True,
+        "shard_evaluation_sha256": {
+            str(path.relative_to(input_directory)): sha256_file(path)
+            for path, _ in records
+        },
+    }
+
+
+def summary_sha256(report: dict[str, Any]) -> str:
+    payload = dict(report)
+    payload.pop("summary_sha256", None)
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode()
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def packet_authority_integrity(cases: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -132,7 +226,11 @@ def packet_authority_integrity(cases: dict[str, dict[str, Any]]) -> dict[str, An
     }
 
 
-def summarize(input_directory: Path, expected_cases: int) -> dict[str, Any]:
+def summarize(
+    input_directory: Path,
+    expected_cases: int,
+    require_identity: bool = False,
+) -> dict[str, Any]:
     paths = sorted(input_directory.glob("**/cases/*.json"))
     cases: dict[str, dict[str, Any]] = {}
     input_hashes: dict[str, str] = {}
@@ -234,10 +332,15 @@ def summarize(input_directory: Path, expected_cases: int) -> dict[str, Any]:
                 value["question_ids"] = sorted(set(value["question_ids"]))
 
     completed = len(cases)
-    return {
+    report = {
         "schema_version": SCHEMA_VERSION,
         "evaluation_kind": evaluation_kind,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "evaluation_identity": evaluation_identity(
+            input_directory,
+            paths,
+            require_identity,
+        ),
         "expected_cases": expected_cases,
         "completed_cases": completed,
         "population_complete": completed == expected_cases,
@@ -292,6 +395,8 @@ def summarize(input_directory: Path, expected_cases: int) -> dict[str, Any]:
             "does not replace factual, accounting, rights, or investment-domain review."
         ),
     }
+    report["summary_sha256"] = summary_sha256(report)
+    return report
 
 
 def main() -> None:
@@ -304,9 +409,18 @@ def main() -> None:
         action="store_true",
         help="fail unless completed_cases equals expected_cases",
     )
+    parser.add_argument(
+        "--require-identity",
+        action="store_true",
+        help="fail unless every shard has matching final evaluation identity",
+    )
     args = parser.parse_args()
 
-    report = summarize(args.input_directory, args.expected_cases)
+    report = summarize(
+        args.input_directory,
+        args.expected_cases,
+        require_identity=args.require_identity,
+    )
     if args.require_complete and not report["population_complete"]:
         raise SystemExit(
             f"incomplete population: {report['completed_cases']}/{report['expected_cases']}"

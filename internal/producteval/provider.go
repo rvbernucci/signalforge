@@ -46,6 +46,9 @@ func LoadProvider(catalogPath, financialDirectory, peerPath string) (*Provider, 
 	if err := productscope.ValidatePeerEvaluationSuite(peers); err != nil {
 		return nil, err
 	}
+	if err := productscope.ValidateReleaseAlignment(catalog, peers); err != nil {
+		return nil, err
+	}
 	entries, err := os.ReadDir(financialDirectory)
 	if err != nil {
 		return nil, fmt.Errorf("read financial authority directory: %w", err)
@@ -95,6 +98,9 @@ func NewPublicReleaseProvider(
 		return nil, err
 	}
 	if err := productscope.ValidatePeerEvaluationSuite(peers); err != nil {
+		return nil, err
+	}
+	if err := productscope.ValidateReleaseAlignment(catalog, peers); err != nil {
 		return nil, err
 	}
 	if summary.UniverseID != catalog.UniverseID || peers.UniverseID != catalog.UniverseID {

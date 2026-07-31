@@ -342,8 +342,16 @@ func TestPublicReleaseProviderEnforcesPromotionAndProjectsVerifiableReceipts(t *
 			catalog.Companies[index].ResearchEnabled = true
 			catalog.Companies[index].ActivationState = contracts.ActivationResearchReady
 			catalog.Companies[index].ReasonCodes = nil
+			catalog.Companies[index].PromotionEvidenceSHA256 = []string{
+				strings.Repeat("1", 64),
+				strings.Repeat("2", 64),
+				strings.Repeat("3", 64),
+				strings.Repeat("4", 64),
+			}
 		}
 	}
+	catalog.PromotionDecisionSHA256 = strings.Repeat("a", 64)
+	peers.PromotionDecisionSHA256 = catalog.PromotionDecisionSHA256
 	provider, err = NewPublicReleaseProvider(catalog, summary, peers)
 	if err != nil {
 		t.Fatal(err)

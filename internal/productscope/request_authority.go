@@ -21,6 +21,9 @@ func BindRequestAuthority(
 	if err := ValidatePeerEvaluationSuite(peers); err != nil {
 		return contracts.ResearchRequest{}, err
 	}
+	if err := ValidateReleaseAlignment(catalog, peers); err != nil {
+		return contracts.ResearchRequest{}, err
+	}
 	companies := map[string]PublicCompany{}
 	for _, company := range catalog.Companies {
 		companies[company.CompanyID] = company

@@ -14,25 +14,27 @@ import (
 const PeerEvaluationSuiteSchemaV1 = "signalforge/technology20-peer-evaluation/v1"
 
 type PeerEvaluationSuite struct {
-	SchemaVersion string                 `json:"schema_version"`
-	UniverseID    string                 `json:"universe_id"`
-	AsOf          time.Time              `json:"as_of"`
-	PolicyVersion string                 `json:"policy_version"`
-	Lanes         []PeerEvaluationResult `json:"lanes"`
-	ClaimBoundary string                 `json:"claim_boundary"`
+	SchemaVersion           string                 `json:"schema_version"`
+	UniverseID              string                 `json:"universe_id"`
+	AsOf                    time.Time              `json:"as_of"`
+	PolicyVersion           string                 `json:"policy_version"`
+	PromotionDecisionSHA256 string                 `json:"promotion_decision_sha256,omitempty"`
+	Lanes                   []PeerEvaluationResult `json:"lanes"`
+	ClaimBoundary           string                 `json:"claim_boundary"`
 }
 
 type PeerEvaluationResult struct {
-	LaneID         string                                 `json:"lane_id"`
-	CompanyIDs     []string                               `json:"company_ids"`
-	Receipts       []contracts.MetricComparabilityReceipt `json:"receipts"`
-	Abstentions    []contracts.TypedAbstention            `json:"abstentions"`
-	Releasable     []string                               `json:"releasable_metric_ids"`
-	ContextOnly    []string                               `json:"context_only_metric_ids,omitempty"`
-	Withheld       []string                               `json:"withheld_metric_ids"`
-	Promoted       bool                                   `json:"promoted"`
-	ReasonCodes    []string                               `json:"reason_codes"`
-	EnvelopeSHA256 string                                 `json:"envelope_sha256,omitempty"`
+	LaneID                  string                                 `json:"lane_id"`
+	CompanyIDs              []string                               `json:"company_ids"`
+	Receipts                []contracts.MetricComparabilityReceipt `json:"receipts"`
+	Abstentions             []contracts.TypedAbstention            `json:"abstentions"`
+	Releasable              []string                               `json:"releasable_metric_ids"`
+	ContextOnly             []string                               `json:"context_only_metric_ids,omitempty"`
+	Withheld                []string                               `json:"withheld_metric_ids"`
+	Promoted                bool                                   `json:"promoted"`
+	ReasonCodes             []string                               `json:"reason_codes"`
+	EnvelopeSHA256          string                                 `json:"envelope_sha256,omitempty"`
+	PromotionEvidenceSHA256 []string                               `json:"promotion_evidence_sha256,omitempty"`
 }
 
 func BuildPeerEvaluationSuite(
@@ -414,11 +416,25 @@ func ValidatePeerEvaluationSuite(suite PeerEvaluationSuite) error {
 		len(suite.Lanes) != 5 || suite.ClaimBoundary == "" {
 		return errors.New("peer evaluation suite envelope is invalid")
 	}
+	if suite.PromotionDecisionSHA256 != "" &&
+		!validPromotionHash(suite.PromotionDecisionSHA256) {
+		return errors.New("peer evaluation promotion decision hash is invalid")
+	}
+	containsPromotion := false
 	for _, lane := range suite.Lanes {
-		if lane.LaneID == "" || len(lane.CompanyIDs) != 2 || lane.Promoted ||
-			len(lane.ReasonCodes) == 0 ||
+		if lane.LaneID == "" || len(lane.CompanyIDs) != 2 ||
 			len(lane.Receipts)+len(lane.Abstentions) == 0 {
 			return errors.New("peer evaluation lane is invalid or over-promoted")
+		}
+		if lane.Promoted {
+			containsPromotion = true
+			if len(lane.ReasonCodes) != 0 ||
+				!validPromotionHashes(lane.PromotionEvidenceSHA256) {
+				return errors.New("promoted peer evaluation lacks exact evidence")
+			}
+		} else if len(lane.ReasonCodes) == 0 ||
+			len(lane.PromotionEvidenceSHA256) != 0 {
+			return errors.New("unpromoted peer evaluation requires reason codes and no promotion evidence")
 		}
 		for _, receipt := range lane.Receipts {
 			if err := contracts.ValidateMetricComparabilityReceipt(receipt); err != nil {
@@ -433,6 +449,9 @@ func ValidatePeerEvaluationSuite(suite PeerEvaluationSuite) error {
 		if !disjointPeerMetricClasses(lane.Releasable, lane.ContextOnly, lane.Withheld) {
 			return errors.New("peer evaluation metric classes overlap")
 		}
+	}
+	if containsPromotion && !validPromotionHash(suite.PromotionDecisionSHA256) {
+		return errors.New("peer evaluation promotion is not bound to a human decision")
 	}
 	return nil
 }

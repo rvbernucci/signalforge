@@ -18,36 +18,39 @@ type PublicCatalog struct {
 	ActivationPolicyVersion string           `json:"activation_policy_version"`
 	PeerLanePolicyVersion   string           `json:"peer_lane_policy_version"`
 	SourceRegistrySHA256    string           `json:"source_registry_sha256"`
+	PromotionDecisionSHA256 string           `json:"promotion_decision_sha256,omitempty"`
 	Companies               []PublicCompany  `json:"companies"`
 	PeerLanes               []PublicPeerLane `json:"peer_lanes"`
 	ClaimBoundary           string           `json:"claim_boundary"`
 }
 
 type PublicCompany struct {
-	CompanyID        string                    `json:"company_id"`
-	DisplayName      string                    `json:"display_name"`
-	PrimaryTicker    string                    `json:"primary_ticker"`
-	Tickers          []string                  `json:"tickers"`
-	ResearchCluster  string                    `json:"research_cluster"`
-	PeerGroup        string                    `json:"peer_group"`
-	ResearchRole     string                    `json:"research_role"`
-	ActivationState  contracts.ActivationState `json:"activation_state"`
-	ResearchEnabled  bool                      `json:"research_enabled"`
-	ReasonCodes      []string                  `json:"reason_codes"`
-	MetricStateCount map[string]int            `json:"metric_state_count"`
-	ProfileSHA256    string                    `json:"profile_sha256"`
+	CompanyID               string                    `json:"company_id"`
+	DisplayName             string                    `json:"display_name"`
+	PrimaryTicker           string                    `json:"primary_ticker"`
+	Tickers                 []string                  `json:"tickers"`
+	ResearchCluster         string                    `json:"research_cluster"`
+	PeerGroup               string                    `json:"peer_group"`
+	ResearchRole            string                    `json:"research_role"`
+	ActivationState         contracts.ActivationState `json:"activation_state"`
+	ResearchEnabled         bool                      `json:"research_enabled"`
+	ReasonCodes             []string                  `json:"reason_codes"`
+	MetricStateCount        map[string]int            `json:"metric_state_count"`
+	ProfileSHA256           string                    `json:"profile_sha256"`
+	PromotionEvidenceSHA256 []string                  `json:"promotion_evidence_sha256,omitempty"`
 }
 
 type PublicPeerLane struct {
-	LaneID             string   `json:"lane_id"`
-	CompanyIDs         []string `json:"company_ids"`
-	ComparisonType     string   `json:"comparison_type"`
-	DecisionQuestion   string   `json:"decision_question"`
-	AllowedQuestionIDs []string `json:"allowed_question_ids"`
-	AllowedMetricIDs   []string `json:"allowed_metric_ids"`
-	Enabled            bool     `json:"enabled"`
-	ReasonCodes        []string `json:"reason_codes"`
-	LaneSHA256         string   `json:"lane_sha256"`
+	LaneID                  string   `json:"lane_id"`
+	CompanyIDs              []string `json:"company_ids"`
+	ComparisonType          string   `json:"comparison_type"`
+	DecisionQuestion        string   `json:"decision_question"`
+	AllowedQuestionIDs      []string `json:"allowed_question_ids"`
+	AllowedMetricIDs        []string `json:"allowed_metric_ids"`
+	Enabled                 bool     `json:"enabled"`
+	ReasonCodes             []string `json:"reason_codes"`
+	LaneSHA256              string   `json:"lane_sha256"`
+	PromotionEvidenceSHA256 []string `json:"promotion_evidence_sha256,omitempty"`
 }
 
 func BuildPublicCatalog(matrix ActivationMatrix) (PublicCatalog, error) {
@@ -128,7 +131,13 @@ func ValidatePublicCatalog(catalog PublicCatalog) error {
 		len(catalog.Companies) != 20 || len(catalog.PeerLanes) != 5 {
 		return errors.New("public catalog envelope is invalid")
 	}
+	if catalog.PromotionDecisionSHA256 != "" &&
+		!validPromotionHash(catalog.PromotionDecisionSHA256) {
+		return errors.New("public catalog promotion decision hash is invalid")
+	}
 	companies := map[string]bool{}
+	researchEnabled := map[string]bool{}
+	containsPromotion := false
 	for _, company := range catalog.Companies {
 		if company.CompanyID == "" || companies[company.CompanyID] || company.DisplayName == "" ||
 			company.PrimaryTicker == "" || company.ResearchCluster == "" || company.PeerGroup == "" ||
@@ -139,10 +148,18 @@ func ValidatePublicCatalog(catalog PublicCatalog) error {
 			company.ActivationState != contracts.ActivationComparisonReady {
 			return errors.New("public catalog expands company activation")
 		}
-		if !company.ResearchEnabled && len(company.ReasonCodes) == 0 {
-			return errors.New("disabled public company requires reason codes")
+		if company.ResearchEnabled {
+			containsPromotion = true
+			if len(company.ReasonCodes) != 0 ||
+				!validPromotionHashes(company.PromotionEvidenceSHA256) {
+				return errors.New("enabled public company lacks exact promotion evidence")
+			}
+		} else if len(company.ReasonCodes) == 0 ||
+			len(company.PromotionEvidenceSHA256) != 0 {
+			return errors.New("disabled public company requires reason codes and no promotion evidence")
 		}
 		companies[company.CompanyID] = true
+		researchEnabled[company.CompanyID] = company.ResearchEnabled
 	}
 	for _, lane := range catalog.PeerLanes {
 		if lane.LaneID == "" || len(lane.CompanyIDs) != 2 || lane.LaneSHA256 == "" {
@@ -151,9 +168,20 @@ func ValidatePublicCatalog(catalog PublicCatalog) error {
 		if !companies[lane.CompanyIDs[0]] || !companies[lane.CompanyIDs[1]] {
 			return errors.New("public peer lane references an unknown company")
 		}
-		if !lane.Enabled && len(lane.ReasonCodes) == 0 {
-			return errors.New("disabled public peer lane requires reason codes")
+		if lane.Enabled {
+			containsPromotion = true
+			if !researchEnabled[lane.CompanyIDs[0]] || !researchEnabled[lane.CompanyIDs[1]] ||
+				len(lane.ReasonCodes) != 0 ||
+				!validPromotionHashes(lane.PromotionEvidenceSHA256) {
+				return errors.New("enabled public peer lane lacks promoted companies or exact evidence")
+			}
+		} else if len(lane.ReasonCodes) == 0 ||
+			len(lane.PromotionEvidenceSHA256) != 0 {
+			return errors.New("disabled public peer lane requires reason codes and no promotion evidence")
 		}
+	}
+	if containsPromotion && !validPromotionHash(catalog.PromotionDecisionSHA256) {
+		return errors.New("public catalog promotion is not bound to a human decision")
 	}
 	return nil
 }
