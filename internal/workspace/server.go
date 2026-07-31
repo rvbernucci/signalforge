@@ -23,9 +23,11 @@ import (
 	"github.com/rvbernucci/signalforge/internal/executionplan"
 	"github.com/rvbernucci/signalforge/internal/golden"
 	"github.com/rvbernucci/signalforge/internal/intelligenceaudit"
+	"github.com/rvbernucci/signalforge/internal/localagent"
 	"github.com/rvbernucci/signalforge/internal/missioncontrol"
 	"github.com/rvbernucci/signalforge/internal/orchestrator"
 	"github.com/rvbernucci/signalforge/internal/permissions"
+	"github.com/rvbernucci/signalforge/internal/producteval"
 	"github.com/rvbernucci/signalforge/internal/productscope"
 	"github.com/rvbernucci/signalforge/internal/requestparser"
 	"github.com/rvbernucci/signalforge/internal/resilience"
@@ -42,24 +44,25 @@ const (
 )
 
 type ServerConfig struct {
-	Mode                string
-	FixturePath         string
-	CatalogPath         string
-	FinancialsPath      string
-	PeerEvaluationPath  string
-	StaticDir           string
-	Golden              golden.RunConfig
-	EventDelay          time.Duration
-	Now                 func() time.Time
-	RunTimeout          time.Duration
-	MaxBodyBytes        int64
-	CaseStore           CaseStore
-	RuntimeBreaker      *resilience.Breaker
-	AuditStore          *intelligenceaudit.Store
-	BuildVersion        string
-	ApplicationIdentity string
-	RuntimeIdentity     string
-	ModelIdentity       string
+	Mode                 string
+	FixturePath          string
+	CatalogPath          string
+	FinancialsPath       string
+	PeerEvaluationPath   string
+	StaticDir            string
+	Golden               golden.RunConfig
+	EventDelay           time.Duration
+	Now                  func() time.Time
+	RunTimeout           time.Duration
+	MaxBodyBytes         int64
+	CaseStore            CaseStore
+	RuntimeBreaker       *resilience.Breaker
+	LiveMaterialProvider localagent.MaterialProvider
+	AuditStore           *intelligenceaudit.Store
+	BuildVersion         string
+	ApplicationIdentity  string
+	RuntimeIdentity      string
+	ModelIdentity        string
 }
 
 type Server struct {
@@ -68,6 +71,7 @@ type Server struct {
 	catalog    productscope.PublicCatalog
 	financials productscope.PublicFinancialSummary
 	peers      productscope.PeerEvaluationSuite
+	materials  localagent.MaterialProvider
 	mu         sync.RWMutex
 	runs       map[string]*runRecord
 	runOrder   []string
@@ -232,6 +236,15 @@ func NewServer(config ServerConfig) (*Server, error) {
 	}
 	if err := productscope.ValidatePeerEvaluationSuite(server.peers); err != nil {
 		return nil, fmt.Errorf("validate workspace peer evaluation: %w", err)
+	}
+	server.materials = config.LiveMaterialProvider
+	if server.materials == nil {
+		server.materials, err = producteval.NewPublicReleaseProvider(
+			server.catalog, server.financials, server.peers,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("build workspace product material provider: %w", err)
+		}
 	}
 	server.readiness, err = buildReadinessIdentities(
 		config,
@@ -764,12 +777,68 @@ func (server *Server) replayFixture(record *runRecord, question string, assumpti
 	server.complete(record, projection, nil)
 }
 
+func (server *Server) prepareLiveRequest(
+	question string,
+	assumptions []string,
+	override *contracts.ResearchRequest,
+	runID string,
+	requestID string,
+) (contracts.ResearchRequest, error) {
+	var request contracts.ResearchRequest
+	var err error
+	if override == nil {
+		request, err = requestparser.ParseDeterministic(requestparser.Input{
+			Text: question, AsOf: server.config.Now(), RunID: runID, RequestID: requestID,
+		})
+		if err != nil {
+			return contracts.ResearchRequest{}, fmt.Errorf("parse governed product request: %w", err)
+		}
+		request.Assumptions = append([]string(nil), assumptions...)
+	} else {
+		request = cloneResearchRequest(*override)
+		if request.RunID != runID || request.RequestID != requestID ||
+			strings.TrimSpace(request.UserText) != strings.TrimSpace(question) {
+			return contracts.ResearchRequest{}, errors.New("request override does not match the live run identity")
+		}
+	}
+	request, err = productscope.BindRequestAuthority(request, server.catalog, server.peers)
+	if err != nil {
+		return contracts.ResearchRequest{}, fmt.Errorf("bind governed product authority: %w", err)
+	}
+	return request, nil
+}
+
+func cloneResearchRequest(request contracts.ResearchRequest) contracts.ResearchRequest {
+	request.LineageEvidenceRefs = append([]string(nil), request.LineageEvidenceRefs...)
+	request.LineageReceiptRefs = append([]string(nil), request.LineageReceiptRefs...)
+	request.SecondaryIntents = append([]string(nil), request.SecondaryIntents...)
+	request.Entities = append([]contracts.EntityRef(nil), request.Entities...)
+	request.Period.FiscalYears = append([]int(nil), request.Period.FiscalYears...)
+	request.Period.FiscalPeriods = append([]string(nil), request.Period.FiscalPeriods...)
+	request.Comparison.EntityIDs = append([]string(nil), request.Comparison.EntityIDs...)
+	request.Comparison.Metrics = append([]string(nil), request.Comparison.Metrics...)
+	request.RequestedOutputs = append([]string(nil), request.RequestedOutputs...)
+	request.Assumptions = append([]string(nil), request.Assumptions...)
+	request.Ambiguities = append([]string(nil), request.Ambiguities...)
+	request.RiskFlags = append([]string(nil), request.RiskFlags...)
+	request.AuthorityRefs = append([]string(nil), request.AuthorityRefs...)
+	request.AuthorityReasonCodes = append([]string(nil), request.AuthorityReasonCodes...)
+	return request
+}
+
 func (server *Server) executeLive(record *runRecord, question string, assumptions []string, requestOverride *contracts.ResearchRequest) {
 	if !server.breaker.Allow(server.config.Now()) {
 		server.fail(record, "local_runtime_temporarily_unavailable", true)
 		return
 	}
 	requestID := "request-" + strings.TrimPrefix(record.view.RunID, "run-")
+	preparedRequest, err := server.prepareLiveRequest(
+		question, assumptions, requestOverride, record.view.RunID, requestID,
+	)
+	if err != nil {
+		server.fail(record, "request_scope_invalid", false)
+		return
+	}
 	journeyContext, journeySpan := telemetry.StartJourney(context.Background(), record.view.RunID, requestID, ModeLive)
 	defer journeySpan.End()
 	ctx, cancel := context.WithTimeout(journeyContext, server.config.RunTimeout)
@@ -787,11 +856,8 @@ func (server *Server) executeLive(record *runRecord, question string, assumption
 	config.ModelObserver = runModelObserver{
 		audit: audit, server: server, record: record,
 	}
-	config.RequestOverride = requestOverride
-	if requestOverride == nil {
-		config.UseAssumptions = true
-		config.Assumptions = append([]string(nil), assumptions...)
-	}
+	config.RequestOverride = &preparedRequest
+	config.MaterialProvider = server.materials
 	report, err := golden.Run(ctx, config)
 	if err != nil {
 		if audit != nil {
@@ -1624,6 +1690,8 @@ func failureLabel(code string) string {
 		return "Local model timed out"
 	case "clarification_required":
 		return "Clarification required before planning"
+	case "request_scope_invalid":
+		return "Choose a governed Technology 20 company or peer lane"
 	case "evidence_rejected":
 		return "Evidence review rejected the draft"
 	case "local_runtime_temporarily_unavailable":

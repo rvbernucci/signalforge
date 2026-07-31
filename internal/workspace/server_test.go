@@ -1103,3 +1103,73 @@ func TestSafeStreamAttributesKeepsReceiptMetadataAndDropsBodies(t *testing.T) {
 		}
 	}
 }
+
+func TestPrepareLiveRequestBindsStandaloneTechnology20Authority(t *testing.T) {
+	server := newFixtureTestServer(t)
+	request, err := server.prepareLiveRequest(
+		"What does Adobe sell, how does it make money, and what are its main business risks?",
+		[]string{"Slower AI infrastructure spending is an explicit scenario."},
+		nil,
+		"run-adobe",
+		"request-adobe",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(request.Entities) != 1 ||
+		request.Entities[0].EntityID != "sec-cik:0000796343" ||
+		request.AuthorityState != "data_ready" ||
+		len(request.Assumptions) != 1 {
+		t.Fatalf("standalone authority = %+v", request)
+	}
+	if len(request.AuthorityRefs) == 0 ||
+		!strings.HasPrefix(request.AuthorityRefs[0], "company-profile-sha256:") {
+		t.Fatalf("standalone authority refs = %+v", request.AuthorityRefs)
+	}
+}
+
+func TestPrepareLiveRequestBindsGuardedPeerWithoutExpandingIt(t *testing.T) {
+	server := newFixtureTestServer(t)
+	request, err := server.prepareLiveRequest(
+		"Compare Cisco Systems and Arista Networks on financial quality.",
+		nil,
+		nil,
+		"run-peer",
+		"request-peer",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if request.Comparison.Mode != "peer" || len(request.Entities) != 2 ||
+		request.AuthorityState != "limited" ||
+		!strings.Contains(strings.Join(request.AuthorityReasonCodes, " "), "pending") {
+		t.Fatalf("peer authority = %+v", request)
+	}
+}
+
+func TestPrepareLiveRequestRejectsUnknownCompanyScopeBeforeInference(t *testing.T) {
+	server := newFixtureTestServer(t)
+	_, err := server.prepareLiveRequest(
+		"What does Acme Orbital sell and how does it make money?",
+		nil,
+		nil,
+		"run-unknown",
+		"request-unknown",
+	)
+	if err == nil || !strings.Contains(err.Error(), "requires a governed company") {
+		t.Fatalf("unknown scope error = %v", err)
+	}
+}
+
+func TestPrepareLiveRequestRejectsMismatchedOverrideIdentity(t *testing.T) {
+	server := newFixtureTestServer(t)
+	override := contracts.ResearchRequest{
+		RunID: "run-other", RequestID: "request-other", UserText: "Research Adobe.",
+	}
+	_, err := server.prepareLiveRequest(
+		"Research Adobe.", nil, &override, "run-adobe", "request-adobe",
+	)
+	if err == nil || !strings.Contains(err.Error(), "does not match") {
+		t.Fatalf("override identity error = %v", err)
+	}
+}

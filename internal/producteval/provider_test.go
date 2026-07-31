@@ -1,11 +1,14 @@
 package producteval
 
 import (
+	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/rvbernucci/signalforge/internal/contracts"
+	"github.com/rvbernucci/signalforge/internal/engine"
 	"github.com/rvbernucci/signalforge/internal/productscope"
 	"github.com/rvbernucci/signalforge/internal/roles"
 )
@@ -296,5 +299,95 @@ func TestModelVisibleMissingEvidenceRemovesBoundedCardinalWording(t *testing.T) 
 	if !strings.Contains(joined, "required annual standardized revenue history") ||
 		!strings.Contains(joined, "required authorized operands") {
 		t.Fatalf("normalized boundaries lost their governed meaning: %q", joined)
+	}
+}
+
+func TestPublicReleaseProviderEnforcesPromotionAndProjectsVerifiableReceipts(t *testing.T) {
+	root := filepath.Join("..", "..", "fixtures", "productscope")
+	var catalog productscope.PublicCatalog
+	var summary productscope.PublicFinancialSummary
+	var peers productscope.PeerEvaluationSuite
+	if err := readJSON(filepath.Join(root, "technology20-catalog.json"), &catalog); err != nil {
+		t.Fatal(err)
+	}
+	if err := readJSON(filepath.Join(root, "technology20-financial-summary.json"), &summary); err != nil {
+		t.Fatal(err)
+	}
+	if err := readJSON(filepath.Join(root, "technology20-peer-evaluation.json"), &peers); err != nil {
+		t.Fatal(err)
+	}
+	adobeID := "sec-cik:0000796343"
+	provider, err := NewPublicReleaseProvider(catalog, summary, peers)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := contracts.ContextRequest{
+		SchemaVersion:    contracts.SchemaVersionV1,
+		ContextRequestID: "context-adobe", RunID: "run-adobe", StepID: "step-adobe",
+		SpecialistRole: roles.FinancialQuality,
+		Scope:          contracts.Scope{CompanyIDs: []string{adobeID}, AsOf: summary.AsOf},
+		CapabilityIDs:  []string{"financial.free_cash_flow"},
+	}
+	material, err := provider.Load(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(material.CalculationReceipts) != 0 ||
+		!strings.Contains(strings.Join(material.Evidence.Missing, " "), "has not been promoted") {
+		t.Fatalf("unpromoted company escaped release boundary: %+v", material)
+	}
+
+	for index := range catalog.Companies {
+		if catalog.Companies[index].CompanyID == adobeID {
+			catalog.Companies[index].ResearchEnabled = true
+			catalog.Companies[index].ActivationState = contracts.ActivationResearchReady
+			catalog.Companies[index].ReasonCodes = nil
+		}
+	}
+	provider, err = NewPublicReleaseProvider(catalog, summary, peers)
+	if err != nil {
+		t.Fatal(err)
+	}
+	material, err = provider.Load(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(material.CalculationReceipts) != 1 {
+		t.Fatalf("projected receipts = %d", len(material.CalculationReceipts))
+	}
+	receipt := material.CalculationReceipts[0]
+	if !strings.HasPrefix(receipt.ReceiptID, "public-projection-") ||
+		!strings.Contains(strings.Join(receipt.Warnings, " "), "source_receipt_sha256:") {
+		t.Fatalf("public projection lineage = %+v", receipt)
+	}
+	if err := engine.VerifyReceipt(receipt); err != nil {
+		t.Fatalf("public projection hash is not reproducible: %v", err)
+	}
+	for _, item := range material.Evidence.Items {
+		for _, output := range receipt.Outputs {
+			if strings.Contains(item.Statement, output.Quantity.Value) {
+				t.Fatalf("public evidence leaked exact output %q: %q", output.Quantity.Value, item.Statement)
+			}
+		}
+	}
+}
+
+func TestPublicReleaseProviderNeverExpandsAnUnpromotedPeerLane(t *testing.T) {
+	provider := Provider{
+		requirePromotion: true,
+		peers: productscope.PeerEvaluationSuite{Lanes: []productscope.PeerEvaluationResult{{
+			CompanyIDs: []string{"company-a", "company-b"},
+			Promoted:   false,
+			Receipts: []contracts.MetricComparabilityReceipt{{
+				Disposition: contracts.ComparisonComparable,
+				Operands: []contracts.MetricComparisonOperand{{
+					CanonicalMetricID: "financial.operating_margin",
+				}},
+			}},
+		}}},
+	}
+	allowed, scoped := provider.comparisonOperationPolicy([]string{"company-a", "company-b"})
+	if !scoped || len(allowed) != 0 {
+		t.Fatalf("unpromoted peer lane expanded release authority: %+v", allowed)
 	}
 }

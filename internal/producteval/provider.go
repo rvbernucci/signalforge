@@ -23,10 +23,12 @@ import (
 // Provider exposes only governed, value-silent material to local agents. Exact values remain in
 // immutable calculation receipts and numerical variables, never in model-visible prose.
 type Provider struct {
-	catalog   productscope.PublicCatalog
-	companies map[string]productscope.PublicCompany
-	reports   map[string]productscope.CompanyFinancialActivation
-	peers     productscope.PeerEvaluationSuite
+	catalog          productscope.PublicCatalog
+	companies        map[string]productscope.PublicCompany
+	reports          map[string]productscope.CompanyFinancialActivation
+	publicReports    map[string]productscope.PublicCompanyFinancials
+	peers            productscope.PeerEvaluationSuite
+	requirePromotion bool
 }
 
 func LoadProvider(catalogPath, financialDirectory, peerPath string) (*Provider, error) {
@@ -78,6 +80,51 @@ func LoadProvider(catalogPath, financialDirectory, peerPath string) (*Provider, 
 	return &Provider{catalog: catalog, companies: companies, reports: reports, peers: peers}, nil
 }
 
+// NewPublicReleaseProvider builds the zero-touch product provider from artifacts that are safe to
+// ship in the application image. Unlike the private evaluation provider, it enforces company and
+// peer promotion before any deterministic result can enter model-visible material.
+func NewPublicReleaseProvider(
+	catalog productscope.PublicCatalog,
+	summary productscope.PublicFinancialSummary,
+	peers productscope.PeerEvaluationSuite,
+) (*Provider, error) {
+	if err := productscope.ValidatePublicCatalog(catalog); err != nil {
+		return nil, err
+	}
+	if err := productscope.ValidatePublicFinancialSummary(summary); err != nil {
+		return nil, err
+	}
+	if err := productscope.ValidatePeerEvaluationSuite(peers); err != nil {
+		return nil, err
+	}
+	if summary.UniverseID != catalog.UniverseID || peers.UniverseID != catalog.UniverseID {
+		return nil, errors.New("public release artifacts do not share one governed universe")
+	}
+	companies := make(map[string]productscope.PublicCompany, len(catalog.Companies))
+	for _, company := range catalog.Companies {
+		companies[company.CompanyID] = company
+	}
+	reports := make(map[string]productscope.PublicCompanyFinancials, len(summary.Companies))
+	for _, report := range summary.Companies {
+		company, ok := companies[report.CompanyID]
+		if !ok || report.PrimaryTicker != company.PrimaryTicker ||
+			report.DisplayName != company.DisplayName {
+			return nil, fmt.Errorf("public financial authority does not match catalog company %q", report.CompanyID)
+		}
+		if _, duplicate := reports[report.CompanyID]; duplicate {
+			return nil, fmt.Errorf("duplicate public financial authority for %s", report.CompanyID)
+		}
+		reports[report.CompanyID] = report
+	}
+	if len(reports) != len(companies) {
+		return nil, fmt.Errorf("public financial authority covers %d companies, want %d", len(reports), len(companies))
+	}
+	return &Provider{
+		catalog: catalog, companies: companies, publicReports: reports, peers: peers,
+		requirePromotion: true,
+	}, nil
+}
+
 func (provider *Provider) Load(ctx context.Context, request contracts.ContextRequest) (localagent.Material, error) {
 	select {
 	case <-ctx.Done():
@@ -96,16 +143,41 @@ func (provider *Provider) Load(ctx context.Context, request contracts.ContextReq
 		if !ok {
 			return localagent.Material{}, fmt.Errorf("company %q is outside the governed product universe", companyID)
 		}
-		report := provider.reports[companyID]
-		selected, unavailable := selectFinancialAuthority(report, request)
+		var selected []contracts.CalculationReceipt
+		var unavailable []string
+		var accountingEvidence *contracts.EvidenceItem
+		if provider.requirePromotion && !company.ResearchEnabled {
+			unavailable = append(unavailable,
+				"SignalForge withheld company research because the governed standalone journey has not been promoted.")
+		} else if report, exists := provider.reports[companyID]; exists {
+			selected, unavailable = selectFinancialAuthority(report, request)
+			if request.SpecialistRole == roles.AccountingReporting {
+				item := accountingAuthorityEvidence(company, report, selected, request.Scope.AsOf)
+				accountingEvidence = &item
+			}
+		} else if report, exists := provider.publicReports[companyID]; exists {
+			selected, unavailable = selectPublicFinancialAuthority(
+				report, request, minTime(request.Scope.AsOf, provider.catalog.AsOf),
+			)
+			if request.SpecialistRole == roles.AccountingReporting {
+				item := publicAccountingAuthorityEvidence(company, report, selected, request.Scope.AsOf)
+				accountingEvidence = &item
+			}
+		} else {
+			return localagent.Material{}, fmt.Errorf("company %q has no governed financial authority", companyID)
+		}
 		if comparisonScoped {
 			selected, unavailable = filterComparisonReceipts(selected, unavailable, comparisonAllowed)
 		}
 		receipts = append(receipts, selected...)
 		missing = append(missing, unavailable...)
-		evidence = append(evidence, receiptEvidence(company, selected)...)
-		if request.SpecialistRole == roles.AccountingReporting {
-			evidence = append(evidence, accountingAuthorityEvidence(company, report, selected, request.Scope.AsOf))
+		if _, private := provider.reports[companyID]; private {
+			evidence = append(evidence, receiptEvidence(company, selected)...)
+		} else {
+			evidence = append(evidence, publicReceiptEvidence(company, selected)...)
+		}
+		if accountingEvidence != nil {
+			evidence = append(evidence, *accountingEvidence)
 		}
 	}
 	if request.Scope.AsOf.After(provider.catalog.AsOf) {
@@ -168,6 +240,9 @@ func (provider *Provider) comparisonOperationPolicy(companyIDs []string) (map[st
 		if !sameCompanySet(lane.CompanyIDs, companyIDs) {
 			continue
 		}
+		if provider.requirePromotion && !lane.Promoted {
+			return allowed, true
+		}
 		for _, receipt := range lane.Receipts {
 			if receipt.Disposition == contracts.ComparisonComparable ||
 				receipt.Disposition == contracts.ComparisonComparableWithCaveat {
@@ -225,6 +300,101 @@ func selectFinancialAuthority(
 	return selected, missing
 }
 
+func selectPublicFinancialAuthority(
+	report productscope.PublicCompanyFinancials,
+	request contracts.ContextRequest,
+	projectionAsOf time.Time,
+) ([]contracts.CalculationReceipt, []string) {
+	allowed := map[string]bool{}
+	for _, operationID := range request.CapabilityIDs {
+		allowed[operationID] = true
+	}
+	if allowed["financial.margin"] {
+		allowed["financial.operating_margin"] = true
+	}
+	selected := []contracts.CalculationReceipt{}
+	for _, result := range report.Results {
+		if !allowed[result.OperationID] {
+			continue
+		}
+		if result.SourceAsOf.After(request.Scope.AsOf) {
+			continue
+		}
+		selected = append(selected, publicProjectionReceipt(report, result, projectionAsOf))
+	}
+	missing := []string{}
+	for _, abstention := range report.Abstentions {
+		if allowed[abstention.OperationID] {
+			missing = append(missing, abstention.Message)
+		}
+	}
+	return selected, missing
+}
+
+// publicProjectionReceipt is an in-memory release projection, not a recreated source receipt. It
+// receives its own verifiable hash and retains the original deterministic receipt identity in
+// dataset_versions and warnings. Exact normalized inputs remain outside model-visible material.
+func publicProjectionReceipt(
+	report productscope.PublicCompanyFinancials,
+	result productscope.PublicFinancialResult,
+	asOf time.Time,
+) contracts.CalculationReceipt {
+	outputs := append([]contracts.ReceiptOutput(nil), result.Outputs...)
+	period := strings.Join(result.Periods, "..")
+	for index := range outputs {
+		if outputs[index].Quantity.Period == "" {
+			outputs[index].Quantity.Period = period
+		}
+	}
+	generatedAt := asOf.UTC()
+	if generatedAt.Before(result.SourceAsOf) {
+		generatedAt = result.SourceAsOf.UTC()
+	}
+	sourceSeed, _ := json.Marshal(result)
+	receipt := contracts.CalculationReceipt{
+		SchemaVersion:  contracts.SchemaVersionV1,
+		ReceiptID:      "public-projection-" + hashText(report.CompanyID + "\n" + result.ReceiptID)[:20],
+		RequestID:      "public-summary-" + hashText(report.ReportSHA256 + "\n" + result.ReceiptID)[:20],
+		EngineID:       "signalforge-public-financial-summary",
+		EngineVersion:  "1.0.0",
+		OperationID:    result.OperationID,
+		FormulaVersion: result.FormulaVersion,
+		Scope: contracts.Scope{
+			CompanyIDs: []string{report.CompanyID},
+			Periods:    append([]string(nil), result.Periods...),
+			AsOf:       generatedAt,
+		},
+		Status:           contracts.ReceiptSuccess,
+		NormalizedInputs: []contracts.EngineInput{},
+		Outputs:          outputs,
+		InvariantResults: []contracts.InvariantResult{{InvariantID: "public_projection_contract", Passed: true}},
+		TolerancePolicy:  "source-receipt-projection/v1",
+		Warnings: []string{
+			"public_summary_projection",
+			"source_receipt_id:" + result.ReceiptID,
+			"source_receipt_sha256:" + result.ReceiptSHA256,
+		},
+		EvidenceRefs:    append([]string(nil), result.EvidenceRefs...),
+		DatasetVersions: []string{productscope.PublicFinancialSummarySchemaV2, "source-report-sha256:" + report.ReportSHA256},
+		SourceAsOf:      result.SourceAsOf.UTC(),
+		CodeCommit:      productscope.PublicFinancialSummarySchemaV2,
+		InputSHA:        hashText(string(sourceSeed)),
+		GeneratedAt:     generatedAt,
+	}
+	receipt.ReceiptSHA = hashReceiptProjection(receipt)
+	return receipt
+}
+
+func hashReceiptProjection(receipt contracts.CalculationReceipt) string {
+	receipt.ReceiptSHA = ""
+	payload, err := json.Marshal(receipt)
+	if err != nil {
+		panic("calculation receipt projection is not JSON serializable")
+	}
+	digest := sha256.Sum256(payload)
+	return hex.EncodeToString(digest[:])
+}
+
 func receiptEvidence(
 	company productscope.PublicCompany,
 	receipts []contracts.CalculationReceipt,
@@ -253,6 +423,38 @@ func receiptEvidence(
 					},
 				})
 			}
+		}
+	}
+	return result
+}
+
+func publicReceiptEvidence(
+	company productscope.PublicCompany,
+	receipts []contracts.CalculationReceipt,
+) []contracts.EvidenceItem {
+	result := []contracts.EvidenceItem{}
+	for _, receipt := range receipts {
+		period := strings.Join(receipt.Scope.Periods, ",")
+		statement := fmt.Sprintf(
+			"%s has a governed SEC-derived result for %s in %s; exact values remain in the trusted numerical renderer and public projection %s.",
+			company.DisplayName, receipt.OperationID, period, receipt.ReceiptID,
+		)
+		for _, evidenceID := range receipt.EvidenceRefs {
+			result = append(result, contracts.EvidenceItem{
+				EvidenceRef: contracts.EvidenceRef{
+					EvidenceID: evidenceID,
+					SourceType: "sec_derived_public_financial_result",
+					Locator:    "signalforge://public-financial-summary/" + company.CompanyID + "#" + evidenceID,
+					ContentSHA: hashText(statement),
+					AsOf:       receipt.SourceAsOf,
+				},
+				State:     contracts.EvidenceAvailable,
+				Statement: statement,
+				Warnings: []string{
+					"exact_value_withheld_from_model_prompt",
+					"trusted_numerical_renderer_required",
+				},
+			})
 		}
 	}
 	return result
@@ -295,6 +497,60 @@ func accountingAuthorityEvidence(
 			SourceType:      "accounting_authority_policy",
 			DocumentSection: "period-taxonomy-perimeter-comparability",
 			Locator:         "signalforge://accounting-authority/" + company.CompanyID,
+			ContentSHA:      hashText(statement + "\n" + strings.Join(warnings, "\n")),
+			AsOf:            asOf,
+		},
+		State:     contracts.EvidenceAvailable,
+		Statement: statement,
+		Warnings:  warnings,
+	}
+}
+
+func publicAccountingAuthorityEvidence(
+	company productscope.PublicCompany,
+	report productscope.PublicCompanyFinancials,
+	receipts []contracts.CalculationReceipt,
+	asOf time.Time,
+) contracts.EvidenceItem {
+	operations := map[string]bool{}
+	periods := []string{}
+	for _, receipt := range receipts {
+		operations[receipt.OperationID] = true
+		periods = append(periods, receipt.Scope.Periods...)
+	}
+	concepts := []string{}
+	perimeters := []string{}
+	for _, result := range report.Results {
+		if !operations[result.OperationID] {
+			continue
+		}
+		for _, input := range result.AccountingAuthority.Inputs {
+			concepts = append(concepts, input.TaxonomyConcept)
+			perimeters = append(perimeters, input.AccountingPerimeter)
+		}
+	}
+	periods = uniqueStrings(periods)
+	concepts = uniqueStrings(concepts)
+	perimeters = uniqueStrings(perimeters)
+	statement := company.DisplayName +
+		"'s public accounting authority is limited to reviewed SEC-derived result projections. " +
+		"Exact values remain outside model-visible prose; cross-company use requires a promoted metric comparability receipt."
+	warnings := []string{"comparability_requires_promoted_metric_receipt"}
+	if len(periods) > 0 {
+		warnings = append(warnings, "authorized_periods:"+strings.Join(periods, ","))
+	}
+	if len(concepts) > 0 {
+		warnings = append(warnings, "authorized_taxonomy_concepts:"+strings.Join(concepts, ","))
+	}
+	if len(perimeters) > 0 {
+		warnings = append(warnings, "authorized_accounting_perimeters:"+strings.Join(perimeters, ","))
+	}
+	return contracts.EvidenceItem{
+		EvidenceRef: contracts.EvidenceRef{
+			EvidenceID:      "public-accounting-authority:" + company.CompanyID,
+			SourceType:      "accounting_authority_policy",
+			DocumentSection: "public-period-taxonomy-perimeter-comparability",
+			Locator:         "signalforge://public-accounting-authority/" + company.CompanyID,
 			ContentSHA:      hashText(statement + "\n" + strings.Join(warnings, "\n")),
 			AsOf:            asOf,
 		},

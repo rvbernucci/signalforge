@@ -142,6 +142,7 @@ function messageFor(cause: unknown): string {
     api_unavailable: "The optional specialist API is unavailable. SignalForge preserved the local evidence boundary.",
     retrieval_unavailable: "Narrative retrieval is unavailable. SignalForge retained deterministic evidence and withheld unsupported prose.",
     tool_failure: "A deterministic tool failed. SignalForge released no value without a valid calculation receipt.",
+    request_scope_invalid: "Choose one governed Technology 20 company or an explicit two-company peer question.",
     cancelled: "The research run was cancelled safely. Your previous case remains available.",
     invalid_scenario: "Choose one option in each scenario control.",
     invalid_json: "The workspace could not send a valid request."

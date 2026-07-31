@@ -52,7 +52,7 @@ export function ResearchScope({ catalog, financials, peers, scenario, live, onQu
     setSelected(next);
     const companies = next.map((id) => companyByID.get(id)).filter((item): item is ProductCompany => Boolean(item));
     if (live && company.research_enabled && mode === "standalone" && companies.length === 1) {
-      onQuestion(`Research ${companies[0].display_name} as a long-term business. Explain its business model, financial quality, risks, valuation assumptions, and thesis invalidation conditions.`);
+      onQuestion(`What does ${companies[0].display_name} sell, how does it make money, and what are its main business risks?`);
     }
     const lane = peers.lanes.find((item) => next.every((id) => item.company_ids.includes(id)));
     if (live && lane?.promoted && mode === "comparison" && companies.length === 2) {
