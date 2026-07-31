@@ -56,6 +56,29 @@ func boundedPacketSchema(maxFindings, maxCounterevidence int) map[string]any {
 	)
 }
 
+// recoveryPacketSchema is intentionally smaller than the primary specialist contract. It is used
+// only after a provider failure or proven truncation, so constrained decoding cannot spend the
+// entire retry budget inside one unbounded string or list.
+func recoveryPacketSchema() map[string]any {
+	reference := boundedStringSchema(160)
+	finding := strictObject(map[string]any{
+		"claim_id": boundedStringSchema(128), "claim_type": stringEnum("fact", "calculation", "inference", "hypothesis"),
+		"statement": boundedStringSchema(320), "evidence_refs": boundedArraySchema(reference, 8),
+		"calculation_refs": boundedArraySchema(reference, 8), "numerical_refs": boundedArraySchema(reference, 8),
+		"assumption_refs": boundedArraySchema(boundedStringSchema(240), 6),
+		"confidence":      numberSchema(0, 1),
+	}, "claim_id", "claim_type", "statement", "evidence_refs", "calculation_refs", "numerical_refs", "assumption_refs", "confidence")
+	return strictObject(map[string]any{
+		"findings":         boundedArraySchema(finding, 4),
+		"counterevidence":  boundedArraySchema(finding, 1),
+		"assumptions":      boundedArraySchema(boundedStringSchema(240), 4),
+		"missing_evidence": boundedArraySchema(boundedStringSchema(240), 4),
+		"conflicts":        boundedArraySchema(boundedStringSchema(240), 4),
+		"uncertainties":    boundedArraySchema(boundedStringSchema(240), 4),
+		"handoff_notes":    boundedArraySchema(boundedStringSchema(160), 2),
+	}, "findings", "counterevidence", "assumptions", "missing_evidence", "conflicts", "uncertainties", "handoff_notes")
+}
+
 func packetSchemaWithArrays(
 	findingsArray func(map[string]any) map[string]any,
 	counterevidenceArray func(map[string]any) map[string]any,

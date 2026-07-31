@@ -594,6 +594,7 @@ func TestSpecialistRetriesOnlyIncompleteJSONWithBoundedBudget(t *testing.T) {
 	if !strings.Contains(client.requests[1].Messages[0].Content, "previous structured response was truncated") {
 		t.Fatalf("truncation retry omitted its concise recovery contract: %+v", client.requests[1].Messages)
 	}
+	assertBoundedRecoverySchema(t, client.requests[1])
 }
 
 func TestSpecialistOrchestratorRetryStartsWithExpandedBudget(t *testing.T) {
@@ -623,7 +624,34 @@ func TestSpecialistOrchestratorRetryStartsWithExpandedBudget(t *testing.T) {
 			if len(client.requests) != 1 || client.requests[0].MaxTokens != test.want {
 				t.Fatalf("retry request=%+v, want one request with max_tokens=%d", client.requests, test.want)
 			}
+			if !strings.Contains(client.requests[0].Messages[0].Content, "previous provider attempt") {
+				t.Fatalf("orchestrator retry omitted its recovery instruction: %+v", client.requests[0].Messages)
+			}
+			assertBoundedRecoverySchema(t, client.requests[0])
 		})
+	}
+}
+
+func assertBoundedRecoverySchema(t *testing.T, request benchmark.Request) {
+	t.Helper()
+	format, ok := request.ResponseFormat["json_schema"].(map[string]any)
+	if !ok {
+		t.Fatalf("recovery request omitted JSON Schema: %+v", request.ResponseFormat)
+	}
+	schema, ok := format["schema"].(map[string]any)
+	if !ok {
+		t.Fatalf("recovery request schema is malformed: %+v", format)
+	}
+	properties := schema["properties"].(map[string]any)
+	findings := properties["findings"].(map[string]any)
+	finding := findings["items"].(map[string]any)
+	findingProperties := finding["properties"].(map[string]any)
+	if findings["maxItems"] != 4 || findingProperties["statement"].(map[string]any)["maxLength"] != 320 {
+		t.Fatalf("recovery finding bounds are missing: %+v", findings)
+	}
+	if properties["counterevidence"].(map[string]any)["maxItems"] != 1 ||
+		properties["uncertainties"].(map[string]any)["maxItems"] != 4 {
+		t.Fatalf("recovery collection bounds are missing: %+v", properties)
 	}
 }
 

@@ -175,6 +175,8 @@ func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequ
 		if prompt.MaxTokens > 3200 {
 			prompt.MaxTokens = 3200
 		}
+		prompt.ResponseSchema = recoveryPacketSchema()
+		prompt.System += " A previous provider attempt did not produce a usable packet. Return at most four concise findings and one concise counterevidence item under the bounded recovery schema."
 	}
 	role, ok := roles.DefaultRegistry().Get(request.SpecialistRole)
 	if !ok || role.Class != roles.ClassContext {
@@ -226,6 +228,7 @@ func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequ
 		}
 		retryPrompt := prompt
 		retryPrompt.System += " The previous structured response was truncated. On this single bounded retry, keep every string concise, respect the role's finding and counterevidence limits, include only material gaps, and close the JSON object."
+		retryPrompt.ResponseSchema = recoveryPacketSchema()
 		retryPrompt.MaxTokens = prompt.MaxTokens * 3
 		if retryPrompt.MaxTokens > 4800 {
 			retryPrompt.MaxTokens = 4800
