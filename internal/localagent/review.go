@@ -439,16 +439,35 @@ func reviewableFindings(findings []contracts.Finding) []contracts.Finding {
 
 // Exact duplicate references do not change a review decision. Canonicalizing them keeps the
 // authority boundary strict while preventing harmless structured-output repetition from turning
-// an otherwise valid local review into a runtime failure. For repair, narrow, and reject decisions,
-// rejection conservatively wins an overlap. An approve decision with an overlap remains invalid.
+// an otherwise valid local review into a runtime failure. Rejection conservatively wins every
+// overlap. If a reviewer labels an output approve while also explicitly rejecting claims, Go
+// records the transport contradiction and downgrades the decision. This cannot add authority: the
+// disputed claims are removed or sent through the bounded repair path.
 func normalizeCritiqueBody(body *critiqueBody) {
 	body.ApprovedClaims = uniqueNonEmpty(body.ApprovedClaims)
 	body.RejectedClaims = uniqueNonEmpty(body.RejectedClaims)
 	for index := range body.Issues {
 		body.Issues[index].ClaimRefs = uniqueNonEmpty(body.Issues[index].ClaimRefs)
 	}
-	if body.Decision == contracts.CritiqueApprove {
+	if body.Decision == contracts.CritiqueApprove && len(body.RejectedClaims) == 0 {
 		return
+	}
+	if body.Decision == contracts.CritiqueApprove {
+		disputed := append([]string(nil), body.RejectedClaims...)
+		for _, issue := range body.Issues {
+			disputed = append(disputed, issue.ClaimRefs...)
+		}
+		disputed = uniqueNonEmpty(disputed)
+		if len(disputed) > 0 {
+			body.Issues = append(body.Issues, contracts.CritiqueIssue{
+				IssueID:     "review-output-contradiction",
+				Severity:    "high",
+				ClaimRefs:   disputed,
+				Description: "The reviewer marked the response approved while also disputing these claims; the deterministic review boundary rejected the disputed claims.",
+				RepairHint:  "Re-evaluate each disputed claim explicitly before release.",
+			})
+			body.Decision = contracts.CritiqueNarrow
+		}
 	}
 	for _, issue := range body.Issues {
 		body.RejectedClaims = append(body.RejectedClaims, issue.ClaimRefs...)
@@ -465,6 +484,9 @@ func normalizeCritiqueBody(body *critiqueBody) {
 		}
 	}
 	body.ApprovedClaims = approved
+	if body.Decision == contracts.CritiqueNarrow && len(body.ApprovedClaims) == 0 {
+		body.Decision = contracts.CritiqueReject
+	}
 	if body.Decision == contracts.CritiqueReject && len(body.ApprovedClaims) > 0 && len(body.RejectedClaims) > 0 {
 		body.Decision = contracts.CritiqueNarrow
 	}

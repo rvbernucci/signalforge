@@ -1980,17 +1980,52 @@ func TestReviewerRejectsPersistentlyOmittedClaimsAfterBoundedRetry(t *testing.T)
 	}
 }
 
-func TestReviewerRejectsContradictoryApproveDecision(t *testing.T) {
+func TestReviewerConservativelyRejectsContradictoryApproveDecision(t *testing.T) {
 	now := time.Now().UTC()
 	client := &fakeCompleter{answers: []string{`{"decision":"approve","approved_claims":["claim-1"],"rejected_claims":["claim-1"],"issues":[]}`}}
 	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
-	_, err := adapter.Review(context.Background(), orchestrator.ReviewInput{
+	report, err := adapter.Review(context.Background(), orchestrator.ReviewInput{
 		Request: validResearchRequest(now),
 		Step:    contracts.PlanStep{StepID: "review-1", RoleID: roles.EvidenceCritic},
 		Packets: []contracts.ContextPacket{validPacket(now)},
 	})
-	if err == nil {
-		t.Fatal("contradictory approve decision must fail closed")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Decision != contracts.CritiqueReject || len(report.ApprovedClaims) != 0 ||
+		!slices.Equal(report.RejectedClaims, []string{"claim-1"}) {
+		t.Fatalf("contradictory approval was not rejected fail-closed: %+v", report)
+	}
+	if len(report.Issues) != 1 || report.Issues[0].IssueID != "review-output-contradiction" ||
+		!slices.Equal(report.Issues[0].ClaimRefs, []string{"claim-1"}) {
+		t.Fatalf("contradictory approval did not retain an auditable issue: %+v", report.Issues)
+	}
+}
+
+func TestReviewerPreservesOnlyUndisputedSubsetFromContradictoryApproveDecision(t *testing.T) {
+	now := time.Now().UTC()
+	packet := validPacket(now)
+	packet.Findings = append(packet.Findings, contracts.Finding{
+		ClaimID: "claim-2", ClaimType: contracts.ClaimFact, Statement: "An undisputed sibling.",
+		EvidenceRefs: []string{"evidence-1"}, Confidence: 0.9, ValidAsOf: now,
+	})
+	client := &fakeCompleter{answers: []string{`{"decision":"approve","approved_claims":["claim-1","claim-2"],"rejected_claims":["claim-1"],"issues":[]}`}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+	report, err := adapter.Review(context.Background(), orchestrator.ReviewInput{
+		Request: validResearchRequest(now),
+		Step:    contracts.PlanStep{StepID: "review-1", RoleID: roles.EvidenceCritic},
+		Packets: []contracts.ContextPacket{packet},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Decision != contracts.CritiqueNarrow ||
+		!slices.Equal(report.ApprovedClaims, []string{"claim-2"}) ||
+		!slices.Equal(report.RejectedClaims, []string{"claim-1"}) {
+		t.Fatalf("contradictory approval expanded or lost authority: %+v", report)
+	}
+	if len(report.Issues) != 1 || report.Issues[0].IssueID != "review-output-contradiction" {
+		t.Fatalf("contradictory approval did not remain auditable: %+v", report.Issues)
 	}
 }
 

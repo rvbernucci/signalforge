@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -189,19 +190,23 @@ func TestUnifiedFakeProviderChaosSuite(t *testing.T) {
 		}
 	})
 
-	t.Run("contradictory review fails closed", func(t *testing.T) {
+	t.Run("contradictory review rejects disputed claim fail closed", func(t *testing.T) {
 		client := &fakeCompleter{answers: []string{`{"decision":"approve","approved_claims":["claim-1"],"rejected_claims":["claim-1"],"issues":[]}`}}
 		adapter, err := New(client, "local-model", staticMaterials{material: validMaterial(now)})
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = adapter.Review(context.Background(), orchestrator.ReviewInput{
+		report, err := adapter.Review(context.Background(), orchestrator.ReviewInput{
 			Request: validResearchRequest(now),
 			Step:    contracts.PlanStep{StepID: "review-1", RoleID: roles.EvidenceCritic},
 			Packets: []contracts.ContextPacket{validPacket(now)},
 		})
-		if err == nil {
-			t.Fatal("contradictory reviewer disposition was accepted")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if report.Decision != contracts.CritiqueReject || len(report.ApprovedClaims) != 0 ||
+			!slices.Equal(report.RejectedClaims, []string{"claim-1"}) {
+			t.Fatalf("contradictory reviewer disposition did not fail closed: %+v", report)
 		}
 	})
 
