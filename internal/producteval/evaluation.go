@@ -229,7 +229,8 @@ func comparisonAuthorityPresent(report golden.Report, expected map[string]string
 			seen++
 		}
 	}
-	return seen == required && report.Request.AuthorityState == "limited"
+	return seen == required &&
+		(report.Request.AuthorityState == "limited" || report.Request.AuthorityState == "comparison_ready")
 }
 
 func unavailableMetricsWithheld(report golden.Report, expected map[string]string) bool {

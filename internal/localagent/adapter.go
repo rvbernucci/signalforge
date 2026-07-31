@@ -299,6 +299,10 @@ func deterministicRecoveryHasRoleAuthority(packet contracts.ContextPacket, mater
 				len(finding.CalculationRefs)+len(finding.NumericalRefs) > 0 {
 				return true
 			}
+			if finding.Origin == contracts.FindingOriginSourceExtraction &&
+				financialQualityBoundaryReferencesAuthorized(finding, evidenceByID) {
+				return true
+			}
 		case roles.Valuation:
 			for _, reference := range finding.CalculationRefs {
 				if receipt, ok := receiptByID[reference]; ok && isRequiredValuationReceipt(receipt.OperationID) {
@@ -354,6 +358,7 @@ func buildContextPacket(request contracts.ContextRequest, material Material, bod
 	appendSourceBackedRiskCounterevidence(&packet, material)
 	appendSourceBackedBusinessFacts(&packet, material)
 	appendScopeBoundaryFindings(&packet, material)
+	appendFinancialQualityComparisonBoundaryFindings(&packet, material)
 	appendAccountingAuthorityFindings(&packet, material)
 	appendGovernedAbstentionFindings(&packet, material, request)
 	appendMarketPriceFindings(&packet, material)
@@ -487,6 +492,54 @@ func appendScopeBoundaryFindings(packet *contracts.ContextPacket, material Mater
 		})
 		return
 	}
+}
+
+// When every governed financial metric is explicitly non-comparable, the correct specialist
+// contribution is a source-backed abstention rather than invented analysis or an empty packet.
+// The finding carries no direction or value and cites only application-validated comparison
+// receipts, preserving the fail-closed comparison boundary.
+func appendFinancialQualityComparisonBoundaryFindings(packet *contracts.ContextPacket, material Material) {
+	if packet.SpecialistRole != roles.FinancialQuality {
+		return
+	}
+	references := []string{}
+	for _, item := range material.Evidence.Items {
+		if item.EvidenceRef.SourceType != "metric_comparability_receipt" ||
+			!strings.HasPrefix(item.EvidenceRef.EvidenceID, "comparison:") {
+			continue
+		}
+		if item.State != contracts.EvidenceIncomparable {
+			return
+		}
+		references = append(references, item.EvidenceRef.EvidenceID)
+	}
+	if len(references) == 0 {
+		return
+	}
+	sort.Strings(references)
+	packet.Findings = append(packet.Findings, contracts.Finding{
+		ClaimType: contracts.ClaimFact, Origin: contracts.FindingOriginSourceExtraction,
+		Statement:    "Every governed financial metric in this request is marked not comparable, so metric directions and a pair-level financial-quality conclusion are withheld.",
+		EvidenceRefs: references, Confidence: 1,
+	})
+}
+
+func financialQualityBoundaryReferencesAuthorized(
+	finding contracts.Finding,
+	evidenceByID map[string]contracts.EvidenceItem,
+) bool {
+	if len(finding.EvidenceRefs) == 0 {
+		return false
+	}
+	for _, reference := range finding.EvidenceRefs {
+		item, ok := evidenceByID[reference]
+		if !ok || item.State != contracts.EvidenceIncomparable ||
+			item.EvidenceRef.SourceType != "metric_comparability_receipt" ||
+			!strings.HasPrefix(reference, "comparison:") {
+			return false
+		}
+	}
+	return true
 }
 
 func appendAccountingAuthorityFindings(packet *contracts.ContextPacket, material Material) {

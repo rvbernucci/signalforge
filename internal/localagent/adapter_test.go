@@ -2990,6 +2990,70 @@ func TestAccountingScopeBoundaryBecomesSourceBackedAuthority(t *testing.T) {
 	}
 }
 
+func TestFinancialQualityAllIncomparableBecomesSourceBackedAbstentionAuthority(t *testing.T) {
+	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+	material := validMaterial(now)
+	material.Evidence.Items = []contracts.EvidenceItem{
+		{
+			EvidenceRef: contracts.EvidenceRef{
+				EvidenceID: "comparison:operating-margin", SourceType: "metric_comparability_receipt",
+				Locator: "signalforge://comparability/operating-margin", ContentSHA: strings.Repeat("a", 64), AsOf: now,
+			},
+			State: contracts.EvidenceIncomparable, Statement: "Operating margin is not comparable.",
+		},
+		{
+			EvidenceRef: contracts.EvidenceRef{
+				EvidenceID: "comparison:revenue-growth", SourceType: "metric_comparability_receipt",
+				Locator: "signalforge://comparability/revenue-growth", ContentSHA: strings.Repeat("b", 64), AsOf: now,
+			},
+			State: contracts.EvidenceIncomparable, Statement: "Revenue growth is not comparable.",
+		},
+	}
+	request := validContextRequest(now)
+	request.SpecialistRole = roles.FinancialQuality
+	packet, err := buildContextPacket(request, material, packetBody{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(packet.Findings) != 1 ||
+		packet.Findings[0].Origin != contracts.FindingOriginSourceExtraction ||
+		!slices.Equal(packet.Findings[0].EvidenceRefs, []string{
+			"comparison:operating-margin", "comparison:revenue-growth",
+		}) ||
+		containsAuthoritativeNumericalLiteral(packet.Findings[0].Statement) {
+		t.Fatalf("financial-quality boundary was not promoted safely: %+v", packet.Findings)
+	}
+	if !deterministicRecoveryHasRoleAuthority(packet, material, request) {
+		t.Fatal("source-backed financial-quality abstention was not recognized as role authority")
+	}
+}
+
+func TestFinancialQualityBoundaryDoesNotHideAComparableMetric(t *testing.T) {
+	now := time.Date(2026, 7, 21, 18, 0, 0, 0, time.UTC)
+	material := validMaterial(now)
+	material.Evidence.Items = []contracts.EvidenceItem{
+		{
+			EvidenceRef: contracts.EvidenceRef{
+				EvidenceID: "comparison:operating-margin", SourceType: "metric_comparability_receipt",
+				Locator: "signalforge://comparability/operating-margin", ContentSHA: strings.Repeat("a", 64), AsOf: now,
+			},
+			State: contracts.EvidenceIncomparable, Statement: "Operating margin is not comparable.",
+		},
+		{
+			EvidenceRef: contracts.EvidenceRef{
+				EvidenceID: "comparison:revenue-growth", SourceType: "metric_comparability_receipt",
+				Locator: "signalforge://comparability/revenue-growth", ContentSHA: strings.Repeat("b", 64), AsOf: now,
+			},
+			State: contracts.EvidenceAvailable, Statement: "Revenue growth is comparable with a caveat.",
+		},
+	}
+	packet := contracts.ContextPacket{SpecialistRole: roles.FinancialQuality}
+	appendFinancialQualityComparisonBoundaryFindings(&packet, material)
+	if len(packet.Findings) != 0 {
+		t.Fatalf("all-incomparable boundary hid a comparable metric: %+v", packet.Findings)
+	}
+}
+
 func TestMarketPriceEvidenceBecomesQualitativeSourceAuthority(t *testing.T) {
 	now := time.Now().UTC()
 	material := validMaterial(now)

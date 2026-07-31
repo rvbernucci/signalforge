@@ -114,6 +114,26 @@ func TestPeerScoreRequiresAuthorityBoundaryAndWithholdsUnavailableMetrics(t *tes
 	}
 }
 
+func TestPeerMetricAuthorityAcceptsLimitedAndPromotedComparisonStates(t *testing.T) {
+	expected := map[string]string{"financial.operating_margin": "comparable_with_caveat"}
+	for _, state := range []string{"limited", "comparison_ready"} {
+		report := golden.Report{Request: contracts.ResearchRequest{
+			AuthorityState: state,
+			AuthorityRefs:  []string{"comparability-receipt-sha256:margin"},
+		}}
+		if !comparisonAuthorityPresent(report, expected) {
+			t.Fatalf("authorized state %q was rejected", state)
+		}
+	}
+	report := golden.Report{Request: contracts.ResearchRequest{
+		AuthorityState: "data_ready",
+		AuthorityRefs:  []string{"comparability-receipt-sha256:margin"},
+	}}
+	if comparisonAuthorityPresent(report, expected) {
+		t.Fatal("non-comparison authority state was accepted")
+	}
+}
+
 func TestPeerScoreRejectsUnavailableMetricInNumericalContext(t *testing.T) {
 	report := golden.Report{
 		Request: contracts.ResearchRequest{
