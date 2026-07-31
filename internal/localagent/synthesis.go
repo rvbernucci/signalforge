@@ -40,6 +40,7 @@ type synthesisRequestView struct {
 	AsOf             time.Time `json:"as_of"`
 	RequestedOutputs []string  `json:"requested_outputs"`
 	Assumptions      []string  `json:"assumptions,omitempty"`
+	Comparative      bool      `json:"comparative"`
 }
 
 type synthesisClaimView struct {
@@ -352,7 +353,8 @@ const comparisonBoundaryDisclosure = "Direct cross-company conclusions are limit
 // the model to repeat it in every answer shape.
 func ensureVisibleComparisonBoundary(body *finalBody, material synthesisPromptInput) {
 	question := strings.ToLower(material.Request.Question)
-	comparative := strings.Contains(question, "compare") ||
+	comparative := material.Request.Comparative ||
+		strings.Contains(question, "compare") ||
 		strings.Contains(question, "comparison") ||
 		strings.Contains(question, "relative-quality") ||
 		strings.Contains(question, "cross-company") ||
@@ -1122,6 +1124,8 @@ func synthesisMaterialForPrompt(input orchestrator.SynthesisInput) synthesisProm
 		Question: input.Request.UserText, PrimaryIntent: input.Request.PrimaryIntent,
 		AsOf: input.Request.AsOf, RequestedOutputs: append([]string(nil), input.Request.RequestedOutputs...),
 		Assumptions: append([]string(nil), input.Request.Assumptions...),
+		Comparative: input.Request.Comparison.Mode == "peer" ||
+			len(input.Request.Comparison.EntityIDs) > 1,
 	}}
 	successfulOperations := successfulReceiptOperations(input.Packets)
 	for operation := range successfulOperations {

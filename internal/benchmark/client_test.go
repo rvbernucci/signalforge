@@ -3,6 +3,7 @@ package benchmark
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -203,6 +204,10 @@ func TestCompleteRejectsEmptyStream(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("expected empty stream failure")
+	}
+	var temporary interface{ Temporary() bool }
+	if !errors.As(err, &temporary) || !temporary.Temporary() {
+		t.Fatalf("empty provider stream must receive one bounded runtime retry: %v", err)
 	}
 }
 

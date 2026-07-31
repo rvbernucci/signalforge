@@ -21,6 +21,22 @@ type Client struct {
 	HTTPClient                  *http.Client
 }
 
+type temporaryCompletionError struct {
+	err error
+}
+
+func (failure temporaryCompletionError) Error() string {
+	return failure.err.Error()
+}
+
+func (failure temporaryCompletionError) Unwrap() error {
+	return failure.err
+}
+
+func (temporaryCompletionError) Temporary() bool {
+	return true
+}
+
 type Request struct {
 	Model              string         `json:"model"`
 	Messages           []Message      `json:"messages"`
@@ -174,7 +190,9 @@ func (client Client) Complete(ctx context.Context, request Request) (Completion,
 		completion.TTFT = completion.Duration
 	}
 	if completion.Answer == "" && len(completion.ToolNames) == 0 {
-		return Completion{}, errors.New("completion stream contained no answer or tool call")
+		return Completion{}, temporaryCompletionError{
+			err: errors.New("completion stream contained no answer or tool call"),
+		}
 	}
 	return completion, nil
 }

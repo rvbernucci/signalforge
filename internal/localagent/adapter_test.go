@@ -2080,6 +2080,17 @@ func TestEnsureVisibleComparisonBoundary(t *testing.T) {
 		t.Fatalf("comparison boundary was duplicated %d times: %+v", count, comparative.Limitations)
 	}
 
+	typedComparative := finalBody{Limitations: []string{"Source coverage is bounded."}}
+	ensureVisibleComparisonBoundary(&typedComparative, synthesisPromptInput{
+		Request: synthesisRequestView{
+			Question:    "Build and challenge the business-quality thesis.",
+			Comparative: true,
+		},
+	})
+	if !slices.Contains(typedComparative.Limitations, comparisonBoundaryDisclosure) {
+		t.Fatalf("typed comparison omitted the deterministic boundary: %+v", typedComparative.Limitations)
+	}
+
 	standalone := finalBody{Limitations: []string{"Source coverage is bounded."}}
 	ensureVisibleComparisonBoundary(&standalone, synthesisPromptInput{
 		Request: synthesisRequestView{Question: "Explain Cisco's cash generation."},
@@ -2764,6 +2775,26 @@ func TestSynthesisCarriesSpecialistBoundariesAndGoAppendsEpistemicDisclosures(t 
 	if !strings.Contains(sections[0].Content, transmissionBoundaryDisclosure) ||
 		!strings.Contains(sections[1].Content, marketBoundaryDisclosure) {
 		t.Fatalf("Go-owned epistemic boundaries were not rendered: %+v", sections)
+	}
+}
+
+func TestSynthesisCarriesTypedComparisonScope(t *testing.T) {
+	comparative := synthesisMaterialForPrompt(orchestrator.SynthesisInput{
+		Request: contracts.ResearchRequest{
+			Comparison: contracts.ComparisonScope{
+				Mode:      "peer",
+				EntityIDs: []string{"company-a", "company-b"},
+			},
+		},
+	})
+	if !comparative.Request.Comparative {
+		t.Fatal("typed peer scope was lost before deterministic presentation")
+	}
+	standalone := synthesisMaterialForPrompt(orchestrator.SynthesisInput{
+		Request: contracts.ResearchRequest{Comparison: contracts.ComparisonScope{Mode: "none"}},
+	})
+	if standalone.Request.Comparative {
+		t.Fatal("standalone scope was incorrectly marked comparative")
 	}
 }
 
