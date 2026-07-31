@@ -588,8 +588,11 @@ func TestSpecialistRetriesOnlyIncompleteJSONWithBoundedBudget(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(packet.Findings) != 1 || len(client.requests) != 2 || client.requests[1].MaxTokens != 3200 {
+	if len(packet.Findings) != 1 || len(client.requests) != 2 || client.requests[1].MaxTokens != 4800 {
 		t.Fatalf("bounded truncation recovery failed: packet=%+v requests=%+v", packet, client.requests)
+	}
+	if !strings.Contains(client.requests[1].Messages[0].Content, "previous structured response was truncated") {
+		t.Fatalf("truncation retry omitted its concise recovery contract: %+v", client.requests[1].Messages)
 	}
 }
 

@@ -156,7 +156,7 @@ func TestUnifiedFakeProviderChaosSuite(t *testing.T) {
 			t.Fatal(err)
 		}
 		packet, err := adapter.Run(context.Background(), validContextRequest(now))
-		if err != nil || len(packet.Findings) != 1 || len(client.requests) != 2 || client.requests[1].MaxTokens != 3200 {
+		if err != nil || len(packet.Findings) != 1 || len(client.requests) != 2 || client.requests[1].MaxTokens != 4800 {
 			t.Fatalf("bounded truncation recovery failed: packet=%+v calls=%d err=%v", packet, len(client.requests), err)
 		}
 	})

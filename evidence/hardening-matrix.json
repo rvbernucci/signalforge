@@ -108,7 +108,7 @@
         },
         {
           "path": "internal/localagent/adapter_test.go",
-          "sha256": "f3bd9338a72a1c889cdb8a1db0e5a1fc4321c71954bff024aeb23046425a32b3"
+          "sha256": "50806186a5d2c5eee8026addc7e67db495b63c70633ec896c53f86e804d6992e"
         },
         {
           "path": "internal/localagent/synthesis.go",
@@ -130,7 +130,7 @@
       "source_hashes": [
         {
           "path": "internal/localagent/chaos_test.go",
-          "sha256": "a164903b3b068e6e2a9c969fa2dc0e0e9c2a94227dcfb0e0f9830824b085d3ec"
+          "sha256": "9731a9e3bc2c72f35534ea22b34afacb44d1b151e0693f5387f20813c15689ea"
         }
       ],
       "status": "passed"

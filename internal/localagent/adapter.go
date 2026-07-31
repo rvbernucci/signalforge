@@ -225,9 +225,10 @@ func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequ
 			return contracts.ContextPacket{}, fmt.Errorf("decode context packet body: %w", decodeErr)
 		}
 		retryPrompt := prompt
-		retryPrompt.MaxTokens = prompt.MaxTokens * 2
-		if retryPrompt.MaxTokens > 3200 {
-			retryPrompt.MaxTokens = 3200
+		retryPrompt.System += " The previous structured response was truncated. On this single bounded retry, keep every string concise, respect the role's finding and counterevidence limits, include only material gaps, and close the JSON object."
+		retryPrompt.MaxTokens = prompt.MaxTokens * 3
+		if retryPrompt.MaxTokens > 4800 {
+			retryPrompt.MaxTokens = 4800
 		}
 		completion, err = adapters.complete(ctx, retryPrompt, string(input))
 		if err != nil {
