@@ -138,6 +138,14 @@ Radeon host. The local journey completed 11 model calls in 132.420 seconds. The 
 completed 16 model calls in 220.949 seconds across the provided Radeon API and the authorized local
 ROCm route. Both reached all governed phases and released only after the required contracts passed.
 
+The forward `ce4f2ca` candidate adds a shared model-call limiter and admits one complete local
+journey at a time while preserving up to four specialists inside that journey. Its bounded Radeon
+campaign completed simultaneous submission and follow-up replays, 30 of 32 soak journeys, both
+post-soak sentinels, supported `rocprofv3` launch profiling, and hydrated inference with external
+networking disabled. Two repeated soak journeys failed closed at synthesis validation, and median
+complete-journey latency was `32.023 s`; neither result is represented as a pass of universal
+stability or the internal `30 s` target.
+
 ## Radeon Optimization Evidence
 
 The optimization contract, workload, quality thresholds, and rollback profile were frozen before
@@ -221,6 +229,11 @@ commands documented in the repository README.
 - The exact forward release identity is authoritative only through the published release manifest,
   image digest, and artifact hash inventory.
 - Concurrent workspace reads do not represent unlimited concurrent 26B generation.
+- The vNext technical browser rehearsal was agent-operated and does not replace independent
+  investor, judge, keyboard, or reduced-motion acceptance.
+- The exact public vNext image was reachable from Radeon, but literal OCI recreation was blocked
+  by the OneClick host's mount policy; exact-source native execution is not relabelled as
+  OCI-filesystem execution.
 
 ## Evidence Index
 
@@ -232,6 +245,7 @@ commands documented in the repository README.
 - Sprint 36 local journey: `evidence/sprint36-radeon-local-journey.json`
 - Sprint 36 hybrid journey: `evidence/sprint36-radeon-hybrid-journey.json`
 - Sprint 36 resilience: `evidence/sprint36-radeon-resilience.json`
+- vNext runtime resilience: `evidence/vnext-runtime-resilience.json`
 <!-- evidence-claim:sprint36-championship-journey -->
 - Synchronized Workspace captures: `evidence/dashboard-radeon-synchronized-captures.json`
 - Adversarial matrix: `evidence/hardening-matrix.json`

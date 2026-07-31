@@ -476,6 +476,21 @@
         "JUDGES.md",
         "docs/track2-compliance.md"
       ]
+    },
+    {
+      "claim_id": "vnext-runtime-resilience",
+      "text": "Exact-source candidate ce4f2ca completed bounded concurrency and follow-up replays, 30 of 32 soak journeys with two synthesis contracts rejected fail-closed, both post-soak sentinels, supported ROCm launch profiling, network-disabled local inference, and observability-loss recovery; median complete-journey latency was 32.023 seconds and literal OCI recreation remained blocked by the OneClick host mount policy.",
+      "status": "measured",
+      "evidence": [
+        {
+          "path": "evidence/vnext-runtime-resilience.json",
+          "sha256": "4d2bba7bc7bdd11d6725494af8faa6e6991dc66bf28e7ff7a25af408240a1a2d"
+        }
+      ],
+      "public_files": [
+        "README.md",
+        "JUDGES.md"
+      ]
     }
   ]
 }

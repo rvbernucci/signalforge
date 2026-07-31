@@ -171,6 +171,26 @@ It retains up to four concurrent specialist calls inside one research journey wh
 complete local journey at a time. In a controlled Radeon replay, two representative journeys
 submitted together both completed through this shared gate. The second journey included queue
 time, and the result does not satisfy or claim the 30-second response target.
+
+A subsequent exact-source Radeon campaign ran a `1,363.185 s` soak: 30 of 32 journeys completed,
+two repeated valuation-sensitivity journeys failed closed at synthesis contract validation, and
+both post-soak sentinels passed. Median complete-journey latency was `32.023 s`; across 224 local
+model calls, median call duration was `8,088.887 ms`, median time to first token was
+`2,186.542 ms`, and aggregate output throughput was `44.596` tokens per wall-second. A 180-sample
+resource window recorded approximately `16.874 GB` median VRAM, `100%` median GPU use, `149 W`
+median power, and maximum edge/junction/memory temperatures of `49 C`/`59 C`/`52 C`.
+
+Supported `rocprofv3` launch profiling completed with only aggregates retained, and the hydrated
+local path completed with external networking disabled. Deliberate observability loss preserved
+the accepted answer. An exact-source technical browser rehearsal confirmed a clean default
+Research view, on-demand Audit and Mission Control, correlated identities, responsive layouts,
+visible limitations, and one governed follow-up. Literal OCI recreation did not complete because
+the OneClick host denied the mount capability required to apply image layers. These are bounded
+engineering measurements, not universal factual-accuracy, independent-human, latency-target, or
+final-release claims. See the
+[vNext runtime resilience record](evidence/vnext-runtime-resilience.json).
+<!-- evidence-claim:vnext-runtime-resilience -->
+
 Private prompts, responses, source bodies, model weights, sealed labels, and raw evaluation
 reports are intentionally absent from this repository. Public promotion proves bounded authority,
 not universal factual accuracy or final championship release.

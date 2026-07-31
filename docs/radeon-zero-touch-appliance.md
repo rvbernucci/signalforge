@@ -309,3 +309,22 @@ A final release still requires a genuinely fresh Radeon workspace to prove the n
 llama.cpp builds, full 14.4 GB hydration, model load, cold/warm startup, interrupted real
 downloads, corrupt-cache recovery, local-only networking, API loss, process teardown, and
 persistent-workspace recreation. Local simulations are not relabelled as that evidence.
+
+## Current vNext Runtime Boundary
+
+Candidate `ce4f2cabf0981bec09cf80c805864515f42fa41c` has completed exact-source native Radeon
+execution, concurrent submission and follow-up replays, a 32-journey bounded soak, post-soak
+sentinels, supported ROCm launch profiling, and hydrated inference with external networking
+disabled. The privacy-safe aggregate is
+[`evidence/vnext-runtime-resilience.json`](../evidence/vnext-runtime-resilience.json).
+
+This does not prove literal container recreation on the allocated OneClick host. Podman reached
+the exact public GHCR index and began copying blobs, but the host denied the mount capability
+required to apply an OCI layer. A mapped user/mount-namespace retry reached the same boundary.
+Native lifecycle evidence and public-image reachability therefore remain distinct from the still
+open OCI container-and-volume recreation gate.
+
+The soak completed 30 of 32 journeys and rejected two repeated synthesis contracts without
+releasing unsupported answers. Median complete-journey latency was `32.023 s`, above the internal
+`30 s` target. Those results are intentionally retained as release limitations rather than being
+converted into a stability or latency pass.

@@ -42,7 +42,7 @@ the current official repository README governs the technical submission format.
 | Core inference local on AMD Radeon | Local interpreter, specialists, critics, and final synthesis through loopback ROCm `llama.cpp` | Demo, [current local journey](../evidence/sprint36-radeon-local-journey.json), and [safe replay](../evidence/golden-safe-decision-replay.json) |
 | No complete dependence on a closed-source agent platform | Typed Go orchestration and authority plane; React workspace; local open model runtime | [Architecture](architecture.svg) |
 | Tool invocation and workflow orchestration | Closed role-authorized tool registry, deterministic receipts, bounded state machine | Project specification pages 3-4 |
-| Operational stability and response performance | Typed failure behavior, bounded retries, startup checks, adversarial matrix, telemetry, and soak evidence | [Hardening matrix](../evidence/hardening-matrix.json), [resilience record](../evidence/sprint36-radeon-resilience.json), and [exact-release attestation](../evidence/sprint36-release-attestation.json) |
+| Operational stability and response performance | Typed failure behavior, bounded retries, startup checks, adversarial matrix, telemetry, exact-source bounded soak, post-soak sentinels, ROCm profiling, and network-isolated local inference | [Hardening matrix](../evidence/hardening-matrix.json), [resilience record](../evidence/sprint36-radeon-resilience.json), [exact-release attestation](../evidence/sprint36-release-attestation.json), and [vNext runtime resilience](../evidence/vnext-runtime-resilience.json) |
 | Local knowledge retrieval | Point-in-time regulatory and official investor-relations evidence with citations | Project specification page 4 |
 | Multi-step task planning | Typed interpreter, orchestrator, specialist waves, critics, and answer compiler | Demo `0:42-1:48` |
 | Local multi-turn memory | Governed follow-ups and opt-in local case retention | Demo `2:52-3:12` |
@@ -125,3 +125,9 @@ the event's complete terms.
   rehearsed OCI image. The exact `v1.1.1` image has a separate public digest, supply-chain
   attestation, anonymous pull, clean fixture execution, and Radeon readback; no earlier native run
   is relabeled as exact-image execution.
+- The vNext `ce4f2ca` soak completed 30/32 journeys; two repeated synthesis contracts failed
+  closed. Median complete-journey latency was `32.023 s`, above the internal `30 s` target.
+- Supported launch profiling and network-disabled local inference completed, but literal OCI
+  recreation of the vNext public image was blocked by the Radeon OneClick host's mount policy.
+- The vNext browser rehearsal was technical and agent-operated; independent investor, judge,
+  keyboard, reduced-motion, factual-usefulness, and final-release acceptance remain open.

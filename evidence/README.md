@@ -322,6 +322,28 @@ records ROCm 7.2.1 on an AMD Radeon `gfx1100` device, the hash-bound Gemma 4 26B
 telemetry, and fail-closed recovery for API loss, local-model loss, and missing financial
 authority. The report retains no prompt, answer, credential, source body, or raw telemetry.
 
+## vNext Runtime Resilience
+
+`vnext-runtime-resilience.json` is the public, privacy-safe aggregate for exact application source
+`ce4f2cabf0981bec09cf80c805864515f42fa41c`. It records:
+
+- shared journey admission with four-way intra-journey specialist execution;
+- simultaneous representative submissions and governed follow-ups;
+- a `1,363.185 s`, 32-journey soak with 30 completions and two fail-closed synthesis contracts;
+- post-soak standalone and peer sentinels;
+- local-model call duration, TTFT, token, throughput, RAM, VRAM, power, temperature, and GPU-use
+  aggregates;
+- bounded `rocprofv3` launch-profile totals after deletion of the raw trace;
+- hydrated local inference with external networking disabled;
+- answer preservation during deliberate observability loss;
+- the exact public-image reachability and host mount-policy boundary; and
+- the exact-source technical browser rehearsal and its independent-human exclusions.
+
+The record contains no prompt, response, source body, credential, chain-of-thought, raw telemetry,
+or raw trace. It reports the internal latency miss, both failed soak journeys, literal OCI
+recreation blocker, and remaining human and semantic gates rather than converting them into
+passes.
+
 ## Local Memory And Privacy Controls
 
 The case-store tests exercise opt-in save, integrity-checked load, bounded listing, export, cascade

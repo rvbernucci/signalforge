@@ -14,7 +14,10 @@ in [Track 2 Compliance](docs/track2-compliance.md).
 3. Read the [six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf).
 4. Inspect the [architecture](docs/architecture.svg), [current Radeon journey](evidence/sprint36-radeon-demo-journey.json),
    [bounded latency tournament](evidence/sprint33-latency-tournament.json), and
-   [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json).
+   [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json). The
+   separate [vNext runtime resilience record](evidence/vnext-runtime-resilience.json) preserves
+   the current candidate's concurrency, soak, profiling, network-isolation, and known-failure
+   boundaries.
 5. Reproduce the credential-free fixture or pull the exact public image identified in the
    championship release section.
 
@@ -149,6 +152,13 @@ Open `http://127.0.0.1:8080`. The selected Radeon model and runtime reproduction
   together both completed in a controlled Radeon replay. Their elapsed times were `98.116 s` and
   `152.149 s` including queue time, so this is bounded resilience evidence, not a 30-second latency
   claim.
+- The same source completed a `1,363.185 s` soak with 30/32 completed journeys. Two repeated
+  valuation-sensitivity journeys failed closed at synthesis validation; both post-soak sentinels
+  passed. Median complete-journey latency was `32.023 s`, so the internal 30-second target remains
+  unmet. Supported ROCm launch profiling and network-disabled local inference completed, while
+  literal OCI recreation was blocked by the OneClick host's mount policy. The technical browser
+  rehearsal was agent-operated, not independent human acceptance.
+  <!-- evidence-claim:vnext-runtime-resilience -->
 - The 80-operation total is the composed deterministic registry, not a claim that the current
   natural-language planner automatically selects every registered operation.
 - In the frozen frontend, aggregate header/sidebar labels can say `Local inference` or `local calls`
