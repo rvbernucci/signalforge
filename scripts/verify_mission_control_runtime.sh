@@ -11,7 +11,7 @@ mkdir -p "$output"
 output="$(cd "$output" && pwd)"
 
 compose() {
-  COMPOSE_PROJECT_NAME="$project" SIGNALFORGE_IMAGE="$image" docker compose "$@"
+  COMPOSE_PROJECT_NAME="$project" SIGNALFORGE_APP_IMAGE="$image" docker compose "$@"
 }
 
 capture_diagnostics() {

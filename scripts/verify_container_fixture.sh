@@ -124,9 +124,12 @@ wait_ready
 recreated_case_index="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/api/v1/cases)"
 jq -e --arg case_id "$case_id" '.cases | any(.case_id == $case_id)' <<<"$recreated_case_index" >/dev/null
 
-docker exec "$container" wget -q -O /tmp/delete.json \
-  --method=DELETE "http://127.0.0.1:8080/api/v1/cases/$case_id"
-jq -e '.status == "deleted"' <<<"$(docker exec "$container" cat /tmp/delete.json)" >/dev/null
+delete_response="$(
+  printf 'DELETE /api/v1/cases/%s HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n' "$case_id" \
+    | docker exec -i "$container" nc 127.0.0.1 8080
+)"
+delete_body="${delete_response#*$'\r\n\r\n'}"
+jq -e '.status == "deleted"' <<<"$delete_body" >/dev/null
 post_delete_index="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/api/v1/cases)"
 jq -e --arg case_id "$case_id" '.cases | all(.case_id != $case_id)' <<<"$post_delete_index" >/dev/null
 

@@ -84,9 +84,14 @@ def validate_configs() -> None:
         if not path.is_file() or not path.read_text().strip():
             fail(f"missing configuration: {path.relative_to(ROOT)}")
     compose = (ROOT / "compose.yaml").read_text()
+    runtime_check = (ROOT / "scripts" / "verify_mission_control_runtime.sh").read_text()
     for profile in ("fixture", "radeon-local", "championship", "observability"):
         if profile not in compose:
             fail(f"compose profile missing: {profile}")
+    if 'SIGNALFORGE_APP_IMAGE="$image"' not in runtime_check:
+        fail("Mission Control runtime check does not bind the requested immutable application image")
+    if 'SIGNALFORGE_IMAGE="$image"' in runtime_check:
+        fail("Mission Control runtime check uses an unsupported application image variable")
     for unsafe in ("0.0.0.0:3000:3000", "GF_AUTH_ANONYMOUS_ENABLED: \"true\""):
         if unsafe in compose:
             fail(f"unsafe observability default: {unsafe}")
