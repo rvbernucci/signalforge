@@ -3,6 +3,7 @@ package localagent
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"slices"
 	"strings"
@@ -1608,6 +1609,56 @@ func TestNormalizeApplicationOwnedEvidenceUsesSupportedFallback(t *testing.T) {
 	normalizeApplicationOwnedSectionAuthority(sections, claims)
 	if !slices.Equal(sections[0].ClaimRefs, []string{"supported"}) {
 		t.Fatalf("evidence section did not receive supported fallback authority: %+v", sections[0])
+	}
+	if sections[0].Title != "Evidence" || sections[0].Content != canonicalEvidenceSection {
+		t.Fatalf("evidence section did not receive canonical application-owned prose: %+v", sections[0])
+	}
+}
+
+func TestNormalizeApplicationOwnedEvidenceBalancesLaterSpecialistAuthority(t *testing.T) {
+	sections := []answerSectionDraft{{
+		SectionType: "evidence",
+		Title:       "Model-authored title",
+		Content:     "Model-authored accounting attribution.",
+		ClaimRefs:   []string{"business-1"},
+	}}
+	claims := make([]synthesisClaimView, 0, 11)
+	for index := 1; index <= 9; index++ {
+		claims = append(claims, synthesisClaimView{
+			SpecialistRole: roles.BusinessStrategy,
+			Finding: contracts.Finding{
+				ClaimID:      fmt.Sprintf("business-%d", index),
+				EvidenceRefs: []string{fmt.Sprintf("business-evidence-%d", index)},
+			},
+		})
+	}
+	claims = append(claims,
+		synthesisClaimView{
+			SpecialistRole: roles.AccountingReporting,
+			Finding: contracts.Finding{
+				ClaimID:      "accounting-1",
+				EvidenceRefs: []string{"accounting-authority:issuer"},
+			},
+		},
+		synthesisClaimView{
+			SpecialistRole: roles.FinancialQuality,
+			Finding: contracts.Finding{
+				ClaimID:      "financial-1",
+				EvidenceRefs: []string{"financial-authority:issuer"},
+			},
+		},
+	)
+
+	normalizeApplicationOwnedSectionAuthority(sections, claims)
+
+	if len(sections[0].ClaimRefs) != 8 ||
+		!slices.Contains(sections[0].ClaimRefs, "business-1") ||
+		!slices.Contains(sections[0].ClaimRefs, "accounting-1") ||
+		!slices.Contains(sections[0].ClaimRefs, "financial-1") {
+		t.Fatalf("evidence authority was not balanced across active specialists: %+v", sections[0])
+	}
+	if sections[0].Title != "Evidence" || sections[0].Content != canonicalEvidenceSection {
+		t.Fatalf("model-authored evidence prose was not replaced: %+v", sections[0])
 	}
 }
 

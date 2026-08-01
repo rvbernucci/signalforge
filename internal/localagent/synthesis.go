@@ -640,6 +640,7 @@ const (
 	transmissionBoundaryDisclosure = "These mechanisms are scenario-conditioned pathways, not estimates of observed causality."
 	marketBoundaryDisclosure       = "Price co-movement, correlation, and event-window timing do not by themselves establish causality."
 	noAuthorizedAssumptions        = "No explicit assumptions were supplied or authorized; any assumption-dependent conclusion remains unavailable."
+	canonicalEvidenceSection       = "Evidence is limited to the approved, source-backed findings attached to this section. Missing evidence and unavailable comparisons remain disclosed rather than inferred."
 )
 
 func appendEpistemicBoundaryDisclosures(sections []contracts.AnswerSection) {
@@ -1054,14 +1055,14 @@ func repairApplicationOwnedSectionSet(
 				Content:     "Application-authorized limitations are listed below.",
 			}
 		case "evidence":
-			refs := supportedSynthesisClaimIDs(claims, 8)
+			refs := balancedSupportedSynthesisClaimIDs(claims, 8)
 			if len(refs) == 0 {
 				return errors.New("cannot reconstruct evidence section without supported authority")
 			}
 			firstByType[sectionType] = answerSectionDraft{
 				SectionType: sectionType,
 				Title:       "Evidence",
-				Content:     "Approved evidence and deterministic authority define the factual boundary of this answer.",
+				Content:     canonicalEvidenceSection,
 				ClaimRefs:   refs,
 			}
 		default:
@@ -1075,46 +1076,58 @@ func repairApplicationOwnedSectionSet(
 	return validateRequestedSectionSet(body.Sections, requested)
 }
 
-func supportedSynthesisClaimIDs(claims []synthesisClaimView, limit int) []string {
+// Evidence is an application-owned section. Select one supported claim from each active
+// specialist before filling the remaining bounded slots so packet order cannot silently erase
+// a later specialist's authority.
+func balancedSupportedSynthesisClaimIDs(claims []synthesisClaimView, limit int) []string {
+	if limit <= 0 {
+		return nil
+	}
 	result := make([]string, 0, limit)
-	for _, claim := range claims {
+	selected := make(map[string]bool, limit)
+	seenRoles := make(map[string]bool)
+	supported := func(claim synthesisClaimView) bool {
 		finding := claim.Finding
-		if len(finding.EvidenceRefs)+len(finding.CalculationRefs)+len(finding.NumericalRefs) == 0 {
+		return len(finding.EvidenceRefs)+len(finding.CalculationRefs)+len(finding.NumericalRefs) > 0
+	}
+	appendClaim := func(claim synthesisClaimView) {
+		claimID := claim.Finding.ClaimID
+		if claimID == "" || selected[claimID] || len(result) == limit {
+			return
+		}
+		selected[claimID] = true
+		result = append(result, claimID)
+	}
+	for _, claim := range claims {
+		if !supported(claim) || seenRoles[claim.SpecialistRole] {
 			continue
 		}
-		result = append(result, finding.ClaimID)
-		if len(result) == limit {
-			break
+		seenRoles[claim.SpecialistRole] = true
+		appendClaim(claim)
+	}
+	for _, claim := range claims {
+		if !supported(claim) {
+			continue
 		}
+		appendClaim(claim)
 	}
 	return result
 }
 
-// Evidence, assumptions, and limitations are application-owned presentation sections. Preserve
-// model-selected evidence claims only when they carry real authority, and bind a supported fallback
-// when the model selected hypotheses alone. Analytical sections remain entirely model-owned.
+// Evidence, assumptions, and limitations are application-owned presentation sections. Use a
+// balanced, source-backed authority set and canonical prose rather than retaining model-authored
+// text with semantically unrelated references. Analytical sections remain entirely model-owned.
 func normalizeApplicationOwnedSectionAuthority(
 	sections []answerSectionDraft,
 	claims []synthesisClaimView,
 ) {
-	supported := supportedSynthesisClaimIDs(claims, 8)
-	supportedSet := make(map[string]bool, len(supported))
-	for _, claimID := range supported {
-		supportedSet[claimID] = true
-	}
+	supported := balancedSupportedSynthesisClaimIDs(claims, 8)
 	for index := range sections {
 		switch sections[index].SectionType {
 		case "evidence":
-			filtered := make([]string, 0, len(sections[index].ClaimRefs))
-			for _, claimID := range sections[index].ClaimRefs {
-				if supportedSet[claimID] {
-					filtered = append(filtered, claimID)
-				}
-			}
-			if len(filtered) == 0 {
-				filtered = append(filtered, supported...)
-			}
-			sections[index].ClaimRefs = dedupeStrings(filtered)
+			sections[index].Title = "Evidence"
+			sections[index].Content = canonicalEvidenceSection
+			sections[index].ClaimRefs = append([]string(nil), supported...)
 		case "assumptions", "limitations":
 			sections[index].ClaimRefs = nil
 		}
