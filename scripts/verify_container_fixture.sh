@@ -53,22 +53,31 @@ if [[ -n "${SIGNALFORGE_EXPECTED_VERSION:-}" ]]; then
 fi
 
 docker volume create "$volume" >/dev/null
-docker run -d \
-  --name "$container" \
-  --network none \
-  --read-only \
-  --tmpfs /tmp:size=64m,mode=1777 \
-  --cap-drop ALL \
-  --security-opt no-new-privileges \
-  --volume "$volume:/var/lib/signalforge" \
-  "$image" >/dev/null
 
-for _ in $(seq 1 30); do
-  if docker exec "$container" wget -q -O /tmp/health.json http://127.0.0.1:8080/health/ready; then
-    break
-  fi
-  sleep 1
-done
+start_container() {
+  docker run -d \
+    --name "$container" \
+    --network none \
+    --read-only \
+    --tmpfs /tmp:size=64m,mode=1777 \
+    --cap-drop ALL \
+    --security-opt no-new-privileges \
+    --volume "$volume:/var/lib/signalforge" \
+    "$image" >/dev/null
+}
+
+wait_ready() {
+  for _ in $(seq 1 30); do
+    if docker exec "$container" wget -q -O /tmp/health.json http://127.0.0.1:8080/health/ready; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+start_container
+wait_ready
 
 health="$(docker exec "$container" cat /tmp/health.json)"
 jq -e '.status == "ready" and .mode == "fixture" and .dependencies.model_runtime == "not_required"' <<<"$health" >/dev/null
@@ -87,7 +96,7 @@ docker exec "$container" sh -ec '
 
 run_view="$(docker exec "$container" wget -q -O - \
   --header='Content-Type: application/json' \
-  --post-data='{"question":"Compare Microsoft and NVIDIA.","scenario":{}}' \
+  --post-data='{"question":"Compare Microsoft and NVIDIA.","scenario":{},"retain":true}' \
   http://127.0.0.1:8080/api/v1/runs)"
 run_id="$(jq -er '.run_id' <<<"$run_view")"
 
@@ -96,7 +105,8 @@ for _ in $(seq 1 30); do
   [[ "$(jq -r '.status' <<<"$result")" == "completed" ]] && break
   sleep 1
 done
-jq -e '.status == "completed" and .result.status == "completed"' <<<"$result" >/dev/null
+jq -e '.status == "completed" and .result.status == "completed" and .retention.status == "saved"' <<<"$result" >/dev/null
+case_id="$(jq -er '.retention.case_id' <<<"$result")"
 
 lineage="$(docker exec "$container" wget -q -O - "http://127.0.0.1:8080/api/v1/runs/$run_id/intelligence")"
 jq -e '.schema_version == "signalforge/intelligence-lineage/v1" and .capture.status == "disabled" and .release.status == "released"' <<<"$lineage" >/dev/null
@@ -104,10 +114,26 @@ jq -e '.schema_version == "signalforge/intelligence-lineage/v1" and .capture.sta
 metrics="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/metrics)"
 grep -q '^signalforge_journeys_total' <<<"$metrics"
 
+case_index="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/api/v1/cases)"
+jq -e --arg case_id "$case_id" '.cases | any(.case_id == $case_id)' <<<"$case_index" >/dev/null
+
+docker rm -f "$container" >/dev/null
+start_container
+wait_ready
+
+recreated_case_index="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/api/v1/cases)"
+jq -e --arg case_id "$case_id" '.cases | any(.case_id == $case_id)' <<<"$recreated_case_index" >/dev/null
+
+docker exec "$container" wget -q -O /tmp/delete.json \
+  --method=DELETE "http://127.0.0.1:8080/api/v1/cases/$case_id"
+jq -e '.status == "deleted"' <<<"$(docker exec "$container" cat /tmp/delete.json)" >/dev/null
+post_delete_index="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/api/v1/cases)"
+jq -e --arg case_id "$case_id" '.cases | all(.case_id != $case_id)' <<<"$post_delete_index" >/dev/null
+
 if grep -R -E 'FIREWORKS_API_KEY|hf_[A-Za-z0-9]{20,}|Bearer [A-Za-z0-9_-]{20,}' \
   Dockerfile compose.yaml deploy container.env.example; then
   echo "Potential credential embedded in container configuration" >&2
   exit 1
 fi
 
-echo "SignalForge linux/amd64 fixture image passed network-disabled clean-room verification"
+echo "SignalForge linux/amd64 fixture image passed network-disabled clean-room and persistent-volume recreation verification"
