@@ -35,9 +35,12 @@ class RadeonManifestTests(unittest.TestCase):
         self.assertEqual(
             selection.manifest["application"]["image"],
             "ghcr.io/rvbernucci/signalforge@sha256:"
-            "2537c832a43b3e71e2352d18ae959803c2b2a218133517e96c4526ee0aeb3ab3",
+            "79a874b5468b624978d65f793b67282808d94ac6a196d289588c057203d6e77e",
         )
-        self.assertEqual(selection.manifest["application"]["source_commit"], "ce4f2cabf0981bec09cf80c805864515f42fa41c")
+        self.assertEqual(
+            selection.manifest["application"]["source_commit"],
+            "b0b5b1898ffc29a56d3c155a208646c1dac62ac4",
+        )
 
     def test_conflicting_cli_environment_and_generated_authorities_fail(self) -> None:
         with self.assertRaisesRegex(MODULE.ManifestError, "conflicting appliance manifest"):
