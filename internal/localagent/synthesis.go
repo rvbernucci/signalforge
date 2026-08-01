@@ -864,8 +864,14 @@ const (
 	receiptInspectionNextAction    = "Inspect the validated deterministic receipts and period definitions before using the rendered measures."
 )
 
-var staleReceiptResolutionActionPattern = regexp.MustCompile(
-	`(?i)\b(?:resolve|obtain|generate)\s+(?:the\s+)?(?:validated\s+)?deterministic\s+(?:calculation\s+)?receipts?\b`,
+var (
+	staleNumericalBoundaryPattern = regexp.MustCompile(
+		`(?i)\b(?:numerically\s+silent|numerical\s+silence)\b|` +
+			`\b(?:exact|specific)\s+(?:metric\s+)?numerical\s+values?\b.{0,96}\b(?:withheld|unavailable|missing|absent)\b`,
+	)
+	staleReceiptResolutionActionPattern = regexp.MustCompile(
+		`(?i)\b(?:resolve|obtain|generate|retrieve)\s+(?:the\s+)?(?:validated\s+)?deterministic\s+(?:calculation\s+)?receipts?\b`,
+	)
 )
 
 // The model remains numerically silent, but the final answer does not: Go may append values from
@@ -877,7 +883,7 @@ func normalizeRenderedNumericalBoundary(body *finalBody, material synthesisPromp
 	}
 	limitations := make([]string, 0, len(body.Limitations))
 	for _, limitation := range body.Limitations {
-		if strings.Contains(strings.ToLower(limitation), "numerically silent") {
+		if staleNumericalBoundaryPattern.MatchString(limitation) {
 			limitations = appendUnique(limitations, receiptBackedNumericalBoundary)
 			continue
 		}

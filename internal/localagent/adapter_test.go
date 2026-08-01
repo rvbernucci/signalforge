@@ -1909,10 +1909,12 @@ func TestReceiptBackedRendererReconcilesStaleNumericalSilenceProse(t *testing.T)
 	body := finalBody{
 		Limitations: []string{
 			"Specific magnitudes remain numerically silent.",
+			"Exact numerical values for revenue and operating income are withheld.",
+			"Specific metric values are unavailable due to numerical silence in the provided context.",
 			"Source scope is bounded.",
 		},
 		NextActions: []string{
-			"Resolve deterministic receipts before relying on the measures.",
+			"Retrieve deterministic receipts containing exact numerical values.",
 		},
 	}
 	material := synthesisPromptInput{Receipts: []synthesisReceiptView{{

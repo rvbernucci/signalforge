@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -28,18 +29,35 @@ class RadeonManifestTests(unittest.TestCase):
         self.assertEqual(selection.reference, "deploy/radeon/appliance-manifest.json")
 
     def test_explicit_candidate_selects_only_candidate_digest(self) -> None:
+        manifest_path = ROOT / "deploy/radeon/appliance-manifest.vnext.json"
+        expected_manifest = json.loads(manifest_path.read_text())
         selection = MODULE.select_manifest(
-            ROOT / "deploy/radeon/appliance-manifest.vnext.json",
+            manifest_path,
             environment={},
         )
         self.assertEqual(
             selection.manifest["application"]["image"],
-            "ghcr.io/rvbernucci/signalforge@sha256:"
-            "79a874b5468b624978d65f793b67282808d94ac6a196d289588c057203d6e77e",
+            expected_manifest["application"]["image"],
         )
         self.assertEqual(
             selection.manifest["application"]["source_commit"],
-            "b0b5b1898ffc29a56d3c155a208646c1dac62ac4",
+            expected_manifest["application"]["source_commit"],
+        )
+        self.assertRegex(
+            selection.manifest["application"]["image"],
+            r"^ghcr\.io/rvbernucci/signalforge@sha256:[0-9a-f]{64}$",
+        )
+        self.assertRegex(
+            selection.manifest["application"]["source_commit"],
+            r"^[0-9a-f]{40}$",
+        )
+        self.assertEqual(
+            selection.sha256,
+            hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+        )
+        self.assertEqual(
+            selection.reference,
+            "deploy/radeon/appliance-manifest.vnext.json",
         )
 
     def test_conflicting_cli_environment_and_generated_authorities_fail(self) -> None:
