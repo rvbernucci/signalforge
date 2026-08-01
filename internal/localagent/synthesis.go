@@ -873,7 +873,7 @@ var (
 			`cannot\s+be\s+(?:published|provided|rendered|shown))\b`,
 	)
 	staleReceiptResolutionActionPattern = regexp.MustCompile(
-		`(?i)\b(?:resolve|obtain|generate|retrieve|fetch|load|access|extract)\b.{0,128}\b` +
+		`(?i)\b(?:resolve|obtain|generate|retrieve|fetch|load|access|extract|render)\b.{0,128}\b` +
 			`(?:deterministic\s+(?:(?:calculation|numerical)\s+)?(?:receipts?|values?)|` +
 			`referenced\s+(?:calculation\s+)?receipts?)\b`,
 	)

@@ -1918,6 +1918,7 @@ func TestReceiptBackedRendererReconcilesStaleNumericalSilenceProse(t *testing.T)
 		NextActions: []string{
 			"Retrieve deterministic receipts containing exact numerical values.",
 			"Retrieve deterministic numerical values from the referenced receipts.",
+			"Render deterministic receipts for revenue growth, operating margin, and cash conversion.",
 			"Review source comparability before making a peer conclusion.",
 		},
 	}
