@@ -68,6 +68,38 @@ func TestStoreRoundTripExportAndSecureDelete(t *testing.T) {
 	}
 }
 
+func TestStoreCanDeletePersistedCaseAfterReopen(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "cases.db")
+	store, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	projection := loadProjection(t)
+	if err := store.Save(context.Background(), projection, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	store, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	if _, _, err := store.Get(context.Background(), projection.CaseID); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := store.Delete(ctx, projection.CaseID); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := store.Get(context.Background(), projection.CaseID); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("deleted reopened case error = %v", err)
+	}
+}
+
 func TestStoreRejectsInvalidProjection(t *testing.T) {
 	store, err := Open(":memory:")
 	if err != nil {

@@ -126,8 +126,11 @@ jq -e --arg case_id "$case_id" '.cases | any(.case_id == $case_id)' <<<"$recreat
 
 delete_response="$(
   {
-    printf 'DELETE /api/v1/cases/%s HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n' "$case_id" \
-      | docker exec -i "$container" nc -w 5 127.0.0.1 8080
+    {
+      printf 'DELETE /api/v1/cases/%s HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n' "$case_id"
+      # Keep stdin open until the server answers; an immediate EOF cancels Go's request context.
+      sleep 1
+    } | docker exec -i "$container" nc -w 5 127.0.0.1 8080
   } || true
 )"
 delete_status="${delete_response%%$'\r\n'*}"
