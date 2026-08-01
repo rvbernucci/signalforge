@@ -125,9 +125,16 @@ recreated_case_index="$(docker exec "$container" wget -q -O - http://127.0.0.1:8
 jq -e --arg case_id "$case_id" '.cases | any(.case_id == $case_id)' <<<"$recreated_case_index" >/dev/null
 
 delete_response="$(
-  printf 'DELETE /api/v1/cases/%s HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n' "$case_id" \
-    | docker exec -i "$container" nc 127.0.0.1 8080
+  {
+    printf 'DELETE /api/v1/cases/%s HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n' "$case_id" \
+      | docker exec -i "$container" nc -w 5 127.0.0.1 8080
+  } || true
 )"
+delete_status="${delete_response%%$'\r\n'*}"
+[[ "$delete_status" =~ ^HTTP/1\.[01]\ 200\  ]] || {
+  echo "Case deletion returned an unexpected HTTP status: ${delete_status:-no response}" >&2
+  exit 1
+}
 delete_body="${delete_response#*$'\r\n\r\n'}"
 jq -e '.status == "deleted"' <<<"$delete_body" >/dev/null
 post_delete_index="$(docker exec "$container" wget -q -O - http://127.0.0.1:8080/api/v1/cases)"
