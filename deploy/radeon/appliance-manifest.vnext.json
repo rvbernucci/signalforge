@@ -1,11 +1,11 @@
 {
   "schema_version": "signalforge/radeon-appliance/v2",
-  "appliance_version": "sprint41-vnext-365136c",
+  "appliance_version": "sprint41-vnext-99f4473",
   "platform": "linux/amd64",
   "application": {
-    "image": "ghcr.io/rvbernucci/signalforge@sha256:7e6dc4278ae11900df4daa01b85ca1560229fb552709b479748cd0f1e0ef4b70",
-    "release": "sha-365136c",
-    "source_commit": "365136cc5f7cd399fff04a0b85ca37a38aead070"
+    "image": "ghcr.io/rvbernucci/signalforge@sha256:72b37e1ab790a778f211faa7b0801a5a9d74b3b1f8176e76acad77a55c80c0f6",
+    "release": "sha-99f4473",
+    "source_commit": "99f44735ac309f685a35a80f0cc7f637c05f4c76"
   },
   "runtime": {
     "image": "rocm/llama.cpp@sha256:be175932c3c96e882dfbc7e20e0e834f58c89c2925f48b222837ee929dfc47ee",
