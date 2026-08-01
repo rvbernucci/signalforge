@@ -375,6 +375,7 @@ func (server *Server) handleGoldenCase(writer http.ResponseWriter, _ *http.Reque
 }
 
 func (server *Server) handleListCases(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
 	if permissions.Authorize(permissions.AuthorityUser, permissions.CaseRead) != nil {
 		writeProblem(writer, http.StatusForbidden, "case_read_denied")
 		return
@@ -397,6 +398,7 @@ func (server *Server) handleListCases(writer http.ResponseWriter, request *http.
 }
 
 func (server *Server) handleGetCase(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
 	if permissions.Authorize(permissions.AuthorityUser, permissions.CaseRead) != nil {
 		writeProblem(writer, http.StatusForbidden, "case_read_denied")
 		return
@@ -421,6 +423,7 @@ func (server *Server) handleGetCase(writer http.ResponseWriter, request *http.Re
 }
 
 func (server *Server) handleExportCase(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
 	if permissions.Authorize(permissions.AuthorityUser, permissions.CaseExport) != nil {
 		writeProblem(writer, http.StatusForbidden, "case_export_denied")
 		return
@@ -446,6 +449,7 @@ func (server *Server) handleExportCase(writer http.ResponseWriter, request *http
 }
 
 func (server *Server) handleDeleteCase(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
 	if permissions.Authorize(permissions.AuthorityUser, permissions.CaseDelete) != nil {
 		writeProblem(writer, http.StatusForbidden, "case_delete_denied")
 		return

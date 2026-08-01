@@ -30,12 +30,22 @@ export function MemoryControls({ available, retain, retention, open, onRetain, o
         </div>
         <button className="library-button" aria-label="Open saved cases" disabled={!available} onClick={onOpen}>Case library <ArrowIcon /></button>
       </section>
-      <CaseLibrary open={open} onClose={onClose} onLoad={onLoad} />
+      <CaseLibrary
+        open={open}
+        refreshKey={retention?.case_id ?? retention?.status ?? "not_requested"}
+        onClose={onClose}
+        onLoad={onLoad}
+      />
     </>
   );
 }
 
-function CaseLibrary({ open, onClose, onLoad }: Pick<Props, "open" | "onClose" | "onLoad">) {
+function CaseLibrary({
+  open,
+  refreshKey,
+  onClose,
+  onLoad
+}: Pick<Props, "open" | "onClose" | "onLoad"> & { refreshKey: string }) {
   const [items, setItems] = useState<CaseSummary[]>([]);
   const [failure, setFailure] = useState("");
   const [pendingDelete, setPendingDelete] = useState("");
@@ -43,9 +53,19 @@ function CaseLibrary({ open, onClose, onLoad }: Pick<Props, "open" | "onClose" |
 
   useEffect(() => {
     if (!open) return;
+    let active = true;
     setFailure("");
-    void listCases().then(setItems).catch(() => setFailure("The local case index is temporarily unavailable."));
-  }, [open]);
+    void listCases()
+      .then((nextItems) => {
+        if (active) setItems(nextItems);
+      })
+      .catch(() => {
+        if (active) setFailure("The local case index is temporarily unavailable.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [open, refreshKey]);
 
   async function inspect(caseID: string) {
     try {

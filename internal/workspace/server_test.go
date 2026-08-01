@@ -675,12 +675,14 @@ func TestRetentionIsOptInAndSupportsInspectExportDelete(t *testing.T) {
 	assertRetentionEvents(t, server, saved.RunID, []string{"requested", "approved", "saved"})
 
 	list := getRaw(t, httpServer.URL+"/api/v1/cases")
-	if list.StatusCode != http.StatusOK || !strings.Contains(readBody(t, list), saved.Retention.CaseID) {
+	if list.StatusCode != http.StatusOK ||
+		list.Header.Get("Cache-Control") != "no-store" ||
+		!strings.Contains(readBody(t, list), saved.Retention.CaseID) {
 		t.Fatal("saved case was not listed")
 	}
 	inspect := getRaw(t, httpServer.URL+"/api/v1/cases/"+saved.Retention.CaseID)
-	if inspect.StatusCode != http.StatusOK {
-		t.Fatalf("inspect status = %d", inspect.StatusCode)
+	if inspect.StatusCode != http.StatusOK || inspect.Header.Get("Cache-Control") != "no-store" {
+		t.Fatalf("inspect status = %d, cache control = %q", inspect.StatusCode, inspect.Header.Get("Cache-Control"))
 	}
 	var inspected struct {
 		Case Projection `json:"case"`
@@ -695,8 +697,11 @@ func TestRetentionIsOptInAndSupportsInspectExportDelete(t *testing.T) {
 		t.Fatal("saved case did not preserve a valid signed execution plan")
 	}
 	exported := getRaw(t, httpServer.URL+"/api/v1/cases/"+saved.Retention.CaseID+"/export")
-	if exported.StatusCode != http.StatusOK || !strings.Contains(exported.Header.Get("Content-Disposition"), saved.Retention.CaseID) {
-		t.Fatalf("export status = %d, disposition = %q", exported.StatusCode, exported.Header.Get("Content-Disposition"))
+	if exported.StatusCode != http.StatusOK ||
+		exported.Header.Get("Cache-Control") != "no-store" ||
+		!strings.Contains(exported.Header.Get("Content-Disposition"), saved.Retention.CaseID) {
+		t.Fatalf("export status = %d, cache control = %q, disposition = %q",
+			exported.StatusCode, exported.Header.Get("Cache-Control"), exported.Header.Get("Content-Disposition"))
 	}
 	var export CaseExport
 	if err := json.NewDecoder(exported.Body).Decode(&export); err != nil {
