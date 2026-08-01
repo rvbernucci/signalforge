@@ -1912,10 +1912,13 @@ func TestReceiptBackedRendererReconcilesStaleNumericalSilenceProse(t *testing.T)
 			"Exact numerical values for revenue and operating income are withheld.",
 			"Specific metric values are unavailable due to numerical silence in the provided context.",
 			"Specific numerical values for growth, margin, and cash conversion are not present in the numerical_context.",
+			"Metric values are not provided in the authorized material.",
 			"Source scope is bounded.",
 		},
 		NextActions: []string{
 			"Retrieve deterministic receipts containing exact numerical values.",
+			"Retrieve deterministic numerical values from the referenced receipts.",
+			"Review source comparability before making a peer conclusion.",
 		},
 	}
 	material := synthesisPromptInput{Receipts: []synthesisReceiptView{{
@@ -1930,7 +1933,10 @@ func TestReceiptBackedRendererReconcilesStaleNumericalSilenceProse(t *testing.T)
 	}) {
 		t.Fatalf("stale numerical boundary was not reconciled: %+v", body.Limitations)
 	}
-	if !slices.Equal(body.NextActions, []string{receiptInspectionNextAction}) {
+	if !slices.Equal(body.NextActions, []string{
+		receiptInspectionNextAction,
+		"Review source comparability before making a peer conclusion.",
+	}) {
 		t.Fatalf("stale receipt action was not reconciled: %+v", body.NextActions)
 	}
 }
