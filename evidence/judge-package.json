@@ -1,119 +1,51 @@
 {
   "schema_version": "signalforge/judge-package/v1",
   "status": "public_artifacts_verified",
-  "evidence_date": "2026-07-27",
-  "artifact_release": "sprint36-championship-v1",
-  "release": {
-    "version": "v1.1.1",
-    "source_commit": "bc9c64746589e79766b2b18226ebb9d1d87d2585",
-    "image": "ghcr.io/rvbernucci/signalforge:v1.1.1",
-    "image_index_digest": "sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b",
-    "linux_amd64_manifest_digest": "sha256:a8d35b2bb315544cb43319b78dcf16ecec0316aa13f279f3774bba6ee9e496a6"
-  },
+  "candidate_scope": "current_source_candidate",
+  "release_authority": "not_granted",
   "artifacts": {
-    "project_specification": {
-      "path": "output/pdf/SignalForge-Project-Specification.pdf",
-      "sha256": "bec9f88828b766045d62d3ae33e865a38f16b989385c8999b260e0cd3c89c123",
-      "pages": 6,
-      "visual_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf"
+    "readme": {
+      "path": "README.md",
+      "sha256": "260764cf80e289c96ebcf67c13722d18c02e40acd474ba0377c1f8c59c928ed8"
     },
-    "judge_deck": {
-      "path": "output/presentation/SignalForge-Judge-Deck.pptx",
-      "sha256": "046714f749f986f70b6870c3b21e673bf6633c6d3320c8c5e5cafe087affe3d3",
-      "slides": 6,
-      "external_render_review": "passed",
-      "template_fidelity_gate": "passed",
-      "canvas_overflow_gate": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Judge-Deck.pptx"
+    "judge_guide": {
+      "path": "JUDGES.md",
+      "sha256": "fac0042a9944632d2d36912876f02c9e6091ba0c1590ff639358811aa560955a"
+    },
+    "project_specification_source": {
+      "path": "docs/project-specification.md",
+      "sha256": "4f66bce7e653f167fe348533876d19bf0009e175ba51d5fbf9110b7bc79d1125"
+    },
+    "track2_compliance": {
+      "path": "docs/track2-compliance.md",
+      "sha256": "3f3ed7daf35f879fe66d72e15471865e925389b6f3fc0633120ce61151cf0d22"
     },
     "architecture": {
       "path": "docs/architecture.svg",
-      "sha256": "b32da58531d1854499b5af479e360205db168f24fa8b6deb42e18f3270db66bc",
-      "visual_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/architecture.svg"
+      "sha256": "b32da58531d1854499b5af479e360205db168f24fa8b6deb42e18f3270db66bc"
     },
-    "demo_script": {
-      "path": "docs/demo-script.md",
-      "sha256": "ae1a907c82ba4bff8db7b78a151c117543d7d2d8b37d8bf6200fbf9c80fb21c5",
-      "final_duration_seconds": 284.970,
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/demo-script.md"
+    "current_evaluation": {
+      "path": "evidence/championship-evaluation.json",
+      "sha256": "a30ae9b5f9658aff3272fbe15a09f08b87a9ec1728d328c8082b9e9685386a19"
     },
-    "demo_voiceover": {
-      "path": "docs/demo-voiceover.txt",
-      "sha256": "80bc6150342de84a1a54543d54b79d8db92ac05b53da24b157e93b724e7dac56",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/demo-voiceover.txt"
+    "current_radeon_runtime": {
+      "path": "evidence/championship-radeon-runtime.json",
+      "sha256": "d57d577649eacf37660ec47e856e6d94ec5445ccc478e76739ece325dafbc1f4"
     },
-    "demo_video": {
-      "path": "output/video/SignalForge-Radeon-Demo.mp4",
-      "sha256": "32a9383b951b844bf4f310c777a3f5d289300b6717f932c80292cd81fbc0d82e",
-      "duration_seconds": 284.970,
-      "resolution": "1920x1080",
-      "video_codec": "H.264",
-      "audio_codec": "AAC",
-      "visual_review": "passed",
-      "audio_review": "passed",
-      "privacy_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4"
+    "current_product_check": {
+      "path": "evidence/championship-product-check.json",
+      "sha256": "2b5e48039b2470d36b5fbbb3522d6847514762f48a50711041e60d4730357bb4"
     },
-    "sprint36_demo_journey": {
-      "path": "evidence/sprint36-radeon-demo-journey.json",
-      "sha256": "5c80d7d241f68871afbc2bc547ec30d7ab24e9ce46bd84e5d7075d48f88655a4",
-      "privacy_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-radeon-demo-journey.json"
+    "accounting_review": {
+      "path": "docs/accounting-authority/technology20-accounting-professional-review.md",
+      "sha256": "8f0bf2f4218f10edb20e0915bd657bc5b243d466fbf18e14f24173f99712d1df"
     },
-    "sprint36_local_journey": {
-      "path": "evidence/sprint36-radeon-local-journey.json",
-      "sha256": "a7f05d89b58524ca0970bd343def94267426cf9017ac293c245fa281e69d51bf",
-      "privacy_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-radeon-local-journey.json"
-    },
-    "sprint36_hybrid_journey": {
-      "path": "evidence/sprint36-radeon-hybrid-journey.json",
-      "sha256": "8c5807315534202d785f7ee740fc3c3351ce9c5d1c36f44171476b61e933621e",
-      "privacy_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-radeon-hybrid-journey.json"
-    },
-    "sprint36_resilience": {
-      "path": "evidence/sprint36-radeon-resilience.json",
-      "sha256": "d4eef8c93ebede91a92bbe1d30d772a94eac3cd1a716f6898663d5bf28d5aaf6",
-      "privacy_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-radeon-resilience.json"
-    },
-    "sprint36_exact_release_radeon_journey": {
-      "path": "evidence/sprint36-exact-release-radeon-journey.json",
-      "sha256": "948a6b49ead427144639325320ce34f8fd016b191958b4bf2172512aa74df0aa",
-      "privacy_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/blob/main/evidence/sprint36-exact-release-radeon-journey.json"
-    },
-    "workspace_capture": {
-      "path": "docs/assets/sprint36-live-hybrid-success.png",
-      "sha256": "e4a45840375895a0454a1d0c5605063ed48985760aab646dd6885489c2f48e26",
-      "visual_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-live-hybrid-success.png"
-    },
-    "mission_control_capture": {
-      "path": "docs/assets/sprint36-live-hybrid-mission-control.png",
-      "sha256": "f61f263f8cb4727fbc7eceac54bc44d6f14fff90c60ad586090b94c9900e5581",
-      "visual_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-live-hybrid-mission-control.png"
-    },
-    "deterministic_receipt_capture": {
-      "path": "docs/assets/sprint36-candidate-dcf-receipt.png",
-      "sha256": "327260b861740fa1e4ad122944513587b904aaee1af985c04db46f33709b60a8",
-      "visual_review": "passed",
-      "public_url": "https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/sprint36-candidate-dcf-receipt.png"
+    "accounting_decision": {
+      "path": "fixtures/productscope/accounting-authority/technology20-accounting-professional-decision.json",
+      "sha256": "dc0318ece20f36c37e4e0fe92cbe4f6a79024e9f26bdc29fd6870ebf8dd96e69"
     }
   },
-  "claim_authority": "Quantitative claims are bounded to the hash-linked public evidence and remain subject to the stated workload and review limitations.",
-  "public_release_page": "https://github.com/rvbernucci/signalforge/releases/tag/sprint36-championship-v1",
-  "public_link_verification": {
-    "status": "passed",
-    "verified_at": "2026-07-27T20:01:51Z",
-    "authentication": "none",
-    "assets_downloaded": 19,
-    "all_hashes_matched": true,
-    "sha256sums_sha256": "946138157d321047b58b39e7402bea3fb1ac450f0b6ba568ce58c2ad1852f2a0"
-  },
+  "claim_authority": "Claims are limited to the hash-bound public artifacts and their stated evaluation boundaries.",
+  "privacy_boundary": "No prompts, answers, source bodies, credentials, private traces, hidden reasoning, or sealed labels are included.",
   "pending": []
 }

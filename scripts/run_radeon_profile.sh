@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 profile_id="${1:-}"
 benchmark_bin="${SIGNALFORGE_BENCHMARK_BIN:-$repo_root/bin/signalforge-benchmark}"
-output_root="${SIGNALFORGE_OPTIMIZATION_OUTPUT_ROOT:-$repo_root/evidence/runs/sprint11}"
+output_root="${SIGNALFORGE_OPTIMIZATION_OUTPUT_ROOT:-$repo_root/var/benchmarks/radeon}"
 output_dir="$output_root/$profile_id"
 server_log="$output_dir/server.log"
 server_pid_file="$output_dir/server.pid"

@@ -2,82 +2,64 @@
   "schema_version": "signalforge/release-checklist/v1",
   "items": [
     {
+      "check_id": "current-product-authority",
+      "required": true,
+      "status": "passed",
+      "evidence": "fixtures/productscope/technology20-catalog.json; fixtures/productscope/technology20-financial-summary.json; evidence/technology20-promotion-manifest.json"
+    },
+    {
+      "check_id": "current-evaluation-aggregated",
+      "required": true,
+      "status": "passed",
+      "evidence": "evidence/championship-evaluation.json; evidence/championship-radeon-runtime.json; evidence/championship-product-check.json"
+    },
+    {
+      "check_id": "accounting-authority-reviewed",
+      "required": true,
+      "status": "passed",
+      "evidence": "docs/accounting-authority/technology20-accounting-professional-review.md; fixtures/productscope/accounting-authority/technology20-accounting-professional-decision.json"
+    },
+    {
       "check_id": "public-repository-clean",
       "required": true,
       "status": "passed",
-      "evidence": "evidence/release-audit.json; source commit bc9c64746589e79766b2b18226ebb9d1d87d2585; scripts/verify.sh exit 0"
+      "evidence": "evidence/release-audit.json; scripts/verify.sh exit 0 on the current candidate"
     },
     {
-      "check_id": "ci-green",
+      "check_id": "ci-green-on-frozen-source",
       "required": true,
-      "status": "passed",
-      "evidence": "https://github.com/rvbernucci/signalforge/actions/runs/30299469455; bc9c64746589e79766b2b18226ebb9d1d87d2585"
+      "status": "pending",
+      "evidence": "Complete after the source candidate is committed and GitHub Actions passes."
     },
     {
-      "check_id": "all-public-claims-supported",
+      "check_id": "final-linux-amd64-image",
       "required": true,
-      "status": "passed",
-      "evidence": "evidence/public-claims.json; signalforge-release-check"
+      "status": "pending",
+      "evidence": "Complete after the frozen source is published by immutable GHCR digest."
     },
     {
-      "check_id": "local-radeon-inference-recorded",
+      "check_id": "exact-image-radeon-readback",
       "required": true,
-      "status": "passed",
-      "evidence": "evidence/sprint36-exact-release-radeon-journey.json; evidence/sprint36-release-attestation.json#exact_image_radeon_readback.hybrid_run"
+      "status": "pending",
+      "evidence": "Complete after a clean pull and bounded Radeon execution of the final digest."
     },
     {
-      "check_id": "golden-journey-recorded",
+      "check_id": "image-supply-chain",
       "required": true,
-      "status": "passed",
-      "evidence": "evidence/sprint36-radeon-demo-journey.json; evidence/sprint36-exact-release-radeon-journey.json; evidence/judge-package.json"
+      "status": "pending",
+      "evidence": "Complete after SBOM, provenance, vulnerability scan, and anonymous pull verification."
     },
     {
-      "check_id": "demo-video-public",
+      "check_id": "final-media-and-submission-links",
       "required": true,
-      "status": "passed",
-      "evidence": "evidence/judge-package.json#artifacts.demo_video"
+      "status": "pending",
+      "evidence": "Complete after PDF, deck, demo video, and submission URLs are bound to the final source identity."
     },
     {
-      "check_id": "project-documentation-public",
+      "check_id": "final-human-release-authority",
       "required": true,
-      "status": "passed",
-      "evidence": "evidence/judge-package.json#artifacts.project_specification"
-    },
-    {
-      "check_id": "source-and-model-licenses-reviewed",
-      "required": true,
-      "status": "passed",
-      "evidence": "LICENSE; NOTICE; THIRD_PARTY_NOTICES.md; /app/licenses in exact image; evidence/sprint36-release-attestation.json#human_authority"
-    },
-    {
-      "check_id": "secrets-scan-clean",
-      "required": true,
-      "status": "passed",
-      "evidence": "evidence/release-audit.json#checks.secret_scan"
-    },
-    {
-      "check_id": "image-supply-chain-clean",
-      "required": true,
-      "status": "passed",
-      "evidence": "https://github.com/rvbernucci/signalforge/actions/runs/30299889090; SBOM attached; SLSA provenance verified; Trivy HIGH/CRITICAL passed"
-    },
-    {
-      "check_id": "exact-image-public-readback",
-      "required": true,
-      "status": "passed",
-      "evidence": "ghcr.io/rvbernucci/signalforge@sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b; evidence/sprint36-release-attestation.json#exact_image_radeon_readback"
-    },
-    {
-      "check_id": "judge-assets-anonymous-readback",
-      "required": true,
-      "status": "passed",
-      "evidence": "https://github.com/rvbernucci/signalforge/releases/tag/sprint36-championship-v1; evidence/judge-package.json#public_link_verification"
-    },
-    {
-      "check_id": "sg-05-release-freeze",
-      "required": true,
-      "status": "passed",
-      "evidence": "evidence/sprint36-release-attestation.json; ghcr.io/rvbernucci/signalforge@sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b; https://github.com/rvbernucci/signalforge/actions/runs/30299889090"
+      "status": "pending",
+      "evidence": "Current aggregate artifacts explicitly retain final_authority=not_granted."
     }
   ]
 }

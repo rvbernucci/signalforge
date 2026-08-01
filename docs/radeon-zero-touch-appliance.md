@@ -1,330 +1,137 @@
 # Zero-Touch Radeon Appliance
 
-This guide is the canonical deployment path for a fresh AMD Radeon Cloud workspace. It requires
-no model, binary, configuration, dataset, or generated artifact to be copied from a Mac. Backend
-selection is automatic: Docker Compose is preferred when healthy; otherwise the current AMD
-OneClick image uses a pinned native ROCm path.
+## Goal
 
-## What The Appliance Starts
+A fresh AMD Radeon Cloud workspace should start SignalForge from this repository without copying
+artifacts from a developer machine, installing host packages, or downloading model weights at
+application startup.
 
-| Profile | Core path | External access after startup |
-|---|---|---|
-| `fixture` | Immutable image or verified native build and public fixture | None |
-| `radeon-local` | Verified app, Gemma cache, and AMD ROCm llama.cpp | None |
-| `championship` | Local path plus bounded organizer Radeon API specialists | Radeon API from the application service only |
-| `observability` | Optional Alloy, Prometheus, Loki, Tempo, and Grafana | No application egress is added |
+The appliance separates:
 
-The application does not download a model at startup. `model-init` is a separate, bounded phase
-that writes only to persistent storage. Local inference and the application remain blocked until
-the complete model passes size and SHA-256 verification and the runtime serves the expected model
-identity.
+- immutable application source and image;
+- separately licensed model hydration;
+- persistent runtime state;
+- runtime-only secrets; and
+- optional observability.
 
-## Fresh Workspace: Two Commands
+## Requirements
 
-Use the AMD OneClick base with persistent `/workspace` storage, SSH enabled, and this public
-repository on `main`. From the cloned repository:
+- AMD Radeon Cloud workspace with persistent `/workspace` storage;
+- `gfx1100` GPU devices available at `/dev/kfd` and `/dev/dri`;
+- Docker Compose or the supported native ROCm toolchain;
+- explicit Gemma license acceptance;
+- Hugging Face read token only when the verified model is not already cached; and
+- organizer Radeon API key only for the optional hybrid profile.
 
-```bash
-make radeon-bootstrap ACCEPT_GEMMA_LICENSE=yes
-make radeon-up
-```
-
-The default remains the accepted `v1.1.1` rollback. To exercise the separately promoted
-Technology 20 vNext candidate before final championship release, select its manifest explicitly
-for both commands:
+## Fresh Workspace
 
 ```bash
+git clone https://github.com/rvbernucci/signalforge.git
+cd signalforge
+
 make radeon-bootstrap \
   MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
+  BACKEND=auto \
   ACCEPT_GEMMA_LICENSE=yes
-make radeon-up MANIFEST=deploy/radeon/appliance-manifest.vnext.json
+
+make radeon-up \
+  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
+  BACKEND=auto
 ```
 
-The first successful preflight records the selected repository-relative path and SHA-256 under
-persistent state. A later command rejects a conflicting CLI, environment, or generated-state
-selection. It also rejects changed bytes, symbolic links, paths outside `deploy/radeon`, mutable
-image tags, and non-`linux/amd64` manifests before startup.
-
-The setup command:
-
-- selects `compose` only when Docker Engine and Compose are healthy, otherwise selects `native`;
-- verifies the native OneClick tools (`git`, `curl`, Python, Node/npm, CMake, Ninja, and `hipcc`)
-  but installs no host package;
-- detects `/dev/kfd`, the DRM render node, effective device group IDs, ROCm, GPU architecture,
-  VRAM, RAM, CPU, disk, and persistent storage;
-- asks for a Hugging Face read token through a hidden terminal prompt only when the pinned model is
-  absent;
-- stores credentials only under the ignored `.secrets/` directory;
-- records derived, non-secret environment values under persistent storage; and
-- writes a machine-readable preflight report without credential values.
-
-Before passing `ACCEPT_GEMMA_LICENSE=yes`, review and accept the
-[upstream Gemma terms](https://ai.google.dev/gemma/terms) for the Hugging Face account whose
-read token is supplied. The model is gated upstream and is not redistributed by SignalForge.
-
-`make radeon-up` then either pulls digest-pinned OCI images or hydrates the pinned native
-toolchain. Both paths reuse the same verified model cache, start the local model, verify `/health`
-and `/v1/models`, and start SignalForge. It prints:
-
-- the active profile;
-- the current startup phase;
-- safe service health;
-- immutable application, runtime, and model identities; and
-- the local workspace URL.
-
-The default workspace is <http://127.0.0.1:8080>.
-
-The vNext application admits one complete local research journey at a time by default while
-retaining up to four specialist model calls within the active journey. This shared gate prevents
-multiple user journeys from independently saturating the same four-slot Gemma runtime. A waiting
-journey remains cancellable and receives a full execution budget only after admission. Operators
-may change `--live-run-concurrency`, but values above one are experimental on the recorded
-single-GPU profile and are not part of the bounded resilience evidence.
-
-The persistent root defaults to `/workspace/signalforge-runtime`. When a separate PVC mount is
-preferred, export `SIGNALFORGE_PERSIST_ROOT` before both commands. Bootstrap, preflight, startup,
-status, shutdown, and reset then resolve the same path; no command silently falls back to another
-cache.
-
-## Automatic Execution Backend
-
-`SIGNALFORGE_EXECUTION_BACKEND=auto` is the default.
-
-- `compose` uses the existing digest-pinned images and never performs a local image build.
-- `native` downloads Go `1.25.12` for `linux/amd64`, verifies SHA-256
-  `234828b7a89e0e303d2556310ee549fbcf253d28de937bac3da13d6294262ac1`, and extracts it
-  atomically under persistent storage.
-- Native `llama.cpp` reuses `scripts/build_llama_rocm.sh` at
-  `305ba519ab61cdff8044922cba2347826a04453f`, built by the OneClick CMake/Ninja/`hipcc`
-  toolchain for `gfx1100`.
-- Native frontend construction uses `npm ci` and the pinned package lock. Backend construction
-  uses the pinned Go toolchain, `go.sum`, `GOTOOLCHAIN=local`, the Radeon-region Go proxy and
-  checksum mirror declared in the native manifest, and persistent module/build caches.
-- Native application construction never compiles the mutable working tree. It resolves the
-  selected appliance manifest's `application.source_commit`, requires that object to exist in the
-  local Git database, safely materializes it through `git archive` into an isolated persistent
-  tree, verifies the dependency locks there, and builds both frontend and Go binary from that
-  exact commit. It performs no runtime Git fetch.
-- Native processes bind to loopback. PID receipts, logs, build receipts, health state, and
-  readiness live under `/workspace/signalforge-runtime/state/native` with private permissions.
-- Native startup refuses an application or model port owned by an untracked process, and
-  application readiness must report the exact source commit, binary digest, and runtime profile
-  launched by the supervisor.
-- Native build receipts bind the resolved source commit to the declared commit, selected manifest
-  path, and selected manifest SHA-256. Old, incomplete, or mismatched receipts cannot be reused,
-  cannot remain `ready`, and are rejected before the specialist credential path is added to the
-  application environment.
-- Championship passes only `.secrets/radeon-model-api-key` to the application through
-  `SIGNALFORGE_SPECIALIST_API_KEY_FILE`; the value is not placed in an environment variable or
-  command line.
-
-Explicit selection remains available for diagnosis:
+Open the loopback endpoint shown by:
 
 ```bash
-make radeon-up BACKEND=compose
-make radeon-up BACKEND=native
-```
-
-The optional containerized Grafana stack requires `compose`. Native mode retains safe status and
-redacted application/model logs but does not install observability packages on the host.
-
-## Profiles And Operator Commands
-
-```bash
-# Local private inference, the default
-make radeon-up
-
-# Local authority plus organizer Radeon API specialists
-make radeon-bootstrap PROFILE=championship ACCEPT_GEMMA_LICENSE=yes
-make radeon-up PROFILE=championship
-
-# Start the optional audit stack beside the selected profile
-make radeon-observe PROFILE=radeon-local
-
-# Safe inspection
-make radeon-status PROFILE=radeon-local
-make radeon-logs PROFILE=radeon-local
-
-# Stop containers and retain application data and the verified model cache
-make radeon-down
-```
-
-`radeon-logs` redacts credential-shaped values plus prompt, question, answer, response, content,
-input, and output bodies. Full private inference bodies are not an operator-log feature.
-
-## Noninteractive Operation
-
-CI or an exact-image verifier may create the ignored files before bootstrap:
-
-```text
-.secrets/hf-token
-.secrets/radeon-model-api-key
-.secrets/grafana-admin-password
-```
-
-Each value must be a single line. The secret directory must be mode `0700`; files must not be
-group- or world-writable. Then run:
-
-```bash
-make radeon-bootstrap \
+make radeon-status \
+  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   PROFILE=radeon-local \
-  ACCEPT_GEMMA_LICENSE=yes \
-  RADEON_NONINTERACTIVE=1
-make radeon-up PROFILE=radeon-local
+  BACKEND=auto
 ```
 
-The Radeon API key is required only for `championship`. The Grafana password is required only when
-the observability profile is selected. No credential belongs in `container.env.example`, Compose,
-Git, an OCI layer, or a command-line argument.
+## Backend Selection
 
-## Immutable Identities
+`BACKEND=auto`:
 
-The authoritative identities live in:
+1. validates the selected appliance manifest;
+2. uses digest-pinned Docker Compose services when Docker is healthy;
+3. otherwise selects the pinned native ROCm path already present in the AMD image; and
+4. fails closed if neither path can preserve the declared source, model, runtime, or storage
+   identity.
 
-- `deploy/radeon/appliance-manifest.json`, the accepted rollback default;
-- `deploy/radeon/appliance-manifest.vnext.json`, the explicit promoted Technology 20 candidate;
-- `deploy/radeon/model-manifest.json`; and
-- `deploy/radeon/native-toolchain-manifest.json`; and
-- the generated preflight report under `/workspace/signalforge-runtime/state/preflight.json`.
+Bootstrap does not run `apt`, `brew`, or another host package manager.
 
-The current zero-touch contract pins:
+## Persistent Layout
 
-- SignalForge `v1.1.1` by the public multi-platform index digest whose runtime manifest is
-  `linux/amd64`;
-- the AMD-published ROCm llama.cpp server by digest;
-- Go `1.25.12` and native `llama.cpp` source revision by SHA/revision;
-- Python and Alpine init images by digest;
-- the exact Gemma repository, revision, filename, byte size, SHA-256, license locator, and served
-  model ID.
-
-No moving tag is sufficient for a release. A candidate reaches Compose only through the
-hash-bound generated environment. The static Compose and environment-example defaults change only
-after every final-release gate passes and the candidate becomes the new accepted rollback
-authority.
-
-For the native backend, the selected source commit must be present in the local Git object
-database. A normal clone satisfies this contract for the accepted rollback and vNext authorities.
-A shallow or incomplete clone that excludes the selected commit fails closed; startup never
-silently fetches or substitutes another revision.
-
-## Model Hydration Contract
-
-The cache supports:
-
-- `huggingface`: resumable, retry-bounded HTTP download through the Radeon-region Hugging Face
-  mirror using a file-mounted read token, while preserving the canonical Hugging Face locator;
-- `existing`: import of an independently acquired exact file, still subject to complete size and
-  hash verification; and
-- `oci`: deliberately disabled until a separate rights decision permits model redistribution.
-
-A partial download lives under `.downloads/` and never becomes the served model. Publication uses
-an atomic rename only after the complete hash passes. The atomic ready marker binds the cache to
-the manifest version, revision, served ID, byte size, and SHA-256.
-
-Interrupted downloads resume from the observed byte offset. A corrupt complete file loses its
-ready marker and is rejected. A valid cache is idempotently reused on warm startup without
-requiring external network access.
-
-## Storage And Safe Cleanup
-
-On Radeon Cloud, persistent state defaults to:
+Default root: `/workspace/signalforge-runtime`
 
 ```text
-/workspace/signalforge-runtime/
-├── data/
-├── models/
-└── state/
+data/       released case database, safe audit records, traces, logs
+models/     verified separately licensed model artifact
+state/      bootstrap, manifest, runtime, and readiness receipts
+source/     exact source materialization for native execution
+toolchain/  pinned native build outputs
 ```
 
-Ordinary shutdown retains all three directories. Cleanup is intentionally explicit:
+Application memory is off by default. Persistent infrastructure storage does not by itself enable
+case retention.
 
-```bash
-# Remove disposable application/state data but retain the verified model
-make radeon-clean CONFIRM=clean-signalforge-state
+## Model Hydration
 
-# Remove the complete runtime root, including the 14.4 GB model cache
-make radeon-reset CONFIRM=delete-signalforge-runtime
-```
+The model manifest pins:
 
-Both commands stop the stack first, reject symbolic links and broad paths, and refuse to run
-without the exact confirmation phrase.
+- upstream repository and revision;
+- exact filename;
+- byte size;
+- SHA-256;
+- license boundary; and
+- local model ID.
+
+Hydration requires explicit acceptance, downloads to a temporary path, verifies size and hash, and
+publishes atomically into persistent storage. Later starts reuse the verified cache.
+
+The application image contains no model weight and performs no startup download.
+
+## Profiles
+
+| Profile | Behavior |
+|---|---|
+| `fixture` | No GPU, model, API key, or network after image pull |
+| `radeon-local` | Local Gemma inference on ROCm only |
+| `championship` | Local authority plus bounded Radeon API specialists |
+| `observability` | Optional Grafana, Prometheus, Loki, Tempo, and Alloy |
+
+## Secrets
+
+Secrets are runtime files under `.secrets/`, mode `0600`, mounted read-only into the required
+service. They are excluded from Git, images, logs, telemetry, evidence, and generated environment
+files.
 
 ## Network Boundary
 
-First-run pulls are declared by backend in the selected appliance manifest. Compose checks only
-its OCI registries. Native checks the AMD-image Git proxy, Google Go distribution, the
-Radeon-region Go module/checksum mirrors, and npm. The model destination is checked only when a
-local model is required and the verified cache is absent. The preflight performs TLS connectivity
-checks without credentials.
+First-run network is limited to declared registries, source transport, and model hydration hosts.
+Steady-state local mode uses only internal container networking or native loopback. Championship
+mode additionally permits the organizer Radeon API host from the application process.
 
-After hydration:
-
-- Compose `fixture` and `radeon-local` run on an internal Docker network;
-- native `fixture` and `radeon-local` expose only the loopback application port;
-- model-init is stopped, so its hydration network is inactive;
-- local model and application ports are not externally published beyond the application loopback
-  URL; and
-- `championship` grants egress only to the application service for the organizer API path.
-
-The model runtime is never published to the host. Observability endpoints bind to `127.0.0.1`.
-
-## Failure Diagnosis
-
-| Phase | Meaning | Safe action |
-|---|---|---|
-| `model-hydration` | No verified ready marker exists | `make radeon-logs`; confirm license, token, disk, and network |
-| `model-load-or-runtime-health` | Runtime has not returned healthy with the exact model ID | Inspect GPU/ROCm preflight and redacted logs |
-| `application-startup` | Model is ready but the workspace is not | Inspect application health and redacted logs |
-| `compose-unavailable` | Existing Docker/Compose cannot be used | Repair the host image; the appliance will not install a duplicate runtime |
-| `native-build` | Go, npm, application, or llama.cpp has not completed | Inspect redacted `native-build.log`; no host package is installed |
-| `application-source-authority-missing` | A cached native receipt predates or omits the selected release authority | Restart with `make radeon-up`; the authorized source is rebuilt |
-| `application-source-authority-mismatch` | Native receipt, source commit, manifest path, or manifest SHA differs from the selected authority | Stop and inspect the selected manifest; no credentialed app is released |
-| `model-runtime` | Native llama-server is absent or unhealthy | Check the pinned build receipt and `make radeon-logs` |
-| `ready` | App, verified model, and mandatory dependencies satisfy the selected profile | Open the workspace URL |
-
-`make radeon-preflight` is idempotent. It refuses unsupported architecture, GPU, device, disk,
-secret-permission, Docker, Compose, or first-run network states with actionable messages.
-
-## Verification Boundary
-
-The following checks run without a live GPU:
+## Safe Operations
 
 ```bash
-python3 scripts/radeon_validate_appliance.py
-python3 scripts/radeon_validate_appliance.py \
-  --manifest deploy/radeon/appliance-manifest.vnext.json
-python3 -m unittest \
-  scripts.tests.test_radeon_manifest \
-  scripts.tests.test_radeon_backend \
-  scripts.tests.test_radeon_model_cache \
-  scripts.tests.test_radeon_native_toolchain \
-  scripts.tests.test_radeon_native_runtime \
-  scripts.tests.test_radeon_preflight \
-  scripts.tests.test_radeon_bootstrap \
-  scripts.tests.test_radeon_runtime_probe \
-  scripts.tests.test_radeon_operator
+make radeon-logs PROFILE=radeon-local BACKEND=auto
+make radeon-down BACKEND=auto
+make radeon-clean CONFIRM=clean
+make radeon-reset CONFIRM=reset
 ```
 
-A final release still requires a genuinely fresh Radeon workspace to prove the native Go and
-llama.cpp builds, full 14.4 GB hydration, model load, cold/warm startup, interrupted real
-downloads, corrupt-cache recovery, local-only networking, API loss, process teardown, and
-persistent-workspace recreation. Local simulations are not relabelled as that evidence.
+`clean` removes disposable application state while retaining the verified model cache. `reset`
+removes the complete runtime root and requires an explicit confirmation token.
 
-## Current vNext Runtime Boundary
+## Verification
 
-Candidate `ce4f2cabf0981bec09cf80c805864515f42fa41c` has completed exact-source native Radeon
-execution, concurrent submission and follow-up replays, a 32-journey bounded soak, post-soak
-sentinels, supported ROCm launch profiling, and hydrated inference with external networking
-disabled. The privacy-safe aggregate is
-[`evidence/vnext-runtime-resilience.json`](../evidence/vnext-runtime-resilience.json).
+```bash
+python3 scripts/radeon_validate_appliance.py \
+  --manifest deploy/radeon/appliance-manifest.vnext.json
+python3 scripts/validate_observability.py
+scripts/verify_container_fixture.sh
+```
 
-This does not prove literal container recreation on the allocated OneClick host. Podman reached
-the exact public GHCR index and began copying blobs, but the host denied the mount capability
-required to apply an OCI layer. A mapped user/mount-namespace retry reached the same boundary.
-Native lifecycle evidence and public-image reachability therefore remain distinct from the still
-open OCI container-and-volume recreation gate.
-
-The soak completed 30 of 32 journeys and rejected two repeated synthesis contracts without
-releasing unsupported answers. Median complete-journey latency was `32.023 s`, above the internal
-`30 s` target. Those results are intentionally retained as release limitations rather than being
-converted into a stability or latency pass.
+The immutable release workflow adds SBOM, provenance, vulnerability scan, public pull, exact-image
+fixture execution, and manifest evidence.

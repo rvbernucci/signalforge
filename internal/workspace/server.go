@@ -496,12 +496,13 @@ func (server *Server) handleCreateRun(writer http.ResponseWriter, request *http.
 		writeProblem(writer, http.StatusInternalServerError, "run_identity_failed")
 		return
 	}
+	view := server.snapshotRunView(record)
 	if server.config.Mode == ModeFixture {
 		go server.replayFixture(record, question, assumptions)
 	} else {
 		go server.executeLive(record, question, assumptions, nil)
 	}
-	writeJSON(writer, http.StatusAccepted, record.view)
+	writeJSON(writer, http.StatusAccepted, view)
 }
 
 func (server *Server) handleFollowUp(writer http.ResponseWriter, request *http.Request) {
@@ -548,8 +549,9 @@ func (server *Server) handleFollowUp(writer http.ResponseWriter, request *http.R
 		return
 	}
 	child.Assumptions = append([]string(nil), parentReport.Request.Assumptions...)
+	view := server.snapshotRunView(record)
 	go server.executeLive(record, input.Question, nil, &child)
-	writeJSON(writer, http.StatusAccepted, record.view)
+	writeJSON(writer, http.StatusAccepted, view)
 }
 
 func (server *Server) handleGetRun(writer http.ResponseWriter, request *http.Request) {
@@ -558,10 +560,14 @@ func (server *Server) handleGetRun(writer http.ResponseWriter, request *http.Req
 		writeProblem(writer, http.StatusNotFound, "run_not_found")
 		return
 	}
-	server.mu.RLock()
-	view := cloneRunView(record.view)
-	server.mu.RUnlock()
+	view := server.snapshotRunView(record)
 	writeJSON(writer, http.StatusOK, view)
+}
+
+func (server *Server) snapshotRunView(record *runRecord) RunView {
+	server.mu.RLock()
+	defer server.mu.RUnlock()
+	return cloneRunView(record.view)
 }
 
 func (server *Server) handleExecutionPlan(writer http.ResponseWriter, request *http.Request) {

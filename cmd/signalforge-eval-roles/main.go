@@ -28,7 +28,7 @@ func (values *repeatedStrings) Set(value string) error {
 func main() {
 	baseURL := flag.String("base-url", "http://127.0.0.1:8000/v1", "OpenAI-compatible local endpoint")
 	model := flag.String("model", "", "served local model identifier")
-	suitePath := flag.String("suite", "fixtures/roles/held-out-cases.json", "frozen held-out role suite")
+	suitePath := flag.String("suite", "fixtures/roles/held-out-v12-cases.json", "current frozen held-out role suite")
 	output := flag.String("output", "", "role evaluation report path")
 	workers := flag.Int("workers", 1, "maximum concurrent role requests (1-8)")
 	requestTimeout := flag.Duration("request-timeout", 3*time.Minute, "timeout for each local completion")

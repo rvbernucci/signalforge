@@ -55,7 +55,7 @@ use described below is technically rejected.
 - Disposition: `conditionally_accepted`
 - UTC timestamp: `2026-07-29T14:00:31Z`
 - Scope: AR-37-01 through AR-37-09 at the exact registry content hash above
-- Record locator: explicit declaration in the shared Codex task, recorded in the private Sprint 38 review
+- Record locator: explicit declaration in the shared Codex task, retained in the private review record
 - Boundary: this is not an independent audit opinion, legal opinion, investment recommendation, or
   professional assurance engagement. Every use beyond the documented boundaries is rejected.
 

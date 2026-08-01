@@ -1,90 +1,79 @@
-# Hybrid vLLM Specialist Runtime
+# Hybrid Radeon API Specialists
 
-This optional runtime path preserves SignalForge's local Radeon control plane while routing
-the bounded context-specialist wave through the organizer-provided Radeon Cloud vLLM Model API.
+## Boundary
 
-## Runtime Split
+The `championship` profile combines:
 
-| Component | Runtime | Authority |
-|---|---|---|
-| Request parsing and deterministic planner | Go and local rules | Intent, authorized roles, DAG, fan-out |
-| Context specialists | Provided Radeon Cloud vLLM Model API | Qualitative interpretation of authorized evidence |
-| Financial calculations | Deterministic Go engines | Values, formulas, units, periods, relations, receipts |
-| Evidence and risk review | Local Radeon model | Claim authorization, conflicts, missing evidence |
-| Final synthesis | Local Radeon model plus Go renderer | Qualitative synthesis; Go owns numbers and final envelope |
+- local Gemma inference on AMD Radeon and ROCm for interpretation, critics, final synthesis, and
+  release authority; and
+- optional organizer-provided OpenAI-compatible Radeon API calls for selected qualitative context
+  specialists.
 
-The planner permits no more than four context specialists per wave. All specialists share one API
-endpoint and model; role prompts, evidence packets, capabilities, and output schemas remain
-different. The remote path cannot add roles, tools, evidence IDs, numerical values, or calculation
-receipts.
+The API path cannot calculate authoritative financial values, mutate local memory, broaden product
+scope, approve its own claims, or publish an answer.
 
-## Environment Contract
+## Configuration
 
-| Variable | Required when enabled | Meaning |
-|---|---:|---|
-| `SIGNALFORGE_SPECIALIST_API_ENABLED` | Yes | Explicit opt-in; defaults to disabled |
-| `SIGNALFORGE_SPECIALIST_API_PROVIDER` | Yes | Must be `radeon-vllm` |
-| `SIGNALFORGE_SPECIALIST_API_BASE_URL` | Yes | OpenAI-compatible `/v1` base URL; external URLs require HTTPS |
-| `SIGNALFORGE_SPECIALIST_TEXT_MODEL` | Yes | Runtime-provided text model ID |
-| `SIGNALFORGE_SPECIALIST_VISION_MODEL` | No | Reserved for image-bearing evidence |
-| `SIGNALFORGE_SPECIALIST_API_TIMEOUT` | No | Positive Go duration; defaults to `90s` |
-| `SIGNALFORGE_SPECIALIST_API_KEY_FILE` | Preferred | Read-only secret file populated at runtime |
-| `SIGNALFORGE_SPECIALIST_API_KEY` | Compatibility only | Direct evaluator-injected secret |
-
-Setting both key variables fails closed. The key is never written to reports, traces, errors,
-command-line arguments, or configuration files.
-
-## OpenBao
-
-The application does not authenticate to OpenBao. An OpenBao Agent, CSI provider, or deployment
-wrapper authenticates independently and renders
-`configs/runtime/openbao-specialist-key.tmpl` to:
+Non-secret configuration:
 
 ```text
-/run/secrets/signalforge/radeon_model_api_key
+SIGNALFORGE_SPECIALIST_API_ENABLED=true
+SIGNALFORGE_SPECIALIST_API_PROVIDER=radeon-vllm
+SIGNALFORGE_SPECIALIST_API_BASE_URL=https://radeon.anruicloud.com/api/v1
+SIGNALFORGE_SPECIALIST_TEXT_MODEL=DeepSeek-V4-Flash
+SIGNALFORGE_SPECIALIST_VISION_MODEL=Qwen3.6-35B-A3B
+SIGNALFORGE_SPECIALIST_API_TIMEOUT=90s
 ```
 
-Mount the file read-only with mode `0400` or `0440`, then set
-`SIGNALFORGE_SPECIALIST_API_KEY_FILE` to that path. This keeps secret retrieval outside the model,
-application logs, image layers, and Go process configuration.
+The credential is read from `.secrets/radeon_api_key`. It is never assigned in `.env`, committed,
+embedded in the image, emitted through the process list, or exported to telemetry.
 
-For a judging harness that supports environment variables but not mounted secrets, inject
-`SIGNALFORGE_SPECIALIST_API_KEY` at container startup and leave the file variable unset.
+```bash
+mkdir -p .secrets
+chmod 700 .secrets
+printf '%s' "$RADEON_API_KEY" > .secrets/radeon_api_key
+chmod 600 .secrets/radeon_api_key
+```
 
-## Model Policy
+The repository audit rejects known credential patterns and forbidden private artifacts.
 
-- `DeepSeek-V4-Flash` is the initial text-specialist candidate.
-- `Qwen3.6-35B-A3B` is reserved for evidence that genuinely requires vision.
-- Model IDs remain runtime variables because the organizer may change the available set.
-- The public endpoints do not advertise JSON Schema response mode. SignalForge serializes the
-  exact response contract into the remote system message and omits only the unsupported
-  transport-level `response_format` parameter. Every returned packet still passes the same
-  deterministic decoder, schema, evidence, Numerical Silence, and review gates.
-- Fine-tuning and LoRA are deferred until a frozen holdout proves a systematic failure that
-  prompting, GraphRAG, deterministic tools, and output contracts cannot repair.
+## Transport Contract
 
-## Retrieval Policy
+Each remote request contains only:
 
-All roles use one shared evidence fabric with role-scoped retrieval profiles.
+- the selected role;
+- a bounded qualitative task;
+- public-safe evidence references and compact authorized context;
+- response constraints; and
+- safe correlation identifiers.
 
-- GraphRAG may select authoritative narrative paths and preserve provenance.
-- HyDE may expand narrative searches for business mechanisms, strategy, economics, or risk.
-- HyDE output is never evidence and is discarded after retrieval.
-- HyDE is forbidden for exact SEC facts, dates, prices, accounting values, calculations, or causal
-  proof.
-- Deterministic and lexical retrieval remain available when vector or graph services are degraded.
+It excludes credentials, prompts from other roles, private memory, source corpora, raw tool
+receipts, answer bodies from other models, and hidden reasoning.
 
-## Failure Behavior
+Go validates the response schema before it can enter the local critic stage.
 
-The remote path receives a 55-second primary packet attempt inside a 180-second specialist budget.
-If transport, truncation, JSON decoding, schema, evidence, Numerical Silence, or semantic
-validation rejects that packet, the complete specialist role is replayed against the local model.
-The remote packet never participates partially. This preserves time for local recovery while the
-complete journey remains bounded by its independent deadline.
+## Fallback
 
-## Evidence
+- Remote timeout, malformed output, denied route, or API loss: replay through the authorized local
+  specialist.
+- Missing indispensable local model: fail closed, even when the remote API is healthy.
+- Invalid local critic or final contract: no answer release.
 
-Every model call records the provider ID, model ID, role ID, start time, latency, TTFT, usage,
-finish reason, and failure state. The API key and raw private prompts or responses are excluded.
-The bonus is considered demonstrated only when at least one successful `radeon-vllm` specialist
-call participates in a complete accepted product journey.
+The current representative tournament passed `5/5`; two cases were faster than local-only and
+three were slower. The route is therefore selective, not the default for every specialist.
+
+## Run
+
+```bash
+make championship-up BACKEND=auto
+```
+
+Inspect the runtime without exposing model bodies:
+
+```bash
+make radeon-status PROFILE=championship BACKEND=auto
+make radeon-logs PROFILE=championship BACKEND=auto
+```
+
+Current aggregate evidence:
+[`championship-radeon-runtime.json`](../evidence/championship-radeon-runtime.json).

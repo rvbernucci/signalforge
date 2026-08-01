@@ -22,7 +22,7 @@
     "contention_concurrency": 4,
     "telemetry_interval_seconds": 1
   },
-  "rollback_profile": {
+  "selected_profile": {
     "context_size": 32768,
     "parallel_slots": 4,
     "batch_size": 2048,

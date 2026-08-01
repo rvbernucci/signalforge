@@ -3,81 +3,12 @@
 .env.*
 !.env.example
 
-# Generated evidence and local model artifacts. Public-safe, verifier-required projections are
-# explicitly allowlisted below; logs, telemetry streams, PIDs, prompts, and private reports stay out.
-evidence/runs/*
-!evidence/runs/sprint02/
-evidence/runs/sprint02/*
-!evidence/runs/sprint02/environment-report.json
-
-!evidence/runs/sprint11/
-evidence/runs/sprint11/*
-!evidence/runs/sprint11/baseline-controlled/
-evidence/runs/sprint11/baseline-controlled/*
-!evidence/runs/sprint11/baseline-controlled/manifest.json
-!evidence/runs/sprint11/baseline-controlled/single-summary.json
-!evidence/runs/sprint11/baseline-controlled/single-telemetry-summary.json
-!evidence/runs/sprint11/baseline-controlled/contention-summary.json
-!evidence/runs/sprint11/baseline-controlled/contention-telemetry-summary.json
-!evidence/runs/sprint11/baseline-unified-kv/
-evidence/runs/sprint11/baseline-unified-kv/*
-!evidence/runs/sprint11/baseline-unified-kv/manifest.json
-!evidence/runs/sprint11/baseline-unified-kv/single-summary.json
-!evidence/runs/sprint11/baseline-unified-kv/single-telemetry-summary.json
-!evidence/runs/sprint11/baseline-unified-kv/contention-summary.json
-!evidence/runs/sprint11/baseline-unified-kv/contention-telemetry-summary.json
-!evidence/runs/sprint11/flash-attn-on/
-evidence/runs/sprint11/flash-attn-on/*
-!evidence/runs/sprint11/flash-attn-on/manifest.json
-!evidence/runs/sprint11/flash-attn-on/single-summary.json
-!evidence/runs/sprint11/flash-attn-on/single-telemetry-summary.json
-!evidence/runs/sprint11/flash-attn-on/contention-summary.json
-!evidence/runs/sprint11/flash-attn-on/contention-telemetry-summary.json
-!evidence/runs/sprint11/flash-on-ubatch-1024/
-evidence/runs/sprint11/flash-on-ubatch-1024/*
-!evidence/runs/sprint11/flash-on-ubatch-1024/manifest.json
-!evidence/runs/sprint11/flash-on-ubatch-1024/single-summary.json
-!evidence/runs/sprint11/flash-on-ubatch-1024/single-telemetry-summary.json
-!evidence/runs/sprint11/flash-on-ubatch-1024/contention-summary.json
-!evidence/runs/sprint11/flash-on-ubatch-1024/contention-telemetry-summary.json
-!evidence/runs/sprint11/flash-on-kv-q8/
-evidence/runs/sprint11/flash-on-kv-q8/*
-!evidence/runs/sprint11/flash-on-kv-q8/manifest.json
-!evidence/runs/sprint11/flash-on-kv-q8/single-summary.json
-!evidence/runs/sprint11/flash-on-kv-q8/single-telemetry-summary.json
-!evidence/runs/sprint11/flash-on-kv-q8/contention-summary.json
-!evidence/runs/sprint11/flash-on-kv-q8/contention-telemetry-summary.json
-!evidence/runs/sprint11/golden-context-2/
-evidence/runs/sprint11/golden-context-2/*
-!evidence/runs/sprint11/golden-context-2/safe-replay.json
-!evidence/runs/sprint11/golden-context-2/semantic-evaluation.json
-!evidence/runs/sprint11/golden-context-3-auto/
-evidence/runs/sprint11/golden-context-3-auto/*
-!evidence/runs/sprint11/golden-context-3-auto/safe-replay.json
-!evidence/runs/sprint11/golden-context-3-auto/semantic-evaluation.json
-!evidence/runs/sprint11/golden-context-4/
-evidence/runs/sprint11/golden-context-4/*
-!evidence/runs/sprint11/golden-context-4/safe-replay.json
-!evidence/runs/sprint11/golden-context-4/semantic-evaluation.json
-!evidence/runs/sprint11/golden-context-4-auto/
-evidence/runs/sprint11/golden-context-4-auto/*
-!evidence/runs/sprint11/golden-context-4-auto/safe-replay.json
-!evidence/runs/sprint11/golden-context-4-auto/semantic-evaluation.json
-
-!evidence/runs/sprint13/
-evidence/runs/sprint13/*
-!evidence/runs/sprint13/live-demo-capture.json
-!evidence/runs/sprint13/live-demo-safe-export.json
-!evidence/runs/sprint34/
-evidence/runs/sprint34/*
-!evidence/runs/sprint34/failure-matrix.json
-!evidence/runs/sprint34/hybrid-journey-timing.json
-!evidence/runs/sprint34/hybrid-startup.json
-!evidence/runs/sprint34/hybrid-telemetry-summary.json
-!evidence/runs/sprint34/local-journey-timing.json
-!evidence/runs/sprint34/local-startup.json
-!evidence/runs/sprint34/local-telemetry-summary.json
+# Raw runs and private evaluation material never enter the public candidate. Only the small,
+# privacy-safe aggregate files explicitly committed under evidence/ are public.
+evidence/runs/
 evidence/local/
+evidence/private/
+evidence/raw/
 models/
 var/
 raw/
@@ -118,9 +49,8 @@ web/vite.config.d.ts
 .secrets/
 .signalforge/
 
-# Local presentation QA renders
-output/presentation/*.inspect.ndjson
-output/presentation/SignalForge-Judge-Deck/
+# Generated release media and local QA renders
+output/
 
 # Editor and OS files
 .DS_Store

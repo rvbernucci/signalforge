@@ -1,0 +1,70 @@
+{
+  "schema_version": "signalforge/championship-radeon-runtime/v1",
+  "status": "measured_candidate",
+  "evaluated_source": "67276e73b3fba1b2d09f9aa51bcb933771f9fd89",
+  "platform": {
+    "environment": "AMD Radeon Cloud",
+    "gpu_architecture": "gfx1100",
+    "vram_gib": 47.98,
+    "host_rocm_version": "7.2.1",
+    "local_runtime": "ROCm llama.cpp",
+    "local_model": "Gemma 4 26B A4B Instruct QAT Q4_0",
+    "context_tokens": 32768,
+    "parallel_specialist_slots": 4
+  },
+  "selected_model_profile": {
+    "selection_evidence": "evidence/radeon-baseline.json",
+    "contract_checks_passed": 40,
+    "contract_checks_total": 40,
+    "decode_tokens_per_second_p50": 86.4601,
+    "comparison_boundary": "Application deployment profiles differed by model, runtime, and precision; this is not a universal model ranking."
+  },
+  "selected_runtime_profile": {
+    "configuration_evidence": "evidence/radeon-optimization.json",
+    "flash_attention": "auto",
+    "kv_cache": "unified_f16",
+    "continuous_batching": true,
+    "server_slots": 4,
+    "product_context_concurrency": 4,
+    "selected_vs_three_worker_improvement_percent": 29.167952298783085
+  },
+  "hybrid_route": {
+    "representative_cases": 5,
+    "runtime_passed": 5,
+    "contract_passed": 5,
+    "semantic_accepted": 5,
+    "faster_than_local": 2,
+    "slower_than_local": 3,
+    "decision": "selective_hybrid_only"
+  },
+  "failure_behavior": {
+    "specialist_api_loss": {
+      "result": "completed_through_local_fallback",
+      "failed_remote_calls": 3,
+      "successful_local_calls": 5,
+      "answer_released": true
+    },
+    "local_model_loss": {
+      "result": "failed_closed",
+      "failure_code": "component_failure",
+      "answer_released": false
+    }
+  },
+  "soak": {
+    "duration_seconds": 19721,
+    "telemetry_samples": 1945,
+    "journeys_runtime_and_contract_passed": 180,
+    "journeys_total": 180,
+    "vram_allocated_percent_first": 32,
+    "vram_allocated_percent_last": 32,
+    "vram_growth_percentage_points": 0,
+    "junction_temperature_celsius_max": 63
+  },
+  "private_source_receipts": {
+    "hybrid_tournament_sha256": "bc64a3ab706c8aa3664dc9fef180566143eb455bd42c35d6f795f851e7e26309",
+    "failure_matrix_sha256": "805aad1d51ab7baae50de3bb31396f953a12e1a479dd2997e3c314f603c0aad8",
+    "soak_summary_sha256": "caf4ea204605745015039f1d5ddeb013ecbe6664935bb58d2f3f20d7dae81a73"
+  },
+  "final_authority": "not_granted",
+  "privacy_boundary": "Aggregate runtime and ROCm telemetry only. Model inputs, outputs, source bodies, credentials, private traces, and sealed labels are excluded."
+}

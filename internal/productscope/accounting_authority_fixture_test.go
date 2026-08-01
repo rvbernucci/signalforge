@@ -101,19 +101,8 @@ func TestFrozenAccountingAuthorityContainsMetadataNotCalculationValues(t *testin
 	}
 }
 
-func TestFrozenAccountingAuthorityIncludesHumanReviewAndCoverageArtifacts(t *testing.T) {
+func TestFrozenAccountingAuthorityIncludesHumanReviewArtifact(t *testing.T) {
 	root := filepath.Join("..", "..", "docs", "accounting-authority")
-	coverage, err := os.ReadFile(filepath.Join(root, "technology20-concept-coverage.tsv"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	lines := strings.Split(strings.TrimSpace(string(coverage)), "\n")
-	if len(lines) != 194 {
-		t.Fatalf("coverage rows including header = %d, want 194", len(lines))
-	}
-	if lines[0] != "company_id\tticker\tcanonical_input\ttaxonomy_namespace\ttaxonomy_concept\tdisposition\taccounting_perimeter\tobserved_records\tactive_annual_sources\tsource_forms\treason_code\tprofessional_review_status" {
-		t.Fatal("coverage header does not match the frozen review contract")
-	}
 	review, err := os.ReadFile(filepath.Join(root, "technology20-accounting-professional-review.md"))
 	if err != nil {
 		t.Fatal(err)

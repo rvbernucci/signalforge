@@ -1,0 +1,50 @@
+{
+  "schema_version": "signalforge/championship-product-check/v1",
+  "status": "automated_and_agent_operated_acceptance_passed",
+  "evaluated_product_source": "e3bd29dc27ad82fbc250431ed2cc2389f36e3d54",
+  "checks": {
+    "workspace_loaded": true,
+    "research_answer_visible": true,
+    "retention_off_by_default": true,
+    "retained_case_created": true,
+    "retained_case_visible": true,
+    "case_index_no_store": true,
+    "privacy_warning_visible": true,
+    "judge_orientation_opened": true,
+    "source_evidence_inspected": true,
+    "calculation_receipts_inspected": true,
+    "mission_control_trace_inspected": true,
+    "mission_control_evidence_inspected": true,
+    "mission_control_engines_inspected": true,
+    "mission_control_privacy_inspected": true
+  },
+  "bounded_live_scope": {
+    "adobe_standalone": {
+      "status": "completed",
+      "elapsed_seconds": 22.015,
+      "released": true
+    },
+    "nvidia_amd_peer": {
+      "status": "completed",
+      "elapsed_seconds": 50.041,
+      "released": true
+    },
+    "overbroad_peer_request": {
+      "status": "failed_closed",
+      "failure_code": "component_failure",
+      "released": false
+    }
+  },
+  "judge_navigation": {
+    "elapsed_milliseconds": 73294,
+    "under_two_minutes": true,
+    "scope": "Workspace, judge orientation, source evidence, deterministic receipts, and Mission Control. Tool wait time is included."
+  },
+  "private_source_receipts": {
+    "exact_product_check_sha256": "4d79a6e29c493b23e878587d5112cc21c0e1aca4fd10fb6ca57d76fcaaeb9e5b",
+    "inference_equivalence_sha256": "e070c56159173f26e404752a01d3a5c1cf4241df4406bca59564247d8754d54f"
+  },
+  "human_acceptance": "pending",
+  "final_authority": "not_granted",
+  "privacy_boundary": "Only bounded outcomes and cryptographic receipts are public. Prompts, answers, source bodies, credentials, hidden reasoning, private traces, and sealed labels are excluded."
+}

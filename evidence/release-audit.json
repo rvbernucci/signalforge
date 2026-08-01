@@ -27,88 +27,64 @@
   },
   "judge_artifacts": [
     {
+      "artifact_id": "accounting_decision",
+      "matches": true,
+      "path": "fixtures/productscope/accounting-authority/technology20-accounting-professional-decision.json",
+      "sha256": "dc0318ece20f36c37e4e0fe92cbe4f6a79024e9f26bdc29fd6870ebf8dd96e69"
+    },
+    {
+      "artifact_id": "accounting_review",
+      "matches": true,
+      "path": "docs/accounting-authority/technology20-accounting-professional-review.md",
+      "sha256": "8f0bf2f4218f10edb20e0915bd657bc5b243d466fbf18e14f24173f99712d1df"
+    },
+    {
       "artifact_id": "architecture",
       "matches": true,
       "path": "docs/architecture.svg",
       "sha256": "b32da58531d1854499b5af479e360205db168f24fa8b6deb42e18f3270db66bc"
     },
     {
-      "artifact_id": "demo_script",
+      "artifact_id": "current_evaluation",
       "matches": true,
-      "path": "docs/demo-script.md",
-      "sha256": "ae1a907c82ba4bff8db7b78a151c117543d7d2d8b37d8bf6200fbf9c80fb21c5"
+      "path": "evidence/championship-evaluation.json",
+      "sha256": "a30ae9b5f9658aff3272fbe15a09f08b87a9ec1728d328c8082b9e9685386a19"
     },
     {
-      "artifact_id": "demo_video",
+      "artifact_id": "current_product_check",
       "matches": true,
-      "path": "output/video/SignalForge-Radeon-Demo.mp4",
-      "sha256": "32a9383b951b844bf4f310c777a3f5d289300b6717f932c80292cd81fbc0d82e"
+      "path": "evidence/championship-product-check.json",
+      "sha256": "2b5e48039b2470d36b5fbbb3522d6847514762f48a50711041e60d4730357bb4"
     },
     {
-      "artifact_id": "demo_voiceover",
+      "artifact_id": "current_radeon_runtime",
       "matches": true,
-      "path": "docs/demo-voiceover.txt",
-      "sha256": "80bc6150342de84a1a54543d54b79d8db92ac05b53da24b157e93b724e7dac56"
+      "path": "evidence/championship-radeon-runtime.json",
+      "sha256": "d57d577649eacf37660ec47e856e6d94ec5445ccc478e76739ece325dafbc1f4"
     },
     {
-      "artifact_id": "deterministic_receipt_capture",
+      "artifact_id": "judge_guide",
       "matches": true,
-      "path": "docs/assets/sprint36-candidate-dcf-receipt.png",
-      "sha256": "327260b861740fa1e4ad122944513587b904aaee1af985c04db46f33709b60a8"
+      "path": "JUDGES.md",
+      "sha256": "fac0042a9944632d2d36912876f02c9e6091ba0c1590ff639358811aa560955a"
     },
     {
-      "artifact_id": "judge_deck",
+      "artifact_id": "project_specification_source",
       "matches": true,
-      "path": "output/presentation/SignalForge-Judge-Deck.pptx",
-      "sha256": "046714f749f986f70b6870c3b21e673bf6633c6d3320c8c5e5cafe087affe3d3"
+      "path": "docs/project-specification.md",
+      "sha256": "4f66bce7e653f167fe348533876d19bf0009e175ba51d5fbf9110b7bc79d1125"
     },
     {
-      "artifact_id": "mission_control_capture",
+      "artifact_id": "readme",
       "matches": true,
-      "path": "docs/assets/sprint36-live-hybrid-mission-control.png",
-      "sha256": "f61f263f8cb4727fbc7eceac54bc44d6f14fff90c60ad586090b94c9900e5581"
+      "path": "README.md",
+      "sha256": "260764cf80e289c96ebcf67c13722d18c02e40acd474ba0377c1f8c59c928ed8"
     },
     {
-      "artifact_id": "project_specification",
+      "artifact_id": "track2_compliance",
       "matches": true,
-      "path": "output/pdf/SignalForge-Project-Specification.pdf",
-      "sha256": "bec9f88828b766045d62d3ae33e865a38f16b989385c8999b260e0cd3c89c123"
-    },
-    {
-      "artifact_id": "sprint36_demo_journey",
-      "matches": true,
-      "path": "evidence/sprint36-radeon-demo-journey.json",
-      "sha256": "5c80d7d241f68871afbc2bc547ec30d7ab24e9ce46bd84e5d7075d48f88655a4"
-    },
-    {
-      "artifact_id": "sprint36_exact_release_radeon_journey",
-      "matches": true,
-      "path": "evidence/sprint36-exact-release-radeon-journey.json",
-      "sha256": "948a6b49ead427144639325320ce34f8fd016b191958b4bf2172512aa74df0aa"
-    },
-    {
-      "artifact_id": "sprint36_hybrid_journey",
-      "matches": true,
-      "path": "evidence/sprint36-radeon-hybrid-journey.json",
-      "sha256": "8c5807315534202d785f7ee740fc3c3351ce9c5d1c36f44171476b61e933621e"
-    },
-    {
-      "artifact_id": "sprint36_local_journey",
-      "matches": true,
-      "path": "evidence/sprint36-radeon-local-journey.json",
-      "sha256": "a7f05d89b58524ca0970bd343def94267426cf9017ac293c245fa281e69d51bf"
-    },
-    {
-      "artifact_id": "sprint36_resilience",
-      "matches": true,
-      "path": "evidence/sprint36-radeon-resilience.json",
-      "sha256": "d4eef8c93ebede91a92bbe1d30d772a94eac3cd1a716f6898663d5bf28d5aaf6"
-    },
-    {
-      "artifact_id": "workspace_capture",
-      "matches": true,
-      "path": "docs/assets/sprint36-live-hybrid-success.png",
-      "sha256": "e4a45840375895a0454a1d0c5605063ed48985760aab646dd6885489c2f48e26"
+      "path": "docs/track2-compliance.md",
+      "sha256": "3f3ed7daf35f879fe66d72e15471865e925389b6f3fc0633120ce61151cf0d22"
     }
   ],
   "schema_version": "signalforge/public-release-audit/v1",
@@ -116,9 +92,9 @@
   "self_excluded_path": "evidence/release-audit.json",
   "summary": {
     "all_checks_passed": true,
-    "public_files": 771,
-    "text_files_scanned": 747,
-    "total_bytes": 19861815
+    "public_files": 633,
+    "text_files_scanned": 632,
+    "total_bytes": 7600603
   },
   "synthetic_secret_sentinels": [
     {

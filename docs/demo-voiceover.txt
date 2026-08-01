@@ -1,25 +1,42 @@
-SignalForge is a private, local-first research desk for independent investors. Public filings, investor-relations material, macroeconomic series, and market observations are abundant. What is scarce is a disciplined process that keeps facts, calculations, assumptions, counterarguments, and uncertainty separate.
+SignalForge is a private, local-first financial research workspace for independent investors.
 
-SignalForge helps a user understand how a business earns money, examine financial quality, connect economic forces to explicit transmission mechanisms, compare companies, inspect valuation scenarios, and identify what would invalidate a thesis. It does not predict prices, execute trades, or provide personalized investment instructions.
+Instead of asking one language model to calculate, remember, retrieve, and judge its own answer,
+SignalForge separates those responsibilities.
 
-The architecture separates interpretation from financial authority. A typed Go control plane owns scope, evidence authorization, tool permissions, calculations, lineage, review gates, and publication. Local Gemma performs core review and final synthesis on an AMD Radeon GPU through ROCm. Optional organizer-provided Radeon API specialists add bounded context in parallel, but they do not own the final answer. If that route fails, the authorized local model can recover. If the core local model is unavailable, SignalForge fails closed.
+A typed Go planner interprets the research goal. Point-in-time retrieval assembles authorized
+public evidence. Deterministic engines calculate financial quantities and issue hash-verifiable
+receipts. Specialist agents work in parallel, then independent evidence and risk critics challenge
+the draft before a local Radeon model performs final synthesis.
 
-This is a real, non-sealed journey captured from the current candidate on AMD Radeon Cloud. The user asks SignalForge to compare Microsoft and NVIDIA as long-term businesses under higher-for-longer rates and slower AI infrastructure spending. These scenario controls are explicit assumptions, not forecasts.
+This is Numerical Silence: the model can explain approved financial evidence, but it does not
+become the source of record for the numbers.
 
-The Interpreter closes intent and scope. The Orchestrator builds a typed plan and schedules two specialist waves, with at most four roles running concurrently. Business strategy, financial quality, economics, valuation, market behavior, and accounting each receive bounded evidence and a strict contract. They exchange typed packets and references, not unrestricted chat transcripts.
+Here we start a governed NVIDIA and AMD comparison. The investor sees a clean workspace, while the
+execution plan can expand to show interpretation, retrieval, tools, specialists, critics, repair,
+and release.
 
-The live plan shows the execution state without exposing hidden reasoning. A first review narrows unsupported claims and approves a safer subset. A second evidence review removes claims that cannot cross the publication boundary. Only then does the local final analyst synthesize the released research case.
+The final answer contains cited evidence, deterministic calculations, accounting caveats, scenario
+assumptions, and monitoring conditions. If definitions, periods, units, or accounting perimeters
+do not support a direct comparison, SignalForge narrows the claim or abstains.
 
-Mission Control reconciles the same run and trace identities shown in the workspace. This accepted demonstration recorded twenty model-call attempts across local ROCm and the provided Radeon API, six completed context packets, eighteen deterministic engine calls, and five governed reviews. Four failed provider attempts were recovered before release. Prompts, responses, source bodies, credentials, and private reasoning are absent from the public telemetry.
+Research memory is local and off by default. The user can explicitly retain the safe released
+projection, inspect it, export it, and delete it. Prompts, raw model responses, source bodies,
+credentials, and hidden reasoning are excluded.
 
-The language model is not the numerical system of record. SignalForge applies a Numerical Silence contract. Models may interpret verified relationships, but Go owns every authoritative value, period, unit, formula, comparison direction, and quantitative rendering.
+Mission Control correlates the same run across agent stages, model routes, evidence, engines,
+failures, and Radeon telemetry without exposing protected content.
 
-The Proof layer makes that boundary inspectable. This evidence card identifies a primary source, its section, as-of date, citation target, and content hash. The DCF receipt exposes the formula version, canonical input references, verified outputs, invariants, evidence references, and replay hash. A fluent model cannot silently rewrite those values.
+Core inference runs locally on AMD Radeon through ROCm using Gemma 4 26B Q4_0. A bounded
+organizer-provided Radeon API can accelerate selected context specialists, but local critics,
+final synthesis, deterministic authority, and release validation remain under SignalForge
+control.
 
-The completed research case uses progressive disclosure. The main answer remains readable, while evidence, assumptions, counterevidence, receipts, and limitations stay one interaction away. Follow-up questions preserve company, scenario, and point-in-time scope. Durable case memory is opt-in, stores only the released safe projection, and supports inspect, export, and delete.
+The current candidate completed one hundred eighty of one hundred eighty Radeon journeys and
+release contracts, ten of ten repeated financial-quality journeys, and a five-hour twenty-eight
+minute soak with no observed allocated-VRAM growth.
 
-Radeon optimization was measured on complete product journeys rather than an isolated token-speed benchmark. The public development tournament contains eight non-sealed journeys per mode. Every compared mode passed eight of eight runtime and release contracts. Against the two-worker baseline, four local workers achieved 2.7777 times aggregate speedup and a 64.37 percent p50 reduction. The hybrid profile achieved 2.0756 times aggregate speedup, accepted twenty Radeon API calls, and recovered one failed remote call. These are workload-specific development results, not universal accuracy or throughput claims.
+SignalForge can make mistakes. It is research software, not an audit, investment recommendation,
+trading system, or guarantee. Important information should be verified before financial
+decisions.
 
-Failure behavior is equally explicit. In a bounded fault-injection run, loss of the Radeon API recovered through local ROCm and completed a governed release. When the core local model was unavailable, the system stopped in twenty-two milliseconds, made zero model calls, and released no answer.
-
-SignalForge combines local specialist intelligence with deterministic financial truth. The result is not another financial chatbot. It is a private, inspectable research process built on AMD Radeon and ROCm, with evidence strong enough to challenge and a release gate strict enough to say no.
+SignalForge: private financial research, with visible evidence and bounded authority.

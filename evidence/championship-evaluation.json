@@ -1,0 +1,54 @@
+{
+  "schema_version": "signalforge/championship-evaluation/v1",
+  "status": "evaluated_candidate",
+  "evaluated_inference_source": "67276e73b3fba1b2d09f9aa51bcb933771f9fd89",
+  "scope": {
+    "companies": 20,
+    "standalone_development": 80,
+    "standalone_sealed": 40,
+    "peer_development": 40,
+    "peer_sealed": 20,
+    "total_cases": 180
+  },
+  "runtime_and_contract": {
+    "passed": 180,
+    "total": 180,
+    "model_calls": 957
+  },
+  "model_assisted_semantic_review": {
+    "method": "Independent model-assisted evidence-alignment review. This is decision support, not human professional or final release authority.",
+    "judge_model": "accounts/fireworks/models/glm-5p2",
+    "accepted": 180,
+    "accept": 162,
+    "accept_with_limitations": 18,
+    "manual_review": 0,
+    "false_release_candidates": 0,
+    "dimensions_out_of_four": {
+      "factual_support": 3.989,
+      "numerical_faithfulness": 4.0,
+      "citation_authority": 4.0,
+      "accounting_boundaries": 3.978,
+      "instruction_adherence": 3.922,
+      "usefulness": 3.128,
+      "abstention_quality": 3.95
+    }
+  },
+  "financial_quality_reliability": {
+    "attempts": 10,
+    "runtime_passed": 10,
+    "contract_passed": 10,
+    "failures": 0,
+    "duration_ms": {
+      "p50": 53872.591,
+      "p95": 59013.938
+    }
+  },
+  "private_source_receipts": {
+    "runtime_summary_sha256": "163481e06868bb29cafba93ac0b35609aa26c1e240983fd5eea68af2a08c2eb9",
+    "semantic_summary_sha256": "2185d9a57fe5e59b733a0e210e7552907c93a7ea1e62d64080dc4df038d8602a",
+    "semantic_dimensions_sha256": "f73f412a2edaa8cb7912e7251f3fc0d1a181ed8d6c6c9fa5a08e74116d0735f2",
+    "financial_reliability_sha256": "f76ab904c2289f589454fb53c897eee0a774ad082d1ea70265be26a171c2e638"
+  },
+  "final_authority": "not_granted",
+  "privacy_boundary": "Aggregate metrics and cryptographic receipts only. Prompts, answers, source bodies, individual decisions, credentials, private traces, and sealed labels are excluded."
+}

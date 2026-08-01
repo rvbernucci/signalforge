@@ -90,10 +90,10 @@ def cover_page(canvas, doc) -> None:
     canvas.drawString(22 * mm, height - 126 * mm, "AMD AI DevMaster Hackathon · Track 2: Agentic AI")
 
     cards = [
-        ("11", "logical roles"),
-        ("80", "deterministic tools"),
-        ("8/8", "contracts per mode"),
-        ("2.78x", "aggregate speedup"),
+        ("20", "covered companies"),
+        ("180/180", "journey contracts"),
+        ("5h28", "Radeon soak"),
+        ("4", "parallel slots"),
     ]
     x = 22 * mm
     y = height - 178 * mm
@@ -110,7 +110,7 @@ def cover_page(canvas, doc) -> None:
 
     canvas.setFillColor(colors.HexColor("#dbe9e4"))
     canvas.setFont("Helvetica", 9)
-    canvas.drawString(22 * mm, 20 * mm, "Evidence date: 27 July 2026 · github.com/rvbernucci/signalforge")
+    canvas.drawString(22 * mm, 20 * mm, "Current championship candidate · github.com/rvbernucci/signalforge")
     canvas.restoreState()
 
 

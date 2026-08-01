@@ -1,169 +1,155 @@
 # SignalForge Judge Guide
 
-SignalForge is a private, local-first financial research desk for independent investors. It turns
-public company evidence into an inspectable process with specialist agents, deterministic
-financial tools, citations, local memory, independent review, and explicit limitations.
+SignalForge is a private, local-first financial research workspace for independent investors. It
+combines multi-agent planning, evidence retrieval, deterministic financial tools, local memory,
+independent review, and explicit release contracts on AMD Radeon and ROCm.
 
-This is the shortest path through the Track 2 submission. The complete requirement-to-proof map is
-in [Track 2 Compliance](docs/track2-compliance.md).
+This document is the shortest route through the current Track 2 candidate. It contains no
+development chronology.
 
-## Two-Minute Review Path
+## Three-Minute Review
 
-1. Watch the [4 minute 45 second Radeon demo (284.970 seconds)](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Radeon-Demo.mp4).
-2. Open the [six-slide judge deck](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Judge-Deck.pptx).
-3. Read the [six-page project specification](https://github.com/rvbernucci/signalforge/releases/download/sprint36-championship-v1/SignalForge-Project-Specification.pdf).
-4. Inspect the [architecture](docs/architecture.svg), [current Radeon journey](evidence/sprint36-radeon-demo-journey.json),
-   [bounded latency tournament](evidence/sprint33-latency-tournament.json), and
-   [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json). The
-   separate [vNext runtime resilience record](evidence/vnext-runtime-resilience.json) preserves
-   the current candidate's concurrency, soak, profiling, network-isolation, and known-failure
-   boundaries.
-5. Reproduce the credential-free fixture or pull the exact public image identified in the
-   championship release section.
-
-The frozen release architecture diagram labels the immutable 28-operation Tier 0 core. The current
-runtime adds the 52-operation Financial Intelligence Registry for 80 role-authorized deterministic
-operations in total.
-
-## Questions To Try
-
-- How would higher-for-longer rates affect Microsoft and NVIDIA?
-- Which evidence weakens NVIDIA's investment thesis, and what should be monitored next?
-- Is a Microsoft/Alphabet metric comparison authorized, caveated, or unavailable?
-
-SignalForge narrows or abstains when evidence, time boundaries, issuer activation, or peer
-comparison authority are insufficient. That behavior is part of the product contract.
-
-## What Judges Can See
-
-- **A concrete application:** evidence-grounded company research for a serious independent
-  investor.
-- **Multi-step planning:** an expandable execution plan shows interpretation, specialist waves,
-  tools, independent critics, repair, synthesis, and release.
-- **Local retrieval and tools:** point-in-time SEC and official investor-relations evidence,
-  resolvable citations, and 80 role-authorized deterministic financial operations.
-- **Local memory and privacy:** governed follow-ups plus opt-in inspect, export, and delete controls.
-- **Local AMD inference:** Gemma 4 26B A4B Instruct QAT Q4_0 on Radeon `gfx1100`, ROCm 7.2.1, and
-  ROCm `llama.cpp`.
-- **Optional Radeon API path:** bounded context-specialist calls use the organizer-provided API
-  while local Radeon critics, final synthesis, deterministic authority, and fallback remain under
-  SignalForge control.
-- **Correlated observability:** the Workspace, Proof Drawer, engines, and Mission Control share one
-  privacy-safe `run_id` and `trace_id`.
-
-## 120-Point Score Map
-
-The judges retain final scoring authority. Each row below points to the fastest reviewable proof.
-
-| Criterion | Judge-facing proof |
-|---|---|
-| Task positioning and application value - 20 | Demo `0:00-0:22`; specification pages 1-2; deck slide 2 |
-| Decomposition, tools, RAG, and memory - 20 | Demo `0:22-3:12`; specification pages 3-4; deck slides 3-4 |
-| Smooth multi-turn experience - 20 | Demo `2:52-3:12`; governed follow-up and local memory controls |
-| Core inference on AMD Radeon - 20 | Demo `0:22-2:22`; [current local journey](evidence/sprint36-radeon-local-journey.json); [exact-release Radeon journey](evidence/sprint36-exact-release-radeon-journey.json) |
-| Targeted ROCm optimization - 20 | Demo `3:12-3:38`; deck slide 5; [three-profile model selection](evidence/radeon-baseline.json); [optimization evidence](evidence/radeon-optimization.json); [three-mode tournament](evidence/sprint33-latency-tournament.json) |
-| Optional Radeon Cloud Model API bonus - 20 | Demo `1:12-2:22` and `3:38-4:02`; [current hybrid journey](evidence/sprint36-radeon-hybrid-journey.json), [current demo journey](evidence/sprint36-radeon-demo-journey.json), and [failure recovery](evidence/sprint36-radeon-resilience.json) |
-
-The frozen Radeon model tournament compared three hash-pinned deployment profiles. Gemma 4 26B
-A4B QAT Q4_0 on `llama.cpp` passed `40/40` deterministic contract checks at `86.46` median decode
-tokens/s; Qwen3 8B BF16 on vLLM passed `40/40` at `26.39`; Granite 4.1 8B BF16 on vLLM passed
-`35/40` at `24.99`. Google's
-[upstream model card](https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf/blob/d1c082be9cf3c8a514acf63b8761f4b41935842e/README.md)
-reports `25.2B` total and `3.8B` active parameters for the selected Gemma MoE. Because model,
-runtime, and precision differed, this establishes a bounded application deployment decision, not
-a universal model ranking or dense-model microbenchmark.
-
-The Sprint 33 development tournament used eight public, non-sealed journeys per mode. Local
-four-worker execution passed `8/8` contracts with `2.7777x` aggregate speedup versus the recorded
-two-worker baseline. Hybrid four-worker execution also passed `8/8`, accepted 20 Radeon API calls,
-and recovered one failed remote call locally. These are bounded workload results, not universal
-performance or factual-accuracy claims.
-
-The current Sprint 36 Radeon run released a complete hybrid answer after 52 public-safe timeline
-events, six context packets, 18 deterministic engine calls, five review events, and both local
-ROCm and Radeon API inference. The public record excludes prompts, responses, source bodies,
-credentials, memory, and private reasoning.
-<!-- evidence-claim:sprint36-championship-journey -->
-
-The exact `v1.1.1` image was then pulled anonymously, read back on Radeon Cloud, and used for both
-the fixture and a complete hybrid journey. The exact-image record keeps this verification separate
-from the pre-freeze video rehearsal and documents that two remote failures recovered before answer
-release.
-<!-- evidence-claim:sprint36-exact-release -->
-
-## Authority Boundary
-
-Language models interpret evidence, propose qualitative claims, challenge support, and synthesize
-a bounded semantic draft. Go owns identity, scope, evidence authorization, calculations, tool
-permissions, lineage, numerical relations, contract validation, and publication.
-
-Fluent model output is never the financial system of record. Authoritative values and calculations
-enter the final answer only through deterministic, hash-verifiable receipts.
-
-## Championship Release
-
-The forward championship release is `v1.1.1`, frozen at source
-`bc9c64746589e79766b2b18226ebb9d1d87d2585` and public image index
-`sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b`.
-Historical `v1.1.0` remains available and byte-identical as the rollback.
-
-| Item | Required release property |
-|---|---|
-| Version | `v1.1.1` |
-| Source | `bc9c64746589e79766b2b18226ebb9d1d87d2585` |
-| Public image | `ghcr.io/rvbernucci/signalforge:v1.1.1` |
-| Image index | `sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b` |
-| Platform | `linux/amd64` |
-| Runtime user | `10001:10001` |
-| Runtime notices | `/app/licenses` |
-| Artifact release | [`sprint36-championship-v1`](https://github.com/rvbernucci/signalforge/releases/tag/sprint36-championship-v1) |
-| Artifact hashes | [Judge package](evidence/judge-package.json) |
-| Release proof | [Sprint 36 attestation](evidence/sprint36-release-attestation.json) |
-
-The application image contains no model weights, credentials, private corpora, or startup
-downloads. The pinned Gemma artifact is staged separately on the Radeon host under its upstream
-license.
-
-## Fast Reproduction
-
-The deterministic workspace proves the product contract without a GPU, API key, model download,
-database setup, or external data call:
+1. Read the [project specification](docs/project-specification.md).
+2. Inspect the [architecture](docs/architecture.svg).
+3. Review the current [evaluation](evidence/championship-evaluation.json),
+   [Radeon runtime](evidence/championship-radeon-runtime.json), and
+   [product check](evidence/championship-product-check.json).
+4. Run the credential-free fixture:
 
 ```bash
-git clone https://github.com/rvbernucci/signalforge.git
-cd signalforge
 npm --prefix web ci
 npm --prefix web run build
 go run ./cmd/signalforge-workspace --mode fixture --static-dir web/dist
 ```
 
-Open `http://127.0.0.1:8080`. The selected Radeon model and runtime reproduction is documented in
-[README: Reproduce The Selected Radeon Runtime](README.md#reproduce-the-selected-radeon-runtime).
+Open `http://127.0.0.1:8080/?audience=judge`.
+
+The final immutable image, SBOM, provenance, public-pull receipt, and media hashes are bound at
+release freeze through the Radeon appliance manifest and judge package. Moving `main` is not
+presented as an immutable release.
+
+## What To Inspect
+
+- **Investor experience:** a clean research answer, cited evidence, calculations, caveats, and
+  governed follow-ups.
+- **Expandable plan:** interpretation, specialist waves, tool calls, critics, repair, synthesis,
+  and release.
+- **Deterministic authority:** financial values and calculations resolve to typed receipts instead
+  of model-generated numbers.
+- **Evidence authority:** every released claim has authorized evidence, deterministic receipts,
+  assumptions, or an explicit limitation.
+- **Local memory:** retention is off by default; inspect, export, and delete require user action.
+- **Mission Control:** optional route, tool, latency, GPU, failure, and lineage telemetry is
+  correlated without recording model or source bodies.
+- **Fail-closed behavior:** unsupported comparisons, invalid contracts, and missing local authority
+  do not release partial answers.
+
+## 120-Point Map
+
+The judges retain complete scoring authority. `Implemented` and `Measured` below describe available
+evidence; they do not pre-award points.
+
+| Track 2 criterion | Status | Fastest proof |
+|---|---|---|
+| Clear task positioning and creative scenario - 20 | Implemented | Investor research workspace; [specification](docs/project-specification.md) |
+| Decomposition, tools, RAG, and memory - 20 | Implemented | Expandable plan; [architecture](docs/architecture.svg); deterministic receipts |
+| Smooth multi-turn interaction - 20 | Implemented | Governed follow-ups; opt-in inspect/export/delete; concise investor view |
+| Core inference on AMD Radeon - 20 | Measured | Gemma 4 26B Q4_0 on `gfx1100`/ROCm 7.2.1; [runtime evidence](evidence/championship-radeon-runtime.json) |
+| Targeted Radeon/ROCm optimization - 20 | Measured | Three-profile selection, four-slot tuning, 5h28 soak; [baseline](evidence/radeon-baseline.json) and [runtime evidence](evidence/championship-radeon-runtime.json) |
+| Optional Radeon Cloud Model API - 20 | Measured | Selective specialist route with local authority and tested fallback; [hybrid evidence](evidence/championship-radeon-runtime.json) |
+
+SignalForge implements all five capability families listed by the rules; the minimum is two.
+
+## Current Results
+
+| Evidence | Result |
+|---|---:|
+| Full four-population Radeon journeys | `180/180` runtime and contract pass |
+| Model-assisted evidence-alignment review | `180/180` accepted; 18 with limitations |
+| False-release candidates | `0` |
+| Numerical faithfulness mean | `4.000/4` |
+| Citation authority mean | `4.000/4` |
+| Factual support mean | `3.989/4` |
+| Accounting boundary mean | `3.978/4` |
+| Repeated financial-quality journey | `10/10` |
+| Representative hybrid journey | `5/5`, retained selectively |
+| Radeon soak | `5h28m`, 1,945 samples, zero observed VRAM growth |
+| Bounded product checks | Adobe standalone and NVIDIA/AMD peer completed |
+| Unsupported peer request | Failed closed, no answer released |
+
+The semantic review used an independent model as decision support. It is not human ground truth,
+professional assurance, or judging authority.
+
+## Why The Architecture Matters
+
+The language model does not own the financial system:
+
+- Go interprets the request into a typed plan.
+- Retrieval is point-in-time and source-authorized.
+- Tools are role-scoped and deterministic.
+- Models receive bounded context packets, not the application envelope.
+- Independent critics evaluate evidence and risk.
+- Final local synthesis remains subject to the Answer Contract Engine.
+- The application deterministically constructs transport and presentation structures.
+
+This separation reduces model formatting burden, protects numerical fidelity, and makes every
+released result inspectable.
+
+## Radeon Boundary
+
+Core interpretation, review, final synthesis, and release authority run locally on Radeon through
+ROCm. The optional organizer-provided API can serve selected context specialists. It never receives
+credentials, private memory, raw source corpora, or authority to publish.
+
+When the optional API failed, the tested journey completed through local fallback. When the
+indispensable local model was absent, the system failed closed even though remote specialists were
+available.
+
+## Reproduce
+
+Full repository gate:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements-verify.txt
+scripts/verify.sh
+```
+
+Exact `linux/amd64` fixture image gate:
+
+```bash
+scripts/verify_container_fixture.sh
+```
+
+Fresh Radeon workspace:
+
+```bash
+make radeon-bootstrap \
+  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
+  BACKEND=auto \
+  ACCEPT_GEMMA_LICENSE=yes
+make radeon-up \
+  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
+  BACKEND=auto
+```
+
+The [operator guide](docs/radeon-zero-touch-appliance.md) documents model hydration, persistent
+storage, secret files, profiles, fallback, observability, and safe cleanup.
 
 ## Honest Scope
 
-- The deepest recorded product journey compares Microsoft and NVIDIA.
-- The current `main` branch promotes twenty US technology company authorities and five bounded
-  peer lanes from 180/180 contract- and runtime-passing development and sealed journeys. This
-  Technology 20 candidate is not yet relabelled as the frozen championship release, and
-  unavailable, context-only, or non-comparable directions remain fail-closed.
-- The exact vNext source `ce4f2ca` admits one complete local research journey at a time while
-  retaining up to four specialist calls inside that journey. Two representative journeys submitted
-  together both completed in a controlled Radeon replay. Their elapsed times were `98.116 s` and
-  `152.149 s` including queue time, so this is bounded resilience evidence, not a 30-second latency
-  claim.
-- The same source completed a `1,363.185 s` soak with 30/32 completed journeys. Two repeated
-  valuation-sensitivity journeys failed closed at synthesis validation; both post-soak sentinels
-  passed. Median complete-journey latency was `32.023 s`, so the internal 30-second target remains
-  unmet. Supported ROCm launch profiling and network-disabled local inference completed, while
-  literal OCI recreation was blocked by the OneClick host's mount policy. The technical browser
-  rehearsal was agent-operated, not independent human acceptance.
-  <!-- evidence-claim:vnext-runtime-resilience -->
-- The 80-operation total is the composed deterministic registry, not a claim that the current
-  natural-language planner automatically selects every registered operation.
-- In the frozen frontend, aggregate header/sidebar labels can say `Local inference` or `local calls`
-  during a hybrid journey. The expandable execution plan and Radeon Mission Control are the
-  route-specific authorities and distinguish Radeon API from local ROCm calls.
-- Frozen semantic checks prove bounded contract conformance, not universal factual accuracy.
-- SignalForge does not predict prices, execute trades, provide personalized investment
-  recommendations, or replace professional judgment.
+- The product universe is 20 US-listed technology companies and five promoted peer lanes.
+- Authority remains metric-, period-, unit-, definition-, and accounting-perimeter-specific.
+- SignalForge does not predict prices, execute trades, or give personalized recommendations.
+- Public evidence contains aggregates and hashes only, never prompts, answers, source bodies,
+  private traces, credentials, hidden reasoning, or sealed labels.
+- Human investor and final judge acceptance remain external gates.
+- The exact release identity is authoritative only after the release workflow publishes and
+  verifies the immutable image.
+
+<!-- evidence-claim:current-product -->
+<!-- evidence-claim:current-evaluation -->
+<!-- evidence-claim:current-radeon-runtime -->
+<!-- evidence-claim:accounting-authority -->
+<!-- evidence-claim:privacy-and-rights -->

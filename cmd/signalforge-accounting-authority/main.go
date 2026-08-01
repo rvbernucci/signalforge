@@ -248,7 +248,7 @@ func professionalReviewMarkdown(review productscope.AccountingProfessionalReview
 		output.WriteString("- Disposition: `conditionally_accepted`\n")
 		output.WriteString("- UTC timestamp: `" + namedProfessionalReviewTimestamp + "`\n")
 		output.WriteString("- Scope: AR-37-01 through AR-37-09 at the exact registry content hash above\n")
-		output.WriteString("- Record locator: explicit declaration in the shared Codex task, recorded in the private Sprint 38 review\n")
+		output.WriteString("- Record locator: explicit declaration in the shared Codex task, retained in the private review record\n")
 		output.WriteString("- Boundary: this is not an independent audit opinion, legal opinion, investment recommendation, or\n")
 		output.WriteString("  professional assurance engagement. Every use beyond the documented boundaries is rejected.\n\n")
 	}
