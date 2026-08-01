@@ -48,6 +48,7 @@ function CaseLibrary({
 }: Pick<Props, "open" | "onClose" | "onLoad"> & { refreshKey: string }) {
   const [items, setItems] = useState<CaseSummary[]>([]);
   const [failure, setFailure] = useState("");
+  const [loading, setLoading] = useState(false);
   const [pendingDelete, setPendingDelete] = useState("");
   const focus = useDialogFocus(open, onClose);
 
@@ -55,12 +56,17 @@ function CaseLibrary({
     if (!open) return;
     let active = true;
     setFailure("");
+    setLoading(true);
     void listCases()
       .then((nextItems) => {
-        if (active) setItems(nextItems);
+        if (!active) return;
+        setItems(nextItems);
+        setLoading(false);
       })
       .catch(() => {
-        if (active) setFailure("The local case index is temporarily unavailable.");
+        if (!active) return;
+        setFailure("The local case index is temporarily unavailable.");
+        setLoading(false);
       });
     return () => {
       active = false;
@@ -99,7 +105,8 @@ function CaseLibrary({
         <div className="library-principle"><ShieldIcon /><p><strong>Published snapshots, not model memory.</strong> Every case is hash-verified on read. Future calculations still resolve from canonical evidence and receipts.</p></div>
         {failure && <p className="library-failure" role="alert">{failure}</p>}
         <div className="library-list">
-          {items.length === 0 && !failure && <p className="empty-proof">No cases have been saved on this device.</p>}
+          {loading && !failure && <p className="empty-proof" role="status">Loading saved cases...</p>}
+          {!loading && items.length === 0 && !failure && <p className="empty-proof">No cases have been saved on this device.</p>}
           {items.map((item) => <article key={item.case_id}>
             <span className="eyebrow">{new Date(item.saved_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
             <h3>{displayCaseTitle(item.title)}</h3>

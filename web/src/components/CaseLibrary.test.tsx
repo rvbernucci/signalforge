@@ -65,4 +65,29 @@ describe("case library refresh", () => {
     expect(await screen.findByRole("heading", { name: "Microsoft / NVIDIA research case" })).toBeInTheDocument();
     await waitFor(() => expect(listCases).toHaveBeenCalledTimes(2));
   });
+
+  it("does not report an empty library while its index is still loading", async () => {
+    let resolveList: (items: CaseSummary[]) => void = () => undefined;
+    vi.mocked(listCases).mockReturnValueOnce(new Promise((resolve) => {
+      resolveList = resolve;
+    }));
+
+    render(
+      <MemoryControls
+        available
+        retain={false}
+        open
+        onRetain={vi.fn()}
+        onOpen={vi.fn()}
+        onClose={vi.fn()}
+        onLoad={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading saved cases...");
+    expect(screen.queryByText("No cases have been saved on this device.")).not.toBeInTheDocument();
+
+    resolveList([]);
+    expect(await screen.findByText("No cases have been saved on this device.")).toBeInTheDocument();
+  });
 });
