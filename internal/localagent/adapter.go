@@ -442,7 +442,7 @@ func quarantinePlaceholderClaims(packet *contracts.ContextPacket) {
 		for _, finding := range findings {
 			if strings.Contains(finding.Statement, "[value withheld]") {
 				packet.Uncertainties = appendUnique(packet.Uncertainties,
-					fmt.Sprintf("Dropped claim %s because semantic prose contained a numerical placeholder; Go retains any authorized receipt separately.", finding.ClaimID))
+					"A model-authored claim was quarantined because semantic prose contained a numerical placeholder; Go retains any authorized receipt separately.")
 				continue
 			}
 			kept = append(kept, finding)
@@ -463,7 +463,7 @@ func quarantineModelOwnedNumericalDirections(packet *contracts.ContextPacket) {
 				modelOwnedDirectionPattern.MatchString(finding.Statement) &&
 				numericalConceptPattern.MatchString(finding.Statement) {
 				packet.Uncertainties = appendUnique(packet.Uncertainties,
-					fmt.Sprintf("Dropped claim %s because only Go may state a quantitative direction.", finding.ClaimID))
+					"A model-authored claim was quarantined because only Go may state a quantitative direction.")
 				continue
 			}
 			kept = append(kept, finding)
@@ -804,7 +804,7 @@ func quarantineIncomparableDirections(packet *contracts.ContextPacket, numerical
 			}
 			if contradiction {
 				packet.Uncertainties = appendUnique(packet.Uncertainties,
-					fmt.Sprintf("Dropped claim %s because it assigned direction to an incomparable numerical relation.", finding.ClaimID))
+					"A model-authored claim was quarantined because it assigned direction to an incomparable numerical relation.")
 				continue
 			}
 			kept = append(kept, finding)
@@ -1148,7 +1148,7 @@ func quarantineUnauthorizedClaims(packet *contracts.ContextPacket, material Mate
 			}
 			if reason != "" {
 				packet.Uncertainties = appendUnique(packet.Uncertainties,
-					fmt.Sprintf("Dropped claim %s because it contained an %s.", finding.ClaimID, reason))
+					fmt.Sprintf("A model-authored claim was quarantined because it contained an %s.", reason))
 				continue
 			}
 			kept = append(kept, finding)
@@ -1166,7 +1166,7 @@ func quarantineStructurallyInvalidClaims(packet *contracts.ContextPacket) {
 			reason := structuralClaimReason(finding)
 			if reason != "" {
 				packet.Uncertainties = appendUnique(packet.Uncertainties,
-					fmt.Sprintf("Dropped claim %s because %s.", finding.ClaimID, reason))
+					fmt.Sprintf("A model-authored claim was quarantined because %s.", reason))
 				continue
 			}
 			kept = append(kept, finding)

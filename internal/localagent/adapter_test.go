@@ -1853,6 +1853,28 @@ func TestSpecialistCannotOwnNumericalDirection(t *testing.T) {
 	}
 }
 
+func TestPreCanonicalQuarantineNoticeCannotAliasSurvivingClaimID(t *testing.T) {
+	packet := contracts.ContextPacket{Findings: []contracts.Finding{{
+		ClaimID: "model-placeholder", Statement: "The result is [value withheld].",
+	}}}
+	assignCanonicalClaimIDs(&packet, "context-1")
+	quarantinePlaceholderClaims(&packet)
+	packet.Findings = append(packet.Findings, contracts.Finding{
+		Origin: contracts.FindingOriginDeterministic, Statement: "A validated receipt is available.",
+	})
+	assignCanonicalClaimIDs(&packet, "context-1")
+
+	if len(packet.Findings) != 1 || len(packet.Uncertainties) != 1 {
+		t.Fatalf("unexpected quarantine result: %+v", packet)
+	}
+	if strings.Contains(packet.Uncertainties[0], packet.Findings[0].ClaimID) {
+		t.Fatalf("quarantine notice aliased a surviving canonical claim: %+v", packet)
+	}
+	if !strings.Contains(packet.Uncertainties[0], "model-authored claim was quarantined") {
+		t.Fatalf("quarantine reason was not retained: %+v", packet.Uncertainties)
+	}
+}
+
 func TestSemanticDraftCannotDenyAvailableCalculationReceipts(t *testing.T) {
 	material := synthesisPromptInput{Receipts: []synthesisReceiptView{
 		{OperationID: "valuation.fcff_dcf"},
@@ -1880,6 +1902,33 @@ func TestSemanticDraftCannotDenyAvailableCalculationReceipts(t *testing.T) {
 	}}}
 	if err := validateReceiptAvailabilityClaims(valid, material); err != nil {
 		t.Fatalf("valid calculation limitation was rejected: %v", err)
+	}
+}
+
+func TestReceiptBackedRendererReconcilesStaleNumericalSilenceProse(t *testing.T) {
+	body := finalBody{
+		Limitations: []string{
+			"Specific magnitudes remain numerically silent.",
+			"Source scope is bounded.",
+		},
+		NextActions: []string{
+			"Resolve deterministic receipts before relying on the measures.",
+		},
+	}
+	material := synthesisPromptInput{Receipts: []synthesisReceiptView{{
+		ReceiptID: "receipt-1", OperationID: "financial.operating_margin",
+	}}}
+
+	normalizeRenderedNumericalBoundary(&body, material)
+
+	if !slices.Equal(body.Limitations, []string{
+		receiptBackedNumericalBoundary,
+		"Source scope is bounded.",
+	}) {
+		t.Fatalf("stale numerical boundary was not reconciled: %+v", body.Limitations)
+	}
+	if !slices.Equal(body.NextActions, []string{receiptInspectionNextAction}) {
+		t.Fatalf("stale receipt action was not reconciled: %+v", body.NextActions)
 	}
 }
 

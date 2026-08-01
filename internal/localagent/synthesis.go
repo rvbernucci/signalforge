@@ -124,6 +124,7 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 	placeApprovedNumericalClaims(body.Sections, material.Claims)
 	normalizeApplicationOwnedSectionAuthority(body.Sections, material.Claims)
 	repairReceiptAvailabilityClaims(&body, material)
+	normalizeRenderedNumericalBoundary(&body, material)
 	neutralizeInternalReferenceMentions(&body, material)
 	ensureVisibleComparisonBoundary(&body, material)
 	neutralizeUnsupportedCausalAttribution(&body)
@@ -191,6 +192,7 @@ func (adapters *Adapters) Synthesize(ctx context.Context, input orchestrator.Syn
 		placeApprovedNumericalClaims(body.Sections, material.Claims)
 		normalizeApplicationOwnedSectionAuthority(body.Sections, material.Claims)
 		repairReceiptAvailabilityClaims(&body, material)
+		normalizeRenderedNumericalBoundary(&body, material)
 		neutralizeInternalReferenceMentions(&body, material)
 		ensureVisibleComparisonBoundary(&body, material)
 		neutralizeUnsupportedCausalAttribution(&body)
@@ -855,6 +857,43 @@ func repairReceiptAvailabilityClaims(body *finalBody, material synthesisPromptIn
 	for index := range body.NextActions {
 		body.NextActions[index] = renderOperationIDs(body.NextActions[index])
 	}
+}
+
+const (
+	receiptBackedNumericalBoundary = "Only values backed by validated deterministic receipts are rendered; unsupported measures remain unavailable."
+	receiptInspectionNextAction    = "Inspect the validated deterministic receipts and period definitions before using the rendered measures."
+)
+
+var staleReceiptResolutionActionPattern = regexp.MustCompile(
+	`(?i)\b(?:resolve|obtain|generate)\s+(?:the\s+)?(?:validated\s+)?deterministic\s+(?:calculation\s+)?receipts?\b`,
+)
+
+// The model remains numerically silent, but the final answer does not: Go may append values from
+// validated receipts after synthesis. Once those receipts exist, application-owned prose replaces
+// stale draft language that would otherwise contradict the deterministic renderer.
+func normalizeRenderedNumericalBoundary(body *finalBody, material synthesisPromptInput) {
+	if len(material.Receipts) == 0 {
+		return
+	}
+	limitations := make([]string, 0, len(body.Limitations))
+	for _, limitation := range body.Limitations {
+		if strings.Contains(strings.ToLower(limitation), "numerically silent") {
+			limitations = appendUnique(limitations, receiptBackedNumericalBoundary)
+			continue
+		}
+		limitations = appendUnique(limitations, limitation)
+	}
+	body.Limitations = limitations
+
+	nextActions := make([]string, 0, len(body.NextActions))
+	for _, action := range body.NextActions {
+		if staleReceiptResolutionActionPattern.MatchString(action) {
+			nextActions = appendUnique(nextActions, receiptInspectionNextAction)
+			continue
+		}
+		nextActions = appendUnique(nextActions, action)
+	}
+	body.NextActions = nextActions
 }
 
 func operationDisplayName(operation string) string {
