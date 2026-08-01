@@ -648,6 +648,53 @@ func TestSpecialistUsesDeterministicAuthorityAfterProviderFailure(t *testing.T) 
 	}
 }
 
+func TestFinancialQualityRetriesOneSemanticallyEmptyPacket(t *testing.T) {
+	now := time.Now().UTC()
+	request := validContextRequest(now)
+	request.SpecialistRole = roles.FinancialQuality
+	client := &fakeCompleter{answers: []string{
+		`{"findings":[],"counterevidence":[],"assumptions":[],"missing_evidence":[],"conflicts":[],"uncertainties":[],"handoff_notes":[]}`,
+		`{"findings":[{"claim_type":"fact","statement":"The filing provides authorized qualitative financial context.","evidence_refs":["evidence-1"],"confidence":0.8}],"counterevidence":[],"assumptions":[],"missing_evidence":[],"conflicts":[],"uncertainties":[],"handoff_notes":[]}`,
+	}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+
+	_, firstErr := adapter.RunAttempt(context.Background(), request, 0)
+	var temporary interface{ Temporary() bool }
+	if !errors.As(firstErr, &temporary) || !temporary.Temporary() {
+		t.Fatalf("first empty packet was not marked for one bounded retry: %v", firstErr)
+	}
+	packet, err := adapter.RunAttempt(context.Background(), request, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(packet.Findings) != 1 || len(client.requests) != 2 {
+		t.Fatalf("bounded semantic recovery failed: packet=%+v calls=%d", packet, len(client.requests))
+	}
+	if client.requests[1].MaxTokens != 2800 ||
+		!strings.Contains(client.requests[1].Messages[0].Content, "previous provider attempt") {
+		t.Fatalf("bounded recovery contract was not applied: %+v", client.requests[1])
+	}
+}
+
+func TestFinancialQualityFailsClosedAfterSecondSemanticallyEmptyPacket(t *testing.T) {
+	now := time.Now().UTC()
+	request := validContextRequest(now)
+	request.SpecialistRole = roles.FinancialQuality
+	client := &fakeCompleter{answers: []string{
+		`{"findings":[],"counterevidence":[],"assumptions":[],"missing_evidence":[],"conflicts":[],"uncertainties":[],"handoff_notes":[]}`,
+	}}
+	adapter, _ := New(client, "local-model", staticMaterials{material: validMaterial(now)})
+
+	_, err := adapter.RunAttempt(context.Background(), request, 1)
+	var temporary interface{ Temporary() bool }
+	if err == nil || !errors.As(err, &temporary) || temporary.Temporary() {
+		t.Fatalf("second empty packet did not fail closed: %v", err)
+	}
+	if len(client.requests) != 1 {
+		t.Fatalf("second empty packet expanded the retry budget: %d", len(client.requests))
+	}
+}
+
 func TestSpecialistCanonicalizesDuplicateReferencesWithoutExpandingAuthority(t *testing.T) {
 	now := time.Now().UTC()
 	client := &fakeCompleter{answers: []string{`{

@@ -145,6 +145,18 @@ type packetBody struct {
 	HandoffNotes    []string            `json:"handoff_notes,omitempty"`
 }
 
+type emptyFinancialQualityPacketError struct {
+	retry bool
+}
+
+func (err emptyFinancialQualityPacketError) Error() string {
+	return "financial-quality specialist produced no authorized claims"
+}
+
+func (err emptyFinancialQualityPacketError) Temporary() bool {
+	return err.retry
+}
+
 func (adapters *Adapters) Run(ctx context.Context, request contracts.ContextRequest) (contracts.ContextPacket, error) {
 	return adapters.run(ctx, request, nil, 0)
 }
@@ -252,7 +264,21 @@ func (adapters *Adapters) run(ctx context.Context, request contracts.ContextRequ
 			return contracts.ContextPacket{}, fmt.Errorf("decode context packet body after bounded truncation retry: %w", err)
 		}
 	}
-	return buildContextPacket(request, material, body)
+	packet, err := buildContextPacket(request, material, body)
+	if err != nil {
+		return contracts.ContextPacket{}, err
+	}
+	if request.SpecialistRole != roles.FinancialQuality ||
+		len(packet.Findings)+len(packet.Counterevidence) > 0 {
+		return packet, nil
+	}
+	if attempt == 0 {
+		return contracts.ContextPacket{}, emptyFinancialQualityPacketError{retry: true}
+	}
+	if recovered, recoveryErr := deterministicRecoveryPacket(request, material); recoveryErr == nil {
+		return recovered, nil
+	}
+	return contracts.ContextPacket{}, emptyFinancialQualityPacketError{}
 }
 
 func deterministicRecoveryPacket(request contracts.ContextRequest, material Material) (contracts.ContextPacket, error) {

@@ -72,12 +72,12 @@ export async function createFollowUp(runID: string, question: string, retain: bo
 }
 
 export async function listCases(): Promise<CaseSummary[]> {
-  const payload = await readJSON<{ cases: CaseSummary[] }>(await fetch("/api/v1/cases"));
+  const payload = await readJSON<{ cases: CaseSummary[] }>(await fetch("/api/v1/cases", { cache: "no-store" }));
   return payload.cases;
 }
 
 export async function getCase(caseID: string): Promise<StoredCase> {
-  return readJSON(await fetch(`/api/v1/cases/${encodeURIComponent(caseID)}`));
+  return readJSON(await fetch(`/api/v1/cases/${encodeURIComponent(caseID)}`, { cache: "no-store" }));
 }
 
 export async function deleteCase(caseID: string): Promise<void> {
