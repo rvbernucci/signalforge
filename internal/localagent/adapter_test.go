@@ -1911,6 +1911,7 @@ func TestReceiptBackedRendererReconcilesStaleNumericalSilenceProse(t *testing.T)
 			"Specific magnitudes remain numerically silent.",
 			"Exact numerical values for revenue and operating income are withheld.",
 			"Specific metric values are unavailable due to numerical silence in the provided context.",
+			"Specific numerical values for growth, margin, and cash conversion are not present in the numerical_context.",
 			"Source scope is bounded.",
 		},
 		NextActions: []string{

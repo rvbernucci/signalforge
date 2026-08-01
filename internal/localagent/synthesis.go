@@ -867,7 +867,7 @@ const (
 var (
 	staleNumericalBoundaryPattern = regexp.MustCompile(
 		`(?i)\b(?:numerically\s+silent|numerical\s+silence)\b|` +
-			`\b(?:exact|specific)\s+(?:metric\s+)?numerical\s+values?\b.{0,96}\b(?:withheld|unavailable|missing|absent)\b`,
+			`\b(?:exact|specific)\s+(?:metric\s+)?numerical\s+values?\b.{0,96}\b(?:withheld|unavailable|missing|absent|not\s+(?:present|available))\b`,
 	)
 	staleReceiptResolutionActionPattern = regexp.MustCompile(
 		`(?i)\b(?:resolve|obtain|generate|retrieve)\s+(?:the\s+)?(?:validated\s+)?deterministic\s+(?:calculation\s+)?receipts?\b`,
