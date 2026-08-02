@@ -46,12 +46,11 @@ final synthesis, deterministic authority, and release validation remain under Si
 control. If the optional route fails, the governed local path can recover. If core local inference
 is unavailable, the product fails closed.
 
-The frozen evaluation completed one hundred eighty of one hundred eighty Radeon journeys and
-release contracts, with zero false-release candidates in the bounded model-assisted review.
-Forty of forty Gemma contract checks passed. Four context workers completed the measured workload
-in one hundred fifty-seven point four six nine seconds, twenty-nine point one seven percent faster
-than the three-worker control. A five-hour twenty-eight-minute soak showed no observed growth in
-allocated VRAM.
+In the bounded Radeon model tournament, Gemma passed all forty contract checks and reached 86.46
+median decode tokens per second. Qwen also passed forty of forty at 26.39 tokens per second, while
+Granite passed thirty-five of forty at 24.99. We therefore selected Gemma for this workload, not as
+a universal ranking. Four workers then reduced end-to-end time by 29.17 percent versus the passing
+three-worker control.
 
 These are application-specific engineering results, not universal model rankings or independent
 human-ground-truth accuracy. SignalForge can make mistakes. It is research software, not an audit,

@@ -59,13 +59,13 @@
       "check_id": "final-media-and-submission-links",
       "required": true,
       "status": "passed",
-      "evidence": "evidence/final-release-authority.json; GitHub release v1.2.0"
+      "evidence": "evidence/final-release-authority.json; GitHub release v1.2.1"
     },
     {
       "check_id": "final-human-release-authority",
       "required": true,
       "status": "passed",
-      "evidence": "evidence/final-release-authority.json; accepted_with_documented_limitations at 2026-08-02T02:28:46Z"
+      "evidence": "evidence/final-release-authority.json; accepted_with_documented_limitations at 2026-08-02T14:36:40Z"
     }
   ]
 }

@@ -39,7 +39,7 @@
     }
   },
   "media_release": {
-    "tag": "v1.2.0",
+    "tag": "v1.2.1",
     "authority_evidence": "evidence/final-release-authority.json"
   },
   "authority_boundary": "This record freezes the public application image, verified supply-chain checks, exact-image Radeon readback, and media release reference. Project-owner submission authority and its limitations are recorded separately in evidence/final-release-authority.json."

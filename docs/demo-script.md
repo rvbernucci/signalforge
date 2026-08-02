@@ -1,6 +1,6 @@
 # SignalForge Demo Script
 
-Final duration: 4 minutes 26 seconds (266.196 seconds). The final cut combines authentic product
+Final duration: 4 minutes 26 seconds (266.496 seconds). The final cut combines authentic product
 footage from the public fixture replay with current, hash-bound architecture and evidence slides.
 It never presents a replay as a new live inference run.
 
@@ -54,10 +54,12 @@ and Radeon signals while keeping model bodies protected.
 Show local Gemma on ROCm, the bounded optional Radeon API route, local recovery, and fail-closed
 behavior when core inference is unavailable.
 
-### 3:32-4:00 - Radeon Optimization
+### 3:32-4:00 - Radeon Model Selection And Optimization
 
-Show the selected Gemma profile, four-slot optimization, 180/180 population result, and 5h28 soak.
-State that these are bounded application measurements, not universal model rankings.
+Show the measured Gemma, Qwen, and Granite profiles. Explain that Gemma and Qwen passed `40/40`
+contract checks, Granite passed `35/40`, and Gemma measured `3.28x` Qwen's median decode
+throughput in this bounded workload. Then show the `29.17%` four-worker end-to-end improvement.
+State that model, runtime, and precision differ and that this is not a universal ranking.
 
 ### 4:00-4:21 - Frozen Evidence And Limitations
 
