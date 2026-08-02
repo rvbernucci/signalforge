@@ -11,23 +11,27 @@
   "artifacts": {
     "readme": {
       "path": "README.md",
-      "sha256": "ca141b5cc8b717e6c2812630c1f48f7e03b3ecbf33c3611d1cc3cdfa2cdfaff2"
+      "sha256": "131e3b0eb00f883efb8e1b046ee587b1e5d77972c72abbd67cd55cc5dbcbc99f"
     },
     "judge_guide": {
       "path": "JUDGES.md",
-      "sha256": "2afdaa9e31ca1d19106917d98c009c210f4d48a58482610763c42254de7388ae"
+      "sha256": "c617c072260236ce14d30e8aa694c8a2a177fff5ff7c784a8b3367079a87b791"
     },
     "project_specification_source": {
       "path": "docs/project-specification.md",
-      "sha256": "4a25b150a8edccc13c1549bebb8611b2bd73b6763f7306003b68deb98a27d0f2"
+      "sha256": "1e706e4f29e084ac61d93fe299ecda37b56f297ab91ff6167b88b6f26068b804"
     },
     "track2_compliance": {
       "path": "docs/track2-compliance.md",
-      "sha256": "a2a3738c5a2fe529ff4c6d2bcc1af9b89c948dbde2da975df214a91aa8d66444"
+      "sha256": "ba6893ed3d8d77e1cf3ed633404b704efb661d973f08f82e5c994dcdb15ee8ba"
     },
     "release_identity": {
       "path": "evidence/release-identity.json",
-      "sha256": "96f646823235ebd0ed098c9bbc3213fdce77060b065ff971e7aa7743b37a245e"
+      "sha256": "b174a2adfe6c224ee0c5b1ce0b0397af5a5a161f518773b3f2895a78011c7f5d"
+    },
+    "mission_control_runtime": {
+      "path": "evidence/mission-control-runtime.json",
+      "sha256": "4459f1d856ea176a90501e7a057765a43578a938a64ae11dc43f8fdaf05b9e3a"
     },
     "architecture": {
       "path": "docs/architecture.svg",

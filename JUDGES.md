@@ -28,7 +28,9 @@ The current application image and supply-chain checks are frozen in
 [`release-identity.json`](evidence/release-identity.json). The image is public, immutable,
 `linux/amd64`, SBOM- and provenance-attested, vulnerability-scanned, clean-pulled, and
 exact-image fixture-tested. The separate [release checklist](evidence/release-checklist.json)
-retains the remaining Radeon readback, media, and human-authority gates.
+retains the remaining Radeon readback, media, and human-authority gates. The synchronized
+[Mission Control runtime](evidence/mission-control-runtime.json) passed against this exact image
+and preserved answer completion after deliberate telemetry loss.
 
 ## What To Inspect
 

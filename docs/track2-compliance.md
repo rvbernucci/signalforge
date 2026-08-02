@@ -79,6 +79,8 @@ The release workflow built the current `linux/amd64` image, attached SBOM and pr
 zero HIGH/CRITICAL vulnerabilities, verified a clean public pull, and ran the exact image fixture.
 The immutable image and source identity are recorded in
 [`release-identity.json`](../evidence/release-identity.json) and the Radeon appliance manifest.
+The synchronized [Mission Control runtime](../evidence/mission-control-runtime.json) passed
+against that digest, including deliberate observability loss.
 Final media URLs and hashes remain a separate gate in
 [`release-checklist.json`](../evidence/release-checklist.json).
 

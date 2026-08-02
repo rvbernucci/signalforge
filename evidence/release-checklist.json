@@ -52,8 +52,8 @@
     {
       "check_id": "mission-control-runtime",
       "required": true,
-      "status": "pending",
-      "evidence": "Complete after the synchronized Mission Control workflow passes against the immutable image."
+      "status": "passed",
+      "evidence": "evidence/mission-control-runtime.json; GitHub Actions run 30724772072"
     },
     {
       "check_id": "final-media-and-submission-links",

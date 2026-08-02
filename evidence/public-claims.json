@@ -96,7 +96,7 @@
       "evidence": [
         {
           "path": "evidence/release-identity.json",
-          "sha256": "96f646823235ebd0ed098c9bbc3213fdce77060b065ff971e7aa7743b37a245e"
+          "sha256": "b174a2adfe6c224ee0c5b1ce0b0397af5a5a161f518773b3f2895a78011c7f5d"
         }
       ],
       "public_files": [

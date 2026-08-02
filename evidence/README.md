@@ -20,6 +20,8 @@ excluded.
   source commit, platform manifest, CI, and supply-chain checks.
 - [`release-checklist.json`](release-checklist.json) separates completed technical gates from
   pending Radeon readback, media, and human authority.
+- [`mission-control-runtime.json`](mission-control-runtime.json) records the sanitized synchronized
+  observability run and telemetry-loss behavior against the immutable image.
 
 These artifacts prove only their stated scope. They do not reveal private evaluation cases, grant
 human professional assurance, or satisfy the remaining external release gates.

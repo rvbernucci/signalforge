@@ -241,7 +241,9 @@ It was built from source commit `ac8685307a420e23f73632f0e59fc647e6fdd870` for `
 The release workflow attached SBOM and provenance, found zero HIGH/CRITICAL vulnerabilities,
 verified a clean public pull, and ran the exact image fixture. See
 [`release-identity.json`](evidence/release-identity.json) and the
-[`release-checklist.json`](evidence/release-checklist.json) for the remaining external gates.
+[`release-checklist.json`](evidence/release-checklist.json) for the remaining external gates. The
+synchronized [Mission Control runtime](evidence/mission-control-runtime.json) also passed against
+this exact digest, including deliberate observability loss.
 
 ## Data, Rights, And Privacy
 

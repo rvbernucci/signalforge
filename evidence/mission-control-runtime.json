@@ -1,0 +1,30 @@
+{
+  "schema_version": "signalforge/mission-control-runtime/v1",
+  "status": "passed",
+  "workflow": {
+    "source_commit": "2648e999429c67950ea5b0b3c5a0a6125d469ddf",
+    "run_id": 30724772072,
+    "url": "https://github.com/rvbernucci/signalforge/actions/runs/30724772072"
+  },
+  "application_image": "ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
+  "synchronized_run": {
+    "run_id": "run-019fbfd0-6abb-7808-9d92-2b7ecf22b022",
+    "trace_id": "48a723804569a0b7e448d032598ab351"
+  },
+  "surfaces": {
+    "workspace": "passed",
+    "grafana": "passed",
+    "prometheus_via_grafana": "passed",
+    "loki_via_grafana": "passed",
+    "tempo_via_grafana": "passed"
+  },
+  "observability_loss": {
+    "run_id": "run-019fbfd0-ad58-7d8b-984b-388fd751397b",
+    "answer_completed": true,
+    "fail_open_for_telemetry_only": true
+  },
+  "privacy": {
+    "protected_model_bodies_exported": false,
+    "artifact_scope": "sanitized_summary_only"
+  }
+}

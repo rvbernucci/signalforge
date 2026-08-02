@@ -26,7 +26,11 @@
       "exact_image_fixture": "passed"
     },
     "mission_control_runtime": {
-      "status": "pending"
+      "status": "passed",
+      "source_commit": "2648e999429c67950ea5b0b3c5a0a6125d469ddf",
+      "run_id": 30724772072,
+      "url": "https://github.com/rvbernucci/signalforge/actions/runs/30724772072",
+      "evidence": "evidence/mission-control-runtime.json"
     },
     "exact_image_radeon_readback": {
       "status": "pending"

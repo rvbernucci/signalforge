@@ -208,6 +208,7 @@ should be consulted before financial decisions.
 - Runtime optimization: `evidence/radeon-optimization.json`
 - Hardening: `evidence/hardening-matrix.json`
 - Application release identity: `evidence/release-identity.json`
+- Synchronized Mission Control: `evidence/mission-control-runtime.json`
 - Accounting authority: `docs/accounting-authority/technology20-accounting-professional-review.md`
 
 <!-- evidence-claim:current-product -->
