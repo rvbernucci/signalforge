@@ -1,7 +1,7 @@
 name: signalforge
 
 x-app-common: &app-common
-  image: ${SIGNALFORGE_APP_IMAGE:-ghcr.io/rvbernucci/signalforge@sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b}
+  image: ${SIGNALFORGE_APP_IMAGE:-ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43}
   platform: linux/amd64
   pull_policy: missing
   restart: "on-failure:3"
@@ -25,8 +25,6 @@ x-app-common: &app-common
     - type: bind
       source: ${SIGNALFORGE_PERSIST_ROOT:-./.signalforge/radeon}/data
       target: /var/lib/signalforge
-  ports:
-    - "127.0.0.1:${SIGNALFORGE_APP_PORT:-8080}:8080"
   healthcheck:
     test:
       - CMD
@@ -297,6 +295,8 @@ services:
     <<: *app-common
     profiles:
       - fixture
+    ports:
+      - "127.0.0.1:${SIGNALFORGE_APP_PORT:-8080}:8080"
     depends_on:
       storage-init:
         condition: service_completed_successfully
@@ -304,11 +304,14 @@ services:
       signalforge:
         aliases:
           - signalforge
+      operator: {}
 
   signalforge-local:
     <<: *app-common
     profiles:
       - radeon-local
+    ports:
+      - "127.0.0.1:${SIGNALFORGE_APP_PORT:-8080}:8080"
     depends_on:
       storage-init:
         condition: service_completed_successfully
@@ -319,11 +322,14 @@ services:
       signalforge:
         aliases:
           - signalforge
+      operator: {}
 
   signalforge-championship:
     <<: *app-common
     profiles:
       - championship
+    ports:
+      - "127.0.0.1:${SIGNALFORGE_APP_PORT:-8080}:8080"
     depends_on:
       storage-init:
         condition: service_completed_successfully
@@ -353,6 +359,7 @@ services:
         aliases:
           - signalforge
       specialist-egress: {}
+      operator: {}
 
   observability-init:
     profiles:
@@ -404,6 +411,7 @@ services:
         condition: service_started
     networks:
       - signalforge
+      - operator
 
   prometheus:
     profiles:
@@ -463,6 +471,10 @@ services:
     environment:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PLUGINS_PLUGIN_ADMIN_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL_AUTO_UPDATE: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+      GF_PLUGINS_PUBLIC_KEY_RETRIEVAL_DISABLED: "true"
       GF_SECURITY_ADMIN_USER: signalforge
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
       GF_USERS_ALLOW_SIGN_UP: "false"
@@ -487,6 +499,7 @@ services:
         condition: service_started
     networks:
       - signalforge
+      - operator
 
 secrets:
   hf_token:

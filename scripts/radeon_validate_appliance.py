@@ -57,7 +57,6 @@ def validate(root: Path, manifest_path: Path | None = None) -> dict[str, Any]:
     )
     appliance = selection.manifest
     default_manifest_path = root / "deploy/radeon/appliance-manifest.json"
-    default_appliance = json.loads(default_manifest_path.read_text(encoding="utf-8"))
     is_default = selection.path == default_manifest_path.resolve()
     model_manifest_path = radeon_manifest.component_path(
         appliance["model_manifest"],
@@ -101,7 +100,7 @@ def validate(root: Path, manifest_path: Path | None = None) -> dict[str, Any]:
         if is_default:
             identity_consistent = image in compose and image in environment
             identity_detail = (
-                f"{identity} rollback identity is consistent across manifest, Compose, "
+                f"{identity} current identity is consistent across manifest, Compose, "
                 "and environment example"
             )
         else:
@@ -116,7 +115,7 @@ def validate(root: Path, manifest_path: Path | None = None) -> dict[str, Any]:
                 and "--manifest-sha256" in startup
             )
             identity_detail = (
-                f"{identity} candidate identity is transported through the hash-bound "
+                f"{identity} explicit override is transported through the hash-bound "
                 "generated environment"
             )
         checks.append(
@@ -128,19 +127,21 @@ def validate(root: Path, manifest_path: Path | None = None) -> dict[str, Any]:
         )
     checks.append(
         result(
-            "rollback-default-preserved",
-            default_appliance["application"]["image"] in compose
-            and default_appliance["application"]["image"] in environment
-            and default_appliance["runtime"]["image"] in compose
-            and default_appliance["runtime"]["image"] in environment,
-            "accepted rollback remains the static Compose and environment default",
+            "current-default-consistent",
+            appliance["application"]["image"] in compose
+            and appliance["application"]["image"] in environment
+            and appliance["runtime"]["image"] in compose
+            and appliance["runtime"]["image"] in environment
+            if is_default
+            else True,
+            "the current manifest is the static Compose and environment default",
         )
     )
     checks.append(
         result(
-            "candidate-source-commit",
-            is_default or bool(re.fullmatch(r"[0-9a-f]{40}", appliance["application"]["source_commit"])),
-            "candidate application source commit is complete",
+            "application-source-commit",
+            bool(re.fullmatch(r"[0-9a-f]{40}", appliance["application"]["source_commit"])),
+            "application source commit is complete",
         )
     )
     for identity, image in appliance["utility_images"].items():

@@ -28,14 +28,14 @@
     {
       "check_id": "ci-green-on-frozen-source",
       "required": true,
-      "status": "pending",
-      "evidence": "Complete after the source candidate is committed and GitHub Actions passes."
+      "status": "passed",
+      "evidence": "evidence/release-identity.json; GitHub Actions run 30723178138"
     },
     {
       "check_id": "final-linux-amd64-image",
       "required": true,
-      "status": "pending",
-      "evidence": "Complete after the frozen source is published by immutable GHCR digest."
+      "status": "passed",
+      "evidence": "evidence/release-identity.json; deploy/radeon/appliance-manifest.json"
     },
     {
       "check_id": "exact-image-radeon-readback",
@@ -46,8 +46,14 @@
     {
       "check_id": "image-supply-chain",
       "required": true,
+      "status": "passed",
+      "evidence": "evidence/release-identity.json; GitHub Actions run 30723351067"
+    },
+    {
+      "check_id": "mission-control-runtime",
+      "required": true,
       "status": "pending",
-      "evidence": "Complete after SBOM, provenance, vulnerability scan, and anonymous pull verification."
+      "evidence": "Complete after the synchronized Mission Control workflow passes against the immutable image."
     },
     {
       "check_id": "final-media-and-submission-links",

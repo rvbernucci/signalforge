@@ -24,9 +24,11 @@ go run ./cmd/signalforge-workspace --mode fixture --static-dir web/dist
 
 Open `http://127.0.0.1:8080/?audience=judge`.
 
-The final immutable image, SBOM, provenance, public-pull receipt, and media hashes are bound at
-release freeze through the Radeon appliance manifest and judge package. Moving `main` is not
-presented as an immutable release.
+The current application image and supply-chain checks are frozen in
+[`release-identity.json`](evidence/release-identity.json). The image is public, immutable,
+`linux/amd64`, SBOM- and provenance-attested, vulnerability-scanned, clean-pulled, and
+exact-image fixture-tested. The separate [release checklist](evidence/release-checklist.json)
+retains the remaining Radeon readback, media, and human-authority gates.
 
 ## What To Inspect
 
@@ -126,11 +128,9 @@ Fresh Radeon workspace:
 
 ```bash
 make radeon-bootstrap \
-  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   BACKEND=auto \
   ACCEPT_GEMMA_LICENSE=yes
 make radeon-up \
-  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   BACKEND=auto
 ```
 
@@ -145,11 +145,12 @@ storage, secret files, profiles, fallback, observability, and safe cleanup.
 - Public evidence contains aggregates and hashes only, never prompts, answers, source bodies,
   private traces, credentials, hidden reasoning, or sealed labels.
 - Human investor and final judge acceptance remain external gates.
-- The exact release identity is authoritative only after the release workflow publishes and
-  verifies the immutable image.
+- The application image identity is authoritative and immutable; final media binding,
+  exact-image Radeon readback, and human release authority remain separate external gates.
 
 <!-- evidence-claim:current-product -->
 <!-- evidence-claim:current-evaluation -->
 <!-- evidence-claim:current-radeon-runtime -->
 <!-- evidence-claim:accounting-authority -->
+<!-- evidence-claim:release-identity -->
 <!-- evidence-claim:privacy-and-rights -->

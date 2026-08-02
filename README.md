@@ -172,12 +172,10 @@ On a fresh AMD Radeon Cloud workspace:
 
 ```bash
 make radeon-bootstrap \
-  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   BACKEND=auto \
   ACCEPT_GEMMA_LICENSE=yes
 
 make radeon-up \
-  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   BACKEND=auto
 ```
 
@@ -231,6 +229,20 @@ The current candidate completed:
 These are candidate-specific engineering results. Model-assisted review is not independent human
 ground truth, professional assurance, or final judging authority.
 
+### Verified Application Image
+
+The current application image is frozen and publicly pullable:
+
+```text
+ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43
+```
+
+It was built from source commit `ac8685307a420e23f73632f0e59fc647e6fdd870` for `linux/amd64`.
+The release workflow attached SBOM and provenance, found zero HIGH/CRITICAL vulnerabilities,
+verified a clean public pull, and ran the exact image fixture. See
+[`release-identity.json`](evidence/release-identity.json) and the
+[`release-checklist.json`](evidence/release-checklist.json) for the remaining external gates.
+
 ## Data, Rights, And Privacy
 
 SignalForge uses public regulatory, macroeconomic, market, and official company sources under
@@ -272,8 +284,8 @@ The public repository intentionally contains no sprint archive or superseded rel
 - The local 26B model limits whole-journey concurrency even though specialist calls can overlap.
 - Literal OCI execution on some OneClick hosts depends on their container and mount policy; the
   native ROCm backend preserves the same source and model identity contract.
-- Final release identity, media hashes, and human acceptance are established only when the
-  championship release is frozen.
+- The application image is frozen; exact-image Radeon readback, final media binding, and final
+  human release authority remain separate gates.
 
 ## License
 
@@ -284,4 +296,5 @@ software, fonts, models, services, and data remain under their respective terms.
 <!-- evidence-claim:current-evaluation -->
 <!-- evidence-claim:current-radeon-runtime -->
 <!-- evidence-claim:accounting-authority -->
+<!-- evidence-claim:release-identity -->
 <!-- evidence-claim:privacy-and-rights -->

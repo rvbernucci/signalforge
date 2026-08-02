@@ -1,0 +1,36 @@
+{
+  "schema_version": "signalforge/release-identity/v1",
+  "status": "application_image_verified",
+  "application": {
+    "source_commit": "ac8685307a420e23f73632f0e59fc647e6fdd870",
+    "public_tag": "ghcr.io/rvbernucci/signalforge:sha-ac86853",
+    "immutable_image": "ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
+    "platform": "linux/amd64",
+    "platform_manifest_digest": "sha256:622013807d01c47e05f1f0a1032a534a237d5c77483b746f3c64ea9c29ce4524"
+  },
+  "verification": {
+    "source_ci": {
+      "status": "passed",
+      "run_id": 30723178138,
+      "url": "https://github.com/rvbernucci/signalforge/actions/runs/30723178138"
+    },
+    "container_release": {
+      "status": "passed",
+      "run_id": 30723351067,
+      "url": "https://github.com/rvbernucci/signalforge/actions/runs/30723351067",
+      "linux_amd64_manifest": "passed",
+      "sbom_attached": true,
+      "provenance_attached": true,
+      "high_or_critical_vulnerabilities": 0,
+      "clean_public_pull": "passed",
+      "exact_image_fixture": "passed"
+    },
+    "mission_control_runtime": {
+      "status": "pending"
+    },
+    "exact_image_radeon_readback": {
+      "status": "pending"
+    }
+  },
+  "authority_boundary": "This record freezes the public application image and its verified supply-chain checks. It does not grant final human release authority or substitute for exact-image Radeon readback and final media binding."
+}

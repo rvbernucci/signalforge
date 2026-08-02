@@ -53,14 +53,14 @@ class RadeonNativeRuntimeTests(unittest.TestCase):
 
     def test_start_rejects_unresolvable_manifest_source_before_hydration(self) -> None:
         appliance = json.loads(
-            (ROOT / "deploy/radeon/appliance-manifest.vnext.json").read_text(
+            (ROOT / "deploy/radeon/appliance-manifest.json").read_text(
                 encoding="utf-8"
             )
         )
         appliance["application"]["source_commit"] = "f" * 40
         selection = MANIFEST.ManifestSelection(
-            path=ROOT / "deploy/radeon/appliance-manifest.vnext.json",
-            reference="deploy/radeon/appliance-manifest.vnext.json",
+            path=ROOT / "deploy/radeon/appliance-manifest.json",
+            reference="deploy/radeon/appliance-manifest.json",
             sha256="1" * 64,
             manifest=appliance,
         )
@@ -80,7 +80,7 @@ class RadeonNativeRuntimeTests(unittest.TestCase):
 
     def test_mismatched_build_receipt_never_reaches_credential_environment(self) -> None:
         selection = MANIFEST.select_manifest(
-            ROOT / "deploy/radeon/appliance-manifest.vnext.json",
+            ROOT / "deploy/radeon/appliance-manifest.json",
             environment={},
         )
         binary_sha256 = "5" * 64

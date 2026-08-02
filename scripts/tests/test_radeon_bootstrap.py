@@ -65,7 +65,17 @@ class RadeonBootstrapTests(unittest.TestCase):
             )
 
     def test_conflicting_manifest_authorities_fail_before_bootstrap(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            tempfile.TemporaryDirectory(dir=ROOT / "deploy/radeon") as manifest_directory,
+        ):
+            override = Path(manifest_directory) / "appliance-manifest-override.json"
+            override.write_text(
+                (ROOT / "deploy/radeon/appliance-manifest.json").read_text(
+                    encoding="utf-8"
+                ),
+                encoding="utf-8",
+            )
             result = subprocess.run(
                 [
                     sys.executable,
@@ -73,7 +83,7 @@ class RadeonBootstrapTests(unittest.TestCase):
                     "--profile",
                     "fixture",
                     "--manifest",
-                    "deploy/radeon/appliance-manifest.vnext.json",
+                    str(override),
                     "--persist-root",
                     directory,
                     "--noninteractive",

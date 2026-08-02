@@ -27,10 +27,10 @@ that both public AMD GPU Cloud endpoints and dedicated vLLM APIs are acceptable 
 | PR title format | Complete: `Track 2, SignalForge Labs, SignalForge` |
 | English source and materials | Complete |
 | Complete source and README | Complete |
-| Project specification | Current Markdown source; frozen PDF is attached to the final release |
+| Project specification | Current Markdown source; final PDF URL and hash remain a media gate |
 | Architecture diagram | [`architecture.svg`](architecture.svg) |
-| 3-5 minute demo video | Frozen video is attached to the final release |
-| PPT or poster | Frozen deck is attached to the final release |
+| 3-5 minute demo video | Final video URL and hash remain a media gate |
+| PPT or poster | Final deck URL and hash remain a media gate |
 
 Moving media binaries are not retained on `main`; the final judge package binds their release URLs
 and SHA-256 values after freeze.
@@ -75,10 +75,12 @@ SignalForge implements all five listed capability families; the rule requires at
 
 ## Artifact Integrity
 
-The release workflow builds `linux/amd64`, attaches SBOM and provenance, scans HIGH/CRITICAL
-vulnerabilities, verifies a public pull, and runs the exact image. The frozen source, image digest,
-media URLs, and hashes become authoritative only in the final Radeon appliance manifest and
-[`judge-package.json`](../evidence/judge-package.json).
+The release workflow built the current `linux/amd64` image, attached SBOM and provenance, found
+zero HIGH/CRITICAL vulnerabilities, verified a clean public pull, and ran the exact image fixture.
+The immutable image and source identity are recorded in
+[`release-identity.json`](../evidence/release-identity.json) and the Radeon appliance manifest.
+Final media URLs and hashes remain a separate gate in
+[`release-checklist.json`](../evidence/release-checklist.json).
 
 ## Known Limitations
 
@@ -92,4 +94,5 @@ media URLs, and hashes become authoritative only in the final Radeon appliance m
 <!-- evidence-claim:current-evaluation -->
 <!-- evidence-claim:current-radeon-runtime -->
 <!-- evidence-claim:accounting-authority -->
+<!-- evidence-claim:release-identity -->
 <!-- evidence-claim:privacy-and-rights -->

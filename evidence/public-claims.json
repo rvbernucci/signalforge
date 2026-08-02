@@ -90,6 +90,23 @@
       ]
     },
     {
+      "claim_id": "release-identity",
+      "text": "The current public application image is an immutable linux/amd64 artifact built from source commit ac8685307a420e23f73632f0e59fc647e6fdd870 with attached SBOM and provenance, zero HIGH/CRITICAL vulnerability findings, a clean public pull, and a passing exact-image fixture.",
+      "status": "verified",
+      "evidence": [
+        {
+          "path": "evidence/release-identity.json",
+          "sha256": "96f646823235ebd0ed098c9bbc3213fdce77060b065ff971e7aa7743b37a245e"
+        }
+      ],
+      "public_files": [
+        "README.md",
+        "JUDGES.md",
+        "docs/project-specification.md",
+        "docs/track2-compliance.md"
+      ]
+    },
+    {
       "claim_id": "privacy-and-rights",
       "text": "The public candidate excludes credentials, model weights, raw prompts and answers, hidden reasoning, sealed labels, and restricted source bodies; it redistributes only declared project and third-party material.",
       "status": "verified",

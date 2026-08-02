@@ -182,8 +182,8 @@ scripts/verify.sh
 Fresh Radeon runtime:
 
 ```text
-make radeon-bootstrap MANIFEST=deploy/radeon/appliance-manifest.vnext.json BACKEND=auto ACCEPT_GEMMA_LICENSE=yes
-make radeon-up MANIFEST=deploy/radeon/appliance-manifest.vnext.json BACKEND=auto
+make radeon-bootstrap BACKEND=auto ACCEPT_GEMMA_LICENSE=yes
+make radeon-up BACKEND=auto
 ```
 
 ## Honest Limitations
@@ -193,7 +193,8 @@ make radeon-up MANIFEST=deploy/radeon/appliance-manifest.vnext.json BACKEND=auto
 - Citation presence does not by itself prove semantic entailment.
 - Whole-journey concurrency is bounded by the local 26B model.
 - Some OneClick hosts require the native ROCm backend because of container mount policy.
-- Final release identity and human acceptance exist only after the exact release is frozen.
+- The application image is frozen and supply-chain verified; exact-image Radeon readback, final
+  media binding, and human acceptance remain separate gates.
 
 SignalForge can make mistakes. Important information must be verified, and qualified professionals
 should be consulted before financial decisions.
@@ -206,10 +207,12 @@ should be consulted before financial decisions.
 - Model selection: `evidence/radeon-baseline.json`
 - Runtime optimization: `evidence/radeon-optimization.json`
 - Hardening: `evidence/hardening-matrix.json`
+- Application release identity: `evidence/release-identity.json`
 - Accounting authority: `docs/accounting-authority/technology20-accounting-professional-review.md`
 
 <!-- evidence-claim:current-product -->
 <!-- evidence-claim:current-evaluation -->
 <!-- evidence-claim:current-radeon-runtime -->
 <!-- evidence-claim:accounting-authority -->
+<!-- evidence-claim:release-identity -->
 <!-- evidence-claim:privacy-and-rights -->

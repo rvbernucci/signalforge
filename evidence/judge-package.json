@@ -1,24 +1,33 @@
 {
   "schema_version": "signalforge/judge-package/v1",
   "status": "public_artifacts_verified",
-  "candidate_scope": "current_source_candidate",
+  "candidate_scope": "hash_bound_public_documents_and_verified_application_image",
   "release_authority": "not_granted",
+  "application_image": {
+    "source_commit": "ac8685307a420e23f73632f0e59fc647e6fdd870",
+    "immutable_reference": "ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
+    "platform": "linux/amd64"
+  },
   "artifacts": {
     "readme": {
       "path": "README.md",
-      "sha256": "260764cf80e289c96ebcf67c13722d18c02e40acd474ba0377c1f8c59c928ed8"
+      "sha256": "ca141b5cc8b717e6c2812630c1f48f7e03b3ecbf33c3611d1cc3cdfa2cdfaff2"
     },
     "judge_guide": {
       "path": "JUDGES.md",
-      "sha256": "fac0042a9944632d2d36912876f02c9e6091ba0c1590ff639358811aa560955a"
+      "sha256": "2afdaa9e31ca1d19106917d98c009c210f4d48a58482610763c42254de7388ae"
     },
     "project_specification_source": {
       "path": "docs/project-specification.md",
-      "sha256": "4f66bce7e653f167fe348533876d19bf0009e175ba51d5fbf9110b7bc79d1125"
+      "sha256": "4a25b150a8edccc13c1549bebb8611b2bd73b6763f7306003b68deb98a27d0f2"
     },
     "track2_compliance": {
       "path": "docs/track2-compliance.md",
-      "sha256": "3f3ed7daf35f879fe66d72e15471865e925389b6f3fc0633120ce61151cf0d22"
+      "sha256": "a2a3738c5a2fe529ff4c6d2bcc1af9b89c948dbde2da975df214a91aa8d66444"
+    },
+    "release_identity": {
+      "path": "evidence/release-identity.json",
+      "sha256": "96f646823235ebd0ed098c9bbc3213fdce77060b065ff971e7aa7743b37a245e"
     },
     "architecture": {
       "path": "docs/architecture.svg",

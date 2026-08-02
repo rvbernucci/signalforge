@@ -41,8 +41,6 @@ jq -e '
   all(.gates[]; .status == "passed" and (.source_hashes | length) > 0)
 ' evidence/hardening-matrix.json >/dev/null
 python3 scripts/radeon_validate_appliance.py >/dev/null
-python3 scripts/radeon_validate_appliance.py \
-  --manifest deploy/radeon/appliance-manifest.vnext.json >/dev/null
 python3 scripts/validate_observability.py
 python3 scripts/audit_restricted_egress.py >/dev/null
 

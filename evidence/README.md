@@ -16,9 +16,13 @@ excluded.
 - [`judge-package.json`](judge-package.json) hash-binds the current public judge documents and
   aggregate evidence.
 - [`public-claims.json`](public-claims.json) binds public claims to exact repository artifacts.
+- [`release-identity.json`](release-identity.json) freezes the verified public application image,
+  source commit, platform manifest, CI, and supply-chain checks.
+- [`release-checklist.json`](release-checklist.json) separates completed technical gates from
+  pending Radeon readback, media, and human authority.
 
 These artifacts prove only their stated scope. They do not reveal private evaluation cases, grant
-human professional assurance, or freeze a final image identity.
+human professional assurance, or satisfy the remaining external release gates.
 
 ## Reproducible Technical Evidence
 

@@ -7,6 +7,7 @@ import os
 import subprocess
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -18,65 +19,86 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
+@contextmanager
+def temporary_override_manifest():
+    with tempfile.TemporaryDirectory(dir=ROOT / "deploy/radeon") as directory:
+        path = Path(directory) / "appliance-manifest-override.json"
+        manifest = json.loads(
+            (ROOT / "deploy/radeon/appliance-manifest.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        manifest["application"]["image"] = (
+            "ghcr.io/rvbernucci/signalforge@sha256:" + "1" * 64
+        )
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        yield path
+
+
 class RadeonManifestTests(unittest.TestCase):
-    def test_default_preserves_accepted_rollback(self) -> None:
+    def test_default_selects_current_release(self) -> None:
         selection = MODULE.select_manifest(environment={})
         self.assertEqual(
             selection.manifest["application"]["image"],
             "ghcr.io/rvbernucci/signalforge@sha256:"
-            "cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b",
+            "4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
         )
         self.assertEqual(selection.reference, "deploy/radeon/appliance-manifest.json")
 
-    def test_explicit_candidate_selects_only_candidate_digest(self) -> None:
-        manifest_path = ROOT / "deploy/radeon/appliance-manifest.vnext.json"
-        expected_manifest = json.loads(manifest_path.read_text())
-        selection = MODULE.select_manifest(
-            manifest_path,
-            environment={},
-        )
-        self.assertEqual(
-            selection.manifest["application"]["image"],
-            expected_manifest["application"]["image"],
-        )
-        self.assertEqual(
-            selection.manifest["application"]["source_commit"],
-            expected_manifest["application"]["source_commit"],
-        )
-        self.assertRegex(
-            selection.manifest["application"]["image"],
-            r"^ghcr\.io/rvbernucci/signalforge@sha256:[0-9a-f]{64}$",
-        )
-        self.assertRegex(
-            selection.manifest["application"]["source_commit"],
-            r"^[0-9a-f]{40}$",
-        )
-        self.assertEqual(
-            selection.sha256,
-            hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
-        )
-        self.assertEqual(
-            selection.reference,
-            "deploy/radeon/appliance-manifest.vnext.json",
-        )
+    def test_explicit_override_selects_only_override_digest(self) -> None:
+        with temporary_override_manifest() as manifest_path:
+            expected_manifest = json.loads(manifest_path.read_text())
+            selection = MODULE.select_manifest(
+                manifest_path,
+                environment={},
+            )
+            self.assertEqual(
+                selection.manifest["application"]["image"],
+                expected_manifest["application"]["image"],
+            )
+            self.assertEqual(
+                selection.manifest["application"]["source_commit"],
+                expected_manifest["application"]["source_commit"],
+            )
+            self.assertRegex(
+                selection.manifest["application"]["image"],
+                r"^ghcr\.io/rvbernucci/signalforge@sha256:[0-9a-f]{64}$",
+            )
+            self.assertRegex(
+                selection.manifest["application"]["source_commit"],
+                r"^[0-9a-f]{40}$",
+            )
+            self.assertEqual(
+                selection.sha256,
+                hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+            )
+            self.assertTrue(
+                selection.reference.endswith("/appliance-manifest-override.json")
+            )
 
     def test_conflicting_cli_environment_and_generated_authorities_fail(self) -> None:
-        with self.assertRaisesRegex(MODULE.ManifestError, "conflicting appliance manifest"):
-            MODULE.select_manifest(
-                ROOT / "deploy/radeon/appliance-manifest.vnext.json",
-                environment={
-                    MODULE.MANIFEST_ENV: "deploy/radeon/appliance-manifest.json",
-                },
-            )
-        with self.assertRaisesRegex(MODULE.ManifestError, "conflicting appliance manifest"):
-            MODULE.select_manifest(
-                environment={
-                    MODULE.MANIFEST_ENV: "deploy/radeon/appliance-manifest.json",
-                },
-                generated_environment={
-                    MODULE.MANIFEST_ENV: "deploy/radeon/appliance-manifest.vnext.json",
-                },
-            )
+        with temporary_override_manifest() as manifest_path:
+            override_reference = MODULE.manifest_reference(manifest_path)
+            with self.assertRaisesRegex(
+                MODULE.ManifestError, "conflicting appliance manifest"
+            ):
+                MODULE.select_manifest(
+                    manifest_path,
+                    environment={
+                        MODULE.MANIFEST_ENV: "deploy/radeon/appliance-manifest.json",
+                    },
+                )
+            with self.assertRaisesRegex(
+                MODULE.ManifestError, "conflicting appliance manifest"
+            ):
+                MODULE.select_manifest(
+                    environment={
+                        MODULE.MANIFEST_ENV: "deploy/radeon/appliance-manifest.json",
+                    },
+                    generated_environment={
+                        MODULE.MANIFEST_ENV: override_reference,
+                    },
+                )
 
     def test_changed_manifest_bytes_fail_expected_hash(self) -> None:
         selection = MODULE.select_manifest(environment={})
@@ -132,14 +154,14 @@ class RadeonManifestTests(unittest.TestCase):
             path = Path(directory) / "generated.env"
             path.write_text(
                 "SIGNALFORGE_EXECUTION_BACKEND=native\n"
-                "SIGNALFORGE_APPLIANCE_MANIFEST=deploy/radeon/appliance-manifest.vnext.json\n"
+                "SIGNALFORGE_APPLIANCE_MANIFEST=deploy/radeon/appliance-manifest.json\n"
                 f"SIGNALFORGE_APPLIANCE_MANIFEST_SHA256={'2' * 64}\n"
             )
             path.chmod(0o600)
             values = MODULE.read_generated_environment(path)
         self.assertEqual(
             values[MODULE.MANIFEST_ENV],
-            "deploy/radeon/appliance-manifest.vnext.json",
+            "deploy/radeon/appliance-manifest.json",
         )
         self.assertEqual(values[MODULE.MANIFEST_SHA_ENV], "2" * 64)
 
@@ -228,15 +250,15 @@ class RadeonManifestTests(unittest.TestCase):
             self.assertIn("owner-only", public.stderr)
 
     def test_direct_compose_wrapper_rejects_conflicting_persisted_authority(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            temporary_override_manifest() as manifest_path,
+        ):
             root = Path(directory)
             runtime = root / "runtime"
             state = runtime / "state"
             state.mkdir(parents=True)
-            candidate = MODULE.select_manifest(
-                ROOT / "deploy/radeon/appliance-manifest.vnext.json",
-                environment={},
-            )
+            candidate = MODULE.select_manifest(manifest_path, environment={})
             generated = state / "generated.env"
             generated.write_text(
                 f"{MODULE.MANIFEST_ENV}={candidate.reference}\n"

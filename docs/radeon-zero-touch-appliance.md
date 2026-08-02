@@ -30,12 +30,10 @@ git clone https://github.com/rvbernucci/signalforge.git
 cd signalforge
 
 make radeon-bootstrap \
-  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   BACKEND=auto \
   ACCEPT_GEMMA_LICENSE=yes
 
 make radeon-up \
-  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   BACKEND=auto
 ```
 
@@ -43,7 +41,6 @@ Open the loopback endpoint shown by:
 
 ```bash
 make radeon-status \
-  MANIFEST=deploy/radeon/appliance-manifest.vnext.json \
   PROFILE=radeon-local \
   BACKEND=auto
 ```
@@ -109,8 +106,10 @@ files.
 ## Network Boundary
 
 First-run network is limited to declared registries, source transport, and model hydration hosts.
-Steady-state local mode uses only internal container networking or native loopback. Championship
-mode additionally permits the organizer Radeon API host from the application process.
+The model data plane remains on the internal network; host-facing application and observability
+ports bind only to loopback through the operator plane. Championship mode additionally permits the
+organizer Radeon API host from the application process through a distinct specialist-egress
+network.
 
 ## Safe Operations
 
@@ -127,8 +126,7 @@ removes the complete runtime root and requires an explicit confirmation token.
 ## Verification
 
 ```bash
-python3 scripts/radeon_validate_appliance.py \
-  --manifest deploy/radeon/appliance-manifest.vnext.json
+python3 scripts/radeon_validate_appliance.py
 python3 scripts/validate_observability.py
 scripts/verify_container_fixture.sh
 ```

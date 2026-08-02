@@ -1,11 +1,11 @@
 {
   "schema_version": "signalforge/radeon-appliance/v2",
-  "appliance_version": "zero-touch-radeon-v2",
+  "appliance_version": "championship-ac86853",
   "platform": "linux/amd64",
   "application": {
-    "image": "ghcr.io/rvbernucci/signalforge@sha256:cbac58cf3e62df0404e9ef1cfc7db6aec49e491e4beb5e1f214d6d562fad814b",
-    "release": "v1.1.1",
-    "source_commit": "bc9c647"
+    "image": "ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
+    "release": "sha-ac86853",
+    "source_commit": "ac8685307a420e23f73632f0e59fc647e6fdd870"
   },
   "runtime": {
     "image": "rocm/llama.cpp@sha256:be175932c3c96e882dfbc7e20e0e834f58c89c2925f48b222837ee929dfc47ee",

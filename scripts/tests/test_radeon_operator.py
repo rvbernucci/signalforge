@@ -402,12 +402,8 @@ class RadeonOperatorTests(unittest.TestCase):
                 )
 
     @unittest.skipUnless(shutil.which("docker"), "Docker is unavailable on this test host")
-    def test_docker_compose_renders_explicit_candidate_without_changing_defaults(self) -> None:
-        candidate = json.loads(
-            (ROOT / "deploy/radeon/appliance-manifest.vnext.json").read_text(
-                encoding="utf-8"
-            )
-        )
+    def test_docker_compose_renders_explicit_image_override_without_changing_defaults(self) -> None:
+        override_image = "ghcr.io/rvbernucci/signalforge@sha256:" + "1" * 64
         result = subprocess.run(
             [
                 "docker",
@@ -422,14 +418,14 @@ class RadeonOperatorTests(unittest.TestCase):
             cwd=ROOT,
             env={
                 **os.environ,
-                "SIGNALFORGE_APP_IMAGE": candidate["application"]["image"],
-                "SIGNALFORGE_LLAMA_ROCM_IMAGE": candidate["runtime"]["image"],
+                "SIGNALFORGE_APP_IMAGE": override_image,
+                "SIGNALFORGE_LLAMA_ROCM_IMAGE": self.appliance["runtime"]["image"],
             },
             check=True,
             capture_output=True,
             text=True,
         )
-        self.assertIn(candidate["application"]["image"], result.stdout)
+        self.assertIn(override_image, result.stdout)
         self.assertIn(self.appliance["application"]["image"], (ROOT / "container.env.example").read_text())
 
     def test_static_appliance_audit_passes(self) -> None:
@@ -442,28 +438,6 @@ class RadeonOperatorTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(json.loads(result.stdout)["status"], "passed")
-
-    def test_static_candidate_appliance_audit_passes(self) -> None:
-        result = subprocess.run(
-            [
-                "python3",
-                "scripts/radeon_validate_appliance.py",
-                "--manifest",
-                "deploy/radeon/appliance-manifest.vnext.json",
-            ],
-            cwd=ROOT,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        report = json.loads(result.stdout)
-        self.assertEqual(report["status"], "passed")
-        self.assertEqual(
-            report["manifest_authority"]["path"],
-            "deploy/radeon/appliance-manifest.vnext.json",
-        )
-
 
 if __name__ == "__main__":
     unittest.main()
