@@ -2,7 +2,7 @@
   "schema_version": "signalforge/final-release-authority/v1",
   "status": "accepted_for_hackathon_submission",
   "disposition": "accepted_with_documented_limitations",
-  "granted_at_utc": "2026-08-02T02:28:46Z",
+  "granted_at_utc": "2026-08-02T14:36:40Z",
   "reviewer": {
     "name": "Rafael Bernucci",
     "role": "project owner",
@@ -16,22 +16,22 @@
     "exact_image_radeon_readback": "evidence/exact-image-radeon-readback.json"
   },
   "media_release": {
-    "tag": "v1.2.0",
+    "tag": "v1.2.1",
     "project_specification_pdf": {
-      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf",
-      "sha256": "699dce4957bc527a273ef8cd76b37d045863b038623d40c3699d72043657bd73",
-      "bytes": 286785
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Project-Specification.pdf",
+      "sha256": "1a113d3afd3c6c9657874580c68222a1562e06eaf85ec57cf81536478f15d58c",
+      "bytes": 362712
     },
     "judge_deck": {
-      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx",
-      "sha256": "7dbad4e713a12e7305a219334fb5dd2c9c80ddd36f0a51d8bd3dd91c5f6795e1",
-      "bytes": 325553
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Judge-Deck.pptx",
+      "sha256": "6ef88d9a4f6acae2355928e1a6c2d7d35e0ac81065437b212af48ab88c605149",
+      "bytes": 325695
     },
     "demo_video": {
-      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4",
-      "sha256": "bceccf5a2842e5fc5333f1b05e9ce53ac76c4c111991af36685d4f68abd3b90a",
-      "bytes": 15223696,
-      "duration_seconds": 266.196,
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Radeon-Demo.mp4",
+      "sha256": "a3ec05eee98debb2499b25e3efdba270e049ca2d85221854dc17a584f1e5270d",
+      "bytes": 15266355,
+      "duration_seconds": 266.496,
       "video": "H.264 1920x1080",
       "audio": "AAC 48000 Hz"
     }
@@ -54,5 +54,5 @@
     "Final eligibility, scoring, and acceptance remain solely with the hackathon organizers and judges.",
     "SignalForge can make mistakes; important information must be verified before financial decisions."
   ],
-  "authority_boundary": "This record grants project-owner authority to submit the hash-bound application and media package. It does not expand product authority, accounting comparability, source rights, or judging authority."
+  "authority_boundary": "This record grants project-owner authority to submit the hash-bound application and v1.2.1 media package. The application source and immutable image are unchanged from the previously verified release. This decision does not expand product authority, accounting comparability, source rights, or judging authority."
 }

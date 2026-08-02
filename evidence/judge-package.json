@@ -11,23 +11,23 @@
   "artifacts": {
     "readme": {
       "path": "README.md",
-      "sha256": "3bfbae2e27ad28f0598a31158a1c3bdf8a61e7ee1aaad288f1586a031509796a"
+      "sha256": "929fca72557b147156f6cf3e9553c51071f69132440df08d316e0363015a5549"
     },
     "judge_guide": {
       "path": "JUDGES.md",
-      "sha256": "fe00cfd2964876ee33657079990fe99498accf6e5b26575bbd608cc4c39a6da0"
+      "sha256": "0a5a8b020a923362341a1151134b39379813f408acefda95d0a10df3629800a3"
     },
     "project_specification_source": {
       "path": "docs/project-specification.md",
-      "sha256": "41b78eb367bba64b36fddc85702dbad8271570ad3418b3f0562078207a4cd0d3"
+      "sha256": "e9e95fff3c2488f275b46f764a72952b6e220c0c5fc7d6fe776b8b09af20f2f3"
     },
     "track2_compliance": {
       "path": "docs/track2-compliance.md",
-      "sha256": "21351aec89c08455ba2b22a737531e83ee229d5f6d70b16bd0dfa6a7f15680c2"
+      "sha256": "980aeada9e7a0772106df2799a8526b743b30f47c3c28f41e4679de4e6558527"
     },
     "release_identity": {
       "path": "evidence/release-identity.json",
-      "sha256": "fd57a5f25dadd82d98f963ff9c577f8e1ec85b1b830e0a400dead738cc0afb67"
+      "sha256": "015983aea10f8eed49df9abd75af80c9612d3a18c0fa8323ed016a04558753b6"
     },
     "mission_control_runtime": {
       "path": "evidence/mission-control-runtime.json",
@@ -59,38 +59,38 @@
     },
     "final_release_authority": {
       "path": "evidence/final-release-authority.json",
-      "sha256": "26188e57074eb1e54c8375fae650264f5cd553c19559daaa65baffbc45761afd"
+      "sha256": "b08fedd47fb9178b4a7b9ec579092e798c60e006fb231624b355487dbcf35011"
     },
     "release_checklist": {
       "path": "evidence/release-checklist.json",
-      "sha256": "d0d01e5f2fb7405a2e2085f78f820e5589f9cc6d7ef8724d0e72054803d0e323"
+      "sha256": "ee24f639ad4b3d4eca40e2a808ffdf2bbf40554bc0e186a7f65f833443200c41"
     },
     "demo_script": {
       "path": "docs/demo-script.md",
-      "sha256": "c901ad6fe6b6498b92d04c4b259908a70e8f931e4aed7d6de6554e0477d61ce8"
+      "sha256": "ec1a3ed8b8440acf2ca263e4a28ef810add5adf3fa50e9415cb888da037ae251"
     },
     "demo_voiceover": {
       "path": "docs/demo-voiceover.txt",
-      "sha256": "cc1fb61bd55237095711951bb37af84cf99d22488c76cf97ca2207995c0d2d56"
+      "sha256": "ed5974763e93b2e70892ee9f7177932a681c4cfa260ff8617eea2e8f9478c42f"
     },
     "public_claims": {
       "path": "evidence/public-claims.json",
-      "sha256": "6f3eead6639ed37ccb043a88c27ac2a39ddc1e7425e1d18a728ec17085fef19b"
+      "sha256": "709dfabc2185a1fe3b362351185f7392c5d683f67017ca5a9718930e46981cd6"
     }
   },
   "external_media": {
-    "release_url": "https://github.com/rvbernucci/signalforge/releases/tag/v1.2.0",
+    "release_url": "https://github.com/rvbernucci/signalforge/releases/tag/v1.2.1",
     "project_specification_pdf": {
-      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf",
-      "sha256": "699dce4957bc527a273ef8cd76b37d045863b038623d40c3699d72043657bd73"
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Project-Specification.pdf",
+      "sha256": "1a113d3afd3c6c9657874580c68222a1562e06eaf85ec57cf81536478f15d58c"
     },
     "judge_deck": {
-      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx",
-      "sha256": "7dbad4e713a12e7305a219334fb5dd2c9c80ddd36f0a51d8bd3dd91c5f6795e1"
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Judge-Deck.pptx",
+      "sha256": "6ef88d9a4f6acae2355928e1a6c2d7d35e0ac81065437b212af48ab88c605149"
     },
     "demo_video": {
-      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4",
-      "sha256": "bceccf5a2842e5fc5333f1b05e9ce53ac76c4c111991af36685d4f68abd3b90a"
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Radeon-Demo.mp4",
+      "sha256": "a3ec05eee98debb2499b25e3efdba270e049ca2d85221854dc17a584f1e5270d"
     }
   },
   "claim_authority": "Claims are limited to the hash-bound public artifacts and their stated evaluation boundaries.",

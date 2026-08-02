@@ -27,10 +27,10 @@ that both public AMD GPU Cloud endpoints and dedicated vLLM APIs are acceptable 
 | PR title format | Complete: `Track 2, SignalForge Labs, SignalForge` |
 | English source and materials | Complete |
 | Complete source and README | Complete |
-| Project specification | [PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf) and [reviewable source](project-specification.md) |
+| Project specification | [PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Project-Specification.pdf) and [reviewable source](project-specification.md) |
 | Architecture diagram | [`architecture.svg`](architecture.svg) |
-| 3-5 minute demo video | [4 min 26 s Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4) |
-| PPT or poster | [Judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx) |
+| 3-5 minute demo video | [4 min 26 s Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Radeon-Demo.mp4) |
+| PPT or poster | [Judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Judge-Deck.pptx) |
 
 Moving media binaries are not retained on `main`; the
 [final release authority](../evidence/final-release-authority.json) binds their release URLs and

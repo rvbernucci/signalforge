@@ -9,10 +9,10 @@ development chronology.
 
 ## Three-Minute Review
 
-1. Watch the [4 min 26 s Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4).
-2. Read the [project specification PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf)
+1. Watch the [4 min 26 s Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Radeon-Demo.mp4).
+2. Read the [project specification PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Project-Specification.pdf)
    or its [reviewable Markdown source](docs/project-specification.md).
-3. Inspect the [judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx)
+3. Inspect the [judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Judge-Deck.pptx)
    and [architecture](docs/architecture.svg).
 4. Review the current [evaluation](evidence/championship-evaluation.json),
    [Radeon runtime](evidence/championship-radeon-runtime.json), and
@@ -70,6 +70,19 @@ evidence; they do not pre-award points.
 | Optional Radeon Cloud Model API - 20 | Measured | Selective specialist route with local authority and tested fallback; [hybrid evidence](evidence/championship-radeon-runtime.json) |
 
 SignalForge implements all five capability families listed by the rules; the minimum is two.
+
+## Bounded Radeon Model Selection
+
+| Profile | Runtime and precision | Contract checks | Median decode tokens/s |
+|---|---|---:|---:|
+| Gemma 4 26B A4B Instruct | ROCm `llama.cpp`, QAT Q4_0 | `40/40` | `86.4601` |
+| Qwen3 8B | ROCm `vLLM`, BF16 | `40/40` | `26.3855` |
+| Granite 4.1 8B | ROCm `vLLM`, BF16 | `35/40` | `24.9882` |
+
+Gemma was selected because it combined full contract compliance with `3.28x` Qwen's measured
+decode throughput in this SignalForge workload. The profiles differ in model, runtime, and
+precision; this evidence supports a bounded deployment decision, not a universal model ranking.
+See the [baseline evidence](evidence/radeon-baseline.json).
 
 ## Current Results
 

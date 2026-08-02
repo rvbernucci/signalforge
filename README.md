@@ -19,9 +19,9 @@ validation.
 Start with the [Judge Guide](JUDGES.md). It maps the 120-point Track 2 rubric to the current
 application, architecture, Radeon measurements, and privacy-safe evidence.
 
-- [Demo video (4 min 26 s)](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4)
-- [Project specification PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf)
-- [Judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx)
+- [Demo video (4 min 26 s)](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Radeon-Demo.mp4)
+- [Project specification PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Project-Specification.pdf)
+- [Judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.1/SignalForge-Judge-Deck.pptx)
 - [Project specification](docs/project-specification.md)
 - [Track 2 compliance map](docs/track2-compliance.md)
 - [Architecture diagram](docs/architecture.svg)
@@ -170,6 +170,19 @@ The selected local profile is:
 The model is a separately licensed artifact and is not embedded in the application image. The
 bootstrap downloads it only after explicit license acceptance, verifies its expected size and
 SHA-256, and stores it under persistent Radeon workspace storage.
+
+The selected profile came from a bounded application-profile tournament:
+
+| Profile | Runtime and precision | Contract checks | Median decode tokens/s |
+|---|---|---:|---:|
+| Gemma 4 26B A4B Instruct | ROCm `llama.cpp`, QAT Q4_0 | `40/40` | `86.4601` |
+| Qwen3 8B | ROCm `vLLM`, BF16 | `40/40` | `26.3855` |
+| Granite 4.1 8B | ROCm `vLLM`, BF16 | `35/40` | `24.9882` |
+
+Gemma combined complete contract compliance with `3.28x` Qwen's measured decode throughput in
+this workload. The profiles differ in model, runtime, and precision, so this is a deployment
+decision for SignalForge rather than a universal model ranking. The supporting measurements are
+in [`radeon-baseline.json`](evidence/radeon-baseline.json).
 
 On a fresh AMD Radeon Cloud workspace:
 

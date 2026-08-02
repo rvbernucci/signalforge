@@ -110,10 +110,17 @@ SHA-256. The public application image contains no weights or credentials.
 
 ### Selection And Optimization
 
-The bounded deployment study compared Gemma, Qwen, and Granite application profiles. Gemma passed
-`40/40` deterministic contract checks and measured `86.4601` median decode tokens/s in that
-workload. The selected four-slot profile was `29.17%` faster end-to-end than the passing
-three-worker control.
+The bounded deployment study compared three measured Radeon application profiles:
+
+- Gemma 4 26B A4B Instruct QAT Q4_0 through `llama.cpp`: `40/40` contract checks and
+  `86.4601` median decode tokens/s;
+- Qwen3 8B BF16 through `vLLM`: `40/40` contract checks and `26.3855` median decode tokens/s; and
+- Granite 4.1 8B BF16 through `vLLM`: `35/40` contract checks and `24.9882` median decode
+  tokens/s.
+
+Gemma therefore combined complete contract compliance with `3.28x` Qwen's measured decode
+throughput in this workload. After model selection, the four-slot Gemma profile was `29.17%`
+faster end-to-end than the passing three-worker control.
 
 These are application-profile measurements, not a universal ranking: models, runtimes, and
 precision differed.
