@@ -133,7 +133,7 @@ def public_files(root: Path, output: Path | None) -> list[Path]:
 def prohibited_public_path(path: Path) -> str | None:
     lower = path.as_posix().lower()
     parts = set(path.parts)
-    if lower.startswith("experiments/sprint32/holdout/"):
+    if lower.startswith("experiments/") and "/holdout/" in lower:
         return "sealed evaluation material"
     if parts.intersection({"Contabilidade", "corpus", "models", "strategy", "var"}):
         return "private corpus, model, strategy, or runtime material"

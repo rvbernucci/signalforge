@@ -9,7 +9,7 @@ import (
 	"github.com/rvbernucci/signalforge/internal/data"
 )
 
-func FuzzSprint38AccountingSourceBoundary(f *testing.F) {
+func FuzzAccountingSourceBoundary(f *testing.F) {
 	f.Add(uint8(0), "", int16(0))
 	f.Add(uint8(1), "duplicate", int16(0))
 	f.Add(uint8(2), "100", int16(-900))

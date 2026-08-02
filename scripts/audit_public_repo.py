@@ -89,7 +89,7 @@ def public_files(root: Path, output: Path) -> list[Path]:
 def forbidden_path_reason(path: Path) -> str | None:
     parts = set(path.parts)
     lower = path.as_posix().lower()
-    if lower.startswith("experiments/sprint32/holdout/"):
+    if lower.startswith("experiments/") and "/holdout/" in lower:
         return "sealed evaluation material"
     if path.name.startswith(".env") and path.name != ".env.example":
         return "private environment file"

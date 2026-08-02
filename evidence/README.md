@@ -1,7 +1,7 @@
 # Current Public Evidence
 
 This directory contains only small, privacy-safe evidence needed to understand and verify the
-current SignalForge candidate. Raw runs, prompts, answers, source bodies, credentials, hidden
+current SignalForge release. Raw runs, prompts, answers, source bodies, credentials, hidden
 reasoning, sealed labels, screenshots, media, and superseded experiment versions are intentionally
 excluded.
 
@@ -19,24 +19,27 @@ excluded.
 - [`release-identity.json`](release-identity.json) freezes the verified public application image,
   source commit, platform manifest, CI, and supply-chain checks.
 - [`release-checklist.json`](release-checklist.json) separates completed technical gates from
-  pending Radeon readback, media, and human authority.
+  the completed media and project-owner authority gates.
+- [`final-release-authority.json`](final-release-authority.json) binds the final media URLs and
+  hashes to the project-owner submission decision and its limitations.
+- [`exact-image-radeon-readback.json`](exact-image-radeon-readback.json) records the clean OCI
+  pull, immutable manifest verification, and bounded execution of the unchanged entrypoint payload
+  on the Radeon host.
 - [`mission-control-runtime.json`](mission-control-runtime.json) records the sanitized synchronized
   observability run and telemetry-loss behavior against the immutable image.
 
 These artifacts prove only their stated scope. They do not reveal private evaluation cases, grant
-human professional assurance, or satisfy the remaining external release gates.
+independent professional assurance, pre-award points, or replace organizer judging.
 
 ## Reproducible Technical Evidence
 
 - [`architecture-eval.json`](architecture-eval.json) and
   [`orchestration-eval.json`](orchestration-eval.json) cover typed planning and orchestration.
-- [`engine-benchmark.json`](engine-benchmark.json) covers deterministic financial computation.
 - [`radeon-baseline.json`](radeon-baseline.json) records the bounded three-profile model/runtime
   comparison.
 - [`radeon-optimization.json`](radeon-optimization.json) records the selected ROCm configuration
   and rejected alternatives.
 - [`hardening-matrix.json`](hardening-matrix.json) records the current adversarial gates.
-- [`sec-pipeline-e2e.json`](sec-pipeline-e2e.json) covers point-in-time SEC ingestion.
 - [`technology20-promotion-manifest.json`](technology20-promotion-manifest.json) binds the active
   20-company and five-peer-lane product authority.
 - [`workspace-evaluation.json`](workspace-evaluation.json) covers the deterministic fixture

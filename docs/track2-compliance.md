@@ -27,13 +27,14 @@ that both public AMD GPU Cloud endpoints and dedicated vLLM APIs are acceptable 
 | PR title format | Complete: `Track 2, SignalForge Labs, SignalForge` |
 | English source and materials | Complete |
 | Complete source and README | Complete |
-| Project specification | Current Markdown source; final PDF URL and hash remain a media gate |
+| Project specification | [PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf) and [reviewable source](project-specification.md) |
 | Architecture diagram | [`architecture.svg`](architecture.svg) |
-| 3-5 minute demo video | Final video URL and hash remain a media gate |
-| PPT or poster | Final deck URL and hash remain a media gate |
+| 3-5 minute demo video | [4 min 26 s Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4) |
+| PPT or poster | [Judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx) |
 
-Moving media binaries are not retained on `main`; the final judge package binds their release URLs
-and SHA-256 values after freeze.
+Moving media binaries are not retained on `main`; the
+[final release authority](../evidence/final-release-authority.json) binds their release URLs and
+SHA-256 values.
 
 ## Technical Requirements
 
@@ -80,9 +81,8 @@ zero HIGH/CRITICAL vulnerabilities, verified a clean public pull, and ran the ex
 The immutable image and source identity are recorded in
 [`release-identity.json`](../evidence/release-identity.json) and the Radeon appliance manifest.
 The synchronized [Mission Control runtime](../evidence/mission-control-runtime.json) passed
-against that digest, including deliberate observability loss.
-Final media URLs and hashes remain a separate gate in
-[`release-checklist.json`](../evidence/release-checklist.json).
+against that digest, including deliberate observability loss. The
+[release checklist](../evidence/release-checklist.json) records all completed gates.
 
 ## Known Limitations
 
@@ -90,7 +90,7 @@ Final media URLs and hashes remain a separate gate in
 - External answer accuracy has not been scored against independent human ground truth.
 - Model-assisted semantic review is not professional or final authority.
 - Whole-journey concurrency is bounded by the local 26B model.
-- Human investor and judge-readability acceptance remain external gates.
+- Independent professional assurance and final judging remain external to the project.
 
 <!-- evidence-claim:current-product -->
 <!-- evidence-claim:current-evaluation -->

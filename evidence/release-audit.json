@@ -42,31 +42,49 @@
       "artifact_id": "architecture",
       "matches": true,
       "path": "docs/architecture.svg",
-      "sha256": "b32da58531d1854499b5af479e360205db168f24fa8b6deb42e18f3270db66bc"
+      "sha256": "f8a53674b4f5929252880ea5e243dcf45f47366d0777afebf573027cfa005016"
     },
     {
       "artifact_id": "current_evaluation",
       "matches": true,
       "path": "evidence/championship-evaluation.json",
-      "sha256": "a30ae9b5f9658aff3272fbe15a09f08b87a9ec1728d328c8082b9e9685386a19"
+      "sha256": "553ea4181900b3ba5b839012c6d0245b0d5bcdff5438d764aad752dd2f1e6a6e"
     },
     {
       "artifact_id": "current_product_check",
       "matches": true,
       "path": "evidence/championship-product-check.json",
-      "sha256": "2b5e48039b2470d36b5fbbb3522d6847514762f48a50711041e60d4730357bb4"
+      "sha256": "402a5a23572769b6c71497adfe0a10da991b81c55bf4aeb986ee532e5457e513"
     },
     {
       "artifact_id": "current_radeon_runtime",
       "matches": true,
       "path": "evidence/championship-radeon-runtime.json",
-      "sha256": "d57d577649eacf37660ec47e856e6d94ec5445ccc478e76739ece325dafbc1f4"
+      "sha256": "ce64f11bc99c6cd50f14389c13f6e7e47211be5fe67f33d343452700a3612ebd"
+    },
+    {
+      "artifact_id": "demo_script",
+      "matches": true,
+      "path": "docs/demo-script.md",
+      "sha256": "c901ad6fe6b6498b92d04c4b259908a70e8f931e4aed7d6de6554e0477d61ce8"
+    },
+    {
+      "artifact_id": "demo_voiceover",
+      "matches": true,
+      "path": "docs/demo-voiceover.txt",
+      "sha256": "cc1fb61bd55237095711951bb37af84cf99d22488c76cf97ca2207995c0d2d56"
+    },
+    {
+      "artifact_id": "final_release_authority",
+      "matches": true,
+      "path": "evidence/final-release-authority.json",
+      "sha256": "26188e57074eb1e54c8375fae650264f5cd553c19559daaa65baffbc45761afd"
     },
     {
       "artifact_id": "judge_guide",
       "matches": true,
       "path": "JUDGES.md",
-      "sha256": "c617c072260236ce14d30e8aa694c8a2a177fff5ff7c784a8b3367079a87b791"
+      "sha256": "fe00cfd2964876ee33657079990fe99498accf6e5b26575bbd608cc4c39a6da0"
     },
     {
       "artifact_id": "mission_control_runtime",
@@ -78,25 +96,37 @@
       "artifact_id": "project_specification_source",
       "matches": true,
       "path": "docs/project-specification.md",
-      "sha256": "1e706e4f29e084ac61d93fe299ecda37b56f297ab91ff6167b88b6f26068b804"
+      "sha256": "41b78eb367bba64b36fddc85702dbad8271570ad3418b3f0562078207a4cd0d3"
+    },
+    {
+      "artifact_id": "public_claims",
+      "matches": true,
+      "path": "evidence/public-claims.json",
+      "sha256": "6f3eead6639ed37ccb043a88c27ac2a39ddc1e7425e1d18a728ec17085fef19b"
     },
     {
       "artifact_id": "readme",
       "matches": true,
       "path": "README.md",
-      "sha256": "131e3b0eb00f883efb8e1b046ee587b1e5d77972c72abbd67cd55cc5dbcbc99f"
+      "sha256": "3bfbae2e27ad28f0598a31158a1c3bdf8a61e7ee1aaad288f1586a031509796a"
+    },
+    {
+      "artifact_id": "release_checklist",
+      "matches": true,
+      "path": "evidence/release-checklist.json",
+      "sha256": "d0d01e5f2fb7405a2e2085f78f820e5589f9cc6d7ef8724d0e72054803d0e323"
     },
     {
       "artifact_id": "release_identity",
       "matches": true,
       "path": "evidence/release-identity.json",
-      "sha256": "b174a2adfe6c224ee0c5b1ce0b0397af5a5a161f518773b3f2895a78011c7f5d"
+      "sha256": "fd57a5f25dadd82d98f963ff9c577f8e1ec85b1b830e0a400dead738cc0afb67"
     },
     {
       "artifact_id": "track2_compliance",
       "matches": true,
       "path": "docs/track2-compliance.md",
-      "sha256": "ba6893ed3d8d77e1cf3ed633404b704efb661d973f08f82e5c994dcdb15ee8ba"
+      "sha256": "21351aec89c08455ba2b22a737531e83ee229d5f6d70b16bd0dfa6a7f15680c2"
     }
   ],
   "schema_version": "signalforge/public-release-audit/v1",
@@ -104,9 +134,9 @@
   "self_excluded_path": "evidence/release-audit.json",
   "summary": {
     "all_checks_passed": true,
-    "public_files": 634,
-    "text_files_scanned": 633,
-    "total_bytes": 7606233
+    "public_files": 617,
+    "text_files_scanned": 616,
+    "total_bytes": 7140282
   },
   "synthetic_secret_sentinels": [
     {

@@ -14,7 +14,7 @@ import (
 	"github.com/rvbernucci/signalforge/internal/localagent"
 )
 
-const candidateManifestSchema = "signalforge/sprint16a-candidate-manifest/v1"
+const candidateManifestSchema = "signalforge/role-evaluation-candidate-manifest/v1"
 
 type candidateFile struct {
 	Path   string `json:"path"`

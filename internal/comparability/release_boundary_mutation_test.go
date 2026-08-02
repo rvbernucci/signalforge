@@ -7,7 +7,7 @@ import (
 	"github.com/rvbernucci/signalforge/internal/contracts"
 )
 
-func TestSprint38ComparabilityMutationMatrixNeverExpandsRelease(t *testing.T) {
+func TestComparabilityMutationMatrixNeverExpandsRelease(t *testing.T) {
 	now := time.Date(2026, 7, 24, 12, 0, 0, 0, time.UTC)
 	tests := map[string]func(*contracts.MetricComparabilityRequest){
 		"future source availability": func(item *contracts.MetricComparabilityRequest) {

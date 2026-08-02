@@ -32,7 +32,7 @@ class PublicReleaseAuditTests(unittest.TestCase):
         self.assertIsNotNone(MODULE.forbidden_path_reason(Path("scripts/__pycache__/audit.pyc")))
         self.assertIsNotNone(MODULE.forbidden_path_reason(Path(".venv/lib/package.py")))
         self.assertEqual(
-            MODULE.forbidden_path_reason(Path("experiments/sprint32/holdout/cases.json")),
+            MODULE.forbidden_path_reason(Path("experiments/evaluation/holdout/cases.json")),
             "sealed evaluation material",
         )
         self.assertIsNone(MODULE.forbidden_path_reason(Path("evidence/public-claims.json")))
@@ -40,7 +40,7 @@ class PublicReleaseAuditTests(unittest.TestCase):
     def test_forbidden_file_is_classified_before_payload_read(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            sealed = root / "experiments" / "sprint32" / "holdout" / "cases.json"
+            sealed = root / "experiments" / "evaluation" / "holdout" / "cases.json"
             sealed.parent.mkdir(parents=True)
             sealed.write_text("must-not-be-read", encoding="utf-8")
 
@@ -51,7 +51,7 @@ class PublicReleaseAuditTests(unittest.TestCase):
             original_verify_artifacts = MODULE.verify_judge_artifacts
             reads: list[Path] = []
             try:
-                MODULE.public_files = lambda _root, _output: [Path("experiments/sprint32/holdout/cases.json")]
+                MODULE.public_files = lambda _root, _output: [Path("experiments/evaluation/holdout/cases.json")]
                 MODULE.text_payload = lambda path: reads.append(path) or "unexpected"
                 MODULE.validate_env_example = lambda _root: []
                 MODULE.validate_release_files = lambda _root: []

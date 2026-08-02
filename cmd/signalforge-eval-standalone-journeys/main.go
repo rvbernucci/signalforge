@@ -101,8 +101,8 @@ func main() {
 	}
 	for index, item := range selected {
 		casePath := filepath.Join(*outputDirectory, "cases", item.JourneyID+".json")
-		runID := fmt.Sprintf("sprint32-%s-%03d", suite.Split, *startIndex+index)
-		requestID := fmt.Sprintf("sprint32-request-%s-%03d", suite.Split, *startIndex+index)
+		runID := fmt.Sprintf("standalone-evaluation-%s-%03d", suite.Split, *startIndex+index)
+		requestID := fmt.Sprintf("standalone-request-%s-%03d", suite.Split, *startIndex+index)
 		identity := evalcheckpoint.Identity{
 			SchemaVersion:  evalcheckpoint.IdentitySchemaVersion,
 			EvaluationKind: "standalone", SuiteSHA256: suiteSHA,

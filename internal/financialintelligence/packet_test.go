@@ -30,7 +30,7 @@ func receiptFixture(t testing.TB) contracts.CalculationReceipt {
 		},
 		Assumptions: []string{"Analytical operating tax rate."}, PrecisionPolicy: operation.NumericalPolicy, RequestedOutputs: []string{"nopat"},
 	}
-	executor, err := engine.NewWithClock("sprint16b-test", func() time.Time { return packetTime })
+	executor, err := engine.NewWithClock("financial-intelligence-test", func() time.Time { return packetTime })
 	if err != nil {
 		t.Fatal(err)
 	}

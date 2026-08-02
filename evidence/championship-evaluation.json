@@ -1,6 +1,6 @@
 {
   "schema_version": "signalforge/championship-evaluation/v1",
-  "status": "evaluated_candidate",
+  "status": "evaluated_release",
   "evaluated_inference_source": "67276e73b3fba1b2d09f9aa51bcb933771f9fd89",
   "scope": {
     "companies": 20,
@@ -49,6 +49,7 @@
     "semantic_dimensions_sha256": "f73f412a2edaa8cb7912e7251f3fc0d1a181ed8d6c6c9fa5a08e74116d0735f2",
     "financial_reliability_sha256": "f76ab904c2289f589454fb53c897eee0a774ad082d1ea70265be26a171c2e638"
   },
-  "final_authority": "not_granted",
+  "final_authority": "external_authority_recorded",
+  "authority_evidence": "evidence/final-release-authority.json",
   "privacy_boundary": "Aggregate metrics and cryptographic receipts only. Prompts, answers, source bodies, individual decisions, credentials, private traces, and sealed labels are excluded."
 }

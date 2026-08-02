@@ -185,7 +185,7 @@ func BuildStandaloneJourneySuites(
 }
 
 // BuildStandaloneDevelopmentAugmentationSuite creates an inspectable development-only population.
-// It has no sealed-output parameter and never reads the sealed Sprint 32 population.
+// It has no sealed-output parameter and never reads the sealed evaluation population.
 func BuildStandaloneDevelopmentAugmentationSuite(
 	catalog PublicCatalog,
 	financials PublicFinancialSummary,

@@ -24,7 +24,7 @@ func runtimeRequest(t *testing.T, operationID string, inputs []contracts.EngineI
 	}
 	return contracts.EngineRequest{
 		SchemaVersion: contracts.SchemaVersionV1, RequestID: "request-" + operationID,
-		RunID: "run-sprint16b", StepID: "step-sprint16b", RequestedBy: role,
+		RunID: "run-financial-intelligence", StepID: "step-financial-intelligence", RequestedBy: role,
 		EngineID: operation.Engine, OperationID: operation.ID, FormulaVersion: operation.FormulaVersion,
 		Scope: contracts.Scope{CompanyIDs: []string{"company-msft"}, AsOf: testTime}, Inputs: inputs,
 		PrecisionPolicy: operation.NumericalPolicy, RequestedOutputs: append([]string(nil), operation.Outputs...),
@@ -103,7 +103,7 @@ func TestExecutorRunsEveryFinancialIntelligenceOperation(t *testing.T) {
 	if len(cases) != len(capability.FinancialIntelligenceRegistry().List()) {
 		t.Fatalf("have %d cases for %d financial-intelligence operations", len(cases), len(capability.FinancialIntelligenceRegistry().List()))
 	}
-	executor, err := New("sprint16b-test")
+	executor, err := New("financial-intelligence-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestEveryRuntimeOperationHasCompleteUnitRules(t *testing.T) {
 }
 
 func TestFinancialIntelligenceOperationsFailClosed(t *testing.T) {
-	executor, _ := New("sprint16b-test")
+	executor, _ := New("financial-intelligence-test")
 	executor.now = func() time.Time { return testTime }
 	request := runtimeRequest(t, "valuation.ev_to_ebitda", []contracts.EngineInput{
 		quantityInput("enterprise_value", "100", "currency", "USD", "FY2025"),

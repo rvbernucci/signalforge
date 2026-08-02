@@ -1,6 +1,6 @@
 {
   "schema_version": "signalforge/release-identity/v1",
-  "status": "application_image_verified",
+  "status": "release_verified",
   "application": {
     "source_commit": "ac8685307a420e23f73632f0e59fc647e6fdd870",
     "public_tag": "ghcr.io/rvbernucci/signalforge:sha-ac86853",
@@ -33,8 +33,14 @@
       "evidence": "evidence/mission-control-runtime.json"
     },
     "exact_image_radeon_readback": {
-      "status": "pending"
+      "status": "passed",
+      "evidence": "evidence/exact-image-radeon-readback.json",
+      "method": "Clean Skopeo OCI pull by immutable digest, Umoci rootless unpack, and bounded execution of the unchanged entrypoint payload on the Radeon host"
     }
   },
-  "authority_boundary": "This record freezes the public application image and its verified supply-chain checks. It does not grant final human release authority or substitute for exact-image Radeon readback and final media binding."
+  "media_release": {
+    "tag": "v1.2.0",
+    "authority_evidence": "evidence/final-release-authority.json"
+  },
+  "authority_boundary": "This record freezes the public application image, verified supply-chain checks, exact-image Radeon readback, and media release reference. Project-owner submission authority and its limitations are recorded separately in evidence/final-release-authority.json."
 }

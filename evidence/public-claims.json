@@ -3,7 +3,7 @@
   "claims": [
     {
       "claim_id": "current-product",
-      "text": "The current SignalForge candidate exposes a governed research workspace for 20 US-listed technology companies and five explicitly bounded peer-comparison lanes.",
+      "text": "The current SignalForge release exposes a governed research workspace for 20 US-listed technology companies and five explicitly bounded peer-comparison lanes.",
       "status": "verified",
       "evidence": [
         {
@@ -12,7 +12,7 @@
         },
         {
           "path": "evidence/championship-product-check.json",
-          "sha256": "2b5e48039b2470d36b5fbbb3522d6847514762f48a50711041e60d4730357bb4"
+          "sha256": "402a5a23572769b6c71497adfe0a10da991b81c55bf4aeb986ee532e5457e513"
         }
       ],
       "public_files": [
@@ -24,12 +24,12 @@
     },
     {
       "claim_id": "current-evaluation",
-      "text": "The current candidate passed runtime and output contracts on all 180 evaluated journeys; independent model-assisted review accepted all 180 with zero false-release candidates in that bounded evaluation.",
+      "text": "The frozen release evaluation passed runtime and output contracts on all 180 evaluated journeys; independent model-assisted review accepted all 180 with zero false-release candidates in that bounded evaluation.",
       "status": "measured",
       "evidence": [
         {
           "path": "evidence/championship-evaluation.json",
-          "sha256": "a30ae9b5f9658aff3272fbe15a09f08b87a9ec1728d328c8082b9e9685386a19"
+          "sha256": "553ea4181900b3ba5b839012c6d0245b0d5bcdff5438d764aad752dd2f1e6a6e"
         }
       ],
       "public_files": [
@@ -46,7 +46,7 @@
       "evidence": [
         {
           "path": "evidence/championship-radeon-runtime.json",
-          "sha256": "d57d577649eacf37660ec47e856e6d94ec5445ccc478e76739ece325dafbc1f4"
+          "sha256": "ce64f11bc99c6cd50f14389c13f6e7e47211be5fe67f33d343452700a3612ebd"
         },
         {
           "path": "evidence/radeon-baseline.json",
@@ -91,12 +91,12 @@
     },
     {
       "claim_id": "release-identity",
-      "text": "The current public application image is an immutable linux/amd64 artifact built from source commit ac8685307a420e23f73632f0e59fc647e6fdd870 with attached SBOM and provenance, zero HIGH/CRITICAL vulnerability findings, a clean public pull, and a passing exact-image fixture.",
+      "text": "The current public application image is an immutable linux/amd64 artifact built from source commit ac8685307a420e23f73632f0e59fc647e6fdd870 with attached SBOM and provenance, zero HIGH/CRITICAL vulnerability findings, a clean public pull, a passing exact-image fixture, and hash-bound release media.",
       "status": "verified",
       "evidence": [
         {
           "path": "evidence/release-identity.json",
-          "sha256": "b174a2adfe6c224ee0c5b1ce0b0397af5a5a161f518773b3f2895a78011c7f5d"
+          "sha256": "fd57a5f25dadd82d98f963ff9c577f8e1ec85b1b830e0a400dead738cc0afb67"
         }
       ],
       "public_files": [
@@ -108,7 +108,7 @@
     },
     {
       "claim_id": "privacy-and-rights",
-      "text": "The public candidate excludes credentials, model weights, raw prompts and answers, hidden reasoning, sealed labels, and restricted source bodies; it redistributes only declared project and third-party material.",
+      "text": "The public release excludes credentials, model weights, raw prompts and answers, hidden reasoning, sealed labels, and restricted source bodies; it redistributes only declared project and third-party material.",
       "status": "verified",
       "evidence": [
         {
@@ -125,11 +125,11 @@
         },
         {
           "path": "scripts/audit_public_repo.py",
-          "sha256": "f9a4a6202b98e101b6e42fb8dce47c8e76968ffeea37da392c1ce2325502e391"
+          "sha256": "7e3f1e33ec2133cea67c592b8b033e7eff59b555dd3cd54dc386acca1b7ea55e"
         },
         {
           "path": "scripts/audit_restricted_egress.py",
-          "sha256": "8fccef2050ec098b26a2b4711d98d0341cc0d4f7576aadb6bedb379365a9046e"
+          "sha256": "6c2f088c391efdfbc625d528b60381a3327e81d3a079f080d432a36d431143b2"
         }
       ],
       "public_files": [

@@ -29,7 +29,7 @@ func TestFinancialIntelligenceRegistryIsIsolatedAndComplete(t *testing.T) {
 		}
 	}
 	if Tier0Registry().Authorizes(roles.Valuation, "valuation.reverse_revenue_growth") {
-		t.Fatal("frozen Tier0 must not silently absorb Sprint 16B operations")
+		t.Fatal("frozen Tier0 must not silently absorb financial-intelligence operations")
 	}
 	if !RuntimeRegistry().Authorizes(roles.Valuation, "valuation.reverse_revenue_growth") {
 		t.Fatal("runtime must authorize the new valuation operation")

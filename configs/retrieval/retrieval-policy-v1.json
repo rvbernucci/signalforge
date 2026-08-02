@@ -7,10 +7,11 @@
   },
   "semantic_baseline": {
     "status": "offline_evaluation_only",
-    "model_id": "ibm-granite/granite-embedding-small-english-r2",
-    "revision": "2ab6fa8ea2d674564defd37171ae19079b864b33",
+    "model_id": "ibm-granite/granite-embedding-97m-multilingual-r2",
+    "revision": "835ad14087e140460703cf0fae09f97d469d65c2",
     "storage": "in_process_exact_cosine",
-    "activation_gate": "must_improve_complete_evidence_rate_without_reducing_citation_correctness"
+    "activation_gate": "must_improve_complete_evidence_rate_without_reducing_citation_correctness",
+    "decision": "not_activated_because_bm25_preserved_complete_evidence_rate_and_citation_correctness"
   },
   "qdrant": {
     "status": "deferred",

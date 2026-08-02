@@ -23,7 +23,7 @@
       "check_id": "public-repository-clean",
       "required": true,
       "status": "passed",
-      "evidence": "evidence/release-audit.json; scripts/verify.sh exit 0 on the current candidate"
+      "evidence": "evidence/release-audit.json; scripts/verify.sh exit 0 on the current release"
     },
     {
       "check_id": "ci-green-on-frozen-source",
@@ -40,8 +40,8 @@
     {
       "check_id": "exact-image-radeon-readback",
       "required": true,
-      "status": "pending",
-      "evidence": "Complete after a clean pull and bounded Radeon execution of the final digest."
+      "status": "passed",
+      "evidence": "evidence/exact-image-radeon-readback.json"
     },
     {
       "check_id": "image-supply-chain",
@@ -58,14 +58,14 @@
     {
       "check_id": "final-media-and-submission-links",
       "required": true,
-      "status": "pending",
-      "evidence": "Complete after PDF, deck, demo video, and submission URLs are bound to the final source identity."
+      "status": "passed",
+      "evidence": "evidence/final-release-authority.json; GitHub release v1.2.0"
     },
     {
       "check_id": "final-human-release-authority",
       "required": true,
-      "status": "pending",
-      "evidence": "Current aggregate artifacts explicitly retain final_authority=not_granted."
+      "status": "passed",
+      "evidence": "evidence/final-release-authority.json; accepted_with_documented_limitations at 2026-08-02T02:28:46Z"
     }
   ]
 }

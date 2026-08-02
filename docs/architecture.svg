@@ -101,7 +101,7 @@
   <rect x="1011" y="594" width="230" height="58" class="software"/>
   <text x="1031" y="621" class="h" font-size="17">Primary Evidence</text><text x="1031" y="642" class="body small">SEC / IR / macro / market</text>
   <rect x="1260" y="594" width="243" height="58" class="software"/>
-  <text x="1280" y="621" class="h" font-size="17">28 Go Tools</text><text x="1280" y="642" class="body small">Decimal finance + invariants</text>
+  <text x="1280" y="621" class="h" font-size="17">80 Go Operations</text><text x="1280" y="642" class="body small">Decimal finance + invariants</text>
   <rect x="1011" y="672" width="230" height="58" class="software"/>
   <text x="1031" y="699" class="h" font-size="17">Receipts + Lineage</text><text x="1031" y="720" class="body small">Hashes, replay, supersession</text>
   <rect x="1260" y="672" width="243" height="58" class="software"/>

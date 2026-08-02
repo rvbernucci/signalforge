@@ -1,6 +1,6 @@
 {
   "schema_version": "signalforge/hardening-matrix/v1",
-  "matrix_id": "sprint12-adversarial-v1",
+  "matrix_id": "signalforge-adversarial-v1",
   "frozen_at": "2026-07-22T07:00:00Z",
   "release_blocking_severities": ["critical"],
   "gates": [

@@ -13,7 +13,7 @@ import (
 
 func main() {
 	reportPath := flag.String("report", "", "private golden investor report JSON")
-	rubricPath := flag.String("rubric", "fixtures/golden/semantic-rubric-v5.json", "frozen semantic rubric JSON")
+	rubricPath := flag.String("rubric", "fixtures/golden/semantic-rubric.json", "current frozen semantic rubric JSON")
 	outputPath := flag.String("output", "", "optional semantic evaluation output path")
 	flag.Parse()
 	if *reportPath == "" {

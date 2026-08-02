@@ -259,7 +259,7 @@ EOF
 
     def test_prohibited_sealed_path_is_classified_without_reading(self) -> None:
         self.assertEqual(
-            MODULE.prohibited_public_path(Path("experiments/sprint32/holdout/cases.json")),
+            MODULE.prohibited_public_path(Path("experiments/evaluation/holdout/cases.json")),
             "sealed evaluation material",
         )
 

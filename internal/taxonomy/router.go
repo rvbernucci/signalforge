@@ -64,7 +64,7 @@ func MinimalRoute(intent Intent, materialDecision bool) (Route, error) {
 }
 
 // Plan refines the intent route only when the question contains a documented
-// domain trigger. It remains a deterministic Sprint 00 reference, not the
+// domain trigger. It remains a deterministic routing reference, not the
 // production model-backed interpreter.
 func Plan(question string, intent Intent, materialDecision bool) (Route, error) {
 	result, err := MinimalRoute(intent, materialDecision)

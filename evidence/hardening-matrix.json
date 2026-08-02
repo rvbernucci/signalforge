@@ -244,9 +244,9 @@
       "status": "passed"
     }
   ],
-  "matrix_id": "sprint12-adversarial-v1",
-  "matrix_path": "configs/hardening/sprint12-matrix-v1.json",
-  "matrix_sha256": "798bcae6ad877e3db479073fd29f527a8cf510fa5f93d7ff2a35fbcb4e04d21a",
+  "matrix_id": "signalforge-adversarial-v1",
+  "matrix_path": "configs/hardening/adversarial-hardening-matrix-v1.json",
+  "matrix_sha256": "a6e9069da619f9202e12a74cc4c068f1c648d9a5cb17cb37efb0ce14828e0ff8",
   "release_blockers": 0,
   "schema_version": "signalforge/hardening-report/v1",
   "scope": "Repository-executable adversarial gates; residual risks remain authoritative and this report is not a universal factual-accuracy claim.",

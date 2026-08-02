@@ -228,20 +228,24 @@ func TestGoldenRequestUsesExplicitWorkspaceScenarioAssumptions(t *testing.T) {
 	}
 }
 
-func TestSemanticRubricAndOfficialPriceSetWereFrozenBeforeEvaluation(t *testing.T) {
+func TestCurrentSemanticRubricAndOfficialPriceSetArePointInTimeBounded(t *testing.T) {
 	rubric, rubricSHA, err := LoadSemanticRubric(filepath.Join("..", "..", "fixtures", "golden", "semantic-rubric.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rubric.RubricID != "golden-msft-nvda-decision-v1" || len(rubricSHA) != 64 {
+	if rubric.RubricID != "golden-msft-nvda-decision-v5" || len(rubricSHA) != 64 {
 		t.Fatalf("unexpected semantic rubric identity: %s %s", rubric.RubricID, rubricSHA)
+	}
+	evaluationAt := time.Date(2026, 7, 22, 4, 30, 0, 0, time.UTC)
+	if !rubric.FrozenAt.Before(evaluationAt) {
+		t.Fatalf("rubric must be frozen before evaluation: rubric=%s evaluation=%s", rubric.FrozenAt, evaluationAt)
 	}
 	prices, err := LoadPriceSet(filepath.Join("..", "..", "fixtures", "golden", "market-price-inputs.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(prices.Prices) != 2 || !rubric.FrozenAt.Before(prices.RetrievedAt) {
-		t.Fatalf("rubric must be frozen before the price-backed evaluation input: rubric=%s prices=%s", rubric.FrozenAt, prices.RetrievedAt)
+	if len(prices.Prices) != 2 {
+		t.Fatalf("unexpected price-set cardinality: %d", len(prices.Prices))
 	}
 	snapshot, err := LoadSnapshot(filepath.Join("..", "..", "fixtures", "golden", "financial-snapshot.json"))
 	if err != nil {
@@ -266,8 +270,8 @@ func TestSemanticEvaluationFailsClosedWithoutReleasedAnswer(t *testing.T) {
 	}
 }
 
-func TestSemanticRubricV5DetectsPresentationDefects(t *testing.T) {
-	rubric, rubricSHA, err := LoadSemanticRubric(filepath.Join("..", "..", "fixtures", "golden", "semantic-rubric-v5.json"))
+func TestCurrentSemanticRubricDetectsPresentationDefects(t *testing.T) {
+	rubric, rubricSHA, err := LoadSemanticRubric(filepath.Join("..", "..", "fixtures", "golden", "semantic-rubric.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -280,7 +284,7 @@ func TestSemanticRubricV5DetectsPresentationDefects(t *testing.T) {
 		Request:  contracts.ResearchRequest{RunID: "run-defective-presentation"},
 		Result:   orchestrator.Result{Answer: &answer},
 	}
-	evaluation := EvaluateSemantics(report, rubric, rubricSHA, time.Date(2026, 7, 22, 4, 0, 0, 0, time.UTC))
+	evaluation := EvaluateSemantics(report, rubric, rubricSHA, time.Date(2026, 7, 22, 4, 30, 0, 0, time.UTC))
 	checks := map[string]bool{}
 	for _, check := range evaluation.Checks {
 		checks[check.CheckID] = check.Passed

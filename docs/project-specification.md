@@ -131,7 +131,7 @@ with no answer release.
 
 ## Evaluation And Stability
 
-The current candidate completed:
+The frozen evaluation completed:
 
 - `180/180` standalone and peer, development and sealed journeys with runtime and contract pass;
 - `180/180` accepted in independent model-assisted evidence-alignment review;
@@ -193,8 +193,9 @@ make radeon-up BACKEND=auto
 - Citation presence does not by itself prove semantic entailment.
 - Whole-journey concurrency is bounded by the local 26B model.
 - Some OneClick hosts require the native ROCm backend because of container mount policy.
-- The application image is frozen and supply-chain verified; exact-image Radeon readback, final
-  media binding, and human acceptance remain separate gates.
+- The application image is frozen, supply-chain verified, and read back on Radeon by immutable
+  digest. Release media and the project-owner decision are hash-bound in
+  `evidence/final-release-authority.json`.
 
 SignalForge can make mistakes. Important information must be verified, and qualified professionals
 should be consulted before financial decisions.
@@ -208,8 +209,10 @@ should be consulted before financial decisions.
 - Runtime optimization: `evidence/radeon-optimization.json`
 - Hardening: `evidence/hardening-matrix.json`
 - Application release identity: `evidence/release-identity.json`
+- Exact-image Radeon readback: `evidence/exact-image-radeon-readback.json`
 - Synchronized Mission Control: `evidence/mission-control-runtime.json`
 - Accounting authority: `docs/accounting-authority/technology20-accounting-professional-review.md`
+- Final release authority and media hashes: `evidence/final-release-authority.json`
 
 <!-- evidence-claim:current-product -->
 <!-- evidence-claim:current-evaluation -->

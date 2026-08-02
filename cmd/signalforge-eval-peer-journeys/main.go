@@ -103,8 +103,8 @@ func main() {
 	}
 	for index, item := range selected {
 		casePath := filepath.Join(*outputDirectory, "cases", item.JourneyID+".json")
-		runID := fmt.Sprintf("sprint32-peer-%s-%03d", suite.Split, *startIndex+index)
-		requestID := fmt.Sprintf("sprint32-peer-request-%s-%03d", suite.Split, *startIndex+index)
+		runID := fmt.Sprintf("peer-evaluation-%s-%03d", suite.Split, *startIndex+index)
+		requestID := fmt.Sprintf("peer-request-%s-%03d", suite.Split, *startIndex+index)
 		identity := evalcheckpoint.Identity{
 			SchemaVersion:  evalcheckpoint.IdentitySchemaVersion,
 			EvaluationKind: "peer", SuiteSHA256: suiteSHA,

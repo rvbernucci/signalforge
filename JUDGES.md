@@ -4,17 +4,20 @@ SignalForge is a private, local-first financial research workspace for independe
 combines multi-agent planning, evidence retrieval, deterministic financial tools, local memory,
 independent review, and explicit release contracts on AMD Radeon and ROCm.
 
-This document is the shortest route through the current Track 2 candidate. It contains no
+This document is the shortest route through the current Track 2 release. It contains no
 development chronology.
 
 ## Three-Minute Review
 
-1. Read the [project specification](docs/project-specification.md).
-2. Inspect the [architecture](docs/architecture.svg).
-3. Review the current [evaluation](evidence/championship-evaluation.json),
+1. Watch the [4 min 26 s Radeon demo](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4).
+2. Read the [project specification PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf)
+   or its [reviewable Markdown source](docs/project-specification.md).
+3. Inspect the [judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx)
+   and [architecture](docs/architecture.svg).
+4. Review the current [evaluation](evidence/championship-evaluation.json),
    [Radeon runtime](evidence/championship-radeon-runtime.json), and
    [product check](evidence/championship-product-check.json).
-4. Run the credential-free fixture:
+5. Run the credential-free fixture:
 
 ```bash
 npm --prefix web ci
@@ -27,8 +30,12 @@ Open `http://127.0.0.1:8080/?audience=judge`.
 The current application image and supply-chain checks are frozen in
 [`release-identity.json`](evidence/release-identity.json). The image is public, immutable,
 `linux/amd64`, SBOM- and provenance-attested, vulnerability-scanned, clean-pulled, and
-exact-image fixture-tested. The separate [release checklist](evidence/release-checklist.json)
-retains the remaining Radeon readback, media, and human-authority gates. The synchronized
+exact-image fixture-tested. A clean OCI pull and bounded execution of the unchanged entrypoint
+payload also passed on the Radeon host; see the
+[readback receipt](evidence/exact-image-radeon-readback.json). The separate
+[release checklist](evidence/release-checklist.json) records the completed gates, and the
+[final release authority](evidence/final-release-authority.json) binds the media hashes and
+project-owner decision. The synchronized
 [Mission Control runtime](evidence/mission-control-runtime.json) passed against this exact image
 and preserved answer completion after deliberate telemetry loss.
 
@@ -146,9 +153,9 @@ storage, secret files, profiles, fallback, observability, and safe cleanup.
 - SignalForge does not predict prices, execute trades, or give personalized recommendations.
 - Public evidence contains aggregates and hashes only, never prompts, answers, source bodies,
   private traces, credentials, hidden reasoning, or sealed labels.
-- Human investor and final judge acceptance remain external gates.
-- The application image identity is authoritative and immutable; final media binding,
-  exact-image Radeon readback, and human release authority remain separate external gates.
+- Independent professional assurance and final judging remain external to the project.
+- The application image identity, Radeon readback, release media, and project-owner authority are
+  frozen and hash-bound; this does not pre-award points or replace organizer review.
 
 <!-- evidence-claim:current-product -->
 <!-- evidence-claim:current-evaluation -->

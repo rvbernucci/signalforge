@@ -10,7 +10,8 @@ authority boundaries. Unknown fields fail closed unless a contract explicitly pe
 - `execution-presentation.schema.json` derives bounded Summary, Details, and Proof views.
 - `orchestration-trace.schema.json` records typed runtime transitions without prompt or answer
   bodies.
-- `context-packet.schema.json` carries evidence-grounded specialist findings.
+- `research-workspace.schema.json` carries the public-safe research surface and its authority
+  boundaries.
 - `research-trace.schema.json` and `failure-receipt.schema.json` preserve observable success,
   degradation, and refusal.
 
@@ -54,15 +55,19 @@ these records.
 - `evidence-chunk.schema.json` preserves point-in-time regulatory and investor-relations lineage.
 - `retrieval-vector-fixture.schema.json` keeps reproducible vectors distinct from source
   authority.
-- `investor-relations-source-map.schema.json` and the `ir-*` schemas govern discovery,
-  collection, transformation, rights quarantine, and lineage.
+- `ir-source-registry-v2.schema.json`, `ir-crawl-observation.schema.json`,
+  `ir-document-v2.schema.json`, `ir-semantic-projection.schema.json`, and
+  `ir-vector-record.schema.json` govern discovery, collection, transformation, rights quarantine,
+  and lineage.
 
 Raw issuer files remain outside Git. Structured financial facts and calculation receipts stay
 directly resolvable rather than being reduced to embeddings.
 
 ## Memory And Privacy
 
-- `research-case.schema.json` governs opt-in retained cases.
+- `research-case-export.schema.json` governs user-authorized export of retained cases.
+- `safe-decision-replay.schema.json` governs bounded replay without restoring protected model or
+  source bodies.
 - `execution-plan.schema.json` and `orchestration-trace.schema.json` intentionally exclude
   credentials, source bodies, prompts, answers, hidden reasoning, and private memory contents.
 - Public evidence contracts retain only bounded metrics, hashes, reason codes, and explicit

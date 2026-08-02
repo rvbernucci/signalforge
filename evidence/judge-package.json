@@ -1,8 +1,8 @@
 {
   "schema_version": "signalforge/judge-package/v1",
   "status": "public_artifacts_verified",
-  "candidate_scope": "hash_bound_public_documents_and_verified_application_image",
-  "release_authority": "not_granted",
+  "release_scope": "hash_bound_public_documents_verified_application_image_and_external_media",
+  "release_authority": "granted_for_hackathon_submission",
   "application_image": {
     "source_commit": "ac8685307a420e23f73632f0e59fc647e6fdd870",
     "immutable_reference": "ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
@@ -11,23 +11,23 @@
   "artifacts": {
     "readme": {
       "path": "README.md",
-      "sha256": "131e3b0eb00f883efb8e1b046ee587b1e5d77972c72abbd67cd55cc5dbcbc99f"
+      "sha256": "3bfbae2e27ad28f0598a31158a1c3bdf8a61e7ee1aaad288f1586a031509796a"
     },
     "judge_guide": {
       "path": "JUDGES.md",
-      "sha256": "c617c072260236ce14d30e8aa694c8a2a177fff5ff7c784a8b3367079a87b791"
+      "sha256": "fe00cfd2964876ee33657079990fe99498accf6e5b26575bbd608cc4c39a6da0"
     },
     "project_specification_source": {
       "path": "docs/project-specification.md",
-      "sha256": "1e706e4f29e084ac61d93fe299ecda37b56f297ab91ff6167b88b6f26068b804"
+      "sha256": "41b78eb367bba64b36fddc85702dbad8271570ad3418b3f0562078207a4cd0d3"
     },
     "track2_compliance": {
       "path": "docs/track2-compliance.md",
-      "sha256": "ba6893ed3d8d77e1cf3ed633404b704efb661d973f08f82e5c994dcdb15ee8ba"
+      "sha256": "21351aec89c08455ba2b22a737531e83ee229d5f6d70b16bd0dfa6a7f15680c2"
     },
     "release_identity": {
       "path": "evidence/release-identity.json",
-      "sha256": "b174a2adfe6c224ee0c5b1ce0b0397af5a5a161f518773b3f2895a78011c7f5d"
+      "sha256": "fd57a5f25dadd82d98f963ff9c577f8e1ec85b1b830e0a400dead738cc0afb67"
     },
     "mission_control_runtime": {
       "path": "evidence/mission-control-runtime.json",
@@ -35,19 +35,19 @@
     },
     "architecture": {
       "path": "docs/architecture.svg",
-      "sha256": "b32da58531d1854499b5af479e360205db168f24fa8b6deb42e18f3270db66bc"
+      "sha256": "f8a53674b4f5929252880ea5e243dcf45f47366d0777afebf573027cfa005016"
     },
     "current_evaluation": {
       "path": "evidence/championship-evaluation.json",
-      "sha256": "a30ae9b5f9658aff3272fbe15a09f08b87a9ec1728d328c8082b9e9685386a19"
+      "sha256": "553ea4181900b3ba5b839012c6d0245b0d5bcdff5438d764aad752dd2f1e6a6e"
     },
     "current_radeon_runtime": {
       "path": "evidence/championship-radeon-runtime.json",
-      "sha256": "d57d577649eacf37660ec47e856e6d94ec5445ccc478e76739ece325dafbc1f4"
+      "sha256": "ce64f11bc99c6cd50f14389c13f6e7e47211be5fe67f33d343452700a3612ebd"
     },
     "current_product_check": {
       "path": "evidence/championship-product-check.json",
-      "sha256": "2b5e48039b2470d36b5fbbb3522d6847514762f48a50711041e60d4730357bb4"
+      "sha256": "402a5a23572769b6c71497adfe0a10da991b81c55bf4aeb986ee532e5457e513"
     },
     "accounting_review": {
       "path": "docs/accounting-authority/technology20-accounting-professional-review.md",
@@ -56,6 +56,41 @@
     "accounting_decision": {
       "path": "fixtures/productscope/accounting-authority/technology20-accounting-professional-decision.json",
       "sha256": "dc0318ece20f36c37e4e0fe92cbe4f6a79024e9f26bdc29fd6870ebf8dd96e69"
+    },
+    "final_release_authority": {
+      "path": "evidence/final-release-authority.json",
+      "sha256": "26188e57074eb1e54c8375fae650264f5cd553c19559daaa65baffbc45761afd"
+    },
+    "release_checklist": {
+      "path": "evidence/release-checklist.json",
+      "sha256": "d0d01e5f2fb7405a2e2085f78f820e5589f9cc6d7ef8724d0e72054803d0e323"
+    },
+    "demo_script": {
+      "path": "docs/demo-script.md",
+      "sha256": "c901ad6fe6b6498b92d04c4b259908a70e8f931e4aed7d6de6554e0477d61ce8"
+    },
+    "demo_voiceover": {
+      "path": "docs/demo-voiceover.txt",
+      "sha256": "cc1fb61bd55237095711951bb37af84cf99d22488c76cf97ca2207995c0d2d56"
+    },
+    "public_claims": {
+      "path": "evidence/public-claims.json",
+      "sha256": "6f3eead6639ed37ccb043a88c27ac2a39ddc1e7425e1d18a728ec17085fef19b"
+    }
+  },
+  "external_media": {
+    "release_url": "https://github.com/rvbernucci/signalforge/releases/tag/v1.2.0",
+    "project_specification_pdf": {
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf",
+      "sha256": "699dce4957bc527a273ef8cd76b37d045863b038623d40c3699d72043657bd73"
+    },
+    "judge_deck": {
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx",
+      "sha256": "7dbad4e713a12e7305a219334fb5dd2c9c80ddd36f0a51d8bd3dd91c5f6795e1"
+    },
+    "demo_video": {
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4",
+      "sha256": "bceccf5a2842e5fc5333f1b05e9ce53ac76c4c111991af36685d4f68abd3b90a"
     }
   },
   "claim_authority": "Claims are limited to the hash-bound public artifacts and their stated evaluation boundaries.",

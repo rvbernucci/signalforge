@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute the frozen Sprint 12 adversarial gates and emit a deterministic report."""
+"""Execute the frozen adversarial gates and emit a deterministic report."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MATRIX = ROOT / "configs" / "hardening" / "sprint12-matrix-v1.json"
+DEFAULT_MATRIX = ROOT / "configs" / "hardening" / "adversarial-hardening-matrix-v1.json"
 DEFAULT_OUTPUT = ROOT / "evidence" / "hardening-matrix.json"
 
 

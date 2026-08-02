@@ -110,7 +110,7 @@ def cover_page(canvas, doc) -> None:
 
     canvas.setFillColor(colors.HexColor("#dbe9e4"))
     canvas.setFont("Helvetica", 9)
-    canvas.drawString(22 * mm, 20 * mm, "Current championship candidate · github.com/rvbernucci/signalforge")
+    canvas.drawString(22 * mm, 20 * mm, "Championship release · github.com/rvbernucci/signalforge")
     canvas.restoreState()
 
 

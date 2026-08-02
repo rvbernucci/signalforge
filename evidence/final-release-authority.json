@@ -1,0 +1,58 @@
+{
+  "schema_version": "signalforge/final-release-authority/v1",
+  "status": "accepted_for_hackathon_submission",
+  "disposition": "accepted_with_documented_limitations",
+  "granted_at_utc": "2026-08-02T02:28:46Z",
+  "reviewer": {
+    "name": "Rafael Bernucci",
+    "role": "project owner",
+    "qualification": "Accounting graduate from the University of Sao Paulo",
+    "independence": "project_owner_not_independent"
+  },
+  "application": {
+    "source_commit": "ac8685307a420e23f73632f0e59fc647e6fdd870",
+    "immutable_image": "ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
+    "platform": "linux/amd64",
+    "exact_image_radeon_readback": "evidence/exact-image-radeon-readback.json"
+  },
+  "media_release": {
+    "tag": "v1.2.0",
+    "project_specification_pdf": {
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf",
+      "sha256": "699dce4957bc527a273ef8cd76b37d045863b038623d40c3699d72043657bd73",
+      "bytes": 286785
+    },
+    "judge_deck": {
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx",
+      "sha256": "7dbad4e713a12e7305a219334fb5dd2c9c80ddd36f0a51d8bd3dd91c5f6795e1",
+      "bytes": 325553
+    },
+    "demo_video": {
+      "url": "https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4",
+      "sha256": "bceccf5a2842e5fc5333f1b05e9ce53ac76c4c111991af36685d4f68abd3b90a",
+      "bytes": 15223696,
+      "duration_seconds": 266.196,
+      "video": "H.264 1920x1080",
+      "audio": "AAC 48000 Hz"
+    }
+  },
+  "accepted_boundaries": {
+    "product_owner_acceptance": "accepted",
+    "judge_readability": "accepted",
+    "media_and_submission_package": "accepted",
+    "accounting_review": "conditionally_accepted_under_documented_boundaries",
+    "source_rights_attestation": "accepted_with_reference_only_and_exclusion_policy"
+  },
+  "rights_and_data_exclusions": [
+    "Restricted IFRS bodies and private authorial corpora are excluded.",
+    "Reference-only sources are cited or linked and are not republished as a public corpus.",
+    "Model weights, credentials, prompts, answers, private traces, raw provider payloads, and sealed labels are excluded."
+  ],
+  "limitations": [
+    "This is a project-owner release decision, not an independent audit opinion, legal opinion, investment recommendation, fiduciary service, or professional assurance engagement.",
+    "Model-assisted evaluation is decision support and not independent human ground truth.",
+    "Final eligibility, scoring, and acceptance remain solely with the hackathon organizers and judges.",
+    "SignalForge can make mistakes; important information must be verified before financial decisions."
+  ],
+  "authority_boundary": "This record grants project-owner authority to submit the hash-bound application and media package. It does not expand product authority, accounting comparability, source rights, or judging authority."
+}

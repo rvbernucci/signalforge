@@ -28,13 +28,13 @@ func (values *repeatedStrings) Set(value string) error {
 func main() {
 	baseURL := flag.String("base-url", "http://127.0.0.1:8000/v1", "OpenAI-compatible local endpoint")
 	model := flag.String("model", "", "served local model identifier")
-	suitePath := flag.String("suite", "fixtures/roles/held-out-v12-cases.json", "current frozen held-out role suite")
+	suitePath := flag.String("suite", "fixtures/roles/held-out-cases.json", "current frozen held-out role suite")
 	output := flag.String("output", "", "role evaluation report path")
 	workers := flag.Int("workers", 1, "maximum concurrent role requests (1-8)")
 	requestTimeout := flag.Duration("request-timeout", 3*time.Minute, "timeout for each local completion")
 	overallTimeout := flag.Duration("overall-timeout", 45*time.Minute, "timeout for the complete suite")
 	var candidateManifests repeatedStrings
-	flag.Var(&candidateManifests, "candidate-manifest", "optional repeatable hash-pinned Sprint 16A candidate manifest")
+	flag.Var(&candidateManifests, "candidate-manifest", "optional repeatable hash-pinned role-evaluation candidate manifest")
 	sourceRoot := flag.String("source-root", ".", "repository root used to verify the base prompt source")
 	verifyCandidateOnly := flag.Bool("verify-candidate-only", false, "verify candidate identity and exit without inference")
 	flag.Parse()

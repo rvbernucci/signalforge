@@ -3,7 +3,7 @@ package roleeval
 import "testing"
 
 func TestHeldOutSuiteCoversEveryRole(t *testing.T) {
-	suite, err := LoadSuite("../../fixtures/roles/held-out-v12-cases.json")
+	suite, err := LoadSuite("../../fixtures/roles/held-out-cases.json")
 	if err != nil {
 		t.Fatal(err)
 	}

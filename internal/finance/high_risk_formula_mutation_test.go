@@ -6,7 +6,7 @@ import (
 	"github.com/rvbernucci/signalforge/internal/numeric"
 )
 
-func TestSprint38HighRiskFormulaMutationMatrixFailsClosed(t *testing.T) {
+func TestHighRiskFormulaMutationMatrixFailsClosed(t *testing.T) {
 	forecast := []numeric.Decimal{
 		numeric.MustDecimal("10"),
 		numeric.MustDecimal("11"),

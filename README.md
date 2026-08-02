@@ -19,6 +19,9 @@ validation.
 Start with the [Judge Guide](JUDGES.md). It maps the 120-point Track 2 rubric to the current
 application, architecture, Radeon measurements, and privacy-safe evidence.
 
+- [Demo video (4 min 26 s)](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Radeon-Demo.mp4)
+- [Project specification PDF](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Project-Specification.pdf)
+- [Judge deck](https://github.com/rvbernucci/signalforge/releases/download/v1.2.0/SignalForge-Judge-Deck.pptx)
 - [Project specification](docs/project-specification.md)
 - [Track 2 compliance map](docs/track2-compliance.md)
 - [Architecture diagram](docs/architecture.svg)
@@ -212,7 +215,7 @@ See [Radeon Mission Control](docs/radeon-mission-control.md).
 
 ## Current Evidence
 
-The current candidate completed:
+The frozen evaluation completed:
 
 - `180/180` Radeon journeys with runtime and release-contract success across standalone and peer,
   development and sealed populations;
@@ -226,8 +229,8 @@ The current candidate completed:
 - a live Adobe standalone journey and a governed NVIDIA/AMD peer journey; and
 - a deliberate fail-closed result for an overbroad peer request.
 
-These are candidate-specific engineering results. Model-assisted review is not independent human
-ground truth, professional assurance, or final judging authority.
+These are bounded engineering results. Model-assisted review is not independent human ground
+truth, professional assurance, or final judging authority.
 
 ### Verified Application Image
 
@@ -241,7 +244,7 @@ It was built from source commit `ac8685307a420e23f73632f0e59fc647e6fdd870` for `
 The release workflow attached SBOM and provenance, found zero HIGH/CRITICAL vulnerabilities,
 verified a clean public pull, and ran the exact image fixture. See
 [`release-identity.json`](evidence/release-identity.json) and the
-[`release-checklist.json`](evidence/release-checklist.json) for the remaining external gates. The
+[`release-checklist.json`](evidence/release-checklist.json) for the completed release gates. The
 synchronized [Mission Control runtime](evidence/mission-control-runtime.json) also passed against
 this exact digest, including deliberate observability loss.
 
@@ -285,9 +288,11 @@ The public repository intentionally contains no sprint archive or superseded rel
 - Citation presence does not by itself prove semantic entailment.
 - The local 26B model limits whole-journey concurrency even though specialist calls can overlap.
 - Literal OCI execution on some OneClick hosts depends on their container and mount policy; the
-  native ROCm backend preserves the same source and model identity contract.
-- The application image is frozen; exact-image Radeon readback, final media binding, and final
-  human release authority remain separate gates.
+  current readback therefore used a clean Skopeo pull and Umoci extraction before executing the
+  unchanged entrypoint payload as the image's non-root UID.
+- The application image and exact-image Radeon readback are frozen. The project-owner release
+  decision and exact media hashes are recorded in
+  [`final-release-authority.json`](evidence/final-release-authority.json).
 
 ## License
 

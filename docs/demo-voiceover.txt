@@ -1,42 +1,61 @@
 SignalForge is a private, local-first financial research workspace for independent investors.
 
-Instead of asking one language model to calculate, remember, retrieve, and judge its own answer,
-SignalForge separates those responsibilities.
+Public filings, investor-relations material, macroeconomic series, and market observations are
+abundant. What is scarce is a disciplined process that keeps reported facts, deterministic
+calculations, assumptions, counterarguments, and uncertainty separate.
 
-A typed Go planner interprets the research goal. Point-in-time retrieval assembles authorized
-public evidence. Deterministic engines calculate financial quantities and issue hash-verifiable
-receipts. Specialist agents work in parallel, then independent evidence and risk critics challenge
-the draft before a local Radeon model performs final synthesis.
+SignalForge helps an investor understand how a business earns money, examine financial quality,
+connect economic forces to explicit transmission mechanisms, compare companies within governed
+boundaries, inspect valuation scenarios, and identify what would invalidate a thesis. It does not
+predict prices, execute trades, or provide personalized investment instructions.
 
-This is Numerical Silence: the model can explain approved financial evidence, but it does not
-become the source of record for the numbers.
+The architecture separates interpretation from financial authority. A typed Go control plane owns
+scope, evidence authorization, tool permissions, calculations, lineage, review gates, and
+publication. Point-in-time retrieval assembles authorized public evidence. Eleven specialist and
+control roles exchange typed packets and references rather than unrestricted chat transcripts.
 
-Here we start a governed NVIDIA and AMD comparison. The investor sees a clean workspace, while the
-execution plan can expand to show interpretation, retrieval, tools, specialists, critics, repair,
-and release.
+This is Numerical Silence. Language models may explain verified relationships, but they do not
+become the system of record for financial values. Eighty deterministic Go operations own every
+authoritative number, period, unit, formula, comparison direction, and replayable receipt.
 
-The final answer contains cited evidence, deterministic calculations, accounting caveats, scenario
-assumptions, and monitoring conditions. If definitions, periods, units, or accounting perimeters
-do not support a direct comparison, SignalForge narrows the claim or abstains.
+The interface footage uses the bundled public Microsoft and NVIDIA fixture to show the workflow.
+It is a transparent product replay, not an authorized direct peer ranking. The current product
+authority covers twenty United States technology companies and five separately governed peer
+lanes, including NVIDIA and AMD.
 
-Research memory is local and off by default. The user can explicitly retain the safe released
-projection, inspect it, export it, and delete it. Prompts, raw model responses, source bodies,
-credentials, and hidden reasoning are excluded.
+The investor begins in a clean workspace. The execution plan can expand to show interpretation,
+planning, evidence authorization, deterministic tools, parallel specialists, independent critics,
+repair, and release validation without exposing hidden reasoning.
 
-Mission Control correlates the same run across agent stages, model routes, evidence, engines,
-failures, and Radeon telemetry without exposing protected content.
+The released research case keeps the main answer readable while evidence, assumptions,
+counterevidence, calculation receipts, accounting caveats, monitoring conditions, and limitations
+remain one interaction away. When definitions, periods, units, or accounting perimeters do not
+support a direct comparison, SignalForge narrows the claim or abstains.
+
+Research memory is local and disabled by default. The user can explicitly retain only the safe
+released projection, inspect it, export it, and delete it. Prompts, raw model responses, source
+bodies, credentials, and hidden reasoning are excluded from durable memory and public telemetry.
+
+Mission Control correlates the same run across plan stages, model routes, evidence, deterministic
+engines, failures, privacy controls, and Radeon telemetry. Operators can inspect the process
+without receiving protected content.
 
 Core inference runs locally on AMD Radeon through ROCm using Gemma 4 26B Q4_0. A bounded
 organizer-provided Radeon API can accelerate selected context specialists, but local critics,
 final synthesis, deterministic authority, and release validation remain under SignalForge
-control.
+control. If the optional route fails, the governed local path can recover. If core local inference
+is unavailable, the product fails closed.
 
-The current candidate completed one hundred eighty of one hundred eighty Radeon journeys and
-release contracts, ten of ten repeated financial-quality journeys, and a five-hour twenty-eight
-minute soak with no observed allocated-VRAM growth.
+The frozen evaluation completed one hundred eighty of one hundred eighty Radeon journeys and
+release contracts, with zero false-release candidates in the bounded model-assisted review.
+Forty of forty Gemma contract checks passed. Four context workers completed the measured workload
+in one hundred fifty-seven point four six nine seconds, twenty-nine point one seven percent faster
+than the three-worker control. A five-hour twenty-eight-minute soak showed no observed growth in
+allocated VRAM.
 
-SignalForge can make mistakes. It is research software, not an audit, investment recommendation,
-trading system, or guarantee. Important information should be verified before financial
-decisions.
+These are application-specific engineering results, not universal model rankings or independent
+human-ground-truth accuracy. SignalForge can make mistakes. It is research software, not an audit,
+investment recommendation, trading system, or guarantee. Important information should be
+verified before financial decisions.
 
 SignalForge: private financial research, with visible evidence and bounded authority.

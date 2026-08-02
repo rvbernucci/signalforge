@@ -1,6 +1,6 @@
 {
   "schema_version": "signalforge/championship-radeon-runtime/v1",
-  "status": "measured_candidate",
+  "status": "measured_release",
   "evaluated_source": "67276e73b3fba1b2d09f9aa51bcb933771f9fd89",
   "platform": {
     "environment": "AMD Radeon Cloud",
@@ -65,6 +65,7 @@
     "failure_matrix_sha256": "805aad1d51ab7baae50de3bb31396f953a12e1a479dd2997e3c314f603c0aad8",
     "soak_summary_sha256": "caf4ea204605745015039f1d5ddeb013ecbe6664935bb58d2f3f20d7dae81a73"
   },
-  "final_authority": "not_granted",
+  "final_authority": "external_authority_recorded",
+  "authority_evidence": "evidence/final-release-authority.json",
   "privacy_boundary": "Aggregate runtime and ROCm telemetry only. Model inputs, outputs, source bodies, credentials, private traces, and sealed labels are excluded."
 }

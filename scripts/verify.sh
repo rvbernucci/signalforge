@@ -119,15 +119,15 @@ go run ./cmd/signalforge-eval-architecture > "$tmp_dir/architecture-eval.json"
 cmp evidence/architecture-eval.json "$tmp_dir/architecture-eval.json"
 go run ./cmd/signalforge-eval-orchestration > "$tmp_dir/orchestration-eval.json"
 cmp evidence/orchestration-eval.json "$tmp_dir/orchestration-eval.json"
-go run ./cmd/signalforge-export-prompts > "$tmp_dir/role-prompts-v12.json"
-cmp configs/prompts/role-prompts-v12.json "$tmp_dir/role-prompts-v12.json"
+go run ./cmd/signalforge-export-prompts > "$tmp_dir/role-prompts.json"
+cmp configs/prompts/role-prompts.json "$tmp_dir/role-prompts.json"
 
 jq -e '
   .schema_version == "signalforge/role-evaluation-suite/v1" and
   .suite_id == "role-held-out-v2" and
   .prompt_set_version == "signalforge-role-prompts/v12" and
   (.cases | length) == 33
-' fixtures/roles/held-out-v12-cases.json >/dev/null
+' fixtures/roles/held-out-cases.json >/dev/null
 jq -e '
   .schema_version == "signalforge/technology20-public-catalog/v1" and
   (.companies | length) == 20 and
@@ -157,18 +157,19 @@ jq -e '
 # Current, privacy-safe championship aggregates.
 jq -e '
   .schema_version == "signalforge/championship-evaluation/v1" and
-  .status == "evaluated_candidate" and
+  .status == "evaluated_release" and
   .scope.companies == 20 and
   .scope.total_cases == 180 and
   .runtime_and_contract.passed == 180 and
   .runtime_and_contract.total == 180 and
   .model_assisted_semantic_review.accepted == 180 and
   .model_assisted_semantic_review.false_release_candidates == 0 and
-  .final_authority == "not_granted"
+  .final_authority == "external_authority_recorded" and
+  .authority_evidence == "evidence/final-release-authority.json"
 ' evidence/championship-evaluation.json >/dev/null
 jq -e '
   .schema_version == "signalforge/championship-radeon-runtime/v1" and
-  .status == "measured_candidate" and
+  .status == "measured_release" and
   .platform.gpu_architecture == "gfx1100" and
   .platform.host_rocm_version == "7.2.1" and
   .selected_model_profile.contract_checks_passed == 40 and
@@ -177,7 +178,8 @@ jq -e '
   .soak.journeys_runtime_and_contract_passed == 180 and
   .soak.vram_growth_percentage_points == 0 and
   .failure_behavior.local_model_loss.answer_released == false and
-  .final_authority == "not_granted"
+  .final_authority == "external_authority_recorded" and
+  .authority_evidence == "evidence/final-release-authority.json"
 ' evidence/championship-radeon-runtime.json >/dev/null
 jq -e '
   .schema_version == "signalforge/championship-product-check/v1" and
@@ -187,8 +189,9 @@ jq -e '
   .bounded_live_scope.nvidia_amd_peer.released == true and
   .bounded_live_scope.overbroad_peer_request.released == false and
   .judge_navigation.under_two_minutes == true and
-  .human_acceptance == "pending" and
-  .final_authority == "not_granted"
+  .human_acceptance == "accepted_by_project_owner_with_documented_limitations" and
+  .final_authority == "granted_for_hackathon_submission" and
+  .authority_evidence == "evidence/final-release-authority.json"
 ' evidence/championship-product-check.json >/dev/null
 
 # Public-claim identity and repository hygiene are the final source-level gates.

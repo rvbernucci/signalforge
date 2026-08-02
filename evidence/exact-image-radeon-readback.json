@@ -1,0 +1,44 @@
+{
+  "schema_version": "signalforge/exact-image-radeon-readback/v1",
+  "status": "passed",
+  "measured_at": "2026-08-02T00:43:19.692920Z",
+  "host": {
+    "hostname": "u-9690-102692dd",
+    "platform": "linux/amd64",
+    "gpu": "AMD Radeon gfx1100",
+    "runtime": "ROCm host runtime"
+  },
+  "image": {
+    "immutable_reference": "ghcr.io/rvbernucci/signalforge@sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
+    "index_digest": "sha256:4b68c713e824d3cea9ad6a83cef4c93304961f9f3c3782a984af312bec47bf43",
+    "platform_manifest_digest": "sha256:622013807d01c47e05f1f0a1032a534a237d5c77483b746f3c64ea9c29ce4524",
+    "platform": "linux/amd64",
+    "source_commit": "ac8685307a420e23f73632f0e59fc647e6fdd870",
+    "extracted_binary_sha256": "ce63569bef313fa21bfbdc5e7b1a45000a8b761ab521084c996cef9ad9b9f2a7"
+  },
+  "execution": {
+    "runtime": "Skopeo clean OCI pull plus Umoci rootless unpack; exact image entrypoint payload executed as UID/GID 10001 on the Radeon host",
+    "clean_store": true,
+    "network": "loopback_only",
+    "cpu_affinity": "2 cores",
+    "mode": "fixture",
+    "local_only": true,
+    "startup_ms": 119.665,
+    "bounded_run_ms": 265.17
+  },
+  "checks": {
+    "index_digest": true,
+    "linux_amd64_manifest": true,
+    "oci_labels": true,
+    "exact_entrypoint_payload": true,
+    "non_root_uid": true,
+    "ready": true,
+    "license_bundle": true,
+    "bounded_journey": true,
+    "intelligence_lineage": true,
+    "metrics": true,
+    "frontend": true
+  },
+  "platform_limitation": "The nested Radeon notebook denied Podman layer mounts. Skopeo and Umoci preserved the verified OCI bytes, and the exact extracted entrypoint payload was executed without modifying it.",
+  "privacy": "Receipt excludes prompts, answers, credentials, source bodies, private memory, and hidden reasoning."
+}
